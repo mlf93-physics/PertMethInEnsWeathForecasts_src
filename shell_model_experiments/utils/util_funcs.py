@@ -1,7 +1,7 @@
 from collections import OrderedDict
 import numpy as np
 from pathlib import Path
-from src.params.params import *
+from shell_model_experiments.params.params import *
 
 def match_start_positions_to_ref_file(args=None, header_dict=None,
         positions=None):

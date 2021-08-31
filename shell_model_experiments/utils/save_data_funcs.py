@@ -1,7 +1,7 @@
 import os
 import numpy as np
 from pathlib import Path
-from src.params.params import *
+from shell_model_experiments.params.params import *
 
 def save_data(data_out, subfolder="", prefix="", perturb_position=None,
     args=None):

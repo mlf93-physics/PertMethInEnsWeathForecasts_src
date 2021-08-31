@@ -8,15 +8,14 @@ import numpy as np
 from numba import jit, types
 import multiprocessing
 from pyinstrument import Profiler
-import matplotlib.pyplot as plt
-from src.sabra_model.sabra_model import run_model
-from src.params.params import *
-from src.utils.save_data_funcs import save_data, save_perturb_info
-from src.utils.import_data_funcs import import_header, import_ref_data,\
+from shell_model_experiments.sabra_model.sabra_model import run_model
+from shell_model_experiments.params.params import *
+from shell_model_experiments.utils.save_data_funcs import save_data, save_perturb_info
+from shell_model_experiments.utils.import_data_funcs import import_header, import_ref_data,\
     import_start_u_profiles
-from src.utils.dev_plots import dev_plot_eigen_mode_analysis,\
+from shell_model_experiments.utils.dev_plots import dev_plot_eigen_mode_analysis,\
     dev_plot_perturbation_generation
-from src.utils.util_funcs import match_start_positions_to_ref_file,\
+from shell_model_experiments.utils.util_funcs import match_start_positions_to_ref_file,\
     get_sorted_ref_record_names
 
 profiler = Profiler()

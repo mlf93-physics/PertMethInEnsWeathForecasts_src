@@ -1,8 +1,8 @@
 from pathlib import Path
 import numpy as np
-from src.utils.util_funcs import match_start_positions_to_ref_file,\
+from shell_model_experiments.utils.util_funcs import match_start_positions_to_ref_file,\
     get_sorted_ref_record_names
-from src.params.params import *
+from shell_model_experiments.params.params import *
 
 
 def import_header(folder="", file_name=None):

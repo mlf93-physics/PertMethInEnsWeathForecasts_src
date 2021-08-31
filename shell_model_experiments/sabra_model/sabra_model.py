@@ -5,9 +5,9 @@ from math import ceil
 import numpy as np
 from numba import njit, types
 from pyinstrument import Profiler
-from src.sabra_model.runge_kutta4 import runge_kutta4_vec
-from src.params.params import *
-from src.utils.save_data_funcs import save_data
+from shell_model_experiments.sabra_model.runge_kutta4 import runge_kutta4_vec
+from shell_model_experiments.params.params import *
+from shell_model_experiments.utils.save_data_funcs import save_data
 
 profiler = Profiler()
 
@@ -100,6 +100,7 @@ if __name__ == "__main__":
     arg_parser.add_argument("--forcing", default=1, type=float)
     arg_parser.add_argument("--save_folder", nargs='?', default='data', type=str)
     arg_parser.add_argument("--record_max_time", default=30, type=float)
+    arg_parser.add_argument("--save_data", action="store_true")
     time_group = arg_parser.add_mutually_exclusive_group(required=True)
     time_group.add_argument("--time_to_run", type=float)
     time_group.add_argument("--n_turnovers", type=float)

@@ -1,16 +1,14 @@
-import os
 import sys
 sys.path.append('..')
 from pathlib import Path
 import argparse
 import numpy as np
-from scipy import signal
 import matplotlib.pyplot as plt
-from math import floor, log, ceil, sqrt
-from src.params.params import *
+from math import floor, ceil, sqrt
+from shell_model_experiments.params.params import *
 from import_data_funcs import import_data, import_header, import_ref_data,\
     import_perturbation_velocities, import_start_u_profiles
-from src.lyaponov.lyaponov_exp_estimator import find_eigenvector_for_perturbation
+from shell_model_experiments.lyaponov.lyaponov_exp_estimator import find_eigenvector_for_perturbation
 
 def plot_shells_vs_time(k_vectors_to_plot=None):
 
@@ -275,7 +273,7 @@ def plots_related_to_energy(args=None):
     figs = []
     axes = []
 
-    num_plots = 3
+    num_plots = 1
 
     for i in range(num_plots):
         fig = plt.figure()
@@ -287,14 +285,14 @@ def plots_related_to_energy(args=None):
     time, u_data, header_dict = import_ref_data(args=args)
 
     # Conserning ny
-    plot_energy_spectrum(u_data, header_dict, ax = axes[0], omit='ny')
-    plot_inviscid_quantities(time, u_data, header_dict, ax = axes[1],
-        omit='ny', args=args)
-    plot_inviscid_quantities_per_shell(time, u_data, header_dict, ax = axes[2],
+    # plot_energy_spectrum(u_data, header_dict, ax = axes[0], omit='ny')
+    # plot_inviscid_quantities(time, u_data, header_dict, ax = axes[0],
+    #     omit='ny', args=args)
+    plot_inviscid_quantities_per_shell(time, u_data, header_dict, ax = axes[0],
         path=args['path'], args=args)
 
     # Plot Kolmogorov scaling
-    axes[0].plot(np.log2(k_vec_temp), k_vec_temp**(-2/3), 'k--')
+    # axes[0].plot(np.log2(k_vec_temp), k_vec_temp**(-2/3), 'k--')
 
     for i in range(num_plots):
         axes[i].grid()
@@ -421,7 +419,7 @@ def plot_error_norm_vs_time(args=None):
         f', time={header_dict["time"]} | Folder: {args["perturb_folder"]};' +
         f'Files: {args["file_offset"]}-{args["file_offset"] + args["n_files"]}')
     
-    plt.savefig(f'../figures/week6/error_eigen_spectrogram/error_norm_ny{header_dict["ny"]:.2e}_file_{args["file_offset"]}', format='png')
+    # plt.savefig(f'../figures/week6/error_eigen_spectrogram/error_norm_ny{header_dict["ny"]:.2e}_file_{args["file_offset"]}', format='png')
     
     # print('perturb_time_pos_list', perturb_time_pos_list)
     
