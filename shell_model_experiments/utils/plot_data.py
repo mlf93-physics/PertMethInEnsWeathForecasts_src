@@ -134,9 +134,13 @@ def plot_inviscid_quantities_per_shell(time, u_store, header_dict, ax=None, omit
 
         perturb_file_names = list(Path(args['path'], args['perturb_folder']).
             glob('*.csv'))
+
         
         pert_u_stores, perturb_time_pos_list, perturb_time_pos_list_legend, header_dict =\
             import_perturbation_velocities(args)
+
+        print('perturb_time_pos_list', perturb_time_pos_list)
+        print('perturb_time_pos_list_legend', perturb_time_pos_list_legend)
 
         index = []
         header_dicts = []
@@ -144,7 +148,10 @@ def plot_inviscid_quantities_per_shell(time, u_store, header_dict, ax=None, omit
             header_dicts.append(import_header(file_name=file_name))
             index.append(header_dicts[-1]['perturb_pos'])
 
-        for ifile, idx in enumerate(np.argsort(index)):
+        header_dicts = [header_dicts[i] for _, i in enumerate(np.argsort(index))]
+        index = [index[i] for _, i in enumerate(np.argsort(index))]
+        
+        for idx in range(len(index)):
 
             point_plot = plt.plot(np.ones(n_k_vec)*header_dicts[idx]['perturb_pos']/sample_rate*dt,
                 energy_vs_time[int(header_dicts[idx]['perturb_pos'])], 'o')
@@ -154,14 +161,14 @@ def plot_inviscid_quantities_per_shell(time, u_store, header_dict, ax=None, omit
                 dtype=np.float64, endpoint=False)
             
             perturbation_energy_vs_time = np.cumsum(((
-                pert_u_stores[ifile] + u_store[int(header_dicts[idx]['perturb_pos']):
+                pert_u_stores[idx] + u_store[int(header_dicts[idx]['perturb_pos']):
                 int(header_dicts[idx]['perturb_pos']) + int(header_dicts[idx]['N_data']), :]) *
-                np.conj(pert_u_stores[ifile] + u_store[int(header_dicts[idx]['perturb_pos']):
+                np.conj(pert_u_stores[idx] + u_store[int(header_dicts[idx]['perturb_pos']):
                 int(header_dicts[idx]['perturb_pos']) + int(header_dicts[idx]['N_data']), :])).real, axis=1)
-            ax.plot(time_array + perturb_time_pos_list[idx],
+            ax.plot(time_array + perturb_time_pos_list[idx]/sample_rate*dt,
                 perturbation_energy_vs_time, color=point_plot[0].get_color())
             
-            if ifile + 1 >= args['n_files'] and args['n_files'] > 0:
+            if idx + 1 >= args['n_files'] and args['n_files'] > 0:
                 break
 
 def plot_eddies():
