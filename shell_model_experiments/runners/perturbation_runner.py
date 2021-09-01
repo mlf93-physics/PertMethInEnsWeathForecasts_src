@@ -1,15 +1,18 @@
 import os
+import sys
+
+sys.path.append("..")
 from math import log10
 import argparse
 from pathlib import Path
 import numpy as np
 import multiprocessing
 from pyinstrument import Profiler
-from sabra_model.sabra_model import run_model
-from params.params import *
-from utils.save_data_funcs import save_data, save_perturb_info
-from utils.import_data_funcs import import_start_u_profiles
-from lyaponov.lyaponov_exp_estimator import (
+from shell_model_experiments.sabra_model.sabra_model import run_model
+from shell_model_experiments.params.params import *
+from shell_model_experiments.utils.save_data_funcs import save_data, save_perturb_info
+from shell_model_experiments.utils.import_data_funcs import import_start_u_profiles
+from shell_model_experiments.lyaponov.lyaponov_exp_estimator import (
     find_eigenvector_for_perturbation,
     calculate_perturbations,
 )
