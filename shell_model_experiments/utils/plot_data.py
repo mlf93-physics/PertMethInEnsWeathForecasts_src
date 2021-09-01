@@ -157,8 +157,8 @@ def plot_inviscid_quantities_per_shell(time, u_store, header_dict, ax=None, omit
                 energy_vs_time[int(header_dicts[idx]['perturb_pos'])], 'o')
         
             time_array = np.linspace(0, header_dicts[idx]['time'],
-                int(header_dicts[idx]['time']*sample_rate/dt),
-                dtype=np.float64, endpoint=False)
+                int(header_dicts[idx]['time']*sample_rate/dt) + args["endpoint"]*1,
+                dtype=np.float64, endpoint=args["endpoint"])
             
             perturbation_energy_vs_time = np.cumsum(((
                 pert_u_stores[idx] + u_store[int(header_dicts[idx]['perturb_pos']):
@@ -820,6 +820,7 @@ if __name__ == "__main__":
     perturb_parser.add_argument("--file_offset", default=0, type=int)
     perturb_parser.add_argument("--specific_files", nargs='+', default=None, type=int)
     perturb_parser.add_argument("--combinations", action='store_true')
+    perturb_parser.add_argument("--endpoint", action='store_true')
     # eigen_mode_parser = subparsers.add_parser("eigen_mode_plot", help=
     #     'Arguments needed for plotting 3D eigenmode analysis.')
     arg_parser.add_argument("--burn_in_time",
