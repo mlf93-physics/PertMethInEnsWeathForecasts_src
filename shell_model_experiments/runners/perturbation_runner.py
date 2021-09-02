@@ -10,14 +10,19 @@ import multiprocessing
 from pyinstrument import Profiler
 from shell_model_experiments.sabra_model.sabra_model import run_model
 from shell_model_experiments.params.params import *
-from shell_model_experiments.utils.save_data_funcs import save_data, save_perturb_info
+from shell_model_experiments.utils.save_data_funcs import (
+    save_data,
+    save_perturb_info,
+    save_lorentz_block_data,
+)
 from shell_model_experiments.utils.import_data_funcs import import_start_u_profiles
 from shell_model_experiments.lyaponov.lyaponov_exp_estimator import (
     find_eigenvector_for_perturbation,
     calculate_perturbations,
 )
 from shell_model_experiments.utils.util_funcs import adjust_start_times_with_offset
-
+from shell_model_experiments.params.experiment_licences import Experiments as EXP
+from shell_model_experiments.config import *
 
 profiler = Profiler()
 
@@ -42,13 +47,23 @@ def perturbation_runner(
         args["ny"],
         args["forcing"],
     )
-    save_data(
-        data_out,
-        subfolder=Path(args["path"]).name,
-        prefix=f"perturb{perturb_count}_",
-        perturb_position=perturb_positions[run_count // args["n_runs_per_profile"]],
-        args=args,
-    )
+
+    if LICENCE == EXP.NORMAL_PERTURBATION:
+        save_data(
+            data_out,
+            subfolder=Path(args["path"]).name,
+            prefix=f"perturb{perturb_count}_",
+            perturb_position=perturb_positions[run_count // args["n_runs_per_profile"]],
+            args=args,
+        )
+    elif LICENCE == EXP.LORENTZ_BLOCK:
+        save_lorentz_block_data(
+            data_out,
+            subfolder=Path(args["path"]).name,
+            prefix=f"perturb{perturb_count}_",
+            perturb_position=perturb_positions[run_count // args["n_runs_per_profile"]],
+            args=args,
+        )
 
 
 def main(args=None):

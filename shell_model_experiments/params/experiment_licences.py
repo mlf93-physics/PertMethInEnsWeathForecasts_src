@@ -1,0 +1,5 @@
+class Experiments:
+    NORMAL_PERTURBATION = 1
+    LORENTZ_BLOCK = 2
+    BREEDING_VECTORS = 3
+    SINGULAR_VECTORS = 4
