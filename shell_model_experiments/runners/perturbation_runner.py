@@ -16,6 +16,7 @@ from shell_model_experiments.lyaponov.lyaponov_exp_estimator import (
     find_eigenvector_for_perturbation,
     calculate_perturbations,
 )
+from shell_model_experiments.utils.util_funcs import adjust_start_times_with_offset
 
 
 profiler = Profiler()
@@ -207,30 +208,7 @@ if __name__ == "__main__":
 
     args["ref_run"] = False
 
-    if args["start_time"] is not None:
-        if args["n_profiles"] > 1 and args["start_time_offset"] is None:
-            np.testing.assert_equal(
-                len(args["start_time"]),
-                args["n_profiles"],
-                "The number of start times do not equal the number of"
-                + " requested profiles.",
-            )
-        elif args["n_profiles"] > 1 and args["start_time_offset"] is not None:
-            np.testing.assert_equal(
-                len(args["start_time"]), 1, "Too many start times given"
-            )
-            print(
-                "Determining starttimes from single starttime value and the"
-                + " start_time_offset parameter"
-            )
-            args["start_time"] = [
-                args["start_time"][0] + args["start_time_offset"] * i
-                for i in range(args["n_profiles"])
-            ]
-        else:
-            np.testing.assert_equal(
-                len(args["start_time"]), 1, "Too many start times given"
-            )
+    args = adjust_start_times_with_offset(args)
 
     # Set seed if wished
     if args["seed_mode"]:

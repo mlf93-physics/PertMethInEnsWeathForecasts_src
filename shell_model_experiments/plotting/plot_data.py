@@ -7,7 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from math import floor, ceil, sqrt
 from shell_model_experiments.params.params import *
-from import_data_funcs import (
+from shell_model_experiments.utils.import_data_funcs import (
     import_data,
     import_header,
     import_ref_data,

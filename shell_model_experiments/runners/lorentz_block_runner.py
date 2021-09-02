@@ -11,10 +11,33 @@ from shell_model_experiments.sabra_model.sabra_model import run_model
 from shell_model_experiments.params.params import *
 from shell_model_experiments.utils.save_data_funcs import save_data, save_perturb_info
 from shell_model_experiments.utils.import_data_funcs import import_start_u_profiles
+from shell_model_experiments.utils.util_funcs import adjust_start_times_with_offset
 from perturbation_runner import main as perturbation_main
 
 
 def main(args):
+    day_offset = 1 / 8
+    start_time_analysis1 = 10
+    # # Make analysis forecasts
+    args["time_to_run"] = 1.5
+    args["start_time"] = [start_time_analysis1]
+    args["start_time_offset"] = day_offset
+    args["endpoint"] = True
+    args["n_profiles"] = 8
+    args["n_runs_per_profile"] = 1
+    args["perturb_folder"] = "lorentz_block_experiment/analysis_forecasts"
+
+    args = adjust_start_times_with_offset(args)
+
+    perturbation_main(args)
+
+    # Make forecast 1
+    args["start_time"] = [start_time_analysis1 - day_offset]
+    args["time_to_run"] = 1.5
+    args["endpoint"] = True
+    args["n_profiles"] = 1
+    args["n_runs_per_profile"] = 4
+    args["perturb_folder"] = "lorentz_block_experiment/forecasts"
     perturbation_main(args)
 
 
@@ -24,7 +47,7 @@ if __name__ == "__main__":
     arg_parser.add_argument("--source", nargs="+", type=str)
     arg_parser.add_argument("--path", nargs="?", type=str)
     arg_parser.add_argument(
-        "--perturb_folder", nargs="?", default=None, required=True, type=str
+        "--perturb_folder", nargs="?", default=None, required=False, type=str
     )
     arg_parser.add_argument("--time_to_run", default=0.1, type=float)
     arg_parser.add_argument("--burn_in_time", default=0.0, type=float)
@@ -41,31 +64,6 @@ if __name__ == "__main__":
     args = vars(arg_parser.parse_args())
 
     args["ref_run"] = False
-
-    if args["start_time"] is not None:
-        if args["n_profiles"] > 1 and args["start_time_offset"] is None:
-            np.testing.assert_equal(
-                len(args["start_time"]),
-                args["n_profiles"],
-                "The number of start times do not equal the number of"
-                + " requested profiles.",
-            )
-        elif args["n_profiles"] > 1 and args["start_time_offset"] is not None:
-            np.testing.assert_equal(
-                len(args["start_time"]), 1, "Too many start times given"
-            )
-            print(
-                "Determining starttimes from single starttime value and the"
-                + " start_time_offset parameter"
-            )
-            args["start_time"] = [
-                args["start_time"][0] + args["start_time_offset"] * i
-                for i in range(args["n_profiles"])
-            ]
-        else:
-            np.testing.assert_equal(
-                len(args["start_time"]), 1, "Too many start times given"
-            )
 
     # Set seed if wished
     if args["seed_mode"]:
