@@ -181,9 +181,6 @@ def plot_inviscid_quantities_per_shell(
             header_dict,
         ) = import_perturbation_velocities(args)
 
-        print("perturb_time_pos_list", perturb_time_pos_list)
-        print("perturb_time_pos_list_legend", perturb_time_pos_list_legend)
-
         index = []
         header_dicts = []
         for ifile, file_name in enumerate(perturb_file_names):
