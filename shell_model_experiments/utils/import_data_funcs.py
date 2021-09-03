@@ -1,5 +1,7 @@
 from pathlib import Path
+import re
 import numpy as np
+from numpy.random import sample
 from shell_model_experiments.utils.util_funcs import (
     match_start_positions_to_ref_file,
     get_sorted_ref_record_names,
@@ -19,12 +21,15 @@ def import_header(folder="", file_name=None):
             header += (
                 file.readline().rstrip().lstrip().strip("#").strip().replace(" ", "")
             )
-        header = header.split(",")
+        # Split only on "," if not inside []
+        header = re.split(r",(?![^\[]*\])", header)
     # print('header', header)
     header_dict = {}
     for item in header:
         splitted_item = item.split("=")
         if splitted_item[0] == "f":
+            header_dict[splitted_item[0]] = np.complex(splitted_item[1])
+        elif splitted_item[0] == "forcing":
             header_dict[splitted_item[0]] = np.complex(splitted_item[1])
         elif splitted_item[1] == "None":
             header_dict[splitted_item[0]] = None
@@ -205,7 +210,12 @@ def import_perturbation_velocities(args=None):
             counter += 1
 
         # Calculate error array
+        print(
+            type(perturb_data_in[:, 1:] - ref_data_in[:, 1:]),
+            (perturb_data_in[:, 1:] - ref_data_in[:, 1:]).dtype,
+        )
         u_stores.append(perturb_data_in[:, 1:] - ref_data_in[:, 1:])
+        # u_stores.append(perturb_data_in)
 
         if args["n_files"] is not None and args["n_files"] >= 0:
             if iperturb_file + 1 - args["file_offset"] >= args["n_files"]:
@@ -322,3 +332,131 @@ def import_start_u_profiles(args=None):
             counter += 1
 
     return u_init_profiles, positions + burn_in * args["burn_in_lines"], ref_header_dict
+
+
+def import_lorentz_block_perturbations(args=None):
+
+    lorentz_block_stores = []
+
+    if args["path"] is None:
+        raise ValueError("No path specified")
+
+    # Check if ref path exists
+    ref_file_path = Path(args["path"], "ref_data")
+
+    # Get ref info text file
+    ref_header_path = list(Path(ref_file_path).glob("*.txt"))[0]
+    # Import header info
+    ref_header_dict = import_header(file_name=ref_header_path)
+
+    perturb_file_names = list(Path(args["path"], args["perturb_folder"]).glob("*.csv"))
+    perturb_time_pos_list_legend = []
+    perturb_time_pos_list = []
+
+    for perturb_file in perturb_file_names:
+        # Import perturbation header info
+        perturb_header_dict = import_header(file_name=perturb_file)
+
+        perturb_time_pos_list.append(int(perturb_header_dict["perturb_pos"]))
+        perturb_time_pos_list_legend.append(
+            f'Start time: {perturb_header_dict["perturb_pos"]/sample_rate*dt:.3f}s'
+        )
+
+    ascending_perturb_pos_index = np.argsort(perturb_time_pos_list)
+    perturb_time_pos_list = np.array(
+        [perturb_time_pos_list[i] for i in ascending_perturb_pos_index]
+    )
+    perturb_time_pos_list_legend = np.array(
+        [perturb_time_pos_list_legend[i] for i in ascending_perturb_pos_index]
+    )
+
+    # Match the positions to the relevant ref files
+    ref_file_match = match_start_positions_to_ref_file(
+        args=args, header_dict=ref_header_dict, positions=perturb_time_pos_list
+    )
+
+    # Get sorted file paths
+    ref_record_names_sorted = get_sorted_ref_record_names(args=args)
+
+    ref_file_counter = 0
+    perturb_index = 0
+
+    for iperturb_file, perturb_file_name in enumerate(
+        perturb_file_names[i] for i in ascending_perturb_pos_index
+    ):
+        # print("perturb_file_name", perturb_file_name)
+
+        ref_file_match_keys_array = np.array(list(ref_file_match.keys()))
+        # sum_pert_files = sum(
+        #     [
+        #         len(ref_file_match[ref_file_index])
+        #         for ref_file_index in ref_file_match_keys_array[
+        #             : (ref_file_counter + 1)
+        #         ]
+        #     ]
+        # )
+
+        # if iperturb_file + 1 > sum_pert_files:
+        #     ref_file_counter += 1
+        #     perturb_index = 0
+
+        # if iperturb_file < args["file_offset"]:
+        #     perturb_index += 1
+        #     continue
+
+        perturb_data_in, perturb_header_dict = import_data(perturb_file_name)
+        # print("perturb_data_in time", perturb_data_in[:, 0])
+
+        perturb_data_in_shape = perturb_data_in.shape
+        num_blocks = perturb_data_in_shape[0]
+        ref_data_in = np.zeros(perturb_data_in_shape, dtype=np.complex128)
+
+        # Import reference u vectors
+        for j in range(num_blocks):
+            skip_lines = (
+                ref_file_match[ref_file_match_keys_array[ref_file_counter]][
+                    perturb_index
+                ]
+                + int(perturb_header_dict["start_time_offset"] * sample_rate / dt)
+                * (j + 1)
+                + 1
+            )
+            # print(
+            #     "ref_file_match",
+            #     ref_file_match[ref_file_match_keys_array[ref_file_counter]][
+            #         perturb_index
+            #     ],
+            #     "added index",
+            #     int(perturb_header_dict["start_time_offset"] * sample_rate / dt)
+            #     * (j + 1),
+            # )
+            # print("skip_lines", skip_lines)
+
+            temp_ref_data_in, ref_header_dict = import_data(
+                ref_record_names_sorted[ref_file_match_keys_array[ref_file_counter]],
+                skip_lines=skip_lines,
+                max_rows=1,
+            )
+
+            ref_data_in[j, :] = temp_ref_data_in
+
+        # Calculate error array
+        print(
+            type(perturb_data_in[:, 1:] - ref_data_in[:, 1:]),
+            (perturb_data_in[:, 1:] - ref_data_in[:, 1:]).dtype,
+        )
+        lorentz_block_stores.append(perturb_data_in[:, 1:] - ref_data_in[:, 1:])
+        # lorentz_block_stores.append(perturb_data_in)
+
+        if args["n_files"] is not None and args["n_files"] >= 0:
+            if iperturb_file + 1 - args["file_offset"] >= args["n_files"]:
+                break
+
+        perturb_index += 1
+
+    return (
+        lorentz_block_stores,
+        perturb_time_pos_list,
+        perturb_time_pos_list_legend,
+        perturb_header_dict,
+    )

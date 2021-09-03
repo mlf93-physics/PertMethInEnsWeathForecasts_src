@@ -51,7 +51,6 @@ def perturbation_runner(
     if LICENCE == EXP.NORMAL_PERTURBATION:
         save_data(
             data_out,
-            subfolder=Path(args["path"]).name,
             prefix=f"perturb{perturb_count}_",
             perturb_position=perturb_positions[run_count // args["n_runs_per_profile"]],
             args=args,
@@ -59,8 +58,7 @@ def perturbation_runner(
     elif LICENCE == EXP.LORENTZ_BLOCK:
         save_lorentz_block_data(
             data_out,
-            subfolder=Path(args["path"]).name,
-            prefix=f"perturb{perturb_count}_",
+            prefix=f"lorentz{perturb_count}_",
             perturb_position=perturb_positions[run_count // args["n_runs_per_profile"]],
             args=args,
         )

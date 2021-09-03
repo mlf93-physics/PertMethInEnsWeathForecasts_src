@@ -1,44 +1,58 @@
 import os
+from shell_model_experiments.config import LICENCE
 import numpy as np
 from pathlib import Path
 from shell_model_experiments.params.params import *
 
 
-def generate_dir(expected_name, subfolder="", args=None):
+def generate_dir(expected_path, subfolder="", args=None):
 
     if len(subfolder) == 0:
-        expected_path = f"{expected_name}"
-
         # See if folder is present
         dir_exists = os.path.isdir(expected_path)
 
         if not dir_exists:
-            os.mkdir(expected_path)
+            os.makedirs(expected_path)
 
-        subfolder = expected_name
+        subfolder = expected_path
     else:
         # Check if path exists
-        expected_path = f"./data/{subfolder}"
+        expected_path = f"{expected_path}{subfolder}"
         dir_exists = os.path.isdir(expected_path)
 
         if not dir_exists:
-            os.mkdir(expected_path)
+            os.makedirs(expected_path)
 
     return expected_path
 
 
-def generate_header(args, n_data, append_extra=""):
+def generate_header(args, n_data=0, append_extra=""):
     arg_str_list = [f"{key}={value}" for key, value in args.items()]
     arg_str = ", ".join(arg_str_list)
     header = (
         arg_str
         + f", n_f={n_forcing}, dt={dt}, epsilon={epsilon}, "
         + f"lambda={lambda_const}, N_data={n_data}, "
-        + f"sample_rate={sample_rate}"
+        + f"sample_rate={sample_rate}, "
+        + f"experiment={LICENCE}"
         + append_extra
     )
 
     return header
+
+
+def convert_arguments_to_string(args):
+    temp_time_to_run = "{:.2e}".format(args["time_to_run"])
+    temp_forcing = "{:.1f}".format(args["forcing"])
+    temp_ny = "{:.2e}".format(args["ny"])
+
+    arguments = {
+        "time_to_run": temp_time_to_run,
+        "forcing": temp_forcing,
+        "ny": temp_ny,
+    }
+
+    return arguments
 
 
 def save_data(data_out, subfolder="", prefix="", perturb_position=None, args=None):
@@ -50,19 +64,17 @@ def save_data(data_out, subfolder="", prefix="", perturb_position=None, args=Non
 
     # Prepare variables to be used when saving
     n_data = data_out.shape[0]
-    temp_time_to_run = "{:.2e}".format(args["time_to_run"])
-    temp_forcing = "{:.1f}".format(args["forcing"])
-    temp_ny = "{:.2e}".format(args["ny"])
+    temp_args = convert_arguments_to_string(args)
 
-    expected_name = (
-        f"data/ny{temp_ny}_t{temp_time_to_run}" + f"_n_f{n_forcing}_f{temp_forcing}"
-    )
-
-    expected_path = generate_dir(expected_name, subfolder=subfolder, args=args)
+    # expected_path = generate_dir(expected_name, subfolder=subfolder, args=args)
 
     if args["ref_run"]:
         subsubfolder = "ref_data"
         # Generate path if not existing
+        expected_path = (
+            f"data/ny{temp_args['ny']}_t{temp_args['time_to_run']}"
+            + f"_n_f{n_forcing}_f{temp_args['forcing']}"
+        )
         expected_path = generate_dir(expected_path + f"/{subsubfolder}", args=args)
 
         prefix = "ref_"
@@ -71,8 +83,8 @@ def save_data(data_out, subfolder="", prefix="", perturb_position=None, args=Non
 
         ref_data_info_name = (
             f"{expected_path}/ref_data_info_ny"
-            + f"{temp_ny}_t{temp_time_to_run}"
-            + f"_n_f{n_forcing}_f{temp_forcing}.txt"
+            + f"{temp_args['ny']}_t{temp_args['time_to_run']}"
+            + f"_n_f{n_forcing}_f{temp_args['forcing']}.txt"
         )
         arg_str_list = [f"{key}={value}" for key, value in args.items()]
         arg_str = ", ".join(arg_str_list)
@@ -86,23 +98,25 @@ def save_data(data_out, subfolder="", prefix="", perturb_position=None, args=Non
             file.write(info_line)
 
         ref_header_extra = f", rec_id={args['record_id']}"
-        header = generate_header(args, n_data, append_extra=ref_header_extra)
+        header = generate_header(args, n_data=n_data, append_extra=ref_header_extra)
 
     else:
         ref_filename_extra = ""
         subsubfolder = args["perturb_folder"]
 
         # Generate path if not existing
-        expected_path = generate_dir(expected_path + f"/{subsubfolder}", args=args)
+        expected_path = generate_dir(Path(args["path"], subsubfolder), args=args)
 
         if perturb_position is not None:
             perturb_header_extra = f", perturb_pos={int(perturb_position)}"
-            header = generate_header(args, n_data, append_extra=perturb_header_extra)
+            header = generate_header(
+                args, n_data=n_data, append_extra=perturb_header_extra
+            )
 
     # Save data
     np.savetxt(
-        f"{expected_path}/{prefix}udata_ny{temp_ny}_t{temp_time_to_run}"
-        + f"_n_f{n_forcing}_f{temp_forcing}{ref_filename_extra}.csv",
+        f"{expected_path}/{prefix}udata_ny{temp_args['ny']}_t{temp_args['time_to_run']}"
+        + f"_n_f{n_forcing}_f{temp_args['forcing']}{ref_filename_extra}.csv",
         data_out,
         delimiter=",",
         header=header,
@@ -112,16 +126,14 @@ def save_data(data_out, subfolder="", prefix="", perturb_position=None, args=Non
 def save_perturb_info(args=None):
     """Save info textfile about the perturbation runs"""
 
-    temp_time_to_run = "{:.2e}".format(args["time_to_run"])
-    temp_forcing = "{:.1f}".format(args["forcing"])
-    temp_ny = "{:.2e}".format(args["ny"])
+    temp_args = convert_arguments_to_string(args)
 
     # Prepare filename
     perturb_data_info_name = Path(
         args["path"],
         args["perturb_folder"],
-        f"perturb_data_info_ny{temp_ny}_t{temp_time_to_run}"
-        + f"_n_f{n_forcing}_f{temp_forcing}.txt",
+        f"perturb_data_info_ny{temp_args['ny']}_t{temp_args['time_to_run']}"
+        + f"_n_f{n_forcing}_f{temp_args['forcing']}.txt",
     )
 
     # Check if path already exists
@@ -149,8 +161,39 @@ def save_perturb_info(args=None):
 
 
 def save_lorentz_block_data(
-    data_out, subfolder="", prefix="", perturb_position=None, args=None
+    perturb_data, subfolder="", prefix="", perturb_position=None, args=None
 ):
-    expected_path = generate_dir()
-    n_data = 0
-    header = generate_header(args, n_data, append_extra=perturb_header_extra)
+    # Prepare data arrays
+    num_forecasts = int(args["time_to_run"] / args["start_time_offset"])
+
+    # Fill in data
+    # NOTE: [start + 1: end + 2: step]:
+    # start + 1: to offset index to save forecast for the given day and not last
+    # datapoint before
+    # end + 2: +1 for same reason as for start + 1. +1 to have endpoint true of slice
+    slice = np.s_[
+        int(args["start_time_offset"] * sample_rate / dt)
+        + 1 : int(args["start_time_offset"] * sample_rate / dt * num_forecasts)
+        + 2 : int(args["start_time_offset"] * sample_rate / dt)
+    ]
+    data_out = perturb_data[slice, :]
+
+    expected_path = generate_dir(
+        args["path"], subfolder=f"{args['perturb_folder']}", args=args
+    )
+    if perturb_position is not None:
+        lorentz_header_extra = f", perturb_pos={int(perturb_position)}"
+        header = generate_header(
+            args, n_data=num_forecasts, append_extra=lorentz_header_extra
+        )
+
+    temp_args = convert_arguments_to_string(args)
+
+    # Save data
+    np.savetxt(
+        f"{expected_path}/{prefix}udata_ny{temp_args['ny']}_t{temp_args['time_to_run']}"
+        + f"_n_f{n_forcing}_f{temp_args['forcing']}.csv",
+        data_out,
+        delimiter=",",
+        header=header,
+    )

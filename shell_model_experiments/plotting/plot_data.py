@@ -200,8 +200,8 @@ def plot_inviscid_quantities_per_shell(
 
             time_array = np.linspace(
                 0,
-                header_dicts[idx]["time"],
-                int(header_dicts[idx]["time"] * sample_rate / dt)
+                header_dicts[idx]["time_to_run"],
+                int(header_dicts[idx]["time_to_run"] * sample_rate / dt)
                 + args["endpoint"] * 1,
                 dtype=np.float64,
                 endpoint=args["endpoint"],
