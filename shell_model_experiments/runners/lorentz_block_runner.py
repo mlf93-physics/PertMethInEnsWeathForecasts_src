@@ -16,15 +16,15 @@ from perturbation_runner import main as perturbation_main
 
 
 def main(args):
-    day_offset = 1 / 8
+    day_offset = 1 / 16
     start_time_analysis1 = 10
-    parent_perturb_folder = "test_old4_lorentz_block_experiment"
+    parent_perturb_folder = "test_lorentz_block_parameters/lorentz_block1"
     # # Make analysis forecasts
-    args["time_to_run"] = 1.5
+    args["time_to_run"] = 1.0
     args["start_time"] = [start_time_analysis1]
     args["start_time_offset"] = day_offset
     args["endpoint"] = True
-    args["n_profiles"] = 8
+    args["n_profiles"] = 16
     args["n_runs_per_profile"] = 1
     args["perturb_folder"] = f"{parent_perturb_folder}/analysis_forecasts"
 
@@ -34,10 +34,10 @@ def main(args):
 
     # Make forecasts
     args["start_time"] = [start_time_analysis1 - day_offset]
-    args["time_to_run"] = 1.5 + day_offset
+    args["time_to_run"] = 1.0 + day_offset
     args["endpoint"] = True
     args["n_profiles"] = 1
-    args["n_runs_per_profile"] = 4
+    args["n_runs_per_profile"] = 16
     args["perturb_folder"] = f"{parent_perturb_folder}/forecasts"
     perturbation_main(args)
 
@@ -71,3 +71,6 @@ if __name__ == "__main__":
         np.random.seed(seed=1)
 
     main(args)
+
+    # Find DONE sound to play
+    # path = Path("/home/martin/Music/done_sound.mp3")
