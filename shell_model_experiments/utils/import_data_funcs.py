@@ -22,7 +22,7 @@ def import_header(folder="", file_name=None):
             )
         # Split only on "," if not inside []
         header = re.split(r",(?![^\[]*\])", header)
-    # print('header', header)
+
     header_dict = {}
     for item in header:
         splitted_item = item.split("=")
@@ -38,9 +38,48 @@ def import_header(folder="", file_name=None):
             except:
                 header_dict[splitted_item[0]] = splitted_item[1]
 
-    # print('header_dict', header_dict)
-
     return header_dict
+
+
+def imported_sorted_perturbation_info(args):
+    # Initiate lists
+    perturb_file_names = list(Path(args["path"], args["perturb_folder"]).glob("*.csv"))
+    perturb_time_pos_list_legend = []
+    perturb_time_pos_list = []
+    perturb_header_dicts = []
+
+    # Import headers and extract info
+    for perturb_file in perturb_file_names:
+        # Import perturbation header info
+        perturb_header_dict = import_header(file_name=perturb_file)
+
+        perturb_time_pos_list.append(int(perturb_header_dict["perturb_pos"]))
+        perturb_time_pos_list_legend.append(
+            f'Start time: {perturb_header_dict["perturb_pos"]/sample_rate*dt:.3f}s'
+        )
+        perturb_header_dicts.append(perturb_header_dict)
+
+    # Get sort index
+    ascending_perturb_pos_index = np.argsort(perturb_time_pos_list)
+
+    # Sort arrays/lists
+    perturb_time_pos_list = np.array(
+        [perturb_time_pos_list[i] for i in ascending_perturb_pos_index]
+    )
+    perturb_time_pos_list_legend = np.array(
+        [perturb_time_pos_list_legend[i] for i in ascending_perturb_pos_index]
+    )
+    perturb_header_dicts = [
+        perturb_header_dicts[i] for i in ascending_perturb_pos_index
+    ]
+    perturb_file_names = [perturb_file_names[i] for i in ascending_perturb_pos_index]
+
+    return (
+        perturb_time_pos_list,
+        perturb_time_pos_list_legend,
+        perturb_header_dicts,
+        perturb_file_names,
+    )
 
 
 def import_data(file_name, skip_lines=0, max_rows=None):
@@ -120,25 +159,12 @@ def import_perturbation_velocities(args=None):
     # Import header info
     ref_header_dict = import_header(file_name=ref_header_path)
 
-    perturb_file_names = list(Path(args["path"], args["perturb_folder"]).glob("*.csv"))
-    perturb_time_pos_list_legend = []
-    perturb_time_pos_list = []
-    for perturb_file in perturb_file_names:
-        # Import perturbation header info
-        perturb_header_dict = import_header(file_name=perturb_file)
-
-        perturb_time_pos_list.append(int(perturb_header_dict["perturb_pos"]))
-        perturb_time_pos_list_legend.append(
-            f'Start time: {perturb_header_dict["perturb_pos"]/sample_rate*dt:.3f}s'
-        )
-
-    ascending_perturb_pos_index = np.argsort(perturb_time_pos_list)
-    perturb_time_pos_list = np.array(
-        [perturb_time_pos_list[i] for i in ascending_perturb_pos_index]
-    )
-    perturb_time_pos_list_legend = np.array(
-        [perturb_time_pos_list_legend[i] for i in ascending_perturb_pos_index]
-    )
+    (
+        perturb_time_pos_list,
+        perturb_time_pos_list_legend,
+        perturb_header_dicts,
+        perturb_file_names,
+    ) = imported_sorted_perturbation_info(args)
 
     # Match the positions to the relevant ref files
     ref_file_match = match_start_positions_to_ref_file(
@@ -151,9 +177,7 @@ def import_perturbation_velocities(args=None):
     ref_file_counter = 0
     perturb_index = 0
 
-    for iperturb_file, perturb_file_name in enumerate(
-        perturb_file_names[i] for i in ascending_perturb_pos_index
-    ):
+    for iperturb_file, perturb_file_name in enumerate(perturb_file_names):
 
         ref_file_match_keys_array = np.array(list(ref_file_match.keys()))
         sum_pert_files = sum(
@@ -330,6 +354,9 @@ def import_start_u_profiles(args=None):
 
 
 def import_lorentz_block_perturbations(args=None):
+    """Imports perturbations from perturbation dir stored as lorentz perturbation
+    and match them up with reference data. Returns a lorentz block list which
+    contains perturbations rel. reference data."""
 
     lorentz_block_stores = []
 
@@ -344,27 +371,12 @@ def import_lorentz_block_perturbations(args=None):
     # Import header info
     ref_header_dict = import_header(file_name=ref_header_path)
 
-    perturb_file_names = list(Path(args["path"], args["perturb_folder"]).glob("*.csv"))
-    perturb_time_pos_list_legend = []
-    perturb_time_pos_list = []
-
-    for perturb_file in perturb_file_names:
-        # Import perturbation header info
-        perturb_header_dict = import_header(file_name=perturb_file)
-
-        perturb_time_pos_list.append(int(perturb_header_dict["perturb_pos"]))
-        perturb_time_pos_list_legend.append(
-            f'Start time: {perturb_header_dict["perturb_pos"]/sample_rate*dt:.3f}s'
-        )
-
-    ascending_perturb_pos_index = np.argsort(perturb_time_pos_list)
-
-    perturb_time_pos_list = np.array(
-        [perturb_time_pos_list[i] for i in ascending_perturb_pos_index]
-    )
-    perturb_time_pos_list_legend = np.array(
-        [perturb_time_pos_list_legend[i] for i in ascending_perturb_pos_index]
-    )
+    (
+        perturb_time_pos_list,
+        perturb_time_pos_list_legend,
+        perturb_header_dicts,
+        perturb_file_names,
+    ) = imported_sorted_perturbation_info(args)
 
     # Match the positions to the relevant ref files
     ref_file_match = match_start_positions_to_ref_file(
@@ -377,9 +389,7 @@ def import_lorentz_block_perturbations(args=None):
     ref_file_counter = 0
     perturb_index = 0
 
-    for iperturb_file, perturb_file_name in enumerate(
-        perturb_file_names[i] for i in ascending_perturb_pos_index
-    ):
+    for iperturb_file, perturb_file_name in enumerate(perturb_file_names):
 
         ref_file_match_keys_array = np.array(list(ref_file_match.keys()))
         sum_pert_files = sum(
@@ -437,5 +447,5 @@ def import_lorentz_block_perturbations(args=None):
         lorentz_block_stores,
         perturb_time_pos_list,
         perturb_time_pos_list_legend,
-        perturb_header_dict,
+        perturb_header_dicts,
     )

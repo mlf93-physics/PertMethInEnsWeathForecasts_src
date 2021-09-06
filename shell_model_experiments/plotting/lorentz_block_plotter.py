@@ -23,8 +23,8 @@ def plt_lorentz_block_from_full_perturbation_data(args):
 
         (
             forecast_pert_u_stores,
-            forecast_time_pos_list,
-            forecast_time_pos_list_legend,
+            _,
+            _,
             forecast_header_dict,
         ) = import_perturbation_velocities(args)
 
@@ -34,9 +34,9 @@ def plt_lorentz_block_from_full_perturbation_data(args):
 
         (
             ana_forecast_pert_u_stores,
-            ana_forecast_time_pos_list,
-            ana_forecast_time_pos_list_legend,
-            ana_forecast_header_dict,
+            _,
+            _,
+            _,
         ) = import_perturbation_velocities(args)
 
         num_ana_forecasts = len(ana_forecast_pert_u_stores)
@@ -85,9 +85,9 @@ def plt_lorentz_block(args):
 
         (
             forecast_pert_u_stores,
-            forecast_time_pos_list,
-            forecast_time_pos_list_legend,
-            forecast_header_dict,
+            _,
+            _,
+            _,
         ) = import_lorentz_block_perturbations(args)
 
         # Import analyses forecasts
@@ -96,9 +96,9 @@ def plt_lorentz_block(args):
 
         (
             ana_forecast_pert_u_stores,
-            ana_forecast_time_pos_list,
-            ana_forecast_time_pos_list_legend,
-            ana_forecast_header_dict,
+            _,
+            _,
+            _,
         ) = import_lorentz_block_perturbations(args)
 
         num_ana_forecasts = len(ana_forecast_pert_u_stores)
