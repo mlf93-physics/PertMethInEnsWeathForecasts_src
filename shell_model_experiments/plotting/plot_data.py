@@ -519,9 +519,9 @@ def plot_error_norm_vs_time(args=None):
     time_array = np.linspace(
         0,
         header_dict["time"],
-        int(header_dict["time"] * sample_rate / dt),
+        int(header_dict["time"] * sample_rate / dt) + args["endpoint"] * 1,
         dtype=np.float64,
-        endpoint=False,
+        endpoint=args["endpoint"],
     )
 
     # Pick out specified runs

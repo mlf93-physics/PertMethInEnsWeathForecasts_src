@@ -16,15 +16,15 @@ from perturbation_runner import main as perturbation_main
 
 
 def main(args):
-    day_offset = 0.01
+    day_offset = 1 / 8
     start_time_analysis1 = 10
-    parent_perturb_folder = "test3_lorentz_block_experiment"
+    parent_perturb_folder = "test_old4_lorentz_block_experiment"
     # # Make analysis forecasts
-    args["time_to_run"] = 0.1
+    args["time_to_run"] = 1.5
     args["start_time"] = [start_time_analysis1]
     args["start_time_offset"] = day_offset
     args["endpoint"] = True
-    args["n_profiles"] = 4
+    args["n_profiles"] = 8
     args["n_runs_per_profile"] = 1
     args["perturb_folder"] = f"{parent_perturb_folder}/analysis_forecasts"
 
@@ -34,7 +34,7 @@ def main(args):
 
     # Make forecasts
     args["start_time"] = [start_time_analysis1 - day_offset]
-    args["time_to_run"] = 0.1 + day_offset
+    args["time_to_run"] = 1.5 + day_offset
     args["endpoint"] = True
     args["n_profiles"] = 1
     args["n_runs_per_profile"] = 4

@@ -1,7 +1,6 @@
 from pathlib import Path
 import re
 import numpy as np
-from numpy.random import sample
 from shell_model_experiments.utils.util_funcs import (
     match_start_positions_to_ref_file,
     get_sorted_ref_record_names,
@@ -210,10 +209,6 @@ def import_perturbation_velocities(args=None):
             counter += 1
 
         # Calculate error array
-        print(
-            type(perturb_data_in[:, 1:] - ref_data_in[:, 1:]),
-            (perturb_data_in[:, 1:] - ref_data_in[:, 1:]).dtype,
-        )
         u_stores.append(perturb_data_in[:, 1:] - ref_data_in[:, 1:])
         # u_stores.append(perturb_data_in)
 
@@ -363,6 +358,7 @@ def import_lorentz_block_perturbations(args=None):
         )
 
     ascending_perturb_pos_index = np.argsort(perturb_time_pos_list)
+
     perturb_time_pos_list = np.array(
         [perturb_time_pos_list[i] for i in ascending_perturb_pos_index]
     )
@@ -384,28 +380,26 @@ def import_lorentz_block_perturbations(args=None):
     for iperturb_file, perturb_file_name in enumerate(
         perturb_file_names[i] for i in ascending_perturb_pos_index
     ):
-        # print("perturb_file_name", perturb_file_name)
 
         ref_file_match_keys_array = np.array(list(ref_file_match.keys()))
-        # sum_pert_files = sum(
-        #     [
-        #         len(ref_file_match[ref_file_index])
-        #         for ref_file_index in ref_file_match_keys_array[
-        #             : (ref_file_counter + 1)
-        #         ]
-        #     ]
-        # )
+        sum_pert_files = sum(
+            [
+                len(ref_file_match[ref_file_index])
+                for ref_file_index in ref_file_match_keys_array[
+                    : (ref_file_counter + 1)
+                ]
+            ]
+        )
 
-        # if iperturb_file + 1 > sum_pert_files:
-        #     ref_file_counter += 1
-        #     perturb_index = 0
+        if iperturb_file + 1 > sum_pert_files:
+            ref_file_counter += 1
+            perturb_index = 0
 
-        # if iperturb_file < args["file_offset"]:
-        #     perturb_index += 1
-        #     continue
+        if iperturb_file < args["file_offset"]:
+            perturb_index += 1
+            continue
 
         perturb_data_in, perturb_header_dict = import_data(perturb_file_name)
-        # print("perturb_data_in time", perturb_data_in[:, 0])
 
         perturb_data_in_shape = perturb_data_in.shape
         num_blocks = perturb_data_in_shape[0]
@@ -421,16 +415,6 @@ def import_lorentz_block_perturbations(args=None):
                 * (j + 1)
                 + 1
             )
-            # print(
-            #     "ref_file_match",
-            #     ref_file_match[ref_file_match_keys_array[ref_file_counter]][
-            #         perturb_index
-            #     ],
-            #     "added index",
-            #     int(perturb_header_dict["start_time_offset"] * sample_rate / dt)
-            #     * (j + 1),
-            # )
-            # print("skip_lines", skip_lines)
 
             temp_ref_data_in, ref_header_dict = import_data(
                 ref_record_names_sorted[ref_file_match_keys_array[ref_file_counter]],
@@ -441,12 +425,7 @@ def import_lorentz_block_perturbations(args=None):
             ref_data_in[j, :] = temp_ref_data_in
 
         # Calculate error array
-        print(
-            type(perturb_data_in[:, 1:] - ref_data_in[:, 1:]),
-            (perturb_data_in[:, 1:] - ref_data_in[:, 1:]).dtype,
-        )
         lorentz_block_stores.append(perturb_data_in[:, 1:] - ref_data_in[:, 1:])
-        # lorentz_block_stores.append(perturb_data_in)
 
         if args["n_files"] is not None and args["n_files"] >= 0:
             if iperturb_file + 1 - args["file_offset"] >= args["n_files"]:
