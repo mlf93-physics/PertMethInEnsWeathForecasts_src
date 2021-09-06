@@ -435,7 +435,7 @@ def plot_eddie_freqs(args=None):
     # file_names = ['../data/udata_ny0_t1.000000e+00_n_f0_f0_j0.csv']
 
     for ifile, file_name in enumerate(file_names):
-        data_in, header_dict = import_data(file_name, skip_lines=args["burn_in_lines"])
+        data_in, header_dict = import_data(file_name, start_line=args["burn_in_lines"])
         time = data_in[:, 0]
         u_store = data_in[:, 1:]
 
@@ -518,8 +518,8 @@ def plot_error_norm_vs_time(args=None):
     error_norm_vs_time = analyse_error_norm_vs_time(u_stores, args=args)
     time_array = np.linspace(
         0,
-        header_dict["time"],
-        int(header_dict["time"] * sample_rate / dt) + args["endpoint"] * 1,
+        header_dict["time_to_run"],
+        int(header_dict["time_to_run"] * sample_rate / dt) + args["endpoint"] * 1,
         dtype=np.float64,
         endpoint=args["endpoint"],
     )
@@ -538,9 +538,9 @@ def plot_error_norm_vs_time(args=None):
     axes.set_yscale("log")
     # axes.legend(perturb_time_pos_list_legend)
     axes.set_title(
-        f'Error vs time; f={header_dict["f"]}'
+        f'Error vs time; f={header_dict["forcing"]}'
         + f', $n_f$={int(header_dict["n_f"])}, $\\nu$={header_dict["ny"]:.2e}'
-        + f', time={header_dict["time"]} | Folder: {args["perturb_folder"]};'
+        + f', time={header_dict["time_to_run"]} | Folder: {args["perturb_folder"]};'
         + f'Files: {args["file_offset"]}-{args["file_offset"] + args["n_files"]}'
     )
 
@@ -551,8 +551,8 @@ def plot_error_norm_vs_time(args=None):
     # Plot energy below
     # ref_file_name = list(Path(args['path']).glob('*.csv'))
     # data_in, ref_header_dict = import_data(ref_file_name[0],
-    #     skip_lines=int(perturb_time_pos_list[0]*sample_rate/dt) + 1,
-    #     max_rows=int((perturb_time_pos_list[-1] - perturb_time_pos_list[0])*sample_rate/dt + header_dict['N_data']))
+    #     start_line=int(perturb_time_pos_list[0]*sample_rate/dt) + 1,
+    #     max_lines=int((perturb_time_pos_list[-1] - perturb_time_pos_list[0])*sample_rate/dt + header_dict['N_data']))
 
     # # print('perturb_time_pos_list[0]', perturb_time_pos_list[0])
     # plot_inviscid_quantities(data_in[:, 0] - perturb_time_pos_list[0],

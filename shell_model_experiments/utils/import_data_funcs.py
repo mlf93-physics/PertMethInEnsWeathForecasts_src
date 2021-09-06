@@ -1,4 +1,5 @@
 from pathlib import Path
+import itertools as it
 import re
 import numpy as np
 from shell_model_experiments.utils.util_funcs import (
@@ -82,19 +83,22 @@ def imported_sorted_perturbation_info(args):
     )
 
 
-def import_data(file_name, skip_lines=0, max_rows=None):
+def import_data(file_name, start_line=0, max_lines=None, step=1):
 
     # Import header
     header_dict = import_header(file_name=file_name)
 
+    stop_line = None if max_lines is None else start_line + max_lines
     # Import data
-    data_in = np.genfromtxt(
-        file_name,
-        dtype=np.complex128,
-        delimiter=",",
-        skip_header=skip_lines,
-        max_rows=max_rows,
-    )
+    with open(file_name) as file:
+        # Setup iterator
+        line_iterator = it.islice(
+            file,
+            start_line,
+            stop_line,
+            step,
+        )
+        data_in = np.genfromtxt(line_iterator, dtype=np.complex128, delimiter=",")
 
     return data_in, header_dict
 
@@ -221,8 +225,8 @@ def import_perturbation_velocities(args=None):
                 ref_record_names_sorted[
                     ref_file_match_keys_array[ref_file_counter] + counter
                 ],
-                skip_lines=skip_lines,
-                max_rows=max_rows,
+                start_line=skip_lines,
+                max_lines=max_rows,
             )
 
             ref_data_in = (
@@ -409,30 +413,26 @@ def import_lorentz_block_perturbations(args=None):
             perturb_index += 1
             continue
 
+        # Import perturbation data
         perturb_data_in, perturb_header_dict = import_data(perturb_file_name)
 
-        perturb_data_in_shape = perturb_data_in.shape
-        num_blocks = perturb_data_in_shape[0]
-        ref_data_in = np.zeros(perturb_data_in_shape, dtype=np.complex128)
+        # Prepare for reference import
+        num_blocks = perturb_data_in.shape[0]
+        perturb_offset = int(
+            perturb_header_dict["start_time_offset"] * sample_rate / dt
+        )
+        start_index = (
+            ref_file_match[ref_file_match_keys_array[ref_file_counter]][perturb_index]
+            + perturb_offset
+        ) + 1
 
         # Import reference u vectors
-        for j in range(num_blocks):
-            skip_lines = (
-                ref_file_match[ref_file_match_keys_array[ref_file_counter]][
-                    perturb_index
-                ]
-                + int(perturb_header_dict["start_time_offset"] * sample_rate / dt)
-                * (j + 1)
-                + 1
-            )
-
-            temp_ref_data_in, ref_header_dict = import_data(
-                ref_record_names_sorted[ref_file_match_keys_array[ref_file_counter]],
-                skip_lines=skip_lines,
-                max_rows=1,
-            )
-
-            ref_data_in[j, :] = temp_ref_data_in
+        ref_data_in, ref_header_dict = import_data(
+            ref_record_names_sorted[ref_file_match_keys_array[ref_file_counter]],
+            start_line=start_index,
+            max_lines=perturb_offset * (num_blocks),
+            step=perturb_offset,
+        )
 
         # Calculate error array
         lorentz_block_stores.append(perturb_data_in[:, 1:] - ref_data_in[:, 1:])

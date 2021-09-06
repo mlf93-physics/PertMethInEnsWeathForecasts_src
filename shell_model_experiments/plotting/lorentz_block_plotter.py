@@ -5,11 +5,14 @@ from pathlib import Path
 import argparse
 import numpy as np
 import matplotlib.pyplot as plt
+from pyinstrument import Profiler
 from shell_model_experiments.params.params import *
 from shell_model_experiments.utils.import_data_funcs import (
     import_perturbation_velocities,
     import_lorentz_block_perturbations,
 )
+
+profiler = Profiler()
 
 
 def plt_lorentz_block_from_full_perturbation_data(args):
@@ -140,7 +143,7 @@ if __name__ == "__main__":
     arg_parser.add_argument("--path", nargs="?", default=None, type=str)
     arg_parser.add_argument("--perturb_folder", nargs="?", default=None, type=str)
     arg_parser.add_argument("--n_files", default=-1, type=int)
-    arg_parser.add_argument("--plotter", default="old", type=str)
+    arg_parser.add_argument("--plotter", default="new", type=str)
 
     args = vars(arg_parser.parse_args())
 
@@ -148,7 +151,12 @@ if __name__ == "__main__":
     args["specific_ref_records"] = [0]
     args["file_offset"] = 0
 
+    profiler.start()
+
     if args["plotter"] == "old":
         plt_lorentz_block_from_full_perturbation_data(args)
     elif args["plotter"] == "new":
         plt_lorentz_block(args)
+
+    profiler.stop()
+    print(profiler.output_text())
