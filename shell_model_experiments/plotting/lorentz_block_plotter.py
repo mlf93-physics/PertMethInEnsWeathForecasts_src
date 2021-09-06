@@ -78,10 +78,63 @@ def plt_lorentz_block_from_full_perturbation_data(args):
 
 def plt_lorentz_block(args):
 
-    rmse_mean = lr_analysis.lorentz_block_analyser.analysis_executer(args)
+    (
+        rmse,
+        ana_forecast_header_dicts,
+    ) = lr_analysis.lorentz_block_analyser.analysis_executer(args)
 
-    plt.plot(rmse_mean.T)
-    plt.show()
+    num_blocks = len(ana_forecast_header_dicts)
+    num_forecasts = rmse.shape[0]
+
+    legend = [f"$\\Delta = {i + 1}$" for i in range(num_forecasts)]
+
+    # Make average plot...
+    if args["average"]:
+        # Get diagonal elements
+        legend.append("The black")
+
+        plt.plot(
+            rmse.T,
+            linewidth=1.5,
+        )
+
+        # Reset color cycle
+        plt.gca().set_prop_cycle(None)
+
+        plt.plot(rmse.T, ".", markersize=8, label="_nolegend_")
+
+        plt.xlabel("Day")
+        plt.ylabel("RMSE; $\\sqrt{\\overline{(u_{error})²}}$")
+        plt.title(f"Lorentz block average | $N_{{blocks}}$={num_blocks}")
+        # Plot diagonal, i.e. bold curve from [Lorentz 1982]
+        plt.plot(np.diagonal(rmse), "k-")
+        plt.plot(np.diagonal(rmse), "k.", markersize=8, linewidth=1.5)
+        plt.legend(legend)
+        # plt.yscale("log")
+    # or plot each rmse in its own axes
+    else:
+        num_subplot_cols = ceil(num_blocks / 2)
+        fig, axes = plt.subplots(
+            ncols=num_subplot_cols, nrows=num_subplot_cols, sharex=True
+        )
+        for i in range(rmse.shape[-1]):
+            line_plot = axes[i // num_subplot_cols, i % num_subplot_cols].plot(
+                rmse[:, :, i].T
+            )
+            axes[i // num_subplot_cols, i % num_subplot_cols].set_xlabel("Day")
+            axes[i // num_subplot_cols, i % num_subplot_cols].set_ylabel(
+                "RMSE; $\\sqrt{\\overline{(u_{error})²}}$"
+            )
+            axes[i // num_subplot_cols, i % num_subplot_cols].set_title(
+                f"Lorentz block {i+1} | $T_{{start}}$="
+                + f"{ana_forecast_header_dicts[i]['perturb_pos']*dt/sample_rate}"
+            )
+
+            if i == 0:
+                fig.legend(line_plot, legend, loc="center right")
+
+        # handles, labels = axes[0, 0].get_legend_handles_labels()
+        # print("handles", handles, "labels", labels)
 
 
 if __name__ == "__main__":
@@ -91,6 +144,7 @@ if __name__ == "__main__":
     arg_parser.add_argument("--perturb_folder", nargs="?", default=None, type=str)
     arg_parser.add_argument("--n_files", default=-1, type=int)
     arg_parser.add_argument("--experiment", nargs="?", default=None, type=str)
+    arg_parser.add_argument("--average", action="store_true")
 
     args = vars(arg_parser.parse_args())
 
@@ -104,3 +158,6 @@ if __name__ == "__main__":
 
     profiler.stop()
     print(profiler.output_text())
+
+    plt.tight_layout()
+    plt.show()

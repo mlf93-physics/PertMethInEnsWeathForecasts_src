@@ -377,11 +377,12 @@ def plots_related_to_energy(args=None):
 
     # Conserning ny
     # plot_energy_spectrum(u_data, header_dict, ax = axes[0], omit='ny')
-    # plot_inviscid_quantities(time, u_data, header_dict, ax = axes[0],
-    #     omit='ny', args=args)
-    plot_inviscid_quantities_per_shell(
-        time, u_data, header_dict, ax=axes[0], path=args["path"], args=args
+    plot_inviscid_quantities(
+        time, u_data, header_dict, ax=axes[0], omit="ny", args=args
     )
+    # plot_inviscid_quantities_per_shell(
+    #     time, u_data, header_dict, ax=axes[0], path=args["path"], args=args
+    # )
 
     # Plot Kolmogorov scaling
     # axes[0].plot(np.log2(k_vec_temp), k_vec_temp**(-2/3), 'k--')

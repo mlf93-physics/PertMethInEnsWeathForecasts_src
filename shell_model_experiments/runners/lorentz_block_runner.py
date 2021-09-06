@@ -5,8 +5,6 @@ sys.path.append("..")
 import argparse
 from pathlib import Path
 import numpy as np
-import multiprocessing
-from pyinstrument import Profiler
 from shell_model_experiments.sabra_model.sabra_model import run_model
 from shell_model_experiments.params.params import *
 from shell_model_experiments.utils.save_data_funcs import save_data, save_perturb_info
@@ -17,29 +15,32 @@ from perturbation_runner import main as perturbation_main
 
 def main(args):
     day_offset = 1 / 16
-    start_time_analysis1 = 10
-    parent_perturb_folder = "test_lorentz_block_parameters/lorentz_block1"
-    # # Make analysis forecasts
-    args["time_to_run"] = 1.0
-    args["start_time"] = [start_time_analysis1]
-    args["start_time_offset"] = day_offset
-    args["endpoint"] = True
-    args["n_profiles"] = 16
-    args["n_runs_per_profile"] = 1
-    args["perturb_folder"] = f"{parent_perturb_folder}/analysis_forecasts"
+    time_to_run = 1.0
 
-    args = adjust_start_times_with_offset(args)
+    for i in range(args["num_blocks"]):
+        start_time_analysis1 = 9.5 + args["block_step"] * i
+        parent_perturb_folder = f"test_lorentz_block_averaging/lorentz_block{i + 1}"
+        # # Make analysis forecasts
+        args["time_to_run"] = time_to_run
+        args["start_time"] = [start_time_analysis1]
+        args["start_time_offset"] = day_offset
+        args["endpoint"] = True
+        args["n_profiles"] = 8
+        args["n_runs_per_profile"] = 1
+        args["perturb_folder"] = f"{parent_perturb_folder}/analysis_forecasts"
 
-    perturbation_main(args)
+        args = adjust_start_times_with_offset(args)
 
-    # Make forecasts
-    args["start_time"] = [start_time_analysis1 - day_offset]
-    args["time_to_run"] = 1.0 + day_offset
-    args["endpoint"] = True
-    args["n_profiles"] = 1
-    args["n_runs_per_profile"] = 16
-    args["perturb_folder"] = f"{parent_perturb_folder}/forecasts"
-    perturbation_main(args)
+        perturbation_main(args)
+
+        # Make forecasts
+        args["start_time"] = [start_time_analysis1 - day_offset]
+        args["time_to_run"] = time_to_run + day_offset
+        args["endpoint"] = True
+        args["n_profiles"] = 1
+        args["n_runs_per_profile"] = 8
+        args["perturb_folder"] = f"{parent_perturb_folder}/forecasts"
+        perturbation_main(args)
 
 
 if __name__ == "__main__":
@@ -59,6 +60,8 @@ if __name__ == "__main__":
     arg_parser.add_argument("--eigen_perturb", action="store_true")
     arg_parser.add_argument("--seed_mode", default=False, type=bool)
     arg_parser.add_argument("--single_shell_perturb", default=None, type=int)
+    arg_parser.add_argument("--num_blocks", default=1, type=int)
+    arg_parser.add_argument("--block_step", default=0.2, type=float)
     arg_parser.add_argument("--start_time_offset", default=None, type=float)
     arg_parser.add_argument("--endpoint", action="store_true")
 
@@ -73,4 +76,7 @@ if __name__ == "__main__":
     main(args)
 
     # Find DONE sound to play
-    # path = Path("/home/martin/Music/done_sound.mp3")
+    done_file = Path("/home/martin/Music/done_sound.mp3")
+
+    # if os.path.isfile(done_file):
+    #     playsound(done_file)

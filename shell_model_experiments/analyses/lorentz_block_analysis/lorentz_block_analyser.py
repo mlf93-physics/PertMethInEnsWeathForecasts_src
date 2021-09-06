@@ -31,7 +31,7 @@ def calculate_rmse_of_block(args):
         ana_forecast_pert_u_stores,
         _,
         _,
-        _,
+        ana_forecast_pert_header_dicts,
     ) = import_lorentz_block_perturbations(args)
 
     num_ana_forecasts = len(ana_forecast_pert_u_stores)
@@ -41,7 +41,6 @@ def calculate_rmse_of_block(args):
     for fc in range(num_forecasts):
         for day in range(fc, num_ana_forecasts):
             if day == fc:
-                # print("fc ref", fc)
 
                 # NOTE: reference velocities are subtracted on import, so
                 # this is the forecast error directly
@@ -60,7 +59,7 @@ def calculate_rmse_of_block(args):
 
     rmse_array[np.where(rmse_array == 0)] = float("nan")
 
-    return rmse_array
+    return rmse_array, ana_forecast_pert_header_dicts[0]
 
 
 def analysis_executer(args):
@@ -73,18 +72,24 @@ def analysis_executer(args):
         block_dirs[i] for i in range(len(block_dirs)) if block_dirs[i].is_dir()
     ]
 
-    rmse_arrays = []
+    rmse = []
+    header_dicts = []
 
     for block in block_dirs:
         args["perturb_folder"] = str(pl.Path(block.parents[0].name, block.name))
 
-        rmse_arrays.append(calculate_rmse_of_block(args))
+        temp_rmse, ana_forecast_header_dict = calculate_rmse_of_block(args)
 
-    rmse_arrays = np.stack(rmse_arrays, axis=2)
+        # Append data and header dict
+        rmse.append(temp_rmse)
+        header_dicts.append(ana_forecast_header_dict)
 
-    rmse_mean = np.mean(rmse_arrays, axis=2)
+    rmse = np.stack(rmse, axis=2)
 
-    return rmse_mean
+    if args["average"]:
+        rmse = np.mean(rmse, axis=2)
+
+    return rmse, header_dicts
 
 
 if __name__ == "__main__":
