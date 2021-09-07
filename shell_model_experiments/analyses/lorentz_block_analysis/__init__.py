@@ -1,1 +1,2 @@
 from .lorentz_block_analyser import analysis_executer
+from .lorentz_block_analyser import get_block_dirs

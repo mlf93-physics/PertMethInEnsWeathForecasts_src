@@ -66,7 +66,7 @@ def calculate_rmse_of_block(args):
     return rmse_array, ana_forecast_pert_header_dicts[0]
 
 
-def analysis_executer(args):
+def get_block_dirs(args):
 
     experiment_dir = pl.Path(args["path"], args["experiment"])
     block_dirs = list(experiment_dir.glob("*"))
@@ -75,6 +75,13 @@ def analysis_executer(args):
     block_dirs = [
         block_dirs[i] for i in range(len(block_dirs)) if block_dirs[i].is_dir()
     ]
+
+    return block_dirs
+
+
+def analysis_executer(args):
+
+    block_dirs = get_block_dirs(args)
 
     rmse = []
     header_dicts = []

@@ -26,7 +26,7 @@ def main(args):
     else:
         exp_setup = exp_setup_file[args["exp_setup"]]
 
-    for i in range(len(exp_setup["start_times"])):
+    for i in range(1, len(exp_setup["start_times"])):
         parent_perturb_folder = f"{exp_setup['folder_name']}/lorentz_block{i + 1}"
 
         # Make analysis forecasts

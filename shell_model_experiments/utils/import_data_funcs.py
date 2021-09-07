@@ -127,7 +127,15 @@ def import_ref_data(args=None):
 
     for record in records_to_import:
         file_name = ref_record_names_sorted[record]
-        data_in, header_dict = import_data(file_name)
+        data_in, header_dict = import_data(
+            file_name,
+            start_line=int(args["ref_start_time"] * sample_rate / dt),
+            max_lines=int(
+                (args["ref_end_time"] - args["ref_start_time"]) * sample_rate / dt
+            )
+            if args["ref_end_time"] > args["ref_start_time"]
+            else None,
+        )
         time_concat.append(data_in[:, 0])
         u_data_concat.append(data_in[:, 1:])
 

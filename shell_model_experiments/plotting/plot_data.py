@@ -93,6 +93,8 @@ def plot_energy_spectrum(u_store, header_dict, ax=None, omit=None):
 def plot_inviscid_quantities(
     time, u_store, header_dict, ax=None, omit=None, args=None, zero_time_ref=None
 ):
+    if ax is None:
+        ax = plt.axes()
     # Plot total energy vs time
     energy_vs_time = np.sum(u_store * np.conj(u_store), axis=1).real
     ax.plot(time.real, energy_vs_time, "k")
@@ -109,29 +111,30 @@ def plot_inviscid_quantities(
         )
 
     if "perturb_folder" in args:
-        perturb_file_names = list(
-            Path(args["path"], args["perturb_folder"]).glob("*.csv")
-        )
-
-        # Import headers to get perturb positions
-        index = []
-        for ifile, file_name in enumerate(perturb_file_names):
-            header_dict = import_header(file_name=file_name)
-
-            if zero_time_ref:
-                index.append(header_dict["perturb_pos"] - zero_time_ref)
-            else:
-                index.append(header_dict["perturb_pos"])
-
-            if ifile + 1 >= args["n_files"] and args["n_files"] > 0:
-                break
-
-        for idx in sorted(index):
-            plt.plot(
-                idx / sample_rate * dt,
-                energy_vs_time[int(idx * sample_rate)],
-                marker="o",
+        if args["perturb_folder"] is not None:
+            perturb_file_names = list(
+                Path(args["path"], args["perturb_folder"]).glob("*.csv")
             )
+
+            # Import headers to get perturb positions
+            index = []
+            for ifile, file_name in enumerate(perturb_file_names):
+                header_dict = import_header(file_name=file_name)
+
+                if zero_time_ref:
+                    index.append(header_dict["perturb_pos"] - zero_time_ref)
+                else:
+                    index.append(header_dict["perturb_pos"])
+
+                if ifile + 1 >= args["n_files"] and args["n_files"] > 0:
+                    break
+
+            for idx in sorted(index):
+                plt.plot(
+                    idx / sample_rate * dt,
+                    energy_vs_time[int(idx * sample_rate)],
+                    marker="o",
+                )
 
 
 def plot_inviscid_quantities_per_shell(
@@ -1024,6 +1027,8 @@ if __name__ == "__main__":
     arg_parser.add_argument("--n_profiles", default=1, type=int)
     arg_parser.add_argument("--n_runs_per_profile", default=1, type=int)
     arg_parser.add_argument("--time_to_run", default=0.1, type=float)
+    arg_parser.add_argument("--ref_start_time", default=0, type=float)
+    arg_parser.add_argument("--ref_end_time", default=-1, type=float)
 
     args = vars(arg_parser.parse_args())
     print("args", args)

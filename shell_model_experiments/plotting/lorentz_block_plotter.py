@@ -3,6 +3,7 @@ import sys
 sys.path.append("..")
 import argparse
 import math
+import pathlib as pl
 import numpy as np
 import matplotlib.pyplot as plt
 from pyinstrument import Profiler
@@ -11,6 +12,8 @@ from shell_model_experiments.utils.import_data_funcs import (
     import_perturbation_velocities,
 )
 import shell_model_experiments.analyses.lorentz_block_analysis as lr_analysis
+import shell_model_experiments.plotting.plot_data as pl_data
+import shell_model_experiments.utils.import_data_funcs as imp_funcs
 
 profiler = Profiler()
 
@@ -142,6 +145,80 @@ def plt_lorentz_block(args):
         # print("handles", handles, "labels", labels)
 
 
+def plt_blocks_and_energy(args):
+
+    time, u_data, ref_header_dict = imp_funcs.import_ref_data(args=args)
+
+    block_dirs = lr_analysis.get_block_dirs(args)
+    num_blocks = len(block_dirs)
+    block_start_indices = np.zeros(num_blocks, dtype=np.int64)
+    block_end_indices = np.zeros(num_blocks, dtype=np.int64)
+    block_names = []
+
+    # Import one forecast header to get perturb positions
+    for i, block in enumerate(block_dirs):
+        # Get perturb_folder
+        args["perturb_folder"] = str(
+            pl.Path(block.parents[0].name, block.name, "forecasts")
+        )
+
+        # Get perturb file names
+        perturb_file_names = list(
+            pl.Path(args["path"], args["perturb_folder"]).glob("*.csv")
+        )
+        # Import header
+        header_dict = imp_funcs.import_header(file_name=perturb_file_names[0])
+
+        block_start_indices[i] = int(
+            header_dict["perturb_pos"]
+            + header_dict["start_time_offset"] * sample_rate / dt
+        )
+        block_end_indices[i] = int(
+            header_dict["perturb_pos"] + header_dict["time_to_run"] * sample_rate / dt
+        )
+        block_names.append(block.name)
+
+    sorted_index = np.argsort(block_start_indices)
+    block_start_indices = block_start_indices[sorted_index]
+    block_end_indices = block_end_indices[sorted_index]
+
+    # Setup axes
+    ax = plt.axes()
+    # Calculate energy
+    energy_vs_time = np.sum(u_data * np.conj(u_data), axis=1).real
+    mean_energy = np.mean(energy_vs_time)
+
+    for i in range(num_blocks):
+        time_array = np.linspace(
+            block_start_indices[i] * dt / sample_rate,
+            block_end_indices[i] * dt / sample_rate,
+            int(block_end_indices[i] - block_start_indices[i]) + 1,
+            endpoint=True,
+        )
+
+        ax.plot(
+            time_array,
+            energy_vs_time[
+                int(
+                    block_start_indices[i] - args["ref_start_time"] * sample_rate / dt
+                ) : int(
+                    block_end_indices[i] - args["ref_start_time"] * sample_rate / dt + 1
+                )
+            ],
+            zorder=15,
+            label=block_names[sorted_index[i]]
+            # + 1 / num_blocks * (i + 1) * mean_energy,
+        )
+
+    # Remove perturb_folder to not plot perturbation start positions
+    args["perturb_folder"] = None
+    pl_data.plot_inviscid_quantities(
+        time, u_data, ref_header_dict, ax=ax, omit="ny", args=args
+    )
+    plt.title("Lorentz block regions")
+    plt.legend()
+
+
 if __name__ == "__main__":
     # Define arguments
     arg_parser = argparse.ArgumentParser()
@@ -149,7 +226,10 @@ if __name__ == "__main__":
     arg_parser.add_argument("--perturb_folder", nargs="?", default=None, type=str)
     arg_parser.add_argument("--n_files", default=-1, type=int)
     arg_parser.add_argument("--experiment", nargs="?", default=None, type=str)
+    arg_parser.add_argument("--plot_type", nargs="?", default=None, type=str)
     arg_parser.add_argument("--average", action="store_true")
+    arg_parser.add_argument("--ref_start_time", default=0, type=float)
+    arg_parser.add_argument("--ref_end_time", default=-1, type=float)
 
     args = vars(arg_parser.parse_args())
 
@@ -157,12 +237,13 @@ if __name__ == "__main__":
     args["specific_ref_records"] = [0]
     args["file_offset"] = 0
 
-    profiler.start()
-
-    plt_lorentz_block(args)
-
-    profiler.stop()
-    print(profiler.output_text())
+    if args["plot_type"] == "blocks":
+        plt_lorentz_block(args)
+    elif args["plot_type"] == "blocks_and_energy":
+        plt_blocks_and_energy(args)
+    else:
+        raise ValueError("No valid plot type given as input argument")
+        exit()
 
     plt.tight_layout()
     plt.show()
