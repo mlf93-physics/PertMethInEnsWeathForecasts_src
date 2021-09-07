@@ -45,7 +45,9 @@ def calculate_rmse_of_block(args):
                 # NOTE: reference velocities are subtracted on import, so
                 # this is the forecast error directly
                 _error = forecast_pert_u_stores[fc][day, :]
-                rmse_array[fc, day] = np.sqrt(np.mean((_error * _error.conj()).real))
+                rmse_array[fc, day] = np.sqrt(
+                    np.sum((_error * _error.conj()).real) ** 2
+                )
 
             else:
                 # NOTE: to ana_forecast_pert_u_stores[fc][(day - fc - 1), :]:
@@ -55,7 +57,9 @@ def calculate_rmse_of_block(args):
                     forecast_pert_u_stores[fc][day, :]
                     - ana_forecast_pert_u_stores[fc][(day - fc - 1), :]
                 )
-                rmse_array[fc, day] = np.sqrt(np.mean((_error * _error.conj()).real))
+                rmse_array[fc, day] = np.sqrt(
+                    np.sum((_error * _error.conj()).real) ** 2
+                )
 
     rmse_array[np.where(rmse_array == 0)] = float("nan")
 

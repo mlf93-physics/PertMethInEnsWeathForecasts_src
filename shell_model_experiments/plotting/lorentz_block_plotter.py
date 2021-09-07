@@ -2,6 +2,7 @@ import sys
 
 sys.path.append("..")
 import argparse
+import math
 import numpy as np
 import matplotlib.pyplot as plt
 from pyinstrument import Profiler
@@ -113,10 +114,14 @@ def plt_lorentz_block(args):
         # plt.yscale("log")
     # or plot each rmse in its own axes
     else:
-        num_subplot_cols = ceil(num_blocks / 2)
+        num_subplot_cols = math.floor(num_blocks / 2) + 1
+        num_subplot_rows = math.floor(num_blocks / 2)
         fig, axes = plt.subplots(
-            ncols=num_subplot_cols, nrows=num_subplot_cols, sharex=True
+            ncols=num_subplot_cols, nrows=num_subplot_rows, sharex=True
         )
+        if len(axes.shape) == 1:
+            axes = np.reshape(axes, (1, num_subplot_cols))
+
         for i in range(rmse.shape[-1]):
             line_plot = axes[i // num_subplot_cols, i % num_subplot_cols].plot(
                 rmse[:, :, i].T

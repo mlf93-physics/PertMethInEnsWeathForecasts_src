@@ -1,0 +1,41 @@
+{
+    "DistinctPredictabilityRegimesLong": {
+        "folder_name": "lorentz_distinct_pred_regimes_long",
+        "day_offset": 0.0625,
+        "time_to_run": 1.0,
+        "n_analyses": 16,
+        "start_times": [
+            5.5,
+            10.2,
+            15.5,
+            18.5,
+            21.5,
+            23.7,
+            26
+        ]
+    },
+    "DistinctPredictabilityRegimesShort": {
+        "folder_name": "lorentz_distinct_pred_regimes_short",
+        "day_offset": 0.0625,
+        "time_to_run": 1.0,
+        "n_analyses": 16,
+        "start_times": [
+            7.65,
+            8.5,
+            11.2,
+            12.2,
+            13.2,
+            14.2,
+            25
+        ]
+    },
+    "TestRun": {
+        "folder_name": "testrun_lorentz_block",
+        "day_offset": 0.0625,
+        "time_to_run": 0.1,
+        "n_analyses": 2,
+        "start_times": [
+            10
+        ]
+    }
+}

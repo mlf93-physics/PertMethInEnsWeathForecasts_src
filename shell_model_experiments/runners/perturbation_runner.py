@@ -64,8 +64,30 @@ def perturbation_runner(
         )
 
 
+def prepare_run_times(args):
+
+    if LICENCE == EXP.NORMAL_PERTURBATION:
+        num_perturbations = args["n_runs_per_profile"] * args["n_profiles"]
+        times_to_run = np.ones(num_perturbations) * args["time_to_run"]
+        Nt_array = (times_to_run / dt).astype(np.int64)
+
+    elif LICENCE == EXP.LORENTZ_BLOCK:
+        num_perturbations = args["n_runs_per_profile"] * args["n_profiles"]
+
+        if len(args["start_time"]) > 1:
+            start_times = np.array(args["start_time"])
+        else:
+            start_times = np.ones(num_perturbations) * args["start_time"]
+
+        times_to_run = start_times[0] + args["time_to_run"] - start_times
+        Nt_array = (times_to_run / dt).astype(np.int64)
+
+    return times_to_run, Nt_array
+
+
 def main(args=None):
-    args["Nt"] = int(args["time_to_run"] / dt)
+
+    times_to_run, Nt_array = prepare_run_times(args)
     args["burn_in_lines"] = int(args["burn_in_time"] / dt * sample_rate)
 
     # Import start profiles
@@ -120,7 +142,7 @@ def main(args=None):
 
     # Prepare array for saving
     data_out = np.zeros(
-        (int(args["Nt"] * sample_rate) + args["endpoint"] * 1, n_k_vec + 1),
+        (int(np.max(Nt_array) * sample_rate) + args["endpoint"] * 1, n_k_vec + 1),
         dtype=np.complex128,
     )
 
@@ -145,6 +167,9 @@ def main(args=None):
     for j in range(args["n_runs_per_profile"] * args["n_profiles"] // cpu_count):
         for i in range(cpu_count):
             count = j * cpu_count + i
+
+            args["time_to_run"] = times_to_run[count]
+            args["Nt"] = Nt_array[count]
 
             processes.append(
                 multiprocessing.Process(
@@ -171,6 +196,9 @@ def main(args=None):
         count = (
             args["n_runs_per_profile"] * args["n_profiles"] // cpu_count
         ) * cpu_count + i
+
+        args["time_to_run"] = times_to_run[count]
+        args["Nt"] = Nt_array[count]
 
         processes.append(
             multiprocessing.Process(

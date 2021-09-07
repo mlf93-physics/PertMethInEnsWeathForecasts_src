@@ -100,6 +100,9 @@ def import_data(file_name, start_line=0, max_lines=None, step=1):
         )
         data_in = np.genfromtxt(line_iterator, dtype=np.complex128, delimiter=",")
 
+    if len(data_in.shape) == 1:
+        data_in = np.reshape(data_in, (1, data_in.size))
+
     return data_in, header_dict
 
 

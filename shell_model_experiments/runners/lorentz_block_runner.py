@@ -4,6 +4,7 @@ import sys
 sys.path.append("..")
 import argparse
 from pathlib import Path
+import json
 import numpy as np
 from shell_model_experiments.sabra_model.sabra_model import run_model
 from shell_model_experiments.params.params import *
@@ -14,18 +15,26 @@ from perturbation_runner import main as perturbation_main
 
 
 def main(args):
-    day_offset = 1 / 16
-    time_to_run = 1.0
+    with open(
+        "./params/experiment_setups/lorentz_block_experiment_setups.json", "r"
+    ) as file:
+        exp_setup_file = json.load(file)
 
-    for i in range(args["num_blocks"]):
-        start_time_analysis1 = 9.5 + args["block_step"] * i
-        parent_perturb_folder = f"test_lorentz_block_averaging/lorentz_block{i + 1}"
-        # # Make analysis forecasts
-        args["time_to_run"] = time_to_run
-        args["start_time"] = [start_time_analysis1]
-        args["start_time_offset"] = day_offset
+    if args["exp_setup"] is None:
+        raise ValueError("No experiment setup chosen")
+        exit()
+    else:
+        exp_setup = exp_setup_file[args["exp_setup"]]
+
+    for i in range(len(exp_setup["start_times"])):
+        parent_perturb_folder = f"{exp_setup['folder_name']}/lorentz_block{i + 1}"
+
+        # Make analysis forecasts
+        args["time_to_run"] = exp_setup["time_to_run"]
+        args["start_time"] = [exp_setup["start_times"][i]]
+        args["start_time_offset"] = exp_setup["day_offset"]
         args["endpoint"] = True
-        args["n_profiles"] = 8
+        args["n_profiles"] = exp_setup["n_analyses"]
         args["n_runs_per_profile"] = 1
         args["perturb_folder"] = f"{parent_perturb_folder}/analysis_forecasts"
 
@@ -34,11 +43,11 @@ def main(args):
         perturbation_main(args)
 
         # Make forecasts
-        args["start_time"] = [start_time_analysis1 - day_offset]
-        args["time_to_run"] = time_to_run + day_offset
+        args["start_time"] = [exp_setup["start_times"][i] - exp_setup["day_offset"]]
+        args["time_to_run"] = exp_setup["time_to_run"] + exp_setup["day_offset"]
         args["endpoint"] = True
         args["n_profiles"] = 1
-        args["n_runs_per_profile"] = 8
+        args["n_runs_per_profile"] = exp_setup["n_analyses"]
         args["perturb_folder"] = f"{parent_perturb_folder}/forecasts"
         perturbation_main(args)
 
@@ -60,10 +69,11 @@ if __name__ == "__main__":
     arg_parser.add_argument("--eigen_perturb", action="store_true")
     arg_parser.add_argument("--seed_mode", default=False, type=bool)
     arg_parser.add_argument("--single_shell_perturb", default=None, type=int)
-    arg_parser.add_argument("--num_blocks", default=1, type=int)
-    arg_parser.add_argument("--block_step", default=0.2, type=float)
+    # arg_parser.add_argument("--num_blocks", default=1, type=int)
+    # arg_parser.add_argument("--block_step", default=0.2, type=float)
     arg_parser.add_argument("--start_time_offset", default=None, type=float)
     arg_parser.add_argument("--endpoint", action="store_true")
+    arg_parser.add_argument("--exp_setup", default=None, type=str)
 
     args = vars(arg_parser.parse_args())
 
