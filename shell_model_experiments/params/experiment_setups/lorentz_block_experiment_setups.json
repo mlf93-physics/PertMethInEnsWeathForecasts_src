@@ -26,16 +26,33 @@
             12.2,
             13.2,
             14.2,
-            25
+            25,
+            30.5,
+            34,
+            37.5,
+            39.7,
+            41,
+            42.2,
+            43.4,
+            44.6,
+            47.8,
+            49,
+            50.1,
+            51.2,
+            54.2,
+            55.3,
+            56.4,
+            57.5,
+            58.6
         ]
     },
     "TestRun": {
         "folder_name": "testrun_lorentz_block",
         "day_offset": 0.0625,
-        "time_to_run": 0.1,
-        "n_analyses": 2,
+        "time_to_run": 0.5,
+        "n_analyses": 4,
         "start_times": [
-            10
+            40.5
         ]
     }
 }

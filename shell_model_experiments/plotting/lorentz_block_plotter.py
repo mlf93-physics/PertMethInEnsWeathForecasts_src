@@ -14,6 +14,7 @@ from shell_model_experiments.utils.import_data_funcs import (
 import shell_model_experiments.analyses.lorentz_block_analysis as lr_analysis
 import shell_model_experiments.plotting.plot_data as pl_data
 import shell_model_experiments.utils.import_data_funcs as imp_funcs
+import shell_model_experiments.utils.plot_utils as plt_utils
 
 profiler = Profiler()
 
@@ -90,12 +91,20 @@ def plt_lorentz_block(args):
     num_blocks = len(ana_forecast_header_dicts)
     num_forecasts = rmse.shape[0]
 
+    if num_blocks == 0:
+        raise ValueError(f"No blocks to plot. num_blocks = {num_blocks}")
+
     legend = [f"$\\Delta = {i + 1}$" for i in range(num_forecasts)]
+    # Get non-repeating colorcycle
+    cmap_list = plt_utils.get_non_repeating_colors(n_colors=num_forecasts)
 
     # Make average plot...
     if args["average"]:
         # Get diagonal elements
         legend.append("The black")
+        # Set colors
+        ax = plt.gca()
+        ax.set_prop_cycle("color", cmap_list)
 
         plt.plot(
             rmse.T,
@@ -103,12 +112,12 @@ def plt_lorentz_block(args):
         )
 
         # Reset color cycle
-        plt.gca().set_prop_cycle(None)
+        ax.set_prop_cycle("color", cmap_list)
 
         plt.plot(rmse.T, ".", markersize=8, label="_nolegend_")
 
-        plt.xlabel("Day")
-        plt.ylabel("RMSE; $\\sqrt{\\overline{(u_{error})²}}$")
+        plt.xlabel("Forecast day; $k$")
+        plt.ylabel("RMSE; $\\sqrt{E_{jk}²}$")
         plt.title(f"Lorentz block average | $N_{{blocks}}$={num_blocks}")
         # Plot diagonal, i.e. bold curve from [Lorentz 1982]
         plt.plot(np.diagonal(rmse), "k-")
@@ -118,31 +127,43 @@ def plt_lorentz_block(args):
     # or plot each rmse in its own axes
     else:
         num_subplot_cols = math.floor(num_blocks / 2) + 1
-        num_subplot_rows = math.floor(num_blocks / 2)
+        num_subplot_rows = math.ceil(num_blocks / num_subplot_cols)
         fig, axes = plt.subplots(
-            ncols=num_subplot_cols, nrows=num_subplot_rows, sharex=True
+            ncols=num_subplot_cols,
+            nrows=num_subplot_rows,
+            sharex=True,
+            sharey=args["sharey"],
         )
-        if len(axes.shape) == 1:
-            axes = np.reshape(axes, (1, num_subplot_cols))
+
+        # Catch if axes is one dimensional or not an array (if only one plot to make)
+        try:
+            if len(axes.shape) == 1:
+                axes = np.reshape(axes, (1, num_subplot_cols))
+        except AttributeError:
+            axes = np.reshape(np.array([axes]), (1, 1))
 
         for i in range(rmse.shape[-1]):
+            axes[i // num_subplot_cols, i % num_subplot_cols].set_prop_cycle(
+                "color", cmap_list
+            )
             line_plot = axes[i // num_subplot_cols, i % num_subplot_cols].plot(
                 rmse[:, :, i].T
             )
-            axes[i // num_subplot_cols, i % num_subplot_cols].set_xlabel("Day")
+            axes[i // num_subplot_cols, i % num_subplot_cols].set_xlabel(
+                "Forecast day; $k$"
+            )
             axes[i // num_subplot_cols, i % num_subplot_cols].set_ylabel(
-                "RMSE; $\\sqrt{\\overline{(u_{error})²}}$"
+                "RMSE; $\\sqrt{E_{jk}²}$"
             )
             axes[i // num_subplot_cols, i % num_subplot_cols].set_title(
                 f"Lorentz block {i+1} | $T_{{start}}$="
-                + f"{ana_forecast_header_dicts[i]['perturb_pos']*dt/sample_rate}"
+                + f"{ana_forecast_header_dicts[i]['perturb_pos']*dt/sample_rate:.1f}"
             )
 
             if i == 0:
                 fig.legend(line_plot, legend, loc="center right")
 
-        # handles, labels = axes[0, 0].get_legend_handles_labels()
-        # print("handles", handles, "labels", labels)
+        plt.subplots_adjust(right=0.9)
 
 
 def plt_blocks_and_energy(args):
@@ -228,8 +249,10 @@ if __name__ == "__main__":
     arg_parser.add_argument("--experiment", nargs="?", default=None, type=str)
     arg_parser.add_argument("--plot_type", nargs="?", default=None, type=str)
     arg_parser.add_argument("--average", action="store_true")
+    arg_parser.add_argument("--sharey", action="store_true")
     arg_parser.add_argument("--ref_start_time", default=0, type=float)
     arg_parser.add_argument("--ref_end_time", default=-1, type=float)
+    arg_parser.add_argument("--num_blocks", default=np.inf, type=int)
 
     args = vars(arg_parser.parse_args())
 

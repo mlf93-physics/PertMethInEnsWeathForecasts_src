@@ -1,3 +1,5 @@
+import os
+import pathlib as pl
 from collections import OrderedDict
 import numpy as np
 from pathlib import Path
@@ -67,3 +69,24 @@ def adjust_start_times_with_offset(args):
             )
 
     return args
+
+
+def count_existing_files_or_dirs(search_path="", search_pattern="*.csv"):
+    """Counts the number of files or folder of a specific kind, and returns the
+    the count. To be used to store numbered folders/files in a numbered order."""
+
+    search_path = pl.Path(search_path)
+
+    # Check if path exists
+    seach_path_exists = os.path.isdir(search_path)
+    if seach_path_exists:
+        if search_pattern != "/":
+            n_files = len(list(search_path.glob(search_pattern)))
+        else:
+            dirs = list(search_path.glob("*"))
+            dirs = [dirs[i] for i in range(len(dirs)) if os.path.isdir(dirs[i])]
+            n_files = len(dirs)
+    else:
+        n_files = 0
+
+    return n_files

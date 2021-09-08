@@ -368,12 +368,21 @@ def import_start_u_profiles(args=None):
     return u_init_profiles, positions + burn_in * args["burn_in_lines"], ref_header_dict
 
 
-def import_lorentz_block_perturbations(args=None):
+def import_lorentz_block_perturbations(args=None, rel_ref=True):
     """Imports perturbations from perturbation dir stored as lorentz perturbation
     and match them up with reference data. Returns a lorentz block list which
-    contains perturbations rel. reference data."""
+    contains perturbations rel. reference data.
+
+    Parameters
+    ----------
+    rel_ref : bool
+        If perturbations are returned relative to the reference or as absolute
+        perturbations
+
+    """
 
     lorentz_block_stores = []
+    lorentz_block_ref_stores = []
 
     if args["path"] is None:
         raise ValueError("No path specified")
@@ -444,9 +453,13 @@ def import_lorentz_block_perturbations(args=None):
             max_lines=perturb_offset * (num_blocks),
             step=perturb_offset,
         )
-
         # Calculate error array
-        lorentz_block_stores.append(perturb_data_in[:, 1:] - ref_data_in[:, 1:])
+        if rel_ref:
+            lorentz_block_stores.append(perturb_data_in[:, 1:] - ref_data_in[:, 1:])
+        else:
+            # Calculate error array
+            lorentz_block_stores.append(perturb_data_in[:, 1:])
+            lorentz_block_ref_stores.append(ref_data_in[:, 1:])
 
         if args["n_files"] is not None and args["n_files"] >= 0:
             if iperturb_file + 1 - args["file_offset"] >= args["n_files"]:
@@ -456,6 +469,7 @@ def import_lorentz_block_perturbations(args=None):
 
     return (
         lorentz_block_stores,
+        lorentz_block_ref_stores,
         perturb_time_pos_list,
         perturb_time_pos_list_legend,
         perturb_header_dicts,

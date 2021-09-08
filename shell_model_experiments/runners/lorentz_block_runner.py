@@ -1,20 +1,19 @@
-import os
 import sys
 
 sys.path.append("..")
 import argparse
-from pathlib import Path
+import pathlib as pl
 import json
 import numpy as np
-from shell_model_experiments.sabra_model.sabra_model import run_model
 from shell_model_experiments.params.params import *
-from shell_model_experiments.utils.save_data_funcs import save_data, save_perturb_info
-from shell_model_experiments.utils.import_data_funcs import import_start_u_profiles
-from shell_model_experiments.utils.util_funcs import adjust_start_times_with_offset
+import shell_model_experiments.utils.validate_exp_setups as ut_val
+import shell_model_experiments.utils.util_funcs as ut_funcs
 from perturbation_runner import main as perturbation_main
 
 
 def main(args):
+
+    # Get experiment setup
     with open(
         "./params/experiment_setups/lorentz_block_experiment_setups.json", "r"
     ) as file:
@@ -26,7 +25,18 @@ def main(args):
     else:
         exp_setup = exp_setup_file[args["exp_setup"]]
 
-    for i in range(1, len(exp_setup["start_times"])):
+    # Validate setup
+    ut_val.validate_lorentz_block_setup(exp_setup=exp_setup)
+
+    # Get number of existing blocks
+    n_existing_blocks = ut_funcs.count_existing_files_or_dirs(
+        search_path=pl.Path(args["path"], exp_setup["folder_name"]), search_pattern="/"
+    )
+
+    for i in range(
+        n_existing_blocks,
+        min(args["num_blocks"] + n_existing_blocks, len(exp_setup["start_times"])),
+    ):
         parent_perturb_folder = f"{exp_setup['folder_name']}/lorentz_block{i + 1}"
 
         # Make analysis forecasts
@@ -38,7 +48,7 @@ def main(args):
         args["n_runs_per_profile"] = 1
         args["perturb_folder"] = f"{parent_perturb_folder}/analysis_forecasts"
 
-        args = adjust_start_times_with_offset(args)
+        args = ut_funcs.adjust_start_times_with_offset(args)
 
         perturbation_main(args)
 
@@ -69,7 +79,7 @@ if __name__ == "__main__":
     arg_parser.add_argument("--eigen_perturb", action="store_true")
     arg_parser.add_argument("--seed_mode", default=False, type=bool)
     arg_parser.add_argument("--single_shell_perturb", default=None, type=int)
-    # arg_parser.add_argument("--num_blocks", default=1, type=int)
+    arg_parser.add_argument("--num_blocks", default=np.inf, type=int)
     # arg_parser.add_argument("--block_step", default=0.2, type=float)
     arg_parser.add_argument("--start_time_offset", default=None, type=float)
     arg_parser.add_argument("--endpoint", action="store_true")
@@ -86,7 +96,7 @@ if __name__ == "__main__":
     main(args)
 
     # Find DONE sound to play
-    done_file = Path("/home/martin/Music/done_sound.mp3")
+    done_file = pl.Path("/home/martin/Music/done_sound.mp3")
 
     # if os.path.isfile(done_file):
     #     playsound(done_file)
