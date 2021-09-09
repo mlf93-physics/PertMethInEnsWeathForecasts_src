@@ -10,5 +10,5 @@ git pull
 # Conda env stuff
 conda init
 source activate python3
-conda env update --file environment.yml --prune
+conda install --file requirements.txt
 
