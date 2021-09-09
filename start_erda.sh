@@ -9,6 +9,6 @@ git pull
 
 # Conda env stuff
 conda init
-source activate python3
-conda install --file requirements.txt --channel conda-forge
+conda activate python3
+conda install -y --file requirements.txt --channel conda-forge
 

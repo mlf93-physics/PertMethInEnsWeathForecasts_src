@@ -93,6 +93,7 @@ def plot_energy_spectrum(u_store, header_dict, ax=None, omit=None):
 def plot_inviscid_quantities(
     time, u_store, header_dict, ax=None, omit=None, args=None, zero_time_ref=None
 ):
+
     if ax is None:
         ax = plt.axes()
     # Plot total energy vs time

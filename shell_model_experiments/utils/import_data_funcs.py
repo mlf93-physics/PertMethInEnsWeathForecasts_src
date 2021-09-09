@@ -125,7 +125,7 @@ def import_ref_data(args=None):
         records_to_import = args["specific_ref_records"]
         print("\n Importing listed reference data records: ", records_to_import, "\n")
 
-    for record in records_to_import:
+    for i, record in enumerate(records_to_import):
         file_name = ref_record_names_sorted[record]
         data_in, header_dict = import_data(
             file_name,
@@ -136,8 +136,15 @@ def import_ref_data(args=None):
             if args["ref_end_time"] > args["ref_start_time"]
             else None,
         )
+        # Add time offset according to the ref_id
         time_concat.append(data_in[:, 0])
         u_data_concat.append(data_in[:, 1:])
+
+        # Add offset to first record, if not starting with first rec_id
+        if i == 0:
+            time_concat[0] += (
+                data_in.shape[0] * dt / sample_rate * header_dict["rec_id"]
+            )
 
     # Add offset to time arrays to make one linear increasing time series
     for i, time_series in enumerate(time_concat):
