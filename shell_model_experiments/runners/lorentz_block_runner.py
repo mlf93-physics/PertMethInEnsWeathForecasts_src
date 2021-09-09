@@ -41,15 +41,15 @@ def main(args):
         print("parent_perturb_folder", parent_perturb_folder)
 
         # Make analysis forecasts
-        # args["time_to_run"] = exp_setup["time_to_run"]
-        # args["start_time"] = [exp_setup["start_times"][i]]
-        # args["start_time_offset"] = exp_setup["day_offset"]
-        # args["endpoint"] = True
-        # args["n_profiles"] = exp_setup["n_analyses"]
-        # args["n_runs_per_profile"] = 1
-        # args["perturb_folder"] = f"{parent_perturb_folder}/analysis_forecasts"
+        args["time_to_run"] = exp_setup["time_to_run"]
+        args["start_time"] = [exp_setup["start_times"][i]]
+        args["start_time_offset"] = exp_setup["day_offset"]
+        args["endpoint"] = True
+        args["n_profiles"] = exp_setup["n_analyses"]
+        args["n_runs_per_profile"] = 1
+        args["perturb_folder"] = f"{parent_perturb_folder}/analysis_forecasts"
 
-        # args = ut_funcs.adjust_start_times_with_offset(args)
+        args = ut_funcs.adjust_start_times_with_offset(args)
 
         perturbation_main(args)
 
