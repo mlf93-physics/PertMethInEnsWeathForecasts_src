@@ -17,8 +17,10 @@ def generate_dir(expected_path, subfolder="", args=None):
         subfolder = expected_path
     else:
         # Check if path exists
-        expected_path = f"{expected_path}{subfolder}"
+        expected_path = str(Path(expected_path, subfolder))
+        print("expected_path", expected_path)
         dir_exists = os.path.isdir(expected_path)
+        print("dir_exists", dir_exists)
 
         if not dir_exists:
             os.makedirs(expected_path)
