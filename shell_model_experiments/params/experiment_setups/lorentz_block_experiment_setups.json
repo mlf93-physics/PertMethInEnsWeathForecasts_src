@@ -48,11 +48,14 @@
     },
     "TestRun": {
         "folder_name": "testrun_lorentz_block",
-        "day_offset": 0.0625,
-        "time_to_run": 0.5,
+        "day_offset": 0.01,
+        "time_to_run": 0.05,
         "n_analyses": 4,
         "start_times": [
-            40.5
+            20.5,
+            30.5,
+            40.5,
+            50.5
         ]
     }
 }

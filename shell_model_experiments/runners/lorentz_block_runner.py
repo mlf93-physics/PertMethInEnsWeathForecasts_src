@@ -1,6 +1,7 @@
 import sys
 
 sys.path.append("..")
+import copy
 import argparse
 import pathlib as pl
 import json
@@ -8,7 +9,7 @@ import numpy as np
 from shell_model_experiments.params.params import *
 import shell_model_experiments.utils.validate_exp_setups as ut_val
 import shell_model_experiments.utils.util_funcs as ut_funcs
-from perturbation_runner import main as perturbation_main
+import perturbation_runner as pt_runner
 
 
 def main(args):
@@ -33,6 +34,8 @@ def main(args):
         search_path=pl.Path(args["path"], exp_setup["folder_name"]), search_pattern="/"
     )
 
+    processes = []
+
     for i in range(
         n_existing_blocks,
         min(args["num_blocks"] + n_existing_blocks, len(exp_setup["start_times"])),
@@ -51,7 +54,9 @@ def main(args):
 
         args = ut_funcs.adjust_start_times_with_offset(args)
 
-        perturbation_main(args)
+        copy_args = copy.deepcopy(args)
+
+        processes.extend(pt_runner.main_setup(copy_args))
 
         # Make forecasts
         args["start_time"] = [exp_setup["start_times"][i] - exp_setup["day_offset"]]
@@ -60,7 +65,20 @@ def main(args):
         args["n_profiles"] = 1
         args["n_runs_per_profile"] = exp_setup["n_analyses"]
         args["perturb_folder"] = f"{parent_perturb_folder}/forecasts"
-        perturbation_main(args)
+
+        copy_args = copy.deepcopy(args)
+        processes.extend(pt_runner.main_setup(copy_args))
+
+    if len(processes) > 0:
+        pt_runner.main_run(
+            processes,
+            args=copy_args,
+            num_blocks=min(
+                args["num_blocks"], len(exp_setup["start_times"]) - n_existing_blocks
+            ),
+        )
+    else:
+        print("No processes to run - check if blocks already exists")
 
 
 if __name__ == "__main__":

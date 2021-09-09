@@ -18,9 +18,7 @@ def generate_dir(expected_path, subfolder="", args=None):
     else:
         # Check if path exists
         expected_path = str(Path(expected_path, subfolder))
-        print("expected_path", expected_path)
         dir_exists = os.path.isdir(expected_path)
-        print("dir_exists", dir_exists)
 
         if not dir_exists:
             os.makedirs(expected_path)
@@ -130,17 +128,19 @@ def save_perturb_info(args=None):
 
     temp_args = convert_arguments_to_string(args)
 
+    expected_path = generate_dir(Path(args["path"], args["perturb_folder"]), args=args)
+
     # Prepare filename
     perturb_data_info_name = Path(
-        args["path"],
-        args["perturb_folder"],
+        expected_path,
         f"perturb_data_info_ny{temp_args['ny']}_t{temp_args['time_to_run']}"
         + f"_n_f{n_forcing}_f{temp_args['forcing']}.txt",
     )
 
     # Check if path already exists
-    dir_exists = os.path.isdir(perturb_data_info_name)
+    dir_exists = os.path.isfile(perturb_data_info_name)
     if dir_exists:
+        print("Perturb info not saved, since file already exists")
         return
 
     print("Saving perturb data info textfile\n")
