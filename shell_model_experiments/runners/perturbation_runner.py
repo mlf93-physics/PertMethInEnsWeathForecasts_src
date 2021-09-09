@@ -29,9 +29,15 @@ profiler = Profiler()
 
 
 def perturbation_runner(
-    u_old, perturb_positions, du_array, data_out, args, run_count, perturb_count
+    u_old, perturb_positions, du_array, args, run_count, perturb_count
 ):
     """Execute the sabra model on one given perturbed u_old profile"""
+
+    # Prepare array for saving
+    data_out = np.zeros(
+        (int(args["Nt"] * sample_rate) + args["endpoint"] * 1, n_k_vec + 1),
+        dtype=np.complex128,
+    )
 
     print(
         f"Running perturbation {run_count + 1}/"
@@ -145,7 +151,6 @@ def prepare_processes(
     perturb_positions,
     times_to_run,
     Nt_array,
-    data_out,
     n_perturbation_files,
     args=None,
 ):
@@ -174,7 +179,6 @@ def prepare_processes(
                         u_init_profiles[:, count] + perturbations[:, count],
                         perturb_positions,
                         du_array,
-                        data_out,
                         copy_args,
                         count,
                         count + n_perturbation_files,
@@ -200,7 +204,6 @@ def prepare_processes(
                     u_init_profiles[:, count] + perturbations[:, count],
                     perturb_positions,
                     du_array,
-                    data_out,
                     copy_args,
                     count,
                     count + n_perturbation_files,
@@ -218,12 +221,6 @@ def main_setup(args=None):
 
     u_init_profiles, perturbations, perturb_positions = prepare_perturbations(args)
 
-    # Prepare array for saving
-    data_out = np.zeros(
-        (int(np.max(Nt_array) * sample_rate) + args["endpoint"] * 1, n_k_vec + 1),
-        dtype=np.complex128,
-    )
-
     # Detect if other perturbations exist in the perturbation_folder and calculate
     # perturbation count to start at
     # Check if path exists
@@ -240,7 +237,6 @@ def main_setup(args=None):
         perturb_positions,
         times_to_run,
         Nt_array,
-        data_out,
         n_perturbation_files,
         args=args,
     )
