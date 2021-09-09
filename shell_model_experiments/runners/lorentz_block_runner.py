@@ -40,8 +40,8 @@ def main(args):
         n_existing_blocks,
         min(args["num_blocks"] + n_existing_blocks, len(exp_setup["start_times"])),
     ):
+
         parent_perturb_folder = f"{exp_setup['folder_name']}/lorentz_block{i + 1}"
-        print("parent_perturb_folder", parent_perturb_folder)
 
         # Make analysis forecasts
         args["time_to_run"] = exp_setup["time_to_run"]
@@ -54,6 +54,7 @@ def main(args):
 
         args = ut_funcs.adjust_start_times_with_offset(args)
 
+        # Copy args in order not override in forecast processes
         copy_args = copy.deepcopy(args)
 
         processes.extend(pt_runner.main_setup(copy_args))

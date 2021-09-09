@@ -3,6 +3,7 @@ import sys
 
 sys.path.append("..")
 from math import log10
+import copy
 import argparse
 from pathlib import Path
 import numpy as np
@@ -111,8 +112,6 @@ def prepare_perturbations(args):
             1 / 2
         )
 
-    print("args", args)
-
     if args["eigen_perturb"]:
         print("\nRunning with eigen_perturb\n")
         perturb_e_vectors, _, _ = find_eigenvector_for_perturbation(
@@ -165,6 +164,9 @@ def prepare_processes(
             args["time_to_run"] = times_to_run[count]
             args["Nt"] = Nt_array[count]
 
+            # Copy args in order to avoid override between processes
+            copy_args = copy.deepcopy(args)
+
             processes.append(
                 multiprocessing.Process(
                     target=perturbation_runner,
@@ -173,7 +175,7 @@ def prepare_processes(
                         perturb_positions,
                         du_array,
                         data_out,
-                        args,
+                        copy_args,
                         count,
                         count + n_perturbation_files,
                     ),
@@ -188,6 +190,9 @@ def prepare_processes(
         args["time_to_run"] = times_to_run[count]
         args["Nt"] = Nt_array[count]
 
+        # Copy args in order to avoid override between processes
+        copy_args = copy.deepcopy(args)
+
         processes.append(
             multiprocessing.Process(
                 target=perturbation_runner,
@@ -196,7 +201,7 @@ def prepare_processes(
                     perturb_positions,
                     du_array,
                     data_out,
-                    args,
+                    copy_args,
                     count,
                     count + n_perturbation_files,
                 ),

@@ -46,7 +46,7 @@
             58.6
         ]
     },
-    "TestRun": {
+    "TestRun1": {
         "folder_name": "testrun_lorentz_block",
         "day_offset": 0.01,
         "time_to_run": 0.05,
@@ -56,6 +56,38 @@
             30.5,
             40.5,
             50.5
+        ]
+    },
+    "TestRun2": {
+        "folder_name": "lorentz_distinct_pred_regimes_short_test",
+        "day_offset": 0.0625,
+        "time_to_run": 1.0,
+        "n_analyses": 16,
+        "start_times": [
+            7.65,
+            8.5,
+            11.2,
+            12.2,
+            13.2,
+            14.2,
+            25,
+            30.5,
+            34,
+            37.5,
+            39.7,
+            41,
+            42.2,
+            43.4,
+            44.6,
+            47.8,
+            49,
+            50.1,
+            51.2,
+            54.2,
+            55.3,
+            56.4,
+            57.5,
+            58.6
         ]
     }
 }
