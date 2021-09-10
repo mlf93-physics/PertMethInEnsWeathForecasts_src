@@ -166,7 +166,7 @@ def plt_lorentz_block(args):
         plt.subplots_adjust(right=0.9)
 
 
-def plt_blocks_and_energy(args):
+def plt_blocks_energy_regions(args):
 
     time, u_data, ref_header_dict = imp_funcs.import_ref_data(args=args)
 
@@ -207,7 +207,6 @@ def plt_blocks_and_energy(args):
     ax = plt.axes()
     # Calculate energy
     energy_vs_time = np.sum(u_data * np.conj(u_data), axis=1).real
-    mean_energy = np.mean(energy_vs_time)
 
     for i in range(num_blocks):
         time_array = np.linspace(
@@ -227,8 +226,7 @@ def plt_blocks_and_energy(args):
                 )
             ],
             zorder=15,
-            label=block_names[sorted_index[i]]
-            # + 1 / num_blocks * (i + 1) * mean_energy,
+            label=block_names[sorted_index[i]],
         )
 
     # Remove perturb_folder to not plot perturbation start positions
@@ -238,6 +236,75 @@ def plt_blocks_and_energy(args):
     )
     plt.title("Lorentz block regions")
     plt.legend()
+
+
+def plt_block_and_energy(args):
+
+    # Only plot one block
+    args["num_blocks"] = 1
+
+    (
+        rmse,
+        ana_forecast_header_dicts,
+    ) = lr_analysis.lorentz_block_analyser.analysis_executer(args)
+
+    num_forecasts = rmse.shape[0]
+
+    block_legend = [f"$\\Delta = {i + 1}$" for i in range(num_forecasts)]
+    # Get non-repeating colorcycle
+    cmap_list = plt_utils.get_non_repeating_colors(n_colors=num_forecasts)
+    block_legend.append("The black")
+
+    # Setup axes
+    fig, axes = plt.subplots(ncols=1, nrows=2)
+
+    axes[1].set_prop_cycle("color", cmap_list)
+    block_handles = axes[1].plot(
+        rmse[:, :, 0].T,
+        linewidth=1.5,
+    )
+
+    print("block_handles", len(block_handles))
+
+    # Reset color cycle
+    axes[1].set_prop_cycle("color", cmap_list)
+
+    axes[1].plot(rmse[:, :, 0].T, ".", markersize=8, label="_nolegend_")
+    axes[1].set_xlabel("Forecast day; $k$")
+    axes[1].set_ylabel("RMSE; $\\sqrt{E_{jk}²}$")
+    axes[1].set_title(f"Lorentz block")
+    # Plot diagonal, i.e. bold curve from [Lorentz 1982]
+    block_handles.extend(axes[1].plot(np.diagonal(rmse)[0], "k-"))
+    axes[1].plot(np.diagonal(rmse)[0], "k.", markersize=8, linewidth=1.5)
+
+    plt.figlegend(
+        block_handles, block_legend, loc="center right", bbox_to_anchor=(1.0, 0.5)
+    )
+
+    # Get perturb positions
+    block_start_index = int(
+        ana_forecast_header_dicts[0]["perturb_pos"]
+        + ana_forecast_header_dicts[0]["start_time_offset"] * sample_rate / dt
+    )
+    block_end_index = int(
+        ana_forecast_header_dicts[0]["perturb_pos"]
+        + ana_forecast_header_dicts[0]["time_to_run"] * sample_rate / dt
+    )
+
+    # Import only portion of ref record that fits the actual block
+    args["ref_start_time"] = block_start_index * dt / sample_rate
+    args["ref_end_time"] = block_end_index * dt / sample_rate
+    time, u_data, ref_header_dict = imp_funcs.import_ref_data(args=args)
+
+    # Remove perturb_folder to not plot perturbation start positions
+    args["perturb_folder"] = None
+    pl_data.plot_inviscid_quantities(
+        time, u_data, ref_header_dict, ax=axes[0], omit="ny", args=args
+    )
+    axes[0].set_title("Lorentz block energy region")
+    plt.subplots_adjust(
+        top=0.955, bottom=0.075, left=0.04, right=0.9, hspace=0.253, wspace=0.2
+    )
 
 
 if __name__ == "__main__":
@@ -262,8 +329,10 @@ if __name__ == "__main__":
 
     if args["plot_type"] == "blocks":
         plt_lorentz_block(args)
+    elif args["plot_type"] == "blocks_energy_regions":
+        plt_blocks_energy_regions(args)
     elif args["plot_type"] == "blocks_and_energy":
-        plt_blocks_and_energy(args)
+        plt_block_and_energy(args)
     else:
         raise ValueError("No valid plot type given as input argument")
         exit()
