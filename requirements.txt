@@ -1,0 +1,9 @@
+black
+conda-lock
+matplotlib
+numba
+numpy
+pip
+pyinstrument
+scipy
+seaborn

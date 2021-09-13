@@ -32,7 +32,7 @@ def main():
 
     start = timer()
 
-    print(f'starting computations on {cpu_count()} cores')
+    print(f"starting computations on {cpu_count()} cores")
 
     values = (2, 4, 6, 8)
 
@@ -41,7 +41,8 @@ def main():
         print(res)
 
     end = timer()
-    print(f'elapsed time: {end - start}')
+    print(f"elapsed time: {end - start}")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()
