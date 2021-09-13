@@ -4,4 +4,4 @@ from shell_model_experiments.params.experiment_licences import Experiments
 
 exp = Experiments()
 
-LICENCE = exp.LORENTZ_BLOCK
+LICENCE = exp.NORMAL_PERTURBATION
