@@ -17,6 +17,7 @@ from shell_model_experiments.utils.import_data_funcs import (
 from shell_model_experiments.lyaponov.lyaponov_exp_estimator import (
     find_eigenvector_for_perturbation,
 )
+import shell_model_experiments.utils.plot_utils as plt_utils
 
 
 def plot_shells_vs_time(k_vectors_to_plot=None):
@@ -183,6 +184,7 @@ def plot_inviscid_quantities_per_shell(
             perturb_time_pos_list,
             perturb_time_pos_list_legend,
             header_dict,
+            _,
         ) = import_perturbation_velocities(args)
 
         index = []
@@ -459,6 +461,7 @@ def plot_shell_error_vs_time(args=None):
         _,
         perturb_time_pos_list_legend,
         header_dict,
+        _,
     ) = import_perturbation_velocities(args)
 
     time_array = np.linspace(
@@ -506,7 +509,46 @@ def analyse_error_norm_vs_time(u_stores, args=None):
         for i in range(len(u_stores)):
             error_norm_vs_time[:, i] = np.linalg.norm(u_stores[i], axis=1).real
 
-    return error_norm_vs_time
+    error_norm_mean_vs_time = np.mean(error_norm_vs_time, axis=1)
+
+    return error_norm_vs_time, error_norm_mean_vs_time
+
+
+def analyse_error_spread_vs_time_norm_of_mean(u_stores, args=None):
+    """Calculates the spread of the error (u' - u) using the 'norm of the mean.'
+
+    Formula: ||\sqrt{<((u' - u) - <u' - u>)²>}||
+
+    """
+
+    u_mean = np.mean(np.array(u_stores), axis=0)
+
+    error_spread = np.array([(u_stores[i] - u_mean) ** 2 for i in range(len(u_stores))])
+
+    error_spread = np.sqrt(np.mean(error_spread, axis=0))
+    error_spread = np.linalg.norm(error_spread, axis=1)
+
+    return error_spread
+
+
+def analyse_error_spread_vs_time_mean_of_norm(u_stores, args=None):
+    """Calculates the spread of the error (u' - u) using the 'mean of the norm'
+
+    Formula: \sqrt{<(||u' - u|| - <||u' - u||>)²>}
+
+    """
+    u_mean_norm = np.mean(np.linalg.norm(np.array(u_stores), axis=2).real, axis=0)
+
+    error_spread = np.array(
+        [
+            (np.linalg.norm(u_stores[i], axis=1).real - u_mean_norm) ** 2
+            for i in range(len(u_stores))
+        ]
+    )
+
+    error_spread = np.sqrt(np.mean(error_spread, axis=0))
+
+    return error_spread
 
 
 def plot_error_norm_vs_time(args=None):
@@ -516,11 +558,19 @@ def plot_error_norm_vs_time(args=None):
         perturb_time_pos_list,
         perturb_time_pos_list_legend,
         header_dict,
+        u_ref_stores,
     ) = import_perturbation_velocities(args)
 
     ascending_perturb_pos_index = np.argsort(perturb_time_pos_list)
 
-    error_norm_vs_time = analyse_error_norm_vs_time(u_stores, args=args)
+    error_norm_vs_time, error_norm_mean_vs_time = analyse_error_norm_vs_time(
+        u_stores, args=args
+    )
+    if args["plot_mode"] == "detailed":
+        error_spread_vs_time = analyse_error_spread_vs_time_mean_of_norm(
+            u_stores, args=args
+        )
+
     time_array = np.linspace(
         0,
         header_dict["time_to_run"],
@@ -536,12 +586,30 @@ def plot_error_norm_vs_time(args=None):
         ]
         error_norm_vs_time = error_norm_vs_time[:, args["specific_files"]]
 
+    if args["plot_mode"] == "detailed":
+        perturb_time_pos_list_legend = np.append(
+            perturb_time_pos_list_legend, ["Mean error norm", "Std of error"]
+        )
+
     fig, axes = plt.subplots(nrows=1, ncols=1, sharex=True, figsize=(10, 6))
+    # Get non-repeating colorcycle
+    cmap_list = plt_utils.get_non_repeating_colors(n_colors=error_norm_vs_time.shape[1])
+    axes.set_prop_cycle("color", cmap_list)
     axes.plot(time_array, error_norm_vs_time)  # , 'k', linewidth=1)
+
+    if args["plot_mode"] == "detailed":
+        # Plot perturbation error norms
+        axes.plot(time_array, error_norm_mean_vs_time, "k")  # , 'k', linewidth=1)
+        # Plot mean perturbation error norm
+        axes.plot(time_array, error_spread_vs_time, "k--")  # , 'k', linewidth=1)
+        # Plot std of perturbation errors
+
     axes.set_xlabel("Time [s]")
     axes.set_ylabel("Error")
     axes.set_yscale("log")
-    # axes.legend(perturb_time_pos_list_legend)
+    axes.legend(perturb_time_pos_list_legend)
+    axes.set_ylim(1e-18, 10)
+    axes.set_xlim(-0.05, 0.35)
     axes.set_title(
         f'Error vs time; f={header_dict["forcing"]}'
         + f', $n_f$={int(header_dict["n_f"])}, $\\nu$={header_dict["ny"]:.2e}'
@@ -808,6 +876,7 @@ def plot_error_energy_spectrum_vs_time_2D(args=None):
         perturb_time_pos_list,
         perturb_time_pos_list_legend,
         header_dict,
+        _,
     ) = import_perturbation_velocities(args)
 
     if args["n_files"] < 0:
@@ -879,6 +948,7 @@ def plot_error_vector_spectrogram(args=None):
         perturb_time_pos_list,
         perturb_time_pos_list_legend,
         perturb_header_dict,
+        _,
     ) = import_perturbation_velocities(args)
 
     args["start_time"] = np.array(
@@ -935,6 +1005,7 @@ def plot_error_vector_spectrum(args=None):
         perturb_time_pos_list,
         perturb_time_pos_list_legend,
         perturb_header_dict,
+        _,
     ) = import_perturbation_velocities(args)
 
     args["start_time"] = np.array(
@@ -1007,6 +1078,12 @@ if __name__ == "__main__":
     arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument("--path", nargs="?", default=None, type=str)
     arg_parser.add_argument("--plot_type", nargs="+", default=None, type=str)
+    """
+    plot_mode :
+        standard : plot everything with the standard plot setup
+        detailted : plot extra details in plots
+    """
+    arg_parser.add_argument("--plot_mode", nargs="?", default="standard", type=str)
     arg_parser.add_argument("--seed_mode", default=False, type=bool)
     arg_parser.add_argument("--start_time", nargs="+", type=float)
     arg_parser.add_argument("--specific_ref_records", nargs="+", default=[0], type=int)

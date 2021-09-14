@@ -65,15 +65,29 @@ def imported_sorted_perturbation_info(args):
 
     # Sort arrays/lists
     perturb_time_pos_list = np.array(
-        [perturb_time_pos_list[i] for i in ascending_perturb_pos_index]
+        [
+            perturb_time_pos_list[i]
+            for i in ascending_perturb_pos_index
+            if (i + 1) <= args["n_files"]
+        ]
     )
     perturb_time_pos_list_legend = np.array(
-        [perturb_time_pos_list_legend[i] for i in ascending_perturb_pos_index]
+        [
+            perturb_time_pos_list_legend[i]
+            for i in ascending_perturb_pos_index
+            if (i + 1) <= args["n_files"]
+        ]
     )
     perturb_header_dicts = [
-        perturb_header_dicts[i] for i in ascending_perturb_pos_index
+        perturb_header_dicts[i]
+        for i in ascending_perturb_pos_index
+        if (i + 1) <= args["n_files"]
     ]
-    perturb_file_names = [perturb_file_names[i] for i in ascending_perturb_pos_index]
+    perturb_file_names = [
+        perturb_file_names[i]
+        for i in ascending_perturb_pos_index
+        if (i + 1) <= args["n_files"]
+    ]
 
     return (
         perturb_time_pos_list,
@@ -220,6 +234,7 @@ def import_perturbation_velocities(args=None):
             continue
 
         perturb_data_in, perturb_header_dict = import_data(perturb_file_name)
+
         # Initialise ref_data_in of null size
         ref_data_in = np.array([[]], dtype=np.complex128)
 
@@ -256,7 +271,12 @@ def import_perturbation_velocities(args=None):
 
         # Calculate error array
         u_stores.append(perturb_data_in[:, 1:] - ref_data_in[:, 1:])
-        # u_stores.append(perturb_data_in)
+        # If perturb positions are the same for all perturbations, return
+        # ref_data_in too
+        if np.unique(perturb_time_pos_list).size == 1:
+            u_ref_stores = [ref_data_in[:, 1:]]
+        else:
+            u_ref_stores = None
 
         if args["n_files"] is not None and args["n_files"] >= 0:
             if iperturb_file + 1 - args["file_offset"] >= args["n_files"]:
@@ -269,6 +289,7 @@ def import_perturbation_velocities(args=None):
         perturb_time_pos_list,
         perturb_time_pos_list_legend,
         perturb_header_dict,
+        u_ref_stores,
     )
 
 

@@ -33,6 +33,7 @@ def plt_lorentz_block_from_full_perturbation_data(args):
             _,
             _,
             forecast_header_dict,
+            _,
         ) = import_perturbation_velocities(args)
 
         # Import forecasts
@@ -41,6 +42,7 @@ def plt_lorentz_block_from_full_perturbation_data(args):
 
         (
             ana_forecast_pert_u_stores,
+            _,
             _,
             _,
             _,
@@ -251,13 +253,13 @@ def plt_block_and_energy(args):
     num_forecasts = rmse.shape[0]
 
     block_legend = [f"$\\Delta = {i + 1}$" for i in range(num_forecasts)]
-    # Get non-repeating colorcycle
-    cmap_list = plt_utils.get_non_repeating_colors(n_colors=num_forecasts)
     block_legend.append("The black")
 
     # Setup axes
     fig, axes = plt.subplots(ncols=1, nrows=2)
 
+    # Get non-repeating colorcycle
+    cmap_list = plt_utils.get_non_repeating_colors(n_colors=num_forecasts)
     axes[1].set_prop_cycle("color", cmap_list)
     block_handles = axes[1].plot(
         rmse[:, :, 0].T,
