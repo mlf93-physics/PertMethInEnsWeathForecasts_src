@@ -15,9 +15,9 @@
         ]
     },
     "DistinctPredictabilityRegimesShort": {
-        "folder_name": "lorentz_distinct_pred_regimes_short",
-        "day_offset": 0.0625,
-        "time_to_run": 1.0,
+        "folder_name": "lorentz_block_short_pred_ttr0.5",
+        "day_offset": 0.03,
+        "time_to_run": 0.5,
         "n_analyses": 16,
         "start_times": [
             7.65,
