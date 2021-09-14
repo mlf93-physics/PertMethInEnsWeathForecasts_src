@@ -128,7 +128,7 @@ def plot_inviscid_quantities(
                 else:
                     index.append(header_dict["perturb_pos"])
 
-                if ifile + 1 >= args["n_files"] and args["n_files"] > 0:
+                if ifile + 1 >= args["n_files"]:
                     break
 
             for idx in sorted(index):
@@ -244,7 +244,7 @@ def plot_inviscid_quantities_per_shell(
                 color=point_plot[0].get_color(),
             )
 
-            if idx + 1 >= args["n_files"] and args["n_files"] > 0:
+            if idx + 1 >= args["n_files"]:
                 break
 
 
@@ -879,7 +879,7 @@ def plot_error_energy_spectrum_vs_time_2D(args=None):
         _,
     ) = import_perturbation_velocities(args)
 
-    if args["n_files"] < 0:
+    if args["n_files"] == np.inf:
         n_files = len(perturb_time_pos_list)
     else:
         n_files = args["n_files"]
@@ -996,7 +996,7 @@ def plot_error_vector_spectrogram(args=None):
 
 
 def plot_error_vector_spectrum(args=None):
-    # args['n_files'] = 2
+    args["n_files"] = 2
     # args['file_offset'] = 0
 
     # Import perturbation data
@@ -1094,7 +1094,7 @@ if __name__ == "__main__":
         help="Arguments needed for plotting the perturbation vs time plot.",
     )
     perturb_parser.add_argument("--perturb_folder", nargs="?", default=None, type=str)
-    perturb_parser.add_argument("--n_files", default=-1, type=int)
+    perturb_parser.add_argument("--n_files", default=np.inf, type=int)
     perturb_parser.add_argument("--file_offset", default=0, type=int)
     perturb_parser.add_argument("--specific_files", nargs="+", default=None, type=int)
     perturb_parser.add_argument("--combinations", action="store_true")

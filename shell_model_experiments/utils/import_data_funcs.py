@@ -278,7 +278,7 @@ def import_perturbation_velocities(args=None):
         else:
             u_ref_stores = None
 
-        if args["n_files"] is not None and args["n_files"] >= 0:
+        if args["n_files"] is not None:
             if iperturb_file + 1 - args["file_offset"] >= args["n_files"]:
                 break
 
@@ -489,7 +489,7 @@ def import_lorentz_block_perturbations(args=None, rel_ref=True):
             lorentz_block_stores.append(perturb_data_in[:, 1:])
             lorentz_block_ref_stores.append(ref_data_in[:, 1:])
 
-        if args["n_files"] is not None and args["n_files"] >= 0:
+        if args["n_files"] is not None:
             if iperturb_file + 1 - args["file_offset"] >= args["n_files"]:
                 break
 

@@ -14,7 +14,7 @@ def calculate_rmse_of_block(args):
     parent_pert_folder = args["perturb_folder"]
     # Import forecasts
     args["perturb_folder"] = parent_pert_folder + "/forecasts"
-    args["n_files"] = -1
+    args["n_files"] = np.inf
 
     (
         forecast_pert_u_stores,
@@ -26,7 +26,7 @@ def calculate_rmse_of_block(args):
 
     # Import analyses forecasts
     args["perturb_folder"] = parent_pert_folder + "/analysis_forecasts"
-    args["n_files"] = -1
+    args["n_files"] = np.inf
 
     (
         ana_forecast_pert_u_stores,

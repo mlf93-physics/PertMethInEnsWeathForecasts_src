@@ -26,7 +26,7 @@ def plt_lorentz_block_from_full_perturbation_data(args):
         parent_pert_folder = args["perturb_folder"]
         # Import forecasts
         args["perturb_folder"] = parent_pert_folder + "/forecasts"
-        args["n_files"] = -1
+        args["n_files"] = np.inf
 
         (
             forecast_pert_u_stores,
@@ -38,7 +38,7 @@ def plt_lorentz_block_from_full_perturbation_data(args):
 
         # Import forecasts
         args["perturb_folder"] = parent_pert_folder + "/analysis_forecasts"
-        args["n_files"] = -1
+        args["n_files"] = np.inf
 
         (
             ana_forecast_pert_u_stores,
@@ -125,7 +125,7 @@ def plt_lorentz_block(args):
         plt.plot(np.diagonal(rmse), "k-")
         plt.plot(np.diagonal(rmse), "k.", markersize=8, linewidth=1.5)
         plt.legend(legend)
-        # plt.yscale("log")
+        plt.yscale("log")
     # or plot each rmse in its own axes
     else:
         num_subplot_cols = math.floor(num_blocks / 2) + 1
@@ -161,6 +161,7 @@ def plt_lorentz_block(args):
                 f"Lorentz block {i+1} | $T_{{start}}$="
                 + f"{ana_forecast_header_dicts[i]['perturb_pos']*dt/sample_rate:.1f}"
             )
+            axes[i // num_subplot_cols, i % num_subplot_cols].set_yscale("log")
 
             if i == 0:
                 fig.legend(line_plot, legend, loc="center right")
