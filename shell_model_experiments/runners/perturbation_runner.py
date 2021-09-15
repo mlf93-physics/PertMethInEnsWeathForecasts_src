@@ -2,7 +2,7 @@ import os
 import sys
 
 sys.path.append("..")
-from math import log10
+import math
 import copy
 import argparse
 from pathlib import Path
@@ -109,8 +109,8 @@ def prepare_perturbations(args):
             args["ny_n"] = int(
                 3
                 / 8
-                * log10(args["forcing"] / (header_dict["ny"] ** 2))
-                / log10(lambda_const)
+                * math.log10(args["forcing"] / (header_dict["ny"] ** 2))
+                / math.log10(lambda_const)
             )
         # Take ny from reference file
     else:
@@ -252,18 +252,17 @@ def main_run(processes, args=None, num_blocks=None):
     num_processes = len(processes)
 
     if num_blocks is not None:
-        num_processes_per_block = (
-            num_blocks * args["n_profiles"] * args["n_runs_per_profile"]
-        )
+        num_processes_per_block = 2 * args["n_profiles"] * args["n_runs_per_profile"]
 
     profiler.start()
 
     for j in range(num_processes // cpu_count):
-        # if num_blocks is not None:
-        #     print(
-        #         f"Block {int(j*cpu_count // num_processes_per_block)}-"
-        #         + f"{int(((j + 1)*cpu_count // num_processes_per_block + 1))}"
-        #     )
+        if num_blocks is not None:
+            print(
+                f"Block {int(j*cpu_count // num_processes_per_block)}-"
+                + f"{int(((j + 1)*cpu_count // num_processes_per_block))}"
+            )
+
         for i in range(cpu_count):
             count = j * cpu_count + i
             processes[count].start()
@@ -272,12 +271,16 @@ def main_run(processes, args=None, num_blocks=None):
             count = j * cpu_count + i
             processes[count].join()
 
+    if num_blocks is not None:
+        _dummy_done_count = (j + 1) * cpu_count // num_processes_per_block
+        _dummy_remain_count = math.ceil(
+            num_processes % cpu_count / num_processes_per_block
+        )
+        print(
+            f"Block {int(_dummy_done_count)}-"
+            + f"{int(_dummy_done_count + _dummy_remain_count)}"
+        )
     for i in range(num_processes % cpu_count):
-        # if num_blocks is not None:
-        #     print(
-        #         f"Block {int((j)*cpu_count % num_processes_per_block)}-"
-        #         + f"{int((j + 1)*cpu_count % num_processes_per_block)}"
-        #     )
 
         count = (num_processes // cpu_count) * cpu_count + i
         processes[count].start()

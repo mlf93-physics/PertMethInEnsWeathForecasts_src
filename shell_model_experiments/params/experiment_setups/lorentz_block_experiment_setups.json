@@ -175,7 +175,7 @@
         "folder_name": "test1_data",
         "day_offset": 0.01,
         "time_to_run": 0.02,
-        "n_analyses": 1,
+        "n_analyses": 2,
         "start_times": [
             5.5,
             10.2,
