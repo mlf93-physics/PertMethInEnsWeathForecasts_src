@@ -123,6 +123,7 @@ def analysis_executer(args):
     rmse = np.stack(rmse, axis=2)
 
     if args["average"]:
+        rmse = np.log(rmse)
         rmse = np.mean(rmse, axis=2)
 
     return rmse, header_dicts

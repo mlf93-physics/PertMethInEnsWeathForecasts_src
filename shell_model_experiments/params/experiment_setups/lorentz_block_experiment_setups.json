@@ -15,11 +15,19 @@
         ]
     },
     "DistinctPredictabilityRegimesShort": {
-        "folder_name": "lorentz_block_short_pred_ttr0.4",
-        "day_offset": 0.012,
-        "time_to_run": 0.4,
-        "n_analyses": 32,
+        "folder_name": "lorentz_block_short_pred_ttr0.5",
+        "day_offset": 0.03,
+        "time_to_run": 0.5,
+        "n_analyses": 16,
         "start_times": [
+            7.65,
+            8.5,
+            11.2,
+            12.2,
+            13.2,
+            14.2,
+            25,
+            30.5,
             34,
             37.5,
             39.7,
@@ -164,9 +172,9 @@
         ]
     },
     "TestRun3": {
-        "folder_name": "lorentz_block_long_pred_ttr2_full_perturb_data",
-        "day_offset": 0.125,
-        "time_to_run": 2,
+        "folder_name": "test1_data",
+        "day_offset": 0.01,
+        "time_to_run": 0.02,
         "n_analyses": 1,
         "start_times": [
             5.5,

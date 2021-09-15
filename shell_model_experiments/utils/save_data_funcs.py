@@ -216,7 +216,10 @@ def compress_dir(path_to_dir, zip_name):
     out_name = pl.Path(path_to_dir.parent, zip_name + ".tar.gz")
 
     print(f"Compressing data directory at path: {path_to_dir}")
-    sp.run(["tar", "-czvf", str(out_name), path_to_dir], stdout=sp.DEVNULL)
+    sp.run(
+        ["tar", "-czvf", str(out_name), "-C", path_to_dir.parent, path_to_dir.name],
+        stdout=sp.DEVNULL,
+    )
 
 
 if __name__ == "__main__":

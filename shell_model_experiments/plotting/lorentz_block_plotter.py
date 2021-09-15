@@ -119,13 +119,13 @@ def plt_lorentz_block(args):
         plt.plot(rmse.T, ".", markersize=8, label="_nolegend_")
 
         plt.xlabel("Forecast day; $k$")
-        plt.ylabel("RMSE; $\\sqrt{E_{jk}²}$")
+        plt.ylabel("RMSE; log($\\sqrt{E_{jk}²})$")
         plt.title(f"Lorentz block average | $N_{{blocks}}$={num_blocks}")
         # Plot diagonal, i.e. bold curve from [Lorentz 1982]
         plt.plot(np.diagonal(rmse), "k-")
         plt.plot(np.diagonal(rmse), "k.", markersize=8, linewidth=1.5)
         plt.legend(legend)
-        plt.yscale("log")
+        # plt.yscale("log")
     # or plot each rmse in its own axes
     else:
         num_subplot_cols = math.floor(num_blocks / 2) + 1
