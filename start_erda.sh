@@ -12,3 +12,6 @@ conda init
 conda activate python3
 conda install -y --file requirements.txt --channel conda-forge
 
+# Install git autocomplete
+curl https://raw.githubusercontent.com/git/git/master/contrib/completion/git-completion.bash -o ~/.git-completion.bash
+chmod u+x ~/.git-completion.bash
