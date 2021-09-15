@@ -26,21 +26,23 @@ def plt_lorentz_block_from_full_perturbation_data(args):
         parent_pert_folder = args["perturb_folder"]
         # Import forecasts
         args["perturb_folder"] = parent_pert_folder + "/forecasts"
-        args["n_files"] = -1
+        args["n_files"] = np.inf
 
         (
             forecast_pert_u_stores,
             _,
             _,
             forecast_header_dict,
+            _,
         ) = import_perturbation_velocities(args)
 
         # Import forecasts
         args["perturb_folder"] = parent_pert_folder + "/analysis_forecasts"
-        args["n_files"] = -1
+        args["n_files"] = np.inf
 
         (
             ana_forecast_pert_u_stores,
+            _,
             _,
             _,
             _,
@@ -117,7 +119,7 @@ def plt_lorentz_block(args):
         plt.plot(rmse.T, ".", markersize=8, label="_nolegend_")
 
         plt.xlabel("Forecast day; $k$")
-        plt.ylabel("RMSE; $\\sqrt{E_{jk}²}$")
+        plt.ylabel("RMSE; log($\\sqrt{E_{jk}²})$")
         plt.title(f"Lorentz block average | $N_{{blocks}}$={num_blocks}")
         # Plot diagonal, i.e. bold curve from [Lorentz 1982]
         plt.plot(np.diagonal(rmse), "k-")
@@ -159,6 +161,7 @@ def plt_lorentz_block(args):
                 f"Lorentz block {i+1} | $T_{{start}}$="
                 + f"{ana_forecast_header_dicts[i]['perturb_pos']*dt/sample_rate:.1f}"
             )
+            axes[i // num_subplot_cols, i % num_subplot_cols].set_yscale("log")
 
             if i == 0:
                 fig.legend(line_plot, legend, loc="center right")
@@ -251,13 +254,13 @@ def plt_block_and_energy(args):
     num_forecasts = rmse.shape[0]
 
     block_legend = [f"$\\Delta = {i + 1}$" for i in range(num_forecasts)]
-    # Get non-repeating colorcycle
-    cmap_list = plt_utils.get_non_repeating_colors(n_colors=num_forecasts)
     block_legend.append("The black")
 
     # Setup axes
     fig, axes = plt.subplots(ncols=1, nrows=2)
 
+    # Get non-repeating colorcycle
+    cmap_list = plt_utils.get_non_repeating_colors(n_colors=num_forecasts)
     axes[1].set_prop_cycle("color", cmap_list)
     block_handles = axes[1].plot(
         rmse[:, :, 0].T,

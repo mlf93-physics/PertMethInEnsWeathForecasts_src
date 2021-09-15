@@ -5,10 +5,13 @@ import copy
 import argparse
 import pathlib as pl
 import json
+import subprocess as sp
 import numpy as np
 from shell_model_experiments.params.params import *
 import shell_model_experiments.utils.validate_exp_setups as ut_val
 import shell_model_experiments.utils.util_funcs as ut_funcs
+import shell_model_experiments.utils.save_data_funcs as ut_save
+from shell_model_experiments.params.env_params import *
 import perturbation_runner as pt_runner
 
 
@@ -81,6 +84,10 @@ def main(args):
     else:
         print("No processes to run - check if blocks already exists")
 
+    if args["erda_run"]:
+        path = pl.Path(args["path"], exp_setup["folder_name"])
+        ut_save.compress_dir(path, "test_temp1")
+
 
 if __name__ == "__main__":
     # Define arguments
@@ -103,6 +110,7 @@ if __name__ == "__main__":
     # arg_parser.add_argument("--block_step", default=0.2, type=float)
     arg_parser.add_argument("--start_time_offset", default=None, type=float)
     arg_parser.add_argument("--endpoint", action="store_true")
+    arg_parser.add_argument("--erda_run", action="store_true")
     arg_parser.add_argument("--exp_setup", default=None, type=str)
 
     args = vars(arg_parser.parse_args())

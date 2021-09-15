@@ -1,5 +1,4 @@
 import numpy as np
-from math import ceil
 
 #### Initialise sabra model constants ####
 epsilon = 0.5
