@@ -84,9 +84,7 @@ def main(args):
     else:
         print("No processes to run - check if blocks already exists")
 
-    uname = sp.run(["uname", "-n"], capture_output=True).stdout.decode().strip()
-
-    if uname == ERDA_UNAME:
+    if args["erda_run"]:
         path = pl.Path(args["path"], exp_setup["folder_name"])
         ut_save.compress_dir(path, "test_temp1")
 
@@ -112,6 +110,7 @@ if __name__ == "__main__":
     # arg_parser.add_argument("--block_step", default=0.2, type=float)
     arg_parser.add_argument("--start_time_offset", default=None, type=float)
     arg_parser.add_argument("--endpoint", action="store_true")
+    arg_parser.add_argument("--erda_run", action="store_true")
     arg_parser.add_argument("--exp_setup", default=None, type=str)
 
     args = vars(arg_parser.parse_args())
