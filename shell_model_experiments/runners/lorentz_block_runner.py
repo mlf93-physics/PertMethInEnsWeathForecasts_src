@@ -10,7 +10,7 @@ import numpy as np
 from shell_model_experiments.params.params import *
 import shell_model_experiments.utils.validate_exp_setups as ut_val
 import shell_model_experiments.utils.util_funcs as ut_funcs
-import shell_model_experiments.utils.save_data_funcs as ut_save
+import general.utils as gutils
 from shell_model_experiments.params.env_params import *
 import perturbation_runner as pt_runner
 
@@ -86,7 +86,7 @@ def main(args):
 
     if args["erda_run"]:
         path = pl.Path(args["path"], exp_setup["folder_name"])
-        ut_save.compress_dir(path, "test_temp1")
+        gutils.compress_dir(path, "test_temp1")
 
 
 if __name__ == "__main__":

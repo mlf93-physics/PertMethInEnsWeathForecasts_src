@@ -7,27 +7,7 @@ from shell_model_experiments.config import LICENCE
 import numpy as np
 import pathlib as pl
 from shell_model_experiments.params.params import *
-
-
-def generate_dir(expected_path, subfolder="", args=None):
-
-    if len(subfolder) == 0:
-        # See if folder is present
-        dir_exists = os.path.isdir(expected_path)
-
-        if not dir_exists:
-            os.makedirs(expected_path)
-
-        subfolder = expected_path
-    else:
-        # Check if path exists
-        expected_path = str(pl.Path(expected_path, subfolder))
-        dir_exists = os.path.isdir(expected_path)
-
-        if not dir_exists:
-            os.makedirs(expected_path)
-
-    return expected_path
+import general.utils as gutils
 
 
 def generate_header(args, n_data=0, append_extra=""):
@@ -70,7 +50,7 @@ def save_data(data_out, subfolder="", prefix="", perturb_position=None, args=Non
     n_data = data_out.shape[0]
     temp_args = convert_arguments_to_string(args)
 
-    # expected_path = generate_dir(expected_name, subfolder=subfolder, args=args)
+    # expected_path = gutils.generate_dir(expected_name, subfolder=subfolder, args=args)
 
     if args["ref_run"]:
         subsubfolder = "ref_data"
@@ -79,7 +59,9 @@ def save_data(data_out, subfolder="", prefix="", perturb_position=None, args=Non
             f"data/ny{temp_args['ny']}_t{temp_args['time_to_run']}"
             + f"_n_f{n_forcing}_f{temp_args['forcing']}"
         )
-        expected_path = generate_dir(expected_path + f"/{subsubfolder}", args=args)
+        expected_path = gutils.generate_dir(
+            expected_path + f"/{subsubfolder}", args=args
+        )
 
         prefix = "ref_"
 
@@ -109,7 +91,9 @@ def save_data(data_out, subfolder="", prefix="", perturb_position=None, args=Non
         subsubfolder = args["perturb_folder"]
 
         # Generate path if not existing
-        expected_path = generate_dir(pl.Path(args["path"], subsubfolder), args=args)
+        expected_path = gutils.generate_dir(
+            pl.Path(args["path"], subsubfolder), args=args
+        )
 
         if perturb_position is not None:
             perturb_header_extra = f", perturb_pos={int(perturb_position)}"
@@ -132,7 +116,7 @@ def save_perturb_info(args=None):
 
     temp_args = convert_arguments_to_string(args)
 
-    expected_path = generate_dir(
+    expected_path = gutils.generate_dir(
         pl.Path(args["path"], args["perturb_folder"]), args=args
     )
 
@@ -186,7 +170,7 @@ def save_lorentz_block_data(
     ]
     data_out = perturb_data[slice, :]
 
-    expected_path = generate_dir(
+    expected_path = gutils.generate_dir(
         args["path"], subfolder=f"{args['perturb_folder']}", args=args
     )
     if perturb_position is not None:
@@ -205,25 +189,3 @@ def save_lorentz_block_data(
         delimiter=",",
         header=header,
     )
-
-
-def compress_dir(path_to_dir, zip_name):
-    if not os.path.isdir(path_to_dir):
-        raise ValueError(f"No dir at the given path ({path_to_dir})")
-    else:
-        path_to_dir = pl.Path(path_to_dir)
-
-    out_name = pl.Path(path_to_dir.parent, zip_name + ".tar.gz")
-
-    print(f"Compressing data directory at path: {path_to_dir}")
-    sp.run(
-        ["tar", "-czvf", str(out_name), "-C", path_to_dir.parent, path_to_dir.name],
-        stdout=sp.DEVNULL,
-    )
-
-
-if __name__ == "__main__":
-    dir = "./data/ny2.37e-08_t4.00e+02_n_f0_f1.0/lorentz_block_short_pred_ttr0.25/"
-    zip_name = "test_tar"
-
-    compress_dir(dir, zip_name)
