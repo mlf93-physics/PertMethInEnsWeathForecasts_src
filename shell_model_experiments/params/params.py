@@ -10,6 +10,10 @@ bd_size = 2
 n_forcing = 0
 u0 = 1
 
+# Define some conversion shortcuts
+tts = sample_rate / dt
+stt = dt / sample_rate
+
 # Define factors to be used in the derivative calculation
 factor2 = -epsilon / lambda_const
 factor3 = (1 - epsilon) / lambda_const ** 2

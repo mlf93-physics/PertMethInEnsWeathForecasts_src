@@ -3,7 +3,10 @@ import pathlib as pl
 from collections import OrderedDict
 import numpy as np
 from pathlib import Path
-from shell_model_experiments.params.params import *
+import shell_model_experiments.params.params as sh_params
+import lorentz63_experiments.params.params as l63_params
+from general.params.model_licences import Models
+from config import MODEL
 
 
 def match_start_positions_to_ref_file(args=None, header_dict=None, positions=None):
@@ -12,14 +15,19 @@ def match_start_positions_to_ref_file(args=None, header_dict=None, positions=Non
 
     ref_file_match = OrderedDict()
 
+    if MODEL == Models.SHELL_MODEL:
+        model_dt = sh_params.dt
+    elif MODEL == Models.LORENTZ63:
+        model_dt = l63_params.dt
+
     # The file ids which shall be imported
     matched_file_ids = positions // int(
-        header_dict["record_max_time"] * header_dict["sample_rate"] / dt
+        header_dict["record_max_time"] * header_dict["sample_rate"] / model_dt
     )
 
     # The positions in the files that shall be imported
     positions_relative_to_record = positions % int(
-        header_dict["record_max_time"] * header_dict["sample_rate"] / dt
+        header_dict["record_max_time"] * header_dict["sample_rate"] / model_dt
     )
 
     # Save the positions per record id to a dictionary
