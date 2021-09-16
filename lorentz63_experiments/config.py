@@ -1,5 +1,4 @@
 __all__ = ["LICENCE"]
-
 import sys
 
 sys.path.append("..")

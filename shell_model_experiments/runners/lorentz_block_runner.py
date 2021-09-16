@@ -5,12 +5,11 @@ import copy
 import argparse
 import pathlib as pl
 import json
-import subprocess as sp
 import numpy as np
 from shell_model_experiments.params.params import *
 import shell_model_experiments.utils.validate_exp_setups as ut_val
 import shell_model_experiments.utils.util_funcs as ut_funcs
-import general.utils as gutils
+import general.utils.save_data_funcs as g_save
 from shell_model_experiments.params.env_params import *
 import perturbation_runner as pt_runner
 
@@ -86,7 +85,7 @@ def main(args):
 
     if args["erda_run"]:
         path = pl.Path(args["path"], exp_setup["folder_name"])
-        gutils.compress_dir(path, "test_temp1")
+        g_save.compress_dir(path, "test_temp1")
 
 
 if __name__ == "__main__":

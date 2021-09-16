@@ -8,7 +8,7 @@ from numba import njit, types
 from pyinstrument import Profiler
 from shell_model_experiments.sabra_model.runge_kutta4 import runge_kutta4_vec
 from shell_model_experiments.params.params import *
-from shell_model_experiments.utils.save_data_funcs import save_data
+import general.utils.save_data_funcs as g_save
 
 profiler = Profiler()
 
@@ -117,7 +117,7 @@ def main(args=None):
         # Add record_id to datafile header
         args["record_id"] = ir
         print(f"saving record\n")
-        save_data(data_out, args=args)
+        g_save.save_data(data_out, args=args)
 
     profiler.stop()
     print(profiler.output_text())

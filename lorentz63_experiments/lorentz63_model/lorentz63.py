@@ -6,9 +6,10 @@ import argparse
 from pyinstrument import Profiler
 import numpy as np
 from numba import njit, types
-from lorentz63_experiments.params.params import *
 import runge_kutta4 as rk4
+from lorentz63_experiments.params.params import *
 import lorentz63_experiments.plotting.plot_data as pl_data
+import general.utils.save_data_funcs as g_save
 
 profiler = Profiler()
 
@@ -117,8 +118,10 @@ def main(args=None):
 
         # Add record_id to datafile header
         args["record_id"] = ir
-        # print(f"saving record\n")
-        # save_data(data_out, args=args)
+
+        if args["save_data"]:
+            print(f"saving record\n")
+            g_save.save_data(data_out, args=args)
 
         # pl_data.plot_attractor(data_out)
 
@@ -131,7 +134,7 @@ if __name__ == "__main__":
     arg_parser.add_argument("--burn_in_time", default=0.0, type=float)
     arg_parser.add_argument("--save_folder", nargs="?", default="data", type=str)
     arg_parser.add_argument("--record_max_time", default=1000, type=float)
-    arg_parser.add_argument("--save_data", action="store_true")
+    arg_parser.add_argument("--save_data", action="store_false")
     arg_parser.add_argument("--time_to_run", type=float, required=True)
     arg_parser.add_argument("--sigma", default=10, type=float)
     arg_parser.add_argument("--r_const", default=28, type=float)

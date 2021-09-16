@@ -11,19 +11,16 @@ import multiprocessing
 from pyinstrument import Profiler
 from shell_model_experiments.sabra_model.sabra_model import run_model
 from shell_model_experiments.params.params import *
-from shell_model_experiments.utils.save_data_funcs import (
-    save_data,
-    save_perturb_info,
-    save_lorentz_block_data,
-)
+from shell_model_experiments.utils.save_data_funcs import save_lorentz_block_data
 from shell_model_experiments.utils.import_data_funcs import import_start_u_profiles
 from shell_model_experiments.lyaponov.lyaponov_exp_estimator import (
     find_eigenvector_for_perturbation,
     calculate_perturbations,
 )
 from shell_model_experiments.utils.util_funcs import adjust_start_times_with_offset
-from shell_model_experiments.params.experiment_licences import Experiments as EXP
 from shell_model_experiments.config import *
+from general.params.experiment_licences import Experiments as EXP
+import general.utils.save_data_funcs as g_save
 
 profiler = Profiler()
 
@@ -56,7 +53,7 @@ def perturbation_runner(
     )
 
     if LICENCE == EXP.NORMAL_PERTURBATION:
-        save_data(
+        g_save.save_data(
             data_out,
             prefix=f"perturb{perturb_count}_",
             perturb_position=perturb_positions[run_count // args["n_runs_per_profile"]],
@@ -241,7 +238,7 @@ def main_setup(args=None):
         args=args,
     )
 
-    save_perturb_info(args=args)
+    g_save.save_perturb_info(args=args)
 
     return processes
 
