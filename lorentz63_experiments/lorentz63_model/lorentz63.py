@@ -24,14 +24,14 @@ profiler = Profiler()
     ),
     cache=True,
 )
-def run_model(x_old, dx_array, derivMatrix, data_out, Nt_local):
+def run_model(x_old, du_array, derivMatrix, data_out, Nt_local):
     """Execute the integration of the sabra shell model.
 
     Parameters
     ----------
     x_old : ndarray
         The initial lorentz positions
-    dx_array : ndarray
+    du_array : ndarray
         A helper array used to store the current derivative of the lorentz
         positions.
     data_out : ndarray
@@ -50,7 +50,7 @@ def run_model(x_old, dx_array, derivMatrix, data_out, Nt_local):
 
         # Update x_old
         x_old = rk4.runge_kutta4_vec(
-            y0=x_old, h=dt, dx=dx_array, derivMatrix=derivMatrix
+            y0=x_old, h=dt, dx=du_array, derivMatrix=derivMatrix
         )
 
     return x_old
@@ -83,7 +83,7 @@ def main(args=None):
     data_out = np.zeros((int(args["burn_in_time"] * tts), sdim + 1), dtype=np.float64)
     print(f'Running burn-in phase of {args["burn_in_time"]}s\n')
     x_old = run_model(
-        x_old, dx_array, derivMatrix, data_out, int(args["burn_in_time"] / dt)
+        x_old, du_array, derivMatrix, data_out, int(args["burn_in_time"] / dt)
     )
 
     for ir in range(args["n_records"]):
@@ -110,7 +110,7 @@ def main(args=None):
         print(f'running record {ir + 1}/{args["n_records"]}')
         x_old = run_model(
             x_old,
-            dx_array,
+            du_array,
             derivMatrix,
             data_out,
             int(out_array_size / sample_rate),

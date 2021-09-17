@@ -9,31 +9,38 @@ from pathlib import Path
 import numpy as np
 import multiprocessing
 from pyinstrument import Profiler
-from shell_model_experiments.sabra_model.sabra_model import run_model
-from shell_model_experiments.params.params import *
+from shell_model_experiments.sabra_model.sabra_model import run_model as sh_model
+import shell_model_experiments.params as sh_params
+import lorentz63_experiments.params as l63_params
 from shell_model_experiments.utils.save_data_funcs import save_lorentz_block_data
 from shell_model_experiments.lyaponov.lyaponov_exp_estimator import (
     find_eigenvector_for_perturbation,
     calculate_perturbations,
 )
-from shell_model_experiments.config import *
 import general.utils.util_funcs as g_utils
 import general.utils.import_data_funcs as g_import
 from general.params.experiment_licences import Experiments as EXP
 import general.utils.save_data_funcs as g_save
+from general.params.model_licences import Models
+from config import MODEL, LICENCE
 
 profiler = Profiler()
+
+# Get parameters for model
+if MODEL == Models.SHELL_MODEL:
+    params = sh_params
+elif MODEL == Models.LORENTZ63:
+    params = l63_params
 
 
 def perturbation_runner(
     u_old, perturb_positions, du_array, args, run_count, perturb_count
 ):
     """Execute the sabra model on one given perturbed u_old profile"""
-
     # Prepare array for saving
     data_out = np.zeros(
-        (int(args["Nt"] * sample_rate) + args["endpoint"] * 1, n_k_vec + 1),
-        dtype=np.complex128,
+        (int(args["Nt"] * params.sample_rate) + args["endpoint"] * 1, params.sdim + 1),
+        dtype=params.dtype,
     )
 
     print(
@@ -43,7 +50,7 @@ def perturbation_runner(
         + f" {run_count % args['n_runs_per_profile']}"
     )
 
-    run_model(
+    sh_model(
         u_old,
         du_array,
         data_out,
@@ -73,7 +80,7 @@ def prepare_run_times(args):
     if LICENCE == EXP.NORMAL_PERTURBATION:
         num_perturbations = args["n_runs_per_profile"] * args["n_profiles"]
         times_to_run = np.ones(num_perturbations) * args["time_to_run"]
-        Nt_array = (times_to_run / dt).astype(np.int64)
+        Nt_array = (times_to_run / params.dt).astype(np.int64)
 
     elif LICENCE == EXP.LORENTZ_BLOCK:
         num_perturbations = args["n_runs_per_profile"] * args["n_profiles"]
@@ -84,7 +91,7 @@ def prepare_run_times(args):
             start_times = np.ones(num_perturbations) * args["start_time"]
 
         times_to_run = start_times[0] + args["time_to_run"] - start_times
-        Nt_array = (times_to_run / dt).astype(np.int64)
+        Nt_array = (times_to_run / params.dt).astype(np.int64)
 
     return times_to_run, Nt_array
 
@@ -109,13 +116,13 @@ def prepare_perturbations(args):
                 3
                 / 8
                 * math.log10(args["forcing"] / (header_dict["ny"] ** 2))
-                / math.log10(lambda_const)
+                / math.log10(params.lambda_const)
             )
         # Take ny from reference file
     else:
-        args["ny"] = (args["forcing"] / (lambda_const ** (8 / 3 * args["ny_n"]))) ** (
-            1 / 2
-        )
+        args["ny"] = (
+            args["forcing"] / (params.lambda_const ** (8 / 3 * args["ny_n"]))
+        ) ** (1 / 2)
 
     if args["eigen_perturb"]:
         print("\nRunning with eigen_perturb\n")
@@ -131,7 +138,9 @@ def prepare_perturbations(args):
         )
     else:
         print("\nRunning without eigen_perturb\n")
-        perturb_e_vectors = np.ones((n_k_vec, args["n_profiles"]), dtype=np.complex128)
+        perturb_e_vectors = np.ones(
+            (params.sdim, args["n_profiles"]), dtype=params.dtype
+        )
 
     if args["single_shell_perturb"] is not None:
         print("\nRunning in single shell perturb mode\n")
@@ -177,7 +186,7 @@ def prepare_processes(
                     args=(
                         u_init_profiles[:, count] + perturbations[:, count],
                         perturb_positions,
-                        du_array,
+                        params.du_array,
                         copy_args,
                         count,
                         count + n_perturbation_files,
@@ -202,7 +211,7 @@ def prepare_processes(
                 args=(
                     u_init_profiles[:, count] + perturbations[:, count],
                     perturb_positions,
-                    du_array,
+                    params.du_array,
                     copy_args,
                     count,
                     count + n_perturbation_files,
@@ -216,7 +225,8 @@ def prepare_processes(
 def main_setup(args=None):
 
     times_to_run, Nt_array = prepare_run_times(args)
-    args["burn_in_lines"] = int(args["burn_in_time"] / dt * sample_rate)
+    print("times_to_run, Nt_array", times_to_run, Nt_array)
+    args["burn_in_lines"] = int(args["burn_in_time"] * params.tts)
 
     u_init_profiles, perturbations, perturb_positions = prepare_perturbations(args)
 

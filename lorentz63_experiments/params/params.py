@@ -17,5 +17,5 @@ dtype = np.float64
 u_init_slice = np.s_[0:-1:1]
 
 # Arrays
-dx_array = np.zeros(sdim, dtype=np.float64)
+du_array = np.zeros(sdim, dtype=np.float64)
 derivMatrix = np.zeros((sdim, sdim))

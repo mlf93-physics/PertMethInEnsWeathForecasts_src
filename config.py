@@ -1,8 +1,9 @@
-__all__ = ["MODEL"]
+__all__ = ["MODEL", "LICENCE"]
 
 import os
 import pathlib as pl
 from general.params.model_licences import Models
+from general.params.experiment_licences import Experiments
 
 models = Models()
 
@@ -20,4 +21,9 @@ def detect_model_in_use():
     return model
 
 
+# Get model
 MODEL = detect_model_in_use()
+
+# Set experiment license
+exp = Experiments()
+LICENCE = exp.NORMAL_PERTURBATION
