@@ -138,25 +138,40 @@ def calculate_perturbations(perturb_e_vectors, dev_plot_active=False, args=None)
         (n_k_vec + 2 * bd_size, n_profiles * n_runs_per_profile), dtype=np.complex128
     )
 
+    if args["eigen_perturb"]:
+        # Get complex-conjugate vector pair
+        perturb_e_vectors_conj = np.conj(perturb_e_vectors)
+
     # Perform perturbation for all eigenvectors
     for i in range(n_profiles * n_runs_per_profile):
-        # Generate random error
-        error = np.random.rand(2 * n_k_vec).astype(np.float64) * 2 - 1
         # Apply single shell perturbation
         if args["single_shell_perturb"] is not None:
             perturb = np.zeros(n_k_vec, dtype=np.complex128)
-            perturb.real[args["single_shell_perturb"]] = error[0]
-            perturb.imag[args["single_shell_perturb"]] = error[1]
-        else:
+            perturb.real[args["single_shell_perturb"]] = (
+                np.random.rand(1)[0].astype(np.float64) * 2 - 1
+            )
+            perturb.imag[args["single_shell_perturb"]] = (
+                np.random.rand(1)[0].astype(np.float64) * 2 - 1
+            )
+        elif not args["eigen_perturb"]:
+            # Generate random perturbation error
             # Reshape into complex array
             perturb = np.empty(n_k_vec, dtype=np.complex128)
+            # Generate random error
+            error = np.random.rand(2 * n_k_vec).astype(np.float64) * 2 - 1
             perturb.real = error[:n_k_vec]
             perturb.imag = error[n_k_vec:]
+        elif args["eigen_perturb"]:
+            # Generate random weights of the complex-conjugate eigenvector pair
+            _weights = np.random.rand(2) * 2 - 1
+            # Make perturbation vector
+            perturb = (
+                _weights[0] * perturb_e_vectors_conj[:, i // n_runs_per_profile]
+                + _weights[1] * perturb_e_vectors[:, i // n_runs_per_profile]
+            )
+
         # Copy array for plotting
         perturb_temp = np.copy(perturb)
-
-        # Scale random perturbation with the normalised eigenvector
-        perturb = perturb * perturb_e_vectors[:, i // n_runs_per_profile]
         # Find scaling factor in order to have the seeked norm of the error
         lambda_factor = seeked_error_norm / np.linalg.norm(perturb)
         # Scale down the perturbation
