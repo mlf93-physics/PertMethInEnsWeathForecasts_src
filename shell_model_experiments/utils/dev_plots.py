@@ -63,20 +63,3 @@ def dev_plot_eigen_mode_analysis(
     # # plt.title('Mod squared of the components of the eigenvectors' + title_append)
     # # plt.colorbar()
     plt.show()
-
-
-def dev_plot_perturbation_generation(perturb, perturb_temp):
-    # Plot the random and the eigenvector scaled perturbation
-    lambda_factor_temp = seeked_error_norm / np.linalg.norm(perturb_temp)
-    perturb_temp = lambda_factor_temp * perturb_temp
-
-    # Plot random perturbation
-    # plt.plot(perturb_temp.real, 'b-')
-    # plt.plot(perturb_temp.imag, 'r-')
-    # Plot perturbation scaled along the eigenvector
-    plt.plot(perturb.real, "b--")
-    plt.plot(perturb.imag, "r--")
-    plt.legend(["Real part", "Imag part"])
-    plt.xlabel("Shell number")
-    plt.ylabel("Perturbation")
-    plt.show()

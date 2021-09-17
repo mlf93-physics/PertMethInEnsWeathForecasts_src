@@ -11,7 +11,7 @@ from shell_model_experiments.params.params import *
 import shell_model_experiments.analyses.lorentz_block_analysis as lr_analysis
 import shell_model_experiments.plotting.plot_data as pl_data
 import general.utils.import_data_funcs as g_import
-import shell_model_experiments.utils.plot_utils as plt_utils
+import general.utils.plot_utils as g_plt_utils
 
 profiler = Profiler()
 
@@ -95,7 +95,7 @@ def plt_lorentz_block(args):
 
     legend = [f"$\\Delta = {i + 1}$" for i in range(num_forecasts)]
     # Get non-repeating colorcycle
-    cmap_list = plt_utils.get_non_repeating_colors(n_colors=num_forecasts)
+    cmap_list = g_plt_utils.get_non_repeating_colors(n_colors=num_forecasts)
 
     # Make average plot...
     if args["average"]:
@@ -254,7 +254,7 @@ def plt_block_and_energy(args):
     fig, axes = plt.subplots(ncols=1, nrows=2)
 
     # Get non-repeating colorcycle
-    cmap_list = plt_utils.get_non_repeating_colors(n_colors=num_forecasts)
+    cmap_list = g_plt_utils.get_non_repeating_colors(n_colors=num_forecasts)
     axes[1].set_prop_cycle("color", cmap_list)
     block_handles = axes[1].plot(
         rmse[:, :, 0].T,

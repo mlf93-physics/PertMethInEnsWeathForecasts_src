@@ -392,10 +392,10 @@ def import_start_u_profiles(args=None):
             # Skip time datapoint and pad array with zeros
             if n_runs_per_profile == 1:
                 indices = counter
-                u_init_profiles[params.u_init_slice, indices] = temp_u_init_profile[1:]
+                u_init_profiles[params.u_slice, indices] = temp_u_init_profile[1:]
             elif n_runs_per_profile > 1:
                 indices = np.s_[counter : counter + n_runs_per_profile : 1]
-                u_init_profiles[params.u_init_slice, indices] = np.repeat(
+                u_init_profiles[params.u_slice, indices] = np.repeat(
                     np.reshape(
                         temp_u_init_profile[1:], (temp_u_init_profile[1:].size, 1)
                     ),

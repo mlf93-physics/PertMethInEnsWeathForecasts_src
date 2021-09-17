@@ -14,12 +14,14 @@ import shell_model_experiments.params as sh_params
 from shell_model_experiments.utils.save_data_funcs import save_lorentz_block_data
 import shell_model_experiments.lyaponov.lyaponov_exp_estimator as lp_estimator
 from lorentz63_experiments.lorentz63_model.lorentz63 import run_model as l63_model
-import lorentz63_experiments.params as l63_params
+import lorentz63_experiments.params.params as l63_params
 import lorentz63_experiments.utils.util_funcs as ut_funcs
 import general.utils.util_funcs as g_utils
 import general.utils.import_data_funcs as g_import
 from general.params.experiment_licences import Experiments as EXP
 import general.utils.save_data_funcs as g_save
+import general.utils.perturb_utils as g_ut_perturb
+import general.utils.exceptions as g_exceptions
 from general.params.model_licences import Models
 from config import MODEL, LICENCE
 
@@ -162,7 +164,7 @@ def prepare_perturbations(args):
             print("\nRunning in single shell perturb mode\n")
 
     # Make perturbations
-    perturbations = lp_estimator.calculate_perturbations(
+    perturbations = g_ut_perturb.calculate_perturbations(
         perturb_e_vectors, dev_plot_active=False, args=args
     )
 
@@ -329,6 +331,9 @@ if __name__ == "__main__":
     arg_parser.add_argument("--time_to_run", default=0.1, type=float)
     arg_parser.add_argument("--burn_in_time", default=0.0, type=float)
     arg_parser.add_argument("--ny_n", default=None, type=int)
+    arg_parser.add_argument("--sigma", default=10, type=float)
+    arg_parser.add_argument("--r_const", default=28, type=float)
+    arg_parser.add_argument("--b_const", default=8 / 3, type=float)
     arg_parser.add_argument("--n_runs_per_profile", default=1, type=int)
     arg_parser.add_argument("--n_profiles", default=1, type=int)
     arg_parser.add_argument("--start_time", nargs="+", type=float, required=True)
@@ -341,6 +346,21 @@ if __name__ == "__main__":
     args = vars(arg_parser.parse_args())
 
     args["ref_run"] = False
+
+    # Check if arguments apply to the model at use
+    if MODEL == Models.LORENTZ63:
+        if args["single_shell_perturb"] is not None:
+            raise g_exceptions.InvalidArgument(
+                "single_shell_perturb is not a valid option for current model."
+                + f" Model in use: {MODEL}",
+                argument="single_shell_perturb",
+            )
+        elif args["ny_n"] is not None:
+            raise g_exceptions.InvalidArgument(
+                "ny_n is not a valid option for current model."
+                + f" Model in use: {MODEL}",
+                argument="ny_n",
+            )
 
     args = g_utils.adjust_start_times_with_offset(args)
 

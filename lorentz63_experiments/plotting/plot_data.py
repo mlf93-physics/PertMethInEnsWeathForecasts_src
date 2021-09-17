@@ -4,8 +4,9 @@ sys.path.append("..")
 import argparse
 from mpl_toolkits import mplot3d
 import matplotlib.pyplot as plt
-import general.utils.import_data_funcs as g_import
 from lorentz63_experiments.params.params import *
+import general.utils.import_data_funcs as g_import
+import general.plotting.plot_data as g_plt_data
 
 
 def plot_attractor(args):
@@ -67,6 +68,11 @@ def plot_energy(args):
     plt.title("Energy vs time")
 
 
+def plot_error_norm_vs_time(args):
+
+    g_plt_data.plot_error_norm_vs_time(args)
+
+
 if __name__ == "__main__":
     # Define arguments
     arg_parser = argparse.ArgumentParser()
@@ -75,7 +81,7 @@ if __name__ == "__main__":
     """
     plot_mode :
         standard : plot everything with the standard plot setup
-        detailted : plot extra details in plots
+        detailed : plot extra details in plots
     """
     arg_parser.add_argument("--plot_mode", nargs="?", default="standard", type=str)
     arg_parser.add_argument("--seed_mode", default=False, type=bool)
@@ -88,6 +94,8 @@ if __name__ == "__main__":
     arg_parser.add_argument("--time_to_run", default=0.1, type=float)
     arg_parser.add_argument("--ref_start_time", default=0, type=float)
     arg_parser.add_argument("--ref_end_time", default=-1, type=float)
+    arg_parser.add_argument("--xlim", nargs=2, default=None, type=float)
+    arg_parser.add_argument("--ylim", nargs=2, default=None, type=float)
 
     subparsers = arg_parser.add_subparsers()
     perturb_parser = subparsers.add_parser(
@@ -99,6 +107,7 @@ if __name__ == "__main__":
     perturb_parser.add_argument("--file_offset", default=0, type=int)
     perturb_parser.add_argument("--specific_files", nargs="+", default=None, type=int)
     perturb_parser.add_argument("--endpoint", action="store_true")
+    perturb_parser.add_argument("--combinations", action="store_true")
 
     args = vars(arg_parser.parse_args())
     print("args", args)
@@ -118,5 +127,7 @@ if __name__ == "__main__":
         plot_velocities(args)
     elif "energy_plot" in args["plot_type"]:
         plot_energy(args)
+    elif "error_norm" in args["plot_type"]:
+        plot_error_norm_vs_time(args)
 
     plt.show()
