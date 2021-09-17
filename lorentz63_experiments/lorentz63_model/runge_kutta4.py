@@ -1,5 +1,8 @@
+import sys
+
+sys.path.append("..")
 from numba import njit, types
-from shell_model_experiments.params.params import *
+from config import NUMBA_CACHE
 
 
 @njit(
@@ -8,7 +11,7 @@ from shell_model_experiments.params.params import *
         types.Array(types.float64, 1, "C", readonly=False),
         types.Array(types.float64, 2, "C", readonly=False),
     ),
-    cache=True,
+    cache=NUMBA_CACHE,
 )
 def derivative_evaluator(x_old=None, dx=None, derivMatrix=None):
     """Derivative evaluator used in the Runge-Kutta method.
@@ -46,7 +49,7 @@ def derivative_evaluator(x_old=None, dx=None, derivMatrix=None):
         types.Array(types.float64, 1, "C", readonly=False),
         types.Array(types.float64, 2, "C", readonly=False),
     ),
-    cache=True,
+    cache=NUMBA_CACHE,
 )
 def runge_kutta4_vec(y0=0, h=1, dx=None, derivMatrix=None):
     """Performs the Runge-Kutta-4 integration of the lorentz model.

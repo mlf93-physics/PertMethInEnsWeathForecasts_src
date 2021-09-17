@@ -6,10 +6,12 @@ import argparse
 from pyinstrument import Profiler
 import numpy as np
 from numba import njit, types
-import runge_kutta4 as rk4
+import lorentz63_experiments.lorentz63_model.runge_kutta4 as rk4
 from lorentz63_experiments.params.params import *
-import lorentz63_experiments.plotting.plot_data as pl_data
+import lorentz63_experiments.utils.util_funcs as ut_funcs
 import general.utils.save_data_funcs as g_save
+from config import NUMBA_CACHE
+
 
 profiler = Profiler()
 
@@ -22,7 +24,7 @@ profiler = Profiler()
         types.Array(types.float64, 2, "C", readonly=False),
         types.int64,
     ),
-    cache=True,
+    cache=NUMBA_CACHE,
 )
 def run_model(x_old, du_array, derivMatrix, data_out, Nt_local):
     """Execute the integration of the sabra shell model.
@@ -60,12 +62,8 @@ def main(args=None):
 
     # Define x_old
     x_old = np.array([1, 1, 1], dtype=np.float64)
-    # Setup derivMatrix
-    derivMatrix[0, 0] = -args["sigma"]
-    derivMatrix[0, 1] = args["sigma"]
-    derivMatrix[1, 0] = args["r_const"]
-    derivMatrix[1, 1] = -1
-    derivMatrix[2, 2] = -args["b_const"]
+
+    derivMatrix = ut_funcs.setup_deriv_matrix(args)
 
     # Get number of records
     args["n_records"] = math.ceil(

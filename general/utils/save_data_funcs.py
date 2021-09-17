@@ -6,9 +6,8 @@ import pathlib as pl
 import subprocess as sp
 import numpy as np
 import shell_model_experiments.params as sh_params
-import shell_model_experiments.config as sh_config
+import config
 import lorentz63_experiments.params.params as l63_params
-import lorentz63_experiments.config as l63_config
 from general.params.model_licences import Models
 from config import MODEL
 
@@ -108,14 +107,14 @@ def generate_header(args, n_data=0, append_extra=""):
             f", n_f={sh_params.n_forcing}, dt={sh_params.dt}, epsilon={sh_params.epsilon}, "
             + f"lambda={sh_params.lambda_const}, N_data={n_data}, "
             + f"sample_rate={sh_params.sample_rate}, "
-            + f"experiment={sh_config.LICENCE}"
+            + f"experiment={config.LICENCE}"
             + append_extra
         )
     elif MODEL == Models.LORENTZ63:
         header += (
             f", dt={l63_params.dt}, N_data={n_data}, "
             + f"sample_rate={l63_params.sample_rate}, "
-            + f"experiment={l63_config.LICENCE}"
+            + f"experiment={config.LICENCE}"
             + append_extra
         )
 

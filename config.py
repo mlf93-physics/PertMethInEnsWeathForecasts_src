@@ -1,4 +1,4 @@
-__all__ = ["MODEL", "LICENCE"]
+__all__ = ["MODEL", "LICENCE", "NUMBA_CACHE"]
 
 import os
 import pathlib as pl
@@ -23,7 +23,11 @@ def detect_model_in_use():
 
 # Get model
 MODEL = detect_model_in_use()
+print(f"Running with model {MODEL}")
 
 # Set experiment license
 exp = Experiments()
 LICENCE = exp.NORMAL_PERTURBATION
+
+# Other general configurations
+NUMBA_CACHE = True

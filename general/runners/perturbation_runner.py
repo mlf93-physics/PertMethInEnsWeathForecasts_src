@@ -11,12 +11,11 @@ import multiprocessing
 from pyinstrument import Profiler
 from shell_model_experiments.sabra_model.sabra_model import run_model as sh_model
 import shell_model_experiments.params as sh_params
-import lorentz63_experiments.params as l63_params
 from shell_model_experiments.utils.save_data_funcs import save_lorentz_block_data
-from shell_model_experiments.lyaponov.lyaponov_exp_estimator import (
-    find_eigenvector_for_perturbation,
-    calculate_perturbations,
-)
+import shell_model_experiments.lyaponov.lyaponov_exp_estimator as lp_estimator
+from lorentz63_experiments.lorentz63_model.lorentz63 import run_model as l63_model
+import lorentz63_experiments.params as l63_params
+import lorentz63_experiments.utils.util_funcs as ut_funcs
 import general.utils.util_funcs as g_utils
 import general.utils.import_data_funcs as g_import
 from general.params.experiment_licences import Experiments as EXP
@@ -49,15 +48,21 @@ def perturbation_runner(
         + f" {run_count // args['n_runs_per_profile']}, profile run"
         + f" {run_count % args['n_runs_per_profile']}"
     )
-
-    sh_model(
-        u_old,
-        du_array,
-        data_out,
-        args["Nt"] + args["endpoint"] * 1,
-        args["ny"],
-        args["forcing"],
-    )
+    if MODEL == Models.SHELL_MODEL:
+        sh_model(
+            u_old,
+            du_array,
+            data_out,
+            args["Nt"] + args["endpoint"] * 1,
+            args["ny"],
+            args["forcing"],
+        )
+    elif MODEL == Models.LORENTZ63:
+        # Model specific setup
+        derivMatrix = ut_funcs.setup_deriv_matrix(args)
+        l63_model(
+            u_old, du_array, derivMatrix, data_out, args["Nt"] + args["endpoint"] * 1
+        )
 
     if LICENCE == EXP.NORMAL_PERTURBATION:
         g_save.save_data(
@@ -103,50 +108,61 @@ def prepare_perturbations(args):
         args=args
     )
 
-    # Save parameters to args dict:
-    args["forcing"] = header_dict["f"].real
+    if MODEL == Models.SHELL_MODEL:
+        # Save parameters to args dict:
+        args["forcing"] = header_dict["f"].real
 
-    if args["ny_n"] is None:
-        args["ny"] = header_dict["ny"]
+        if args["ny_n"] is None:
+            args["ny"] = header_dict["ny"]
 
-        if args["forcing"] == 0:
-            args["ny_n"] = 0
+            if args["forcing"] == 0:
+                args["ny_n"] = 0
+            else:
+                args["ny_n"] = int(
+                    3
+                    / 8
+                    * math.log10(args["forcing"] / (header_dict["ny"] ** 2))
+                    / math.log10(params.lambda_const)
+                )
+            # Take ny from reference file
         else:
-            args["ny_n"] = int(
-                3
-                / 8
-                * math.log10(args["forcing"] / (header_dict["ny"] ** 2))
-                / math.log10(params.lambda_const)
-            )
-        # Take ny from reference file
-    else:
-        args["ny"] = (
-            args["forcing"] / (params.lambda_const ** (8 / 3 * args["ny_n"]))
-        ) ** (1 / 2)
+            args["ny"] = (
+                args["forcing"] / (params.lambda_const ** (8 / 3 * args["ny_n"]))
+            ) ** (1 / 2)
+
+    elif MODEL == Models.LORENTZ63:
+        print("Nothing specific to do with args in lorentz63 model yet")
 
     if args["eigen_perturb"]:
         print("\nRunning with eigen_perturb\n")
-        perturb_e_vectors, _, _ = find_eigenvector_for_perturbation(
-            u_init_profiles[
-                :,
-                0 : args["n_profiles"]
-                * args["n_runs_per_profile"] : args["n_runs_per_profile"],
-            ],
-            dev_plot_active=False,
-            n_profiles=args["n_profiles"],
-            local_ny=header_dict["ny"],
-        )
+        if MODEL == Models.SHELL_MODEL:
+            perturb_e_vectors, _, _ = lp_estimator.find_eigenvector_for_perturbation(
+                u_init_profiles[
+                    :,
+                    0 : args["n_profiles"]
+                    * args["n_runs_per_profile"] : args["n_runs_per_profile"],
+                ],
+                dev_plot_active=False,
+                n_profiles=args["n_profiles"],
+                local_ny=header_dict["ny"],
+            )
+        elif MODEL == Models.LORENTZ63:
+            print(
+                "No eigenvector perturbations implemented for the lorentz63 model yet"
+            )
     else:
         print("\nRunning without eigen_perturb\n")
         perturb_e_vectors = np.ones(
             (params.sdim, args["n_profiles"]), dtype=params.dtype
         )
 
-    if args["single_shell_perturb"] is not None:
-        print("\nRunning in single shell perturb mode\n")
+    # Specific to shell model setup
+    if MODEL == Models.SHELL_MODEL:
+        if args["single_shell_perturb"] is not None:
+            print("\nRunning in single shell perturb mode\n")
 
     # Make perturbations
-    perturbations = calculate_perturbations(
+    perturbations = lp_estimator.calculate_perturbations(
         perturb_e_vectors, dev_plot_active=False, args=args
     )
 
