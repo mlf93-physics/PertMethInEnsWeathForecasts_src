@@ -99,6 +99,8 @@ def main(args=None):
                     )
                     * sample_rate
                 )
+            else:
+                out_array_size = int(args["record_max_time"] * tts)
         else:
             out_array_size = int(args["record_max_time"] * tts)
 

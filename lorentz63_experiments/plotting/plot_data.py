@@ -26,6 +26,47 @@ def plot_attractor(args):
     ax.plot3D(u_data[:, 0], u_data[:, 1], u_data[:, 2], "k-", linewidth=0.5)
 
 
+def plot_velocities(args):
+    """Plot the velocities of the reference data
+
+    Parameters
+    ----------
+    args : dict
+        A dictionary containing run time arguments
+    """
+
+    # Import reference data
+    time, u_data, header_dict = g_import.import_ref_data(args=args)
+
+    fig, axes = plt.subplots(nrows=3, ncols=1, sharex=True)
+
+    for i, ax in enumerate(axes):
+        ax.plot(time, u_data[:, i], "k-")
+        ax.set_xlabel("Time")
+        ax.set_ylabel("Velocity")
+
+    plt.suptitle("Velocities vs time")
+
+
+def plot_energy(args):
+    """Plot the energy of the reference data
+
+    Parameters
+    ----------
+    args : dict
+        A dictionary containing run time arguments
+    """
+
+    # Import reference data
+    time, u_data, header_dict = g_import.import_ref_data(args=args)
+
+    energy = 1 / 2 * np.sum(u_data ** 2, axis=1)
+    plt.plot(time, energy, "k-")
+    plt.xlabel("Time")
+    plt.ylabel("Energy")
+    plt.title("Energy vs time")
+
+
 if __name__ == "__main__":
     # Define arguments
     arg_parser = argparse.ArgumentParser()
@@ -41,7 +82,6 @@ if __name__ == "__main__":
     arg_parser.add_argument("--start_time", nargs="+", type=float)
     arg_parser.add_argument("--specific_ref_records", nargs="+", default=[0], type=int)
 
-    subparsers = arg_parser.add_subparsers()
     arg_parser.add_argument("--burn_in_time", default=0.0, type=float)
     arg_parser.add_argument("--n_profiles", default=1, type=int)
     arg_parser.add_argument("--n_runs_per_profile", default=1, type=int)
@@ -49,6 +89,7 @@ if __name__ == "__main__":
     arg_parser.add_argument("--ref_start_time", default=0, type=float)
     arg_parser.add_argument("--ref_end_time", default=-1, type=float)
 
+    subparsers = arg_parser.add_subparsers()
     perturb_parser = subparsers.add_parser(
         "perturb_plot",
         help="Arguments needed for plotting the perturbation vs time plot.",
@@ -71,7 +112,11 @@ if __name__ == "__main__":
     if "time_to_run" in args:
         args["Nt"] = int(args["time_to_run"] / dt * sample_rate)
 
-    if "attractor" in args["plot_type"]:
+    if "attractor_plot" in args["plot_type"]:
         plot_attractor(args)
+    elif "velocity_plot" in args["plot_type"]:
+        plot_velocities(args)
+    elif "energy_plot" in args["plot_type"]:
+        plot_energy(args)
 
     plt.show()
