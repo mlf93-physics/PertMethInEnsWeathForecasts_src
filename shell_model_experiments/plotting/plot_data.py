@@ -17,7 +17,6 @@ from general.utils.import_data_funcs import (
 from shell_model_experiments.lyaponov.lyaponov_exp_estimator import (
     find_eigenvector_for_perturbation,
 )
-import shell_model_experiments.utils.plot_utils as plt_utils
 
 
 def plot_shells_vs_time(k_vectors_to_plot=None):

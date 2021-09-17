@@ -1,8 +1,17 @@
 from pathlib import Path
 import numpy as np
+import shell_model_experiments.params as sh_params
+import lorentz63_experiments.params.params as l63_params
 import general.utils.util_funcs as g_utils
 import general.utils.import_data_funcs as g_import
-from shell_model_experiments.params.params import *
+from general.params.model_licences import Models
+from config import MODEL
+
+# Get parameters for model
+if MODEL == Models.SHELL_MODEL:
+    params = sh_params
+elif MODEL == Models.LORENTZ63:
+    params = l63_params
 
 
 def import_lorentz_block_perturbations(args=None, rel_ref=True):
@@ -75,7 +84,7 @@ def import_lorentz_block_perturbations(args=None, rel_ref=True):
 
         # Prepare for reference import
         num_blocks = perturb_data_in.shape[0]
-        perturb_offset = int(perturb_header_dict["start_time_offset"] * tts)
+        perturb_offset = int(perturb_header_dict["start_time_offset"] * params.tts)
         start_index = (
             ref_file_match[ref_file_match_keys_array[ref_file_counter]][perturb_index]
             + perturb_offset

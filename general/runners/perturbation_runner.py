@@ -11,7 +11,6 @@ import multiprocessing
 from pyinstrument import Profiler
 from shell_model_experiments.sabra_model.sabra_model import run_model as sh_model
 import shell_model_experiments.params as sh_params
-from shell_model_experiments.utils.save_data_funcs import save_lorentz_block_data
 import shell_model_experiments.lyaponov.lyaponov_exp_estimator as lp_estimator
 from lorentz63_experiments.lorentz63_model.lorentz63 import run_model as l63_model
 import lorentz63_experiments.params.params as l63_params
@@ -20,6 +19,7 @@ import general.utils.util_funcs as g_utils
 import general.utils.import_data_funcs as g_import
 from general.params.experiment_licences import Experiments as EXP
 import general.utils.save_data_funcs as g_save
+import general.utils.saving.save_lorentz_block_funcs as lb_save
 import general.utils.perturb_utils as g_ut_perturb
 import general.utils.exceptions as g_exceptions
 from general.params.model_licences import Models
@@ -74,7 +74,7 @@ def perturbation_runner(
             args=args,
         )
     elif LICENCE == EXP.LORENTZ_BLOCK:
-        save_lorentz_block_data(
+        lb_save.save_lorentz_block_data(
             data_out,
             prefix=f"lorentz{perturb_count}_",
             perturb_position=perturb_positions[run_count // args["n_runs_per_profile"]],

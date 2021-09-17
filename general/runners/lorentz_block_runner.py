@@ -6,12 +6,22 @@ import argparse
 import pathlib as pl
 import json
 import numpy as np
-from shell_model_experiments.params.params import *
-import shell_model_experiments.utils.validate_exp_setups as ut_val
+import shell_model_experiments.params as sh_params
+import lorentz63_experiments.params.params as l63_params
+import perturbation_runner as pt_runner
+import general.utils.validate_exp_setups as ut_val
 import general.utils.util_funcs as g_utils
 import general.utils.save_data_funcs as g_save
-from shell_model_experiments.params.env_params import *
-import perturbation_runner as pt_runner
+from general.params.env_params import *
+from general.params.model_licences import Models
+import general.utils.exceptions as g_exceptions
+from config import MODEL
+
+# Get parameters for model
+if MODEL == Models.SHELL_MODEL:
+    params = sh_params
+elif MODEL == Models.LORENTZ63:
+    params = l63_params
 
 
 def main(args):
@@ -99,6 +109,9 @@ if __name__ == "__main__":
     arg_parser.add_argument("--time_to_run", default=0.1, type=float)
     arg_parser.add_argument("--burn_in_time", default=0.0, type=float)
     arg_parser.add_argument("--ny_n", default=None, type=int)
+    arg_parser.add_argument("--sigma", default=10, type=float)
+    arg_parser.add_argument("--r_const", default=28, type=float)
+    arg_parser.add_argument("--b_const", default=8 / 3, type=float)
     arg_parser.add_argument("--n_runs_per_profile", default=1, type=int)
     arg_parser.add_argument("--n_profiles", default=1, type=int)
     arg_parser.add_argument("--start_time", nargs="+", type=float)
@@ -119,6 +132,21 @@ if __name__ == "__main__":
     # Set seed if wished
     if args["seed_mode"]:
         np.random.seed(seed=1)
+
+    # Check if arguments apply to the model at use
+    if MODEL == Models.LORENTZ63:
+        if args["single_shell_perturb"] is not None:
+            raise g_exceptions.InvalidArgument(
+                "single_shell_perturb is not a valid option for current model."
+                + f" Model in use: {MODEL}",
+                argument="single_shell_perturb",
+            )
+        elif args["ny_n"] is not None:
+            raise g_exceptions.InvalidArgument(
+                "ny_n is not a valid option for current model."
+                + f" Model in use: {MODEL}",
+                argument="ny_n",
+            )
 
     main(args)
 

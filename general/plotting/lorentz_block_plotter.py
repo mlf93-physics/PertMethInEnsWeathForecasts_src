@@ -7,11 +7,20 @@ import pathlib as pl
 import numpy as np
 import matplotlib.pyplot as plt
 from pyinstrument import Profiler
-from shell_model_experiments.params.params import *
-import shell_model_experiments.analyses.lorentz_block_analysis as lr_analysis
+import shell_model_experiments.params as sh_params
+import lorentz63_experiments.params.params as l63_params
 import shell_model_experiments.plotting.plot_data as pl_data
+import general.analyses.lorentz_block_analysis as lr_analysis
 import general.utils.import_data_funcs as g_import
 import general.utils.plot_utils as g_plt_utils
+from general.params.model_licences import Models
+from config import MODEL
+
+# Get parameters for model
+if MODEL == Models.SHELL_MODEL:
+    params = sh_params
+elif MODEL == Models.LORENTZ63:
+    params = l63_params
 
 profiler = Profiler()
 
@@ -57,7 +66,7 @@ def plt_lorentz_block_from_full_perturbation_data(args):
                     # NOTE: reference velocities are subtracted on import, so
                     # this is the forecast error directly
                     _error = forecast_pert_u_stores[fc][
-                        int((day + 1) * day_offset * tts) + 1, :
+                        int((day + 1) * day_offset * params.tts) + 1, :
                     ]
                     rmse_array[fc, day] = np.sqrt(
                         np.mean((_error * _error.conj()).real)
@@ -65,10 +74,10 @@ def plt_lorentz_block_from_full_perturbation_data(args):
                 else:
                     _error = (
                         forecast_pert_u_stores[fc][
-                            int((day + 1) * day_offset * tts) + 1, :
+                            int((day + 1) * day_offset * params.tts) + 1, :
                         ]
                         - ana_forecast_pert_u_stores[fc][
-                            int((day - fc) * day_offset * tts) + 1, :
+                            int((day - fc) * day_offset * params.tts) + 1, :
                         ]
                     )
                     rmse_array[fc, day] = np.sqrt(
@@ -156,7 +165,7 @@ def plt_lorentz_block(args):
             )
             axes[i // num_subplot_cols, i % num_subplot_cols].set_title(
                 f"Lorentz block {i+1} | $T_{{start}}$="
-                + f"{ana_forecast_header_dicts[i]['perturb_pos']*dt/sample_rate:.1f}"
+                + f"{ana_forecast_header_dicts[i]['perturb_pos']*params.stt:.1f}"
             )
             axes[i // num_subplot_cols, i % num_subplot_cols].set_yscale("log")
 
@@ -191,10 +200,10 @@ def plt_blocks_energy_regions(args):
         header_dict = g_import.import_header(file_name=perturb_file_names[0])
 
         block_start_indices[i] = int(
-            header_dict["perturb_pos"] + header_dict["start_time_offset"] * tts
+            header_dict["perturb_pos"] + header_dict["start_time_offset"] * params.tts
         )
         block_end_indices[i] = int(
-            header_dict["perturb_pos"] + header_dict["time_to_run"] * tts
+            header_dict["perturb_pos"] + header_dict["time_to_run"] * params.tts
         )
         block_names.append(block.name)
 
@@ -209,8 +218,8 @@ def plt_blocks_energy_regions(args):
 
     for i in range(num_blocks):
         time_array = np.linspace(
-            block_start_indices[i] * dt / sample_rate,
-            block_end_indices[i] * dt / sample_rate,
+            block_start_indices[i] * params.stt,
+            block_end_indices[i] * params.stt,
             int(block_end_indices[i] - block_start_indices[i]) + 1,
             endpoint=True,
         )
@@ -218,8 +227,8 @@ def plt_blocks_energy_regions(args):
         ax.plot(
             time_array,
             energy_vs_time[
-                int(block_start_indices[i] - args["ref_start_time"] * tts) : int(
-                    block_end_indices[i] - args["ref_start_time"] * tts + 1
+                int(block_start_indices[i] - args["ref_start_time"] * params.tts) : int(
+                    block_end_indices[i] - args["ref_start_time"] * params.tts + 1
                 )
             ],
             zorder=15,
@@ -281,16 +290,16 @@ def plt_block_and_energy(args):
     # Get perturb positions
     block_start_index = int(
         ana_forecast_header_dicts[0]["perturb_pos"]
-        + ana_forecast_header_dicts[0]["start_time_offset"] * tts
+        + ana_forecast_header_dicts[0]["start_time_offset"] * params.tts
     )
     block_end_index = int(
         ana_forecast_header_dicts[0]["perturb_pos"]
-        + ana_forecast_header_dicts[0]["time_to_run"] * tts
+        + ana_forecast_header_dicts[0]["time_to_run"] * params.tts
     )
 
     # Import only portion of ref record that fits the actual block
-    args["ref_start_time"] = block_start_index * dt / sample_rate
-    args["ref_end_time"] = block_end_index * dt / sample_rate
+    args["ref_start_time"] = block_start_index * params.stt
+    args["ref_end_time"] = block_end_index * params.stt
     time, u_data, ref_header_dict = g_import.import_ref_data(args=args)
 
     # Remove perturb_folder to not plot perturbation start positions
@@ -310,8 +319,8 @@ if __name__ == "__main__":
     arg_parser.add_argument("--path", nargs="?", default=None, type=str)
     arg_parser.add_argument("--perturb_folder", nargs="?", default=None, type=str)
     arg_parser.add_argument("--n_files", default=-1, type=int)
-    arg_parser.add_argument("--experiment", nargs="?", default=None, type=str)
     arg_parser.add_argument("--plot_type", nargs="?", default=None, type=str)
+    arg_parser.add_argument("--experiment", nargs="?", default=None, type=str)
     arg_parser.add_argument("--average", action="store_true")
     arg_parser.add_argument("--sharey", action="store_true")
     arg_parser.add_argument("--ref_start_time", default=0, type=float)
@@ -332,7 +341,6 @@ if __name__ == "__main__":
         plt_block_and_energy(args)
     else:
         raise ValueError("No valid plot type given as input argument")
-        exit()
 
     plt.tight_layout()
     plt.show()
