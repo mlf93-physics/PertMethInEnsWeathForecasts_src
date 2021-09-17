@@ -8,12 +8,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from pyinstrument import Profiler
 from shell_model_experiments.params.params import *
-from shell_model_experiments.utils.import_data_funcs import (
-    import_perturbation_velocities,
-)
 import shell_model_experiments.analyses.lorentz_block_analysis as lr_analysis
 import shell_model_experiments.plotting.plot_data as pl_data
-import shell_model_experiments.utils.import_data_funcs as imp_funcs
+import general.utils.import_data_funcs as g_import
 import shell_model_experiments.utils.plot_utils as plt_utils
 
 profiler = Profiler()
@@ -34,7 +31,7 @@ def plt_lorentz_block_from_full_perturbation_data(args):
             _,
             forecast_header_dict,
             _,
-        ) = import_perturbation_velocities(args)
+        ) = g_import.import_perturbation_velocities(args)
 
         # Import forecasts
         args["perturb_folder"] = parent_pert_folder + "/analysis_forecasts"
@@ -46,7 +43,7 @@ def plt_lorentz_block_from_full_perturbation_data(args):
             _,
             _,
             _,
-        ) = import_perturbation_velocities(args)
+        ) = g_import.import_perturbation_velocities(args)
 
         num_ana_forecasts = len(ana_forecast_pert_u_stores)
         num_forecasts = len(forecast_pert_u_stores)
@@ -60,7 +57,7 @@ def plt_lorentz_block_from_full_perturbation_data(args):
                     # NOTE: reference velocities are subtracted on import, so
                     # this is the forecast error directly
                     _error = forecast_pert_u_stores[fc][
-                        int((day + 1) * day_offset * sample_rate / dt) + 1, :
+                        int((day + 1) * day_offset * tts) + 1, :
                     ]
                     rmse_array[fc, day] = np.sqrt(
                         np.mean((_error * _error.conj()).real)
@@ -68,10 +65,10 @@ def plt_lorentz_block_from_full_perturbation_data(args):
                 else:
                     _error = (
                         forecast_pert_u_stores[fc][
-                            int((day + 1) * day_offset * sample_rate / dt) + 1, :
+                            int((day + 1) * day_offset * tts) + 1, :
                         ]
                         - ana_forecast_pert_u_stores[fc][
-                            int((day - fc) * day_offset * sample_rate / dt) + 1, :
+                            int((day - fc) * day_offset * tts) + 1, :
                         ]
                     )
                     rmse_array[fc, day] = np.sqrt(
@@ -171,7 +168,7 @@ def plt_lorentz_block(args):
 
 def plt_blocks_energy_regions(args):
 
-    time, u_data, ref_header_dict = imp_funcs.import_ref_data(args=args)
+    time, u_data, ref_header_dict = g_import.import_ref_data(args=args)
 
     block_dirs = lr_analysis.get_block_dirs(args)
     num_blocks = len(block_dirs)
@@ -191,14 +188,13 @@ def plt_blocks_energy_regions(args):
             pl.Path(args["path"], args["perturb_folder"]).glob("*.csv")
         )
         # Import header
-        header_dict = imp_funcs.import_header(file_name=perturb_file_names[0])
+        header_dict = g_import.import_header(file_name=perturb_file_names[0])
 
         block_start_indices[i] = int(
-            header_dict["perturb_pos"]
-            + header_dict["start_time_offset"] * sample_rate / dt
+            header_dict["perturb_pos"] + header_dict["start_time_offset"] * tts
         )
         block_end_indices[i] = int(
-            header_dict["perturb_pos"] + header_dict["time_to_run"] * sample_rate / dt
+            header_dict["perturb_pos"] + header_dict["time_to_run"] * tts
         )
         block_names.append(block.name)
 
@@ -222,10 +218,8 @@ def plt_blocks_energy_regions(args):
         ax.plot(
             time_array,
             energy_vs_time[
-                int(
-                    block_start_indices[i] - args["ref_start_time"] * sample_rate / dt
-                ) : int(
-                    block_end_indices[i] - args["ref_start_time"] * sample_rate / dt + 1
+                int(block_start_indices[i] - args["ref_start_time"] * tts) : int(
+                    block_end_indices[i] - args["ref_start_time"] * tts + 1
                 )
             ],
             zorder=15,
@@ -287,17 +281,17 @@ def plt_block_and_energy(args):
     # Get perturb positions
     block_start_index = int(
         ana_forecast_header_dicts[0]["perturb_pos"]
-        + ana_forecast_header_dicts[0]["start_time_offset"] * sample_rate / dt
+        + ana_forecast_header_dicts[0]["start_time_offset"] * tts
     )
     block_end_index = int(
         ana_forecast_header_dicts[0]["perturb_pos"]
-        + ana_forecast_header_dicts[0]["time_to_run"] * sample_rate / dt
+        + ana_forecast_header_dicts[0]["time_to_run"] * tts
     )
 
     # Import only portion of ref record that fits the actual block
     args["ref_start_time"] = block_start_index * dt / sample_rate
     args["ref_end_time"] = block_end_index * dt / sample_rate
-    time, u_data, ref_header_dict = imp_funcs.import_ref_data(args=args)
+    time, u_data, ref_header_dict = g_import.import_ref_data(args=args)
 
     # Remove perturb_folder to not plot perturbation start positions
     args["perturb_folder"] = None

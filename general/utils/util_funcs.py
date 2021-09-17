@@ -3,7 +3,7 @@ import pathlib as pl
 from collections import OrderedDict
 import numpy as np
 from pathlib import Path
-import shell_model_experiments.params.params as sh_params
+import shell_model_experiments.params as sh_params
 import lorentz63_experiments.params.params as l63_params
 from general.params.model_licences import Models
 from config import MODEL

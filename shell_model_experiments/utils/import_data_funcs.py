@@ -75,9 +75,7 @@ def import_lorentz_block_perturbations(args=None, rel_ref=True):
 
         # Prepare for reference import
         num_blocks = perturb_data_in.shape[0]
-        perturb_offset = int(
-            perturb_header_dict["start_time_offset"] * sample_rate / dt
-        )
+        perturb_offset = int(perturb_header_dict["start_time_offset"] * tts)
         start_index = (
             ref_file_match[ref_file_match_keys_array[ref_file_counter]][perturb_index]
             + perturb_offset

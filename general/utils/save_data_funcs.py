@@ -199,13 +199,13 @@ def save_data(data_out, subfolder="", prefix="", perturb_position=None, args=Non
             ref_data_info_name = (
                 f"{expected_path}/ref_data_info_ny"
                 + f"{temp_args['ny']}_t{temp_args['time_to_run']}"
-                + f"_n_f{n_forcing}_f{temp_args['forcing']}.txt"
+                + f"_n_f{sh_params.n_forcing}_f{temp_args['forcing']}.txt"
             )
         elif MODEL == Models.LORENTZ63:
             ref_data_info_name = (
                 f"{expected_path}/ref_data_info_sig{temp_args['sigma']}"
                 + f"_t{temp_args['time_to_run']}"
-                + f"_b{temp_args['b_const']}_r{temp_args['r_const']}"
+                + f"_b{temp_args['b_const']}_r{temp_args['r_const']}.txt"
             )
 
         arg_str_list = [f"{key}={value}" for key, value in args.items()]

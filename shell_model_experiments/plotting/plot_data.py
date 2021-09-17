@@ -7,7 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from math import floor, ceil, sqrt
 from shell_model_experiments.params.params import *
-from shell_model_experiments.utils.import_data_funcs import (
+from general.utils.import_data_funcs import (
     import_data,
     import_header,
     import_ref_data,
@@ -133,7 +133,7 @@ def plot_inviscid_quantities(
 
             for idx in sorted(index):
                 plt.plot(
-                    idx / sample_rate * dt,
+                    idx * stt,
                     energy_vs_time[int(idx * sample_rate)],
                     marker="o",
                 )
@@ -199,7 +199,7 @@ def plot_inviscid_quantities_per_shell(
         for idx in range(len(index)):
 
             point_plot = plt.plot(
-                np.ones(n_k_vec) * header_dicts[idx]["perturb_pos"] / sample_rate * dt,
+                np.ones(n_k_vec) * header_dicts[idx]["perturb_pos"] * stt,
                 energy_vs_time[int(header_dicts[idx]["perturb_pos"])],
                 "o",
             )
@@ -207,8 +207,7 @@ def plot_inviscid_quantities_per_shell(
             time_array = np.linspace(
                 0,
                 header_dicts[idx]["time_to_run"],
-                int(header_dicts[idx]["time_to_run"] * sample_rate / dt)
-                + args["endpoint"] * 1,
+                int(header_dicts[idx]["time_to_run"] * tts) + args["endpoint"] * 1,
                 dtype=np.float64,
                 endpoint=args["endpoint"],
             )
@@ -239,7 +238,7 @@ def plot_inviscid_quantities_per_shell(
                 axis=1,
             )
             ax.plot(
-                time_array + perturb_time_pos_list[idx] / sample_rate * dt,
+                time_array + perturb_time_pos_list[idx] * stt,
                 perturbation_energy_vs_time,
                 color=point_plot[0].get_color(),
             )
@@ -467,7 +466,7 @@ def plot_shell_error_vs_time(args=None):
     time_array = np.linspace(
         0,
         header_dict["time"],
-        int(header_dict["time"] * sample_rate / dt),
+        int(header_dict["time"] * tts),
         dtype=np.float64,
         endpoint=False,
     )
@@ -574,7 +573,7 @@ def plot_error_norm_vs_time(args=None):
     time_array = np.linspace(
         0,
         header_dict["time_to_run"],
-        int(header_dict["time_to_run"] * sample_rate / dt) + args["endpoint"] * 1,
+        int(header_dict["time_to_run"] * tts) + args["endpoint"] * 1,
         dtype=np.float64,
         endpoint=args["endpoint"],
     )
@@ -952,7 +951,7 @@ def plot_error_vector_spectrogram(args=None):
     ) = import_perturbation_velocities(args)
 
     args["start_time"] = np.array(
-        [perturb_time_pos_list[args["file_offset"]] / sample_rate * dt],
+        [perturb_time_pos_list[args["file_offset"]] * stt],
         dtype=np.float64,
     )
     args["n_profiles"] = len(args["start_time"])
@@ -1010,7 +1009,7 @@ def plot_error_vector_spectrum(args=None):
 
     args["start_time"] = np.array(
         [
-            perturb_time_pos_list[args["file_offset"] + i] / sample_rate * dt
+            perturb_time_pos_list[args["file_offset"] + i] * stt
             for i in range(args["n_files"])
         ],
         dtype=np.float64,

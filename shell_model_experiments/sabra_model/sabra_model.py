@@ -73,7 +73,7 @@ def main(args=None):
 
     # Burn in the model for the desired burn in time
     data_out = np.zeros(
-        (int(args["burn_in_time"] * sample_rate / dt), n_k_vec + 1), dtype=np.complex128
+        (int(args["burn_in_time"] * tts), n_k_vec + 1), dtype=np.complex128
     )
     print(f'running burn-in phase of {args["burn_in_time"]}s\n')
     u_old = run_model(
@@ -99,7 +99,7 @@ def main(args=None):
                     * sample_rate
                 )
         else:
-            out_array_size = int(args["record_max_time"] * sample_rate / dt)
+            out_array_size = int(args["record_max_time"] * tts)
 
         data_out = np.zeros((out_array_size, n_k_vec + 1), dtype=np.complex128)
 

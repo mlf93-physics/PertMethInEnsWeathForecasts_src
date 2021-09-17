@@ -8,7 +8,7 @@ import json
 import numpy as np
 from shell_model_experiments.params.params import *
 import shell_model_experiments.utils.validate_exp_setups as ut_val
-import shell_model_experiments.utils.util_funcs as ut_funcs
+import general.utils.util_funcs as g_utils
 import general.utils.save_data_funcs as g_save
 from shell_model_experiments.params.env_params import *
 import perturbation_runner as pt_runner
@@ -32,7 +32,7 @@ def main(args):
     ut_val.validate_lorentz_block_setup(exp_setup=exp_setup)
 
     # Get number of existing blocks
-    n_existing_blocks = ut_funcs.count_existing_files_or_dirs(
+    n_existing_blocks = g_utils.count_existing_files_or_dirs(
         search_path=pl.Path(args["path"], exp_setup["folder_name"]), search_pattern="/"
     )
 
@@ -54,7 +54,7 @@ def main(args):
         args["n_runs_per_profile"] = 1
         args["perturb_folder"] = f"{parent_perturb_folder}/analysis_forecasts"
 
-        args = ut_funcs.adjust_start_times_with_offset(args)
+        args = g_utils.adjust_start_times_with_offset(args)
 
         # Copy args in order not override in forecast processes
         copy_args = copy.deepcopy(args)

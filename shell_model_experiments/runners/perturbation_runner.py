@@ -12,13 +12,13 @@ from pyinstrument import Profiler
 from shell_model_experiments.sabra_model.sabra_model import run_model
 from shell_model_experiments.params.params import *
 from shell_model_experiments.utils.save_data_funcs import save_lorentz_block_data
-from shell_model_experiments.utils.import_data_funcs import import_start_u_profiles
 from shell_model_experiments.lyaponov.lyaponov_exp_estimator import (
     find_eigenvector_for_perturbation,
     calculate_perturbations,
 )
-from shell_model_experiments.utils.util_funcs import adjust_start_times_with_offset
 from shell_model_experiments.config import *
+import general.utils.util_funcs as g_utils
+import general.utils.import_data_funcs as g_import
 from general.params.experiment_licences import Experiments as EXP
 import general.utils.save_data_funcs as g_save
 
@@ -92,7 +92,9 @@ def prepare_run_times(args):
 def prepare_perturbations(args):
 
     # Import start profiles
-    u_init_profiles, perturb_positions, header_dict = import_start_u_profiles(args=args)
+    u_init_profiles, perturb_positions, header_dict = g_import.import_start_u_profiles(
+        args=args
+    )
 
     # Save parameters to args dict:
     args["forcing"] = header_dict["f"].real
@@ -314,7 +316,7 @@ if __name__ == "__main__":
 
     args["ref_run"] = False
 
-    args = adjust_start_times_with_offset(args)
+    args = g_utils.adjust_start_times_with_offset(args)
 
     # Set seed if wished
     if args["seed_mode"]:

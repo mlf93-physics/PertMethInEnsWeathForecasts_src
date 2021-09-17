@@ -80,9 +80,7 @@ def main(args=None):
     )
 
     # Burn in the model for the desired burn in time
-    data_out = np.zeros(
-        (int(args["burn_in_time"] * sample_rate / dt), sdim + 1), dtype=np.float64
-    )
+    data_out = np.zeros((int(args["burn_in_time"] * tts), sdim + 1), dtype=np.float64)
     print(f'Running burn-in phase of {args["burn_in_time"]}s\n')
     x_old = run_model(
         x_old, dx_array, derivMatrix, data_out, int(args["burn_in_time"] / dt)
@@ -102,7 +100,7 @@ def main(args=None):
                     * sample_rate
                 )
         else:
-            out_array_size = int(args["record_max_time"] * sample_rate / dt)
+            out_array_size = int(args["record_max_time"] * tts)
 
         data_out = np.zeros((out_array_size, sdim + 1), dtype=np.float64)
 

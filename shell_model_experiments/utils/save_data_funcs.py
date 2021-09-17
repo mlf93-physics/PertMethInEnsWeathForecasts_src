@@ -18,9 +18,9 @@ def save_lorentz_block_data(
     # datapoint before
     # end + 2: +1 for same reason as for start + 1. +1 to have endpoint true of slice
     slice = np.s_[
-        int(args["start_time_offset"] * sample_rate / dt)
-        + 1 : int(args["start_time_offset"] * sample_rate / dt * num_forecasts)
-        + 2 : int(args["start_time_offset"] * sample_rate / dt)
+        int(args["start_time_offset"] * tts)
+        + 1 : int(args["start_time_offset"] * tts * num_forecasts)
+        + 2 : int(args["start_time_offset"] * tts)
     ]
     data_out = perturb_data[slice, :]
 
