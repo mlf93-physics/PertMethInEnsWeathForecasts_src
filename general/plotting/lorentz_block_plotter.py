@@ -270,8 +270,6 @@ def plt_block_and_energy(args):
         linewidth=1.5,
     )
 
-    print("block_handles", len(block_handles))
-
     # Reset color cycle
     axes[1].set_prop_cycle("color", cmap_list)
 
@@ -325,7 +323,9 @@ if __name__ == "__main__":
     arg_parser.add_argument("--sharey", action="store_true")
     arg_parser.add_argument("--ref_start_time", default=0, type=float)
     arg_parser.add_argument("--ref_end_time", default=-1, type=float)
-    arg_parser.add_argument("--num_blocks", default=np.inf, type=int)
+    num_block_group = arg_parser.add_mutually_exclusive_group()
+    num_block_group.add_argument("--num_blocks", default=np.inf, type=int)
+    num_block_group.add_argument("--specific_blocks", nargs="+", default=None, type=int)
 
     args = vars(arg_parser.parse_args())
 

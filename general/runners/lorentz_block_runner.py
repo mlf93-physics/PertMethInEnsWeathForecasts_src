@@ -53,7 +53,7 @@ def main(args):
         min(args["num_blocks"] + n_existing_blocks, len(exp_setup["start_times"])),
     ):
 
-        parent_perturb_folder = f"{exp_setup['folder_name']}/lorentz_block{i + 1}"
+        parent_perturb_folder = f"{exp_setup['folder_name']}/lorentz_block{i}"
 
         # Make analysis forecasts
         args["time_to_run"] = exp_setup["time_to_run"]

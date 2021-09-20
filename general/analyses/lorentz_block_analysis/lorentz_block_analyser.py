@@ -1,6 +1,7 @@
 import sys
 
 sys.path.append("..")
+import re
 import argparse
 import pathlib as pl
 import numpy as np
@@ -108,14 +109,34 @@ def analysis_executer(args):
     for block in block_dirs:
         args["perturb_folder"] = str(pl.Path(block.parents[0].name, block.name))
 
+        # Only import selected blocks if specified
+        if args["specific_blocks"] is not None:
+            block_numbers = re.findall(r"\d+", block.name)
+
+            if len(block_numbers) > 1:
+                raise ValueError(
+                    "Multiple numbers in block name; please only put one ID"
+                    + " number in block dir name"
+                )
+
+            block_number = int(block_numbers[0])
+
+            if not block_number in args["specific_blocks"]:
+                continue
+
         temp_rmse, ana_forecast_header_dict = calculate_rmse_of_block(args)
 
         # Append data and header dict
         rmse.append(temp_rmse)
         header_dicts.append(ana_forecast_header_dict)
 
+    if args["specific_blocks"] is None:
+        num_imported_blocks = len(block_dirs)
+    else:
+        num_imported_blocks = len(args["specific_blocks"])
+
     # Sort rmse and header_dicts lists
-    perturb_pos = [header_dicts[i]["perturb_pos"] for i in range(len(block_dirs))]
+    perturb_pos = [header_dicts[i]["perturb_pos"] for i in range(num_imported_blocks)]
     sort_index = np.argsort(perturb_pos)
     header_dicts = [header_dicts[i] for i in sort_index]
     rmse = [rmse[i] for i in sort_index]

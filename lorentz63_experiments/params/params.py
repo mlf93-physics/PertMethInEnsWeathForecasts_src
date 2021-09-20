@@ -7,7 +7,9 @@ sdim = 3  # Dimension of dynamical system
 bd_size = 0
 
 # Parameters for perturbations
-seeked_error_norm = 1e-14
+# For the Lorentz63 model, some perturbations can settle down to reference if
+# norm is ~ 1e-14
+seeked_error_norm = 1e-10
 
 # Define some conversion shortcuts
 tts = sample_rate / dt
