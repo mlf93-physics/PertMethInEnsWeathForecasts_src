@@ -297,7 +297,7 @@ def main_run(processes, args=None, num_blocks=None):
         for i in range(cpu_count):
             count = j * cpu_count + i
             processes[count].join()
-            processes[count].terminate()
+            processes[count].close()
 
     if num_blocks is not None:
         _dummy_done_count = (j + 1) * cpu_count // num_processes_per_block
@@ -316,7 +316,7 @@ def main_run(processes, args=None, num_blocks=None):
     for i in range(num_processes % cpu_count):
         count = (num_processes // cpu_count) * cpu_count + i
         processes[count].join()
-        processes[count].terminate()
+        processes[count].close()
 
     profiler.stop()
     print(profiler.output_text())
