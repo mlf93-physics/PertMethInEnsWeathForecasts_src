@@ -51,6 +51,21 @@ def import_header(folder="", file_name=None):
     return header_dict
 
 
+def import_ref_header(args):
+
+    # Import reference header dict
+    ref_header_path = list(pl.Path(args["path"], "ref_data").glob("*.txt"))
+    if len(ref_header_path) > 1:
+        raise ValueError(
+            f"To many reference header files. Found "
+            + f"{len(ref_header_path)}; expected 1."
+        )
+
+    ref_header_dict = import_header(file_name=ref_header_path[0])
+
+    return ref_header_dict
+
+
 def imported_sorted_perturbation_info(args):
     # Initiate lists
     perturb_file_names = list(
@@ -179,15 +194,7 @@ def import_ref_data(args=None):
     time = np.concatenate(time_concat)
     u_data = np.concatenate(u_data_concat)
 
-    # Import reference header dict
-    ref_header_path = list(pl.Path(args["path"], "ref_data").glob("*.txt"))
-    if len(ref_header_path) > 1:
-        raise ValueError(
-            f"To many reference header files. Found "
-            + f"{len(ref_header_path)}; expected 1."
-        )
-
-    ref_header_dict = import_header(file_name=ref_header_path[0])
+    ref_header_dict = import_ref_header(args)
 
     return time, u_data, ref_header_dict
 

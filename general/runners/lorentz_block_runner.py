@@ -11,6 +11,7 @@ import lorentz63_experiments.params.params as l63_params
 import perturbation_runner as pt_runner
 import general.utils.validate_exp_setups as ut_val
 import general.utils.util_funcs as g_utils
+import general.utils.import_data_funcs as g_import
 import general.utils.save_data_funcs as g_save
 from general.params.env_params import *
 from general.params.model_licences import Models
@@ -46,18 +47,37 @@ def main(args):
         search_path=pl.Path(args["path"], exp_setup["folder_name"]), search_pattern="/"
     )
 
+    # Determine how to infer start times (from start_times in exp_setup or
+    # calculated from block_offset)
+    ut_val.validate_start_time_method(exp_setup=exp_setup)
+    ref_header_dict = g_import.import_ref_header(args)
+
+    if "block_offset" in exp_setup:
+        num_possible_blocks = (
+            int(ref_header_dict["time_to_run"] - ref_header_dict["burn_in_time"])
+            // exp_setup["block_offset"]
+        )
+        start_times = [
+            exp_setup["day_offset"] + exp_setup["block_offset"] * i
+            for i in range(num_possible_blocks)
+        ]
+    elif "start_times" in exp_setup:
+        num_possible_blocks = len(exp_setup["start_times"])
+        start_times = exp_setup["start_times"]
+
     processes = []
 
     for i in range(
         n_existing_blocks,
-        min(args["num_blocks"] + n_existing_blocks, len(exp_setup["start_times"])),
+        min(args["num_blocks"] + n_existing_blocks, num_possible_blocks),
     ):
 
         parent_perturb_folder = f"{exp_setup['folder_name']}/lorentz_block{i}"
 
+        print("start_times[i]", start_times[i])
         # Make analysis forecasts
         args["time_to_run"] = exp_setup["time_to_run"]
-        args["start_time"] = [exp_setup["start_times"][i]]
+        args["start_time"] = [start_times[i]]
         args["start_time_offset"] = exp_setup["day_offset"]
         args["endpoint"] = True
         args["n_profiles"] = exp_setup["n_analyses"]
@@ -72,7 +92,7 @@ def main(args):
         processes.extend(pt_runner.main_setup(copy_args))
 
         # Make forecasts
-        args["start_time"] = [exp_setup["start_times"][i] - exp_setup["day_offset"]]
+        args["start_time"] = [start_times[i] - exp_setup["day_offset"]]
         args["time_to_run"] = exp_setup["time_to_run"] + exp_setup["day_offset"]
         args["endpoint"] = True
         args["n_profiles"] = 1
@@ -86,9 +106,7 @@ def main(args):
         pt_runner.main_run(
             processes,
             args=copy_args,
-            num_blocks=min(
-                args["num_blocks"], len(exp_setup["start_times"]) - n_existing_blocks
-            ),
+            num_blocks=min(args["num_blocks"], num_possible_blocks - n_existing_blocks),
         )
     else:
         print("No processes to run - check if blocks already exists")
@@ -119,8 +137,6 @@ if __name__ == "__main__":
     arg_parser.add_argument("--seed_mode", default=False, type=bool)
     arg_parser.add_argument("--single_shell_perturb", default=None, type=int)
     arg_parser.add_argument("--num_blocks", default=np.inf, type=int)
-    # arg_parser.add_argument("--block_step", default=0.2, type=float)
-    arg_parser.add_argument("--start_time_offset", default=None, type=float)
     arg_parser.add_argument("--endpoint", action="store_true")
     arg_parser.add_argument("--erda_run", action="store_true")
     arg_parser.add_argument("--exp_setup", default=None, type=str)

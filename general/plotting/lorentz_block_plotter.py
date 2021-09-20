@@ -7,6 +7,7 @@ import pathlib as pl
 import numpy as np
 import matplotlib.pyplot as plt
 from pyinstrument import Profiler
+import general.plotting.plot_config as g_plt_config
 import shell_model_experiments.params as sh_params
 import lorentz63_experiments.params.params as l63_params
 import shell_model_experiments.plotting.plot_data as pl_data
@@ -21,6 +22,9 @@ if MODEL == Models.SHELL_MODEL:
     params = sh_params
 elif MODEL == Models.LORENTZ63:
     params = l63_params
+
+# Setup plotting defaults
+g_plt_config.setup_plotting_defaults()
 
 profiler = Profiler()
 

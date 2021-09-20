@@ -1,4 +1,11 @@
 {
+    "lorentz63_blocks_v1": {
+        "folder_name": "lorentz63_blocks_v1",
+        "day_offset": 2,
+        "time_to_run": 42,
+        "n_analyses": 20,
+        "block_offset": 50
+    },
     "TestRun1": {
         "folder_name": "lorentz_block_test1",
         "day_offset": 2,

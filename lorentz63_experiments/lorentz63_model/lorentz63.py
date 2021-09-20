@@ -121,8 +121,6 @@ def main(args=None):
             print(f"saving record\n")
             g_save.save_data(data_out, args=args)
 
-        # pl_data.plot_attractor(data_out)
-
     profiler.stop()
     print(profiler.output_text())
 
@@ -131,8 +129,8 @@ if __name__ == "__main__":
     arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument("--burn_in_time", default=0.0, type=float)
     arg_parser.add_argument("--save_folder", nargs="?", default="data", type=str)
-    arg_parser.add_argument("--record_max_time", default=1000, type=float)
-    arg_parser.add_argument("--save_data", action="store_false")
+    arg_parser.add_argument("--record_max_time", default=3000, type=float)
+    arg_parser.add_argument("--save_data", action="store_true")
     arg_parser.add_argument("--time_to_run", type=float, required=True)
     arg_parser.add_argument("--sigma", default=10, type=float)
     arg_parser.add_argument("--r_const", default=28, type=float)
