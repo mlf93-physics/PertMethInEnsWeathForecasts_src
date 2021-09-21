@@ -39,7 +39,7 @@ def calculate_perturbations(perturb_e_vectors, dev_plot_active=False, args=None)
         dtype=params.dtype,
     )
 
-    if args["eigen_perturb"]:
+    if args["pert_mode"] == "normal_mode":
         # Get complex-conjugate vector pair
         perturb_e_vectors_conj = np.conj(perturb_e_vectors)
 
@@ -54,7 +54,7 @@ def calculate_perturbations(perturb_e_vectors, dev_plot_active=False, args=None)
             perturb.imag[args["single_shell_perturb"]] = (
                 np.random.rand(1)[0].astype(np.float64) * 2 - 1
             )
-        elif not args["eigen_perturb"]:
+        elif args["pert_mode"] == "random":
             # Generate random perturbation error
             # Reshape into complex array
             perturb = np.empty(params.sdim, dtype=params.dtype)
@@ -67,7 +67,7 @@ def calculate_perturbations(perturb_e_vectors, dev_plot_active=False, args=None)
             elif MODEL == Models.LORENTZ63:
                 perturb = error[: params.sdim]
 
-        elif args["eigen_perturb"]:
+        elif args["pert_mode"] == "normal_mode":
             # Generate random weights of the complex-conjugate eigenvector pair
             _weights = np.random.rand(2) * 2 - 1
             # Make perturbation vector

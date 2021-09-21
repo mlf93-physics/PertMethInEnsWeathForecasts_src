@@ -334,9 +334,14 @@ def import_start_u_profiles(args=None):
             f"\nImporting {n_profiles} velocity profiles randomly positioned "
             + "in reference datafile(s)\n"
         )
-        n_data = int(
-            (ref_header_dict["time"] - ref_header_dict["burn_in_time"]) * params.tts
-        )
+        if "time" in ref_header_dict:
+            time_to_run = ref_header_dict["time"]
+        elif "time_to_run" in ref_header_dict:
+            time_to_run = ref_header_dict["time_to_run"]
+        else:
+            raise KeyError("No valid key with time to run information")
+
+        n_data = int((time_to_run - ref_header_dict["burn_in_time"]) * params.tts)
 
         # Generate random start positions
         # division = total #datapoints - burn_in #datapoints - #datapoints per perturbation

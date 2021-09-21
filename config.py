@@ -28,7 +28,7 @@ def confirm_run_setup():
     print(f"Numba cache: {NUMBA_CACHE}")
     print("\n")
 
-    confirm = g_ui.ask_user("Please confirm the current setup to run (y/n)")
+    confirm = g_ui.ask_user("Please confirm the current setup to run")
 
     if not confirm:
         exit()
@@ -40,7 +40,7 @@ print(f"\nRunning with model {MODEL}\n")
 
 # Set experiment license
 exp = Experiments()
-LICENCE = exp.LORENTZ_BLOCK
+LICENCE = exp.NORMAL_PERTURBATION
 
 # Other general configurations
 NUMBA_CACHE = True

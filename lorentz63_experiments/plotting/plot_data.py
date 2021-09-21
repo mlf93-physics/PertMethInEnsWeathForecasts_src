@@ -5,6 +5,7 @@ import argparse
 from mpl_toolkits import mplot3d
 import matplotlib.pyplot as plt
 from lorentz63_experiments.params.params import *
+import lorentz63_experiments.analyses.normal_mode_analysis as nm_analysis
 import general.utils.import_data_funcs as g_import
 import general.plotting.plot_data as g_plt_data
 
@@ -73,6 +74,11 @@ def plot_error_norm_vs_time(args):
     g_plt_data.plot_error_norm_vs_time(args)
 
 
+def plot_normal_mode_dist(args):
+
+    nm_analysis.analyse_normal_mode_dist(args)
+
+
 if __name__ == "__main__":
     # Define arguments
     arg_parser = argparse.ArgumentParser()
@@ -87,7 +93,6 @@ if __name__ == "__main__":
     arg_parser.add_argument("--seed_mode", default=False, type=bool)
     arg_parser.add_argument("--start_time", nargs="+", type=float)
     arg_parser.add_argument("--specific_ref_records", nargs="+", default=[0], type=int)
-
     arg_parser.add_argument("--burn_in_time", default=0.0, type=float)
     arg_parser.add_argument("--n_profiles", default=1, type=int)
     arg_parser.add_argument("--n_runs_per_profile", default=1, type=int)
@@ -96,6 +101,9 @@ if __name__ == "__main__":
     arg_parser.add_argument("--ref_end_time", default=-1, type=float)
     arg_parser.add_argument("--xlim", nargs=2, default=None, type=float)
     arg_parser.add_argument("--ylim", nargs=2, default=None, type=float)
+    arg_parser.add_argument("--sigma", default=10, type=float)
+    arg_parser.add_argument("--r_const", default=28, type=float)
+    arg_parser.add_argument("--b_const", default=8 / 3, type=float)
 
     subparsers = arg_parser.add_subparsers()
     perturb_parser = subparsers.add_parser(
@@ -129,5 +137,7 @@ if __name__ == "__main__":
         plot_energy(args)
     elif "error_norm" in args["plot_type"]:
         plot_error_norm_vs_time(args)
+    elif "nm_dist" in args["plot_type"]:
+        plot_normal_mode_dist(args)
 
     plt.show()
