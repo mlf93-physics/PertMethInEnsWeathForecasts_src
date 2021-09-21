@@ -8,7 +8,7 @@ from numba import njit, types
 from pyinstrument import Profiler
 from shell_model_experiments.sabra_model.runge_kutta4 import runge_kutta4_vec
 from shell_model_experiments.params.params import *
-from shell_model_experiments.utils.save_data_funcs import save_data
+import general.utils.save_data_funcs as g_save
 
 profiler = Profiler()
 
@@ -73,7 +73,7 @@ def main(args=None):
 
     # Burn in the model for the desired burn in time
     data_out = np.zeros(
-        (int(args["burn_in_time"] * sample_rate / dt), n_k_vec + 1), dtype=np.complex128
+        (int(args["burn_in_time"] * tts), n_k_vec + 1), dtype=np.complex128
     )
     print(f'running burn-in phase of {args["burn_in_time"]}s\n')
     u_old = run_model(
@@ -99,7 +99,7 @@ def main(args=None):
                     * sample_rate
                 )
         else:
-            out_array_size = int(args["record_max_time"] * sample_rate / dt)
+            out_array_size = int(args["record_max_time"] * tts)
 
         data_out = np.zeros((out_array_size, n_k_vec + 1), dtype=np.complex128)
 
@@ -117,7 +117,7 @@ def main(args=None):
         # Add record_id to datafile header
         args["record_id"] = ir
         print(f"saving record\n")
-        save_data(data_out, args=args)
+        g_save.save_data(data_out, args=args)
 
     profiler.stop()
     print(profiler.output_text())
