@@ -7,15 +7,16 @@ import numpy as np
 import matplotlib.pyplot as plt
 from math import floor, ceil, sqrt
 from shell_model_experiments.params.params import *
+from shell_model_experiments.lyaponov.lyaponov_exp_estimator import (
+    find_eigenvector_for_perturbation,
+)
+import general.plotting.plot_data as g_plt_data
 from general.utils.import_data_funcs import (
     import_data,
     import_header,
     import_ref_data,
     import_perturbation_velocities,
     import_start_u_profiles,
-)
-from shell_model_experiments.lyaponov.lyaponov_exp_estimator import (
-    find_eigenvector_for_perturbation,
 )
 
 
@@ -995,7 +996,7 @@ if __name__ == "__main__":
         if args["path"] is None:
             print("No path specified to analyse error norms.")
         else:
-            plot_error_norm_vs_time(args=args)
+            g_plt_data.plot_error_norm_vs_time(args=args)
 
     if "error_spectrum_vs_time" in args["plot_type"]:
         plot_error_energy_spectrum_vs_time_2D(args=args)

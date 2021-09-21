@@ -254,7 +254,7 @@ def import_perturbation_velocities(args=None):
         perturb_data_in, perturb_header_dict = import_data(perturb_file_name)
 
         # Initialise ref_data_in of null size
-        ref_data_in = np.array([[]], dtype=params.dtype)
+        ref_data_in = np.array([], dtype=params.dtype).reshape(0, params.sdim + 1)
 
         # Keep importing datafiles untill ref_data_in has same size as perturb dataarray
         counter = 0
@@ -263,6 +263,7 @@ def import_perturbation_velocities(args=None):
                 ref_file_match[ref_file_match_keys_array[ref_file_counter]][
                     perturb_index
                 ]
+                + 1 * (counter == 0)  # and iperturb_file == 0)
                 if counter == 0
                 else 0
             )
@@ -279,11 +280,10 @@ def import_perturbation_velocities(args=None):
                 start_line=skip_lines,
                 max_lines=max_rows,
             )
-
             ref_data_in = (
                 np.concatenate((ref_data_in, temp_ref_data_in))
-                if counter > 0
-                else temp_ref_data_in
+                if temp_ref_data_in.size > 0
+                else ref_data_in
             )
             counter += 1
 

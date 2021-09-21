@@ -7,7 +7,7 @@
         "block_offset": 50
     },
     "TestRun1": {
-        "folder_name": "lorentz_block_test1",
+        "folder_name": "lorentz_block_test",
         "day_offset": 2,
         "time_to_run": 60,
         "n_analyses": 29,
