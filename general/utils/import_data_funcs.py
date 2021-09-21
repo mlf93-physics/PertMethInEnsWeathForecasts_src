@@ -4,6 +4,7 @@ sys.path.append("..")
 import itertools as it
 import re
 import pathlib as pl
+import random
 import numpy as np
 import shell_model_experiments.params as sh_params
 import lorentz63_experiments.params.params as l63_params
@@ -421,3 +422,41 @@ def import_start_u_profiles(args=None):
             counter += 1
 
     return u_init_profiles, positions + burn_in * args["burn_in_lines"], ref_header_dict
+
+
+def import_profiles_for_nm_analysis(args=None):
+
+    n_profiles = args["n_profiles"]
+    n_runs_per_profile = args["n_runs_per_profile"]
+    num_profiles = n_profiles * n_runs_per_profile
+
+    # Get sorted file paths
+    ref_record_names_sorted = g_utils.get_sorted_ref_record_names(args=args)
+
+    num_ref_records = len(ref_record_names_sorted)
+    profiles = []
+
+    for ifile, ref_file in enumerate(ref_record_names_sorted):
+        with open(ref_file) as file:
+            lines = random.sample(
+                list(it.chain(file)),
+                num_profiles // num_ref_records
+                + (ifile + 1 == num_ref_records) * num_profiles % num_ref_records,
+            )
+
+        lines = map(lambda x: x.strip().split(","), lines)
+        profiles.extend(list(lines))
+
+    profiles = np.array(profiles, dtype=l63_params.dtype)[:, 1:]
+
+    # Pad profiles if necessary
+    if params.bd_size > 0:
+        profiles = np.pad(
+            profiles,
+            pad_width=((0, 0), (params.bd_size, params.bd_size)),
+            mode="constant",
+        )
+
+    profiles = profiles.T
+
+    return profiles

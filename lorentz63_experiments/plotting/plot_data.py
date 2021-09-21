@@ -3,6 +3,7 @@ import sys
 sys.path.append("..")
 import argparse
 from mpl_toolkits import mplot3d
+import matplotlib.colors as mpl_colors
 import matplotlib.pyplot as plt
 from lorentz63_experiments.params.params import *
 import lorentz63_experiments.analyses.normal_mode_analysis as nm_analysis
@@ -76,7 +77,24 @@ def plot_error_norm_vs_time(args):
 
 def plot_normal_mode_dist(args):
 
-    nm_analysis.analyse_normal_mode_dist(args)
+    u_profiles, e_values = nm_analysis.analyse_normal_mode_dist(args)
+
+    # Setup axes
+    ax = plt.axes(projection="3d")
+
+    max_e_value = np.max(e_values.real)
+
+    # Plot
+    # for i in range(u_profiles.shape[1]):
+    scatter_plot = ax.scatter(
+        u_profiles[0, :],
+        u_profiles[1, :],
+        u_profiles[2, :],
+        c=e_values.real,
+        norm=mpl_colors.Normalize(-max_e_value, max_e_value),
+        cmap="coolwarm",
+    )
+    plt.colorbar(scatter_plot)
 
 
 if __name__ == "__main__":
