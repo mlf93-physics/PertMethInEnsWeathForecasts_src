@@ -256,6 +256,9 @@ def import_perturbation_velocities(args=None):
         # Initialise ref_data_in of null size
         ref_data_in = np.array([], dtype=params.dtype).reshape(0, params.sdim + 1)
 
+        # Determine offset to work with perturb_pos=0
+        _offset = 1 * (perturb_header_dict["perturb_pos"] == 0)
+
         # Keep importing datafiles untill ref_data_in has same size as perturb dataarray
         counter = 0
         while ref_data_in.shape[0] < perturb_header_dict["N_data"]:
@@ -263,7 +266,7 @@ def import_perturbation_velocities(args=None):
                 ref_file_match[ref_file_match_keys_array[ref_file_counter]][
                     perturb_index
                 ]
-                + 1 * (counter == 0)  # and iperturb_file == 0)
+                + _offset
                 if counter == 0
                 else 0
             )
