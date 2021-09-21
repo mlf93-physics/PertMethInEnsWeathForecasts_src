@@ -961,6 +961,8 @@ if __name__ == "__main__":
     arg_parser.add_argument("--time_to_run", default=0.1, type=float)
     arg_parser.add_argument("--ref_start_time", default=0, type=float)
     arg_parser.add_argument("--ref_end_time", default=-1, type=float)
+    arg_parser.add_argument("--xlim", nargs=2, default=None, type=float)
+    arg_parser.add_argument("--ylim", nargs=2, default=None, type=float)
 
     args = vars(arg_parser.parse_args())
     print("args", args)

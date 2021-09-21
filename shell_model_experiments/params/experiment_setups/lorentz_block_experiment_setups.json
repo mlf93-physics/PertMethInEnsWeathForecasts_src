@@ -172,17 +172,14 @@
         ]
     },
     "TestRun3": {
-        "folder_name": "test1_data",
-        "day_offset": 0.01,
-        "time_to_run": 0.02,
-        "n_analyses": 2,
+        "folder_name": "testny6",
+        "day_offset": 0.24,
+        "time_to_run": 4.0,
+        "n_analyses": 16,
         "start_times": [
-            5.5,
-            10.2,
-            15.5,
-            18.5,
-            21.5,
-            23.7,
+            9.5,
+            14,
+            22,
             26
         ]
     }
