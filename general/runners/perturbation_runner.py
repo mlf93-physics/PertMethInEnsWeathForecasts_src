@@ -21,7 +21,7 @@ import general.utils.import_data_funcs as g_import
 from general.params.experiment_licences import Experiments as EXP
 import general.utils.save_data_funcs as g_save
 import general.utils.saving.save_lorentz_block_funcs as lb_save
-import general.utils.perturb_utils as g_ut_perturb
+import general.utils.perturb_utils as p_utils
 import general.utils.exceptions as g_exceptions
 from general.params.model_licences import Models
 from config import MODEL, LICENCE
@@ -113,7 +113,7 @@ def prepare_perturbations(args):
     header_dict = g_utils.handle_different_headers(header_dict)
 
     if MODEL == Models.SHELL_MODEL:
-        
+
         # Save parameters to args dict:
         args["forcing"] = header_dict["forcing"].real
 
@@ -178,7 +178,7 @@ def prepare_perturbations(args):
             print("\nRunning in single shell perturb mode\n")
 
     # Make perturbations
-    perturbations = g_ut_perturb.calculate_perturbations(
+    perturbations = p_utils.calculate_perturbations(
         perturb_e_vectors, dev_plot_active=False, args=args
     )
 

@@ -15,3 +15,25 @@ class InvalidArgument(Exception):
             self.message = message
 
         super().__init__(f"{self.message}. Argument: {self.argument}")
+
+
+class LicenceImplementationError(Exception):
+    """Exception raised if an algorithm is not implemented for the current licence
+
+    Attributes:
+        licence -- the licence
+        message -- explanation of the error
+    """
+
+    def __init__(self, message="", licence=None):
+        self.licence = licence
+
+        if len(message) == 0:
+            self.message = (
+                "This functionality is currently not available/implemented"
+                + " for the current licence"
+            )
+        else:
+            self.message = message
+
+        super().__init__(f"{self.message}. Licence: {self.licence}")

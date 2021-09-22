@@ -1,21 +1,13 @@
 import sys
 
 sys.path.append("..")
-import copy
 import argparse
 import pathlib as pl
-import numpy as np
 import shell_model_experiments.params as sh_params
 import lorentz63_experiments.params.params as l63_params
-import perturbation_runner as pt_runner
-import general.utils.util_funcs as g_utils
-import general.utils.import_data_funcs as g_import
-import general.utils.save_data_funcs as g_save
-from general.params.env_params import *
 from general.params.model_licences import Models
-import general.utils.exceptions as g_exceptions
-import general.utils.experiments.validate_exp_setups as ut_exp_val
 import general.utils.experiments.exp_utils as exp_utils
+import general.utils.experiments.validate_exp_setups as ut_exp_val
 import general.utils.runner_utils as r_utils
 from config import MODEL
 
@@ -32,68 +24,23 @@ def main(args):
     )
     exp_setup = exp_utils.get_exp_setup(exp_file_path, args)
 
-    # Validate setup
-    ut_exp_val.validate_lorentz_block_setup(exp_setup=exp_setup)
-
-    # Get number of existing blocks
-    n_existing_blocks = g_utils.count_existing_files_or_dirs(
-        search_path=pl.Path(args["path"], exp_setup["folder_name"]), search_pattern="/"
-    )
-
-    # Determine how to infer start times (from start_times in exp_setup or
-    # calculated from block_offset)
     ut_exp_val.validate_start_time_method(exp_setup=exp_setup)
 
-    start_times, num_possible_blocks = r_utils.generate_start_times(exp_setup, args)
+    # start_times, num_possible_blocks = r_utils.generate_start_times(exp_setup, args)
 
-    processes = []
+    # Make analysis forecasts
+    args["time_to_run"] = exp_setup["time_to_run"]
+    args["start_time"] = [start_times[i]]
+    args["start_time_offset"] = exp_setup["day_offset"]
+    args["endpoint"] = True
+    args["n_profiles"] = 1
+    args["n_runs_per_profile"] = exp_setup["n_vectors"]
+    args["perturb_folder"] = f"{exp_setup['folder_name']}"
 
-    for i in range(
-        n_existing_blocks,
-        min(args["num_blocks"] + n_existing_blocks, num_possible_blocks),
-    ):
+    args = g_utils.adjust_start_times_with_offset(args)
 
-        parent_perturb_folder = f"{exp_setup['folder_name']}/lorentz_block{i}"
-
-        # Make analysis forecasts
-        args["time_to_run"] = exp_setup["time_to_run"]
-        args["start_time"] = [start_times[i]]
-        args["start_time_offset"] = exp_setup["day_offset"]
-        args["endpoint"] = True
-        args["n_profiles"] = exp_setup["n_analyses"]
-        args["n_runs_per_profile"] = 1
-        args["perturb_folder"] = f"{parent_perturb_folder}/analysis_forecasts"
-
-        args = g_utils.adjust_start_times_with_offset(args)
-
-        # Copy args in order not override in forecast processes
-        copy_args = copy.deepcopy(args)
-
-        processes.extend(pt_runner.main_setup(copy_args))
-
-        # Make forecasts
-        args["start_time"] = [start_times[i] - exp_setup["day_offset"]]
-        args["time_to_run"] = exp_setup["time_to_run"] + exp_setup["day_offset"]
-        args["endpoint"] = True
-        args["n_profiles"] = 1
-        args["n_runs_per_profile"] = exp_setup["n_analyses"]
-        args["perturb_folder"] = f"{parent_perturb_folder}/forecasts"
-
-        copy_args = copy.deepcopy(args)
-        processes.extend(pt_runner.main_setup(copy_args))
-
-    if len(processes) > 0:
-        pt_runner.main_run(
-            processes,
-            args=copy_args,
-            num_blocks=min(args["num_blocks"], num_possible_blocks - n_existing_blocks),
-        )
-    else:
-        print("No processes to run - check if blocks already exists")
-
-    if args["erda_run"]:
-        path = pl.Path(args["path"], exp_setup["folder_name"])
-        g_save.compress_dir(path, "test_temp1")
+    # Copy args in order not override in forecast processes
+    copy_args = copy.deepcopy(args)
 
 
 if __name__ == "__main__":
@@ -145,9 +92,3 @@ if __name__ == "__main__":
             )
 
     main(args)
-
-    # Find DONE sound to play
-    done_file = pl.Path("/home/martin/Music/done_sound.mp3")
-
-    # if os.path.isfile(done_file):
-    #     playsound(done_file)
