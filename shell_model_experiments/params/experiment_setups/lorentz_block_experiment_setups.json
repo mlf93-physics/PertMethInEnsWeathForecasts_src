@@ -125,6 +125,34 @@
             178.6
         ]
     },
+    "DistinctPredictabilityRegimesShort_n_ny13": {
+        "folder_name": "lorentz_block_short_pred_n_ny13_ttr4",
+        "day_offset": 0.24,
+        "time_to_run": 4.0,
+        "n_analyses": 16,
+        "start_times": [
+            2.9,
+            6.9,
+            10.9,
+            24,
+            31.3,
+            38.8,
+            44.6,
+            52.2,
+            63.13,
+            68.8,
+            74.3,
+            80.7,
+            84.7,
+            90.1,
+            94.1,
+            98.1,
+            102.1,
+            106.3,
+            110.3,
+            114.3
+        ]
+    },
     "TestRun1": {
         "folder_name": "lorentz_block_short_pred_ttr2_full_perturb_data",
         "day_offset": 0.125,

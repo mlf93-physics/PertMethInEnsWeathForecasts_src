@@ -98,3 +98,23 @@ def count_existing_files_or_dirs(search_path="", search_pattern="*.csv"):
         n_files = 0
 
     return n_files
+
+
+def handle_different_headers(header_dict):
+    """Handle new and old style of the header_dict
+
+    Parameters
+    ----------
+    header_dict : dict
+        The header of a datafile parsed as a dict
+    """
+
+    if "f" in header_dict:
+        header_dict["forcing"] = header_dict["f"]
+        del header_dict["f"]
+
+    if "time" in header_dict:
+        header_dict["time_to_run"] = header_dict["time"]
+        del header_dict["time"]
+
+    return header_dict
