@@ -9,6 +9,7 @@ from lorentz63_experiments.params.params import *
 import lorentz63_experiments.analyses.normal_mode_analysis as nm_analysis
 import general.utils.import_data_funcs as g_import
 import general.plotting.plot_data as g_plt_data
+import general.utils.plot_utils as g_plt_utils
 
 
 def plot_attractor(args):
@@ -90,14 +91,21 @@ def plot_normal_mode_dist(args):
 
     max_e_value = np.max(e_values.real)
 
+    cmap, norm = g_plt_utils.get_cmap_distributed_around_zero(
+        vmin=-max_e_value, vmax=max_e_value
+    )
+
+    # print("num pos e values: ", np.sum(e_values.real > 0))
+    # print("num neg e values: ", np.sum(e_values.real < 0))
+
     # Plot
     scatter_plot = ax1.scatter(
         u_profiles[0, :],
         u_profiles[1, :],
         u_profiles[2, :],
         c=e_values.real,
-        norm=mpl_colors.Normalize(-max_e_value, max_e_value),
-        cmap="coolwarm",
+        norm=norm,  # mpl_colors.Normalize(-max_e_value, max_e_value),
+        cmap=cmap,
     )
     ax1.set_title(
         "Eigen value dist | Lorentz63 model \n"
@@ -131,7 +139,8 @@ def plot_normal_mode_dist(args):
     # Prepare quiver colors
     colors = e_values.real
     # Flatten and normalize
-    colors = (colors.ravel() - colors.min()) / colors.ptp()
+    colors = (colors.ravel()) / (0.5 * colors.ptp())
+
     # Repeat for each body line and two head lines
     colors = np.concatenate((colors, np.repeat(colors, 2)))
     # repeated_mask = np.concatenate((mask.ravel(), np.repeat(mask.ravel(), 2)))
