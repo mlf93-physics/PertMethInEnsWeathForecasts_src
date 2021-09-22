@@ -14,7 +14,7 @@ def analyse_normal_mode_dist(args):
 
     # Import reference data
     # time, u_data, ref_header_dict = g_import.import_ref_data(args=args)
-    u_profiles = g_import.import_profiles_for_nm_analysis(args)
+    u_profiles, ref_header_dict = g_import.import_profiles_for_nm_analysis(args)
 
     (
         e_vector_matrix,
@@ -29,4 +29,4 @@ def analyse_normal_mode_dist(args):
     profiler.stop()
     print(profiler.output_text())
 
-    return u_profiles, e_values
+    return u_profiles, e_values, e_vector_matrix, ref_header_dict

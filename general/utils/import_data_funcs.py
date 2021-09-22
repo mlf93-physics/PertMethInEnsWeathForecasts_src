@@ -433,6 +433,8 @@ def import_profiles_for_nm_analysis(args=None):
     # Get sorted file paths
     ref_record_names_sorted = g_utils.get_sorted_ref_record_names(args=args)
 
+    ref_header_dict = import_ref_header(args)
+
     num_ref_records = len(ref_record_names_sorted)
     profiles = []
 
@@ -459,4 +461,4 @@ def import_profiles_for_nm_analysis(args=None):
 
     profiles = profiles.T
 
-    return profiles
+    return profiles, ref_header_dict
