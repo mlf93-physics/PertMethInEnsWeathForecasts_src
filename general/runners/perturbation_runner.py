@@ -110,10 +110,12 @@ def prepare_perturbations(args):
     u_init_profiles, perturb_positions, header_dict = g_import.import_start_u_profiles(
         args=args
     )
+    header_dict = g_utils.handle_different_headers(header_dict)
 
     if MODEL == Models.SHELL_MODEL:
+        
         # Save parameters to args dict:
-        args["forcing"] = header_dict["f"].real
+        args["forcing"] = header_dict["forcing"].real
 
         if args["ny_n"] is None:
             args["ny"] = header_dict["ny"]
