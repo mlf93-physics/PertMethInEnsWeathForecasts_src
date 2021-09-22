@@ -4,6 +4,7 @@ sys.path.append("..")
 import itertools as it
 import re
 import pathlib as pl
+import random
 import numpy as np
 import shell_model_experiments.params as sh_params
 import lorentz63_experiments.params.params as l63_params
@@ -334,9 +335,14 @@ def import_start_u_profiles(args=None):
             f"\nImporting {n_profiles} velocity profiles randomly positioned "
             + "in reference datafile(s)\n"
         )
-        n_data = int(
-            (ref_header_dict["time"] - ref_header_dict["burn_in_time"]) * params.tts
-        )
+        if "time" in ref_header_dict:
+            time_to_run = ref_header_dict["time"]
+        elif "time_to_run" in ref_header_dict:
+            time_to_run = ref_header_dict["time_to_run"]
+        else:
+            raise KeyError("No valid key with time to run information")
+
+        n_data = int((time_to_run - ref_header_dict["burn_in_time"]) * params.tts)
 
         # Generate random start positions
         # division = total #datapoints - burn_in #datapoints - #datapoints per perturbation
@@ -416,3 +422,43 @@ def import_start_u_profiles(args=None):
             counter += 1
 
     return u_init_profiles, positions + burn_in * args["burn_in_lines"], ref_header_dict
+
+
+def import_profiles_for_nm_analysis(args=None):
+
+    n_profiles = args["n_profiles"]
+    n_runs_per_profile = args["n_runs_per_profile"]
+    num_profiles = n_profiles * n_runs_per_profile
+
+    # Get sorted file paths
+    ref_record_names_sorted = g_utils.get_sorted_ref_record_names(args=args)
+
+    ref_header_dict = import_ref_header(args)
+
+    num_ref_records = len(ref_record_names_sorted)
+    profiles = []
+
+    for ifile, ref_file in enumerate(ref_record_names_sorted):
+        with open(ref_file) as file:
+            lines = random.sample(
+                list(it.chain(file)),
+                num_profiles // num_ref_records
+                + (ifile + 1 == num_ref_records) * num_profiles % num_ref_records,
+            )
+
+        lines = map(lambda x: x.strip().split(","), lines)
+        profiles.extend(list(lines))
+
+    profiles = np.array(profiles, dtype=l63_params.dtype)[:, 1:]
+
+    # Pad profiles if necessary
+    if params.bd_size > 0:
+        profiles = np.pad(
+            profiles,
+            pad_width=((0, 0), (params.bd_size, params.bd_size)),
+            mode="constant",
+        )
+
+    profiles = profiles.T
+
+    return profiles, ref_header_dict

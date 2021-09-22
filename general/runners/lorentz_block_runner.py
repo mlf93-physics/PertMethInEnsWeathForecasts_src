@@ -133,7 +133,7 @@ if __name__ == "__main__":
     arg_parser.add_argument("--n_runs_per_profile", default=1, type=int)
     arg_parser.add_argument("--n_profiles", default=1, type=int)
     arg_parser.add_argument("--start_time", nargs="+", type=float)
-    arg_parser.add_argument("--eigen_perturb", action="store_true")
+    arg_parser.add_argument("--pert_mode", default="random", type=str)
     arg_parser.add_argument("--seed_mode", default=False, type=bool)
     arg_parser.add_argument("--single_shell_perturb", default=None, type=int)
     arg_parser.add_argument("--num_blocks", default=np.inf, type=int)

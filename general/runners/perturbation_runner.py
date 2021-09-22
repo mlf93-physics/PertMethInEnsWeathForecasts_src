@@ -11,7 +11,8 @@ import multiprocessing
 from pyinstrument import Profiler
 from shell_model_experiments.sabra_model.sabra_model import run_model as sh_model
 import shell_model_experiments.params as sh_params
-import shell_model_experiments.lyaponov.lyaponov_exp_estimator as lp_estimator
+import shell_model_experiments.lyaponov.lyaponov_exp_estimator as sh_lp_estimator
+import lorentz63_experiments.perturbations.normal_modes as l63_nm_estimator
 from lorentz63_experiments.lorentz63_model.lorentz63 import run_model as l63_model
 import lorentz63_experiments.params.params as l63_params
 import lorentz63_experiments.utils.util_funcs as ut_funcs
@@ -109,10 +110,12 @@ def prepare_perturbations(args):
     u_init_profiles, perturb_positions, header_dict = g_import.import_start_u_profiles(
         args=args
     )
+    header_dict = g_utils.handle_different_headers(header_dict)
 
     if MODEL == Models.SHELL_MODEL:
+        
         # Save parameters to args dict:
-        args["forcing"] = header_dict["f"].real
+        args["forcing"] = header_dict["forcing"].real
 
         if args["ny_n"] is None:
             args["ny"] = header_dict["ny"]
@@ -135,10 +138,10 @@ def prepare_perturbations(args):
     elif MODEL == Models.LORENTZ63:
         print("Nothing specific to do with args in lorentz63 model yet")
 
-    if args["eigen_perturb"]:
-        print("\nRunning with eigen_perturb\n")
+    if args["pert_mode"] == "normal_mode":
+        print("\nRunning with NORMAL MODE perturbations\n")
         if MODEL == Models.SHELL_MODEL:
-            perturb_e_vectors, _, _ = lp_estimator.find_eigenvector_for_perturbation(
+            perturb_e_vectors, _, _ = sh_lp_estimator.find_eigenvector_for_perturbation(
                 u_init_profiles[
                     :,
                     0 : args["n_profiles"]
@@ -149,13 +152,24 @@ def prepare_perturbations(args):
                 local_ny=header_dict["ny"],
             )
         elif MODEL == Models.LORENTZ63:
-            print(
-                "No eigenvector perturbations implemented for the lorentz63 model yet"
+            perturb_e_vectors, _, _ = l63_nm_estimator.find_normal_modes(
+                u_init_profiles[
+                    :,
+                    0 : args["n_profiles"]
+                    * args["n_runs_per_profile"] : args["n_runs_per_profile"],
+                ],
+                args,
+                dev_plot_active=False,
+                n_profiles=args["n_profiles"],
             )
-    else:
-        print("\nRunning without eigen_perturb\n")
+    elif args["pert_mode"] == "random":
+        print("\nRunning with RANDOM perturbations\n")
         perturb_e_vectors = np.ones(
             (params.sdim, args["n_profiles"]), dtype=params.dtype
+        )
+    else:
+        raise g_exceptions.InvalidArgument(
+            "Not a valid perturbation mode", argument=args["pert_mode"]
         )
 
     # Specific to shell model setup
@@ -243,7 +257,6 @@ def prepare_processes(
 def main_setup(args=None):
 
     times_to_run, Nt_array = prepare_run_times(args)
-    print("times_to_run, Nt_array", times_to_run, Nt_array)
     args["burn_in_lines"] = int(args["burn_in_time"] * params.tts)
 
     u_init_profiles, perturbations, perturb_positions = prepare_perturbations(args)
@@ -339,7 +352,7 @@ if __name__ == "__main__":
     arg_parser.add_argument("--n_runs_per_profile", default=1, type=int)
     arg_parser.add_argument("--n_profiles", default=1, type=int)
     arg_parser.add_argument("--start_time", nargs="+", type=float, required=True)
-    arg_parser.add_argument("--eigen_perturb", action="store_true")
+    arg_parser.add_argument("--pert_mode", default="random", type=str)
     arg_parser.add_argument("--seed_mode", default=False, type=bool)
     arg_parser.add_argument("--single_shell_perturb", default=None, type=int)
     arg_parser.add_argument("--start_time_offset", default=None, type=float)

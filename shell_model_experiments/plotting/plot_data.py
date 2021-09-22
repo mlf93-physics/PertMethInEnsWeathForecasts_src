@@ -18,6 +18,7 @@ from general.utils.import_data_funcs import (
     import_perturbation_velocities,
     import_start_u_profiles,
 )
+import general.utils.util_funcs as g_utils
 
 
 def plot_shells_vs_time(k_vectors_to_plot=None):
@@ -103,13 +104,15 @@ def plot_inviscid_quantities(
     ax.set_xlabel("Time")
     ax.set_ylabel("Energy")
 
+    header_dict = g_utils.handle_different_headers(header_dict)
+
     if omit == "ny":
         ax.set_title(
-            f'Energy over time vs $\\nu$; f={header_dict["f"]}, $n_f$={header_dict["n_f"]}, time={header_dict["time"]}'
+            f'Energy over time vs $\\nu$; f={header_dict["forcing"]}, $n_f$={header_dict["n_f"]}, time={header_dict["time_to_run"]}'
         )
     if omit == "n_f":
         ax.set_title(
-            f'Energy over time vs $n_f$; f={header_dict["f"]}, $\\nu$={header_dict["ny"]:.2e}, time={header_dict["time"]}'
+            f'Energy over time vs $n_f$; f={header_dict["forcing"]}, $\\nu$={header_dict["ny"]:.2e}, time={header_dict["time_to_run"]}'
         )
 
     if "perturb_folder" in args:
@@ -961,6 +964,8 @@ if __name__ == "__main__":
     arg_parser.add_argument("--time_to_run", default=0.1, type=float)
     arg_parser.add_argument("--ref_start_time", default=0, type=float)
     arg_parser.add_argument("--ref_end_time", default=-1, type=float)
+    arg_parser.add_argument("--xlim", nargs=2, default=None, type=float)
+    arg_parser.add_argument("--ylim", nargs=2, default=None, type=float)
 
     args = vars(arg_parser.parse_args())
     print("args", args)
