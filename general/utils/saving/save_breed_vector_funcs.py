@@ -56,11 +56,10 @@ def save_breed_vector_unit(
 
     prefix = "breed_vectors"
     suffix = f"_br_unit{br_unit}"
-
     # Save data
     np.savetxt(
         f"{expected_path}/{prefix}{out_name}{suffix}.csv",
-        breed_data,
+        breed_data[:, params.u_slice],
         delimiter=",",
         header=header,
     )

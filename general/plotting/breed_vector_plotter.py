@@ -44,7 +44,9 @@ def plot_breed_vectors(args):
         x.dot(y) for x, y in it.combinations(normed_mean_breed_vector_units.T, 2)
     ]
     orthonormality_matrix = np.zeros((args["n_profiles"], args["n_profiles"]))
-    orthonormality_matrix[np.triu_indices(args["n_profiles"], k=1)] = orthonormality
+    orthonormality_matrix[np.triu_indices(args["n_profiles"], k=1)] = np.abs(
+        orthonormality
+    )
 
     # Plotting
     plt.figure()

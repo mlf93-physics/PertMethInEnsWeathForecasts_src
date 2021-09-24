@@ -113,6 +113,13 @@ def rescale_perturbations(perturb_data, args):
     # Transform into 2d array
     perturb_data = np.array(perturb_data)
 
+    # Pad array if necessary
+    perturb_data = np.pad(
+        perturb_data,
+        pad_width=((0, 0), (params.bd_size, params.bd_size)),
+        mode="constant",
+    )
+
     # Diff data
     diff_data = perturb_data.T - u_init_profiles
     # Rescale data
