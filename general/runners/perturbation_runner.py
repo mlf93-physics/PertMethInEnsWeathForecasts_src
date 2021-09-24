@@ -51,8 +51,6 @@ def perturbation_runner(
         + f" {run_count // args['n_runs_per_profile']}, profile run"
         + f" {run_count % args['n_runs_per_profile']}"
     )
-    print("args", args)
-    print("u_old", u_old)
     if MODEL == Models.SHELL_MODEL:
         sh_model(
             u_old,
@@ -218,17 +216,7 @@ def prepare_processes(
                 multiprocessing.Process(
                     target=perturbation_runner,
                     args=(
-                        # NOTE: This is needed for numba not to produce the error,
-                        # that the array is order A and not order C as expected.
-                        # No clue yet why this error happens, but it needs to be fixed.
-                        np.array(
-                            [
-                                u_profiles_perturbed[k, count]
-                                for k in range(params.sdim)
-                            ],
-                            dtype=params.dtype,
-                            order="C",
-                        ),
+                        np.copy(u_profiles_perturbed[:, count]),
                         perturb_positions,
                         params.du_array,
                         data_out_list,
@@ -254,14 +242,7 @@ def prepare_processes(
             multiprocessing.Process(
                 target=perturbation_runner,
                 args=(
-                    # NOTE: This is needed for numba not to produce the error,
-                    # that the array is order A and not order C as expected.
-                    # No clue yet why this error happens, but it needs to be fixed.
-                    np.array(
-                        [u_profiles_perturbed[k, count] for k in range(params.sdim)],
-                        dtype=params.dtype,
-                        order="C",
-                    ),
+                    np.copy(u_profiles_perturbed[:, count]),
                     perturb_positions,
                     params.du_array,
                     data_out_list,
@@ -284,12 +265,6 @@ def main_setup(
 
     if u_profiles_perturbed is None or perturb_positions is None:
         u_profiles_perturbed, perturb_positions = prepare_perturbations(args)
-
-    print(
-        "u_profiles_perturbed, perturb_positions",
-        u_profiles_perturbed,
-        perturb_positions,
-    )
 
     # Detect if other perturbations exist in the perturbation_folder and calculate
     # perturbation count to start at

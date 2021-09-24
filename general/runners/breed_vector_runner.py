@@ -78,7 +78,6 @@ def main(args):
                 perturb_positions=perturb_positions,
                 exp_setup=exp_setup,
             )
-            print("processes", processes)
 
             if len(processes) > 0:
                 # Run specified number of cycles
@@ -94,8 +93,7 @@ def main(args):
                 copy_args["start_time"][0] += copy_args["time_to_run"]
 
                 # The rescaled data is used to start off cycle 1+
-                exit()
-                # rescaled_data = pt_utils.rescale_perturbations(data_out_list, copy_args)
+                rescaled_data = pt_utils.rescale_perturbations(data_out_list, copy_args)
         else:
             print("No processes to run - check if units already exists")
 
