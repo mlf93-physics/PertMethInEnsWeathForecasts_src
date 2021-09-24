@@ -17,7 +17,7 @@ from lorentz63_experiments.lorentz63_model.lorentz63 import run_model as l63_mod
 import lorentz63_experiments.params.params as l63_params
 import lorentz63_experiments.utils.util_funcs as ut_funcs
 import general.utils.util_funcs as g_utils
-import general.utils.import_data_funcs as g_import
+import general.utils.importing.import_data_funcs as g_import
 from general.params.experiment_licences import Experiments as EXP
 import general.utils.saving.save_data_funcs as g_save
 import general.utils.saving.save_perturbation as pt_save

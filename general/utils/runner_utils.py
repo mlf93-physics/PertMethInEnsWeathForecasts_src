@@ -1,7 +1,7 @@
 import sys
 
 sys.path.append("..")
-import general.utils.import_data_funcs as g_import
+import general.utils.importing.import_data_funcs as g_import
 from general.params.experiment_licences import Experiments as EXP
 import general.utils.exceptions as g_exceptions
 from config import LICENCE

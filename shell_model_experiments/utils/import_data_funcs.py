@@ -3,7 +3,7 @@ import numpy as np
 import shell_model_experiments.params as sh_params
 import lorentz63_experiments.params.params as l63_params
 import general.utils.util_funcs as g_utils
-import general.utils.import_data_funcs as g_import
+import general.utils.importing.import_data_funcs as g_import
 from general.params.model_licences import Models
 from config import MODEL
 

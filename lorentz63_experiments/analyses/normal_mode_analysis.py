@@ -4,7 +4,7 @@ sys.path.append("..")
 import numpy as np
 from pyinstrument import Profiler
 import lorentz63_experiments.perturbations.normal_modes as pert_nm
-import general.utils.import_data_funcs as g_import
+import general.utils.importing.import_data_funcs as g_import
 
 profiler = Profiler()
 
