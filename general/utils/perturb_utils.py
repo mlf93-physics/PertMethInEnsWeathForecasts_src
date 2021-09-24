@@ -6,6 +6,7 @@ import numpy as np
 import shell_model_experiments.params as sh_params
 import lorentz63_experiments.params.params as l63_params
 import general.utils.dev_plots as g_dev_plots
+import general.utils.import_data_funcs as g_import
 from general.params.model_licences import Models
 from config import MODEL
 
@@ -96,3 +97,29 @@ def calculate_perturbations(perturb_e_vectors, dev_plot_active=False, args=None)
             g_dev_plots.dev_plot_perturbation_generation(perturb, perturb_temp)
 
     return perturbations
+
+
+def rescale_perturbations(perturb_data, args):
+
+    num_perturbations = args["n_runs_per_profile"]
+
+    # Import reference data
+    (
+        u_init_profiles,
+        _,
+        _,
+    ) = g_import.import_start_u_profiles(args=args)
+
+    # Transform into 2d array
+    perturb_data = np.array(perturb_data)
+
+    # Diff data
+    diff_data = perturb_data.T - u_init_profiles
+    # Rescale data
+    rescaled_data = (
+        diff_data
+        / np.reshape(np.linalg.norm(diff_data, axis=0), (1, num_perturbations))
+        * params.seeked_error_norm
+    )
+
+    return rescaled_data

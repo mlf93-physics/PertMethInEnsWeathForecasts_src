@@ -36,7 +36,7 @@ elif MODEL == Models.LORENTZ63:
 
 
 def perturbation_runner(
-    u_old, perturb_positions, du_array, args, run_count, perturb_count
+    u_old, perturb_positions, du_array, data_out_list, args, run_count, perturb_count
 ):
     """Execute the sabra model on one given perturbed u_old profile"""
     # Prepare array for saving
@@ -67,7 +67,7 @@ def perturbation_runner(
             u_old, du_array, derivMatrix, data_out, args["Nt"] + args["endpoint"] * 1
         )
 
-    if LICENCE == EXP.NORMAL_PERTURBATION:
+    if LICENCE == EXP.NORMAL_PERTURBATION:  # or LICENCE == EXP.BREEDING_VECTORS:
         g_save.save_data(
             data_out,
             prefix=f"perturb{perturb_count}_",
@@ -81,11 +81,14 @@ def perturbation_runner(
             perturb_position=perturb_positions[run_count // args["n_runs_per_profile"]],
             args=args,
         )
+    if LICENCE == EXP.BREEDING_VECTORS:
+        # Save latest state vector to output dir
+        data_out_list.append(data_out[-1, 1:])
 
 
 def prepare_run_times(args):
 
-    if LICENCE == EXP.NORMAL_PERTURBATION:
+    if LICENCE == EXP.NORMAL_PERTURBATION or LICENCE == EXP.BREEDING_VECTORS:
         num_perturbations = args["n_runs_per_profile"] * args["n_profiles"]
         times_to_run = np.ones(num_perturbations) * args["time_to_run"]
         Nt_array = (times_to_run / params.dt).astype(np.int64)
@@ -182,21 +185,25 @@ def prepare_perturbations(args):
         perturb_e_vectors, dev_plot_active=False, args=args
     )
 
-    return u_init_profiles, perturbations, perturb_positions
+    # Apply perturbations
+    u_profiles_perturbed = u_init_profiles + perturbations
+
+    return u_profiles_perturbed, perturb_positions
 
 
 def prepare_processes(
-    u_init_profiles,
-    perturbations,
+    u_profiles_perturbed,
     perturb_positions,
     times_to_run,
     Nt_array,
     n_perturbation_files,
     args=None,
 ):
-
     # Prepare and start the perturbation_runner in multiple processes
     processes = []
+    # Prepare return data list
+    manager = multiprocessing.Manager()
+    data_out_list = manager.list()
 
     # Get number of threads
     cpu_count = multiprocessing.cpu_count()
@@ -216,9 +223,20 @@ def prepare_processes(
                 multiprocessing.Process(
                     target=perturbation_runner,
                     args=(
-                        u_init_profiles[:, count] + perturbations[:, count],
+                        # NOTE: This is needed for numba not to produce the error,
+                        # that the array is order A and not order C as expected.
+                        # No clue yet why this error happens, but it needs to be fixed.
+                        np.array(
+                            [
+                                u_profiles_perturbed[k, count]
+                                for k in range(params.sdim)
+                            ],
+                            dtype=params.dtype,
+                            order="C",
+                        ),
                         perturb_positions,
                         params.du_array,
+                        data_out_list,
                         copy_args,
                         count,
                         count + n_perturbation_files,
@@ -241,9 +259,17 @@ def prepare_processes(
             multiprocessing.Process(
                 target=perturbation_runner,
                 args=(
-                    u_init_profiles[:, count] + perturbations[:, count],
+                    # NOTE: This is needed for numba not to produce the error,
+                    # that the array is order A and not order C as expected.
+                    # No clue yet why this error happens, but it needs to be fixed.
+                    np.array(
+                        [u_profiles_perturbed[k, count] for k in range(params.sdim)],
+                        dtype=params.dtype,
+                        order="C",
+                    ),
                     perturb_positions,
                     params.du_array,
+                    data_out_list,
                     copy_args,
                     count,
                     count + n_perturbation_files,
@@ -251,15 +277,16 @@ def prepare_processes(
             )
         )
 
-    return processes
+    return processes, data_out_list
 
 
-def main_setup(args=None):
+def main_setup(args=None, u_profiles_perturbed=None, perturb_positions=None):
 
     times_to_run, Nt_array = prepare_run_times(args)
     args["burn_in_lines"] = int(args["burn_in_time"] * params.tts)
 
-    u_init_profiles, perturbations, perturb_positions = prepare_perturbations(args)
+    if u_profiles_perturbed is None:
+        u_profiles_perturbed, perturb_positions = prepare_perturbations(args)
 
     # Detect if other perturbations exist in the perturbation_folder and calculate
     # perturbation count to start at
@@ -271,9 +298,8 @@ def main_setup(args=None):
     else:
         n_perturbation_files = 0
 
-    processes = prepare_processes(
-        u_init_profiles,
-        perturbations,
+    processes, data_out_list = prepare_processes(
+        u_profiles_perturbed,
         perturb_positions,
         times_to_run,
         Nt_array,
@@ -283,25 +309,41 @@ def main_setup(args=None):
 
     g_save.save_perturb_info(args=args)
 
-    return processes
+    return processes, data_out_list
 
 
-def main_run(processes, args=None, num_blocks=None):
+def main_run(processes, args=None, num_units=None):
+    """Run the processes in parallel. The processes are distributed according
+    to the number of units to run
+
+    Parameters
+    ----------
+    processes : list
+        List of processes to run
+    args : dict, optional
+        Run-time arguments, by default None
+    num_units : int, optional
+        The number of units to run (e.g. blocks, vectors etc. depending on
+        the experiment license), by default None
+    """
 
     cpu_count = multiprocessing.cpu_count()
     num_processes = len(processes)
 
-    if num_blocks is not None:
-        num_processes_per_block = 2 * args["n_profiles"] * args["n_runs_per_profile"]
+    # if num_units is not None:
+    #     if LICENCE == EXP.NORMAL_PERTURBATION or LICENCE == EXP.BREEDING_VECTORS:
+    #         num_processes_per_unit = args["n_profiles"] * args["n_runs_per_profile"]
+    #     elif LICENCE == EXP.LORENTZ_BLOCK:
+    #         num_processes_per_unit = 2 * args["n_profiles"] * args["n_runs_per_profile"]
 
     profiler.start()
 
     for j in range(num_processes // cpu_count):
-        if num_blocks is not None:
-            print(
-                f"Block {int(j*cpu_count // num_processes_per_block)}-"
-                + f"{int(((j + 1)*cpu_count // num_processes_per_block))}"
-            )
+        # if num_units is not None:
+        #     print(
+        #         f"Unit {int(j*cpu_count // num_processes_per_unit)}-"
+        #         + f"{int(((j + 1)*cpu_count // num_processes_per_unit))}"
+        #     )
 
         for i in range(cpu_count):
             count = j * cpu_count + i
@@ -312,15 +354,15 @@ def main_run(processes, args=None, num_blocks=None):
             processes[count].join()
             processes[count].close()
 
-    if num_blocks is not None:
-        _dummy_done_count = (j + 1) * cpu_count // num_processes_per_block
-        _dummy_remain_count = math.ceil(
-            num_processes % cpu_count / num_processes_per_block
-        )
-        print(
-            f"Block {int(_dummy_done_count)}-"
-            + f"{int(_dummy_done_count + _dummy_remain_count)}"
-        )
+    # if num_units is not None:
+    #     _dummy_done_count = (j + 1) * cpu_count // num_processes_per_unit
+    #     _dummy_remain_count = math.ceil(
+    #         num_processes % cpu_count / num_processes_per_unit
+    #     )
+    #     print(
+    #         f"Unit {int(_dummy_done_count)}-"
+    #         + f"{int(_dummy_done_count + _dummy_remain_count)}"
+    #     )
     for i in range(num_processes % cpu_count):
 
         count = (num_processes // cpu_count) * cpu_count + i

@@ -9,7 +9,6 @@ import shell_model_experiments.params as sh_params
 import lorentz63_experiments.params.params as l63_params
 import perturbation_runner as pt_runner
 import general.utils.util_funcs as g_utils
-import general.utils.import_data_funcs as g_import
 import general.utils.save_data_funcs as g_save
 from general.params.env_params import *
 from general.params.model_licences import Models
@@ -36,7 +35,7 @@ def main(args):
     ut_exp_val.validate_lorentz_block_setup(exp_setup=exp_setup)
 
     # Get number of existing blocks
-    n_existing_blocks = g_utils.count_existing_files_or_dirs(
+    n_existing_units = g_utils.count_existing_files_or_dirs(
         search_path=pl.Path(args["path"], exp_setup["folder_name"]), search_pattern="/"
     )
 
@@ -44,20 +43,20 @@ def main(args):
     # calculated from block_offset)
     ut_exp_val.validate_start_time_method(exp_setup=exp_setup)
 
-    start_times, num_possible_blocks = r_utils.generate_start_times(exp_setup, args)
+    start_times, num_possible_units = r_utils.generate_start_times(exp_setup, args)
 
     processes = []
 
     for i in range(
-        n_existing_blocks,
-        min(args["num_blocks"] + n_existing_blocks, num_possible_blocks),
+        n_existing_units,
+        min(args["num_units"] + n_existing_units, num_possible_units),
     ):
 
         parent_perturb_folder = f"{exp_setup['folder_name']}/lorentz_block{i}"
 
         # Make analysis forecasts
         args["time_to_run"] = exp_setup["time_to_run"]
-        args["start_time"] = [start_times[i]]
+        args["start_time"] = [start_times[i] + exp_setup["day_offset"]]
         args["start_time_offset"] = exp_setup["day_offset"]
         args["endpoint"] = True
         args["n_profiles"] = exp_setup["n_analyses"]
@@ -69,10 +68,11 @@ def main(args):
         # Copy args in order not override in forecast processes
         copy_args = copy.deepcopy(args)
 
-        processes.extend(pt_runner.main_setup(copy_args))
+        temp_processes, _ = pt_runner.main_setup(copy_args)
+        processes.extend(temp_processes)
 
         # Make forecasts
-        args["start_time"] = [start_times[i] - exp_setup["day_offset"]]
+        args["start_time"] = [start_times[i]]
         args["time_to_run"] = exp_setup["time_to_run"] + exp_setup["day_offset"]
         args["endpoint"] = True
         args["n_profiles"] = 1
@@ -80,13 +80,14 @@ def main(args):
         args["perturb_folder"] = f"{parent_perturb_folder}/forecasts"
 
         copy_args = copy.deepcopy(args)
-        processes.extend(pt_runner.main_setup(copy_args))
+        temp_processes, _ = pt_runner.main_setup(copy_args)
+        processes.extend(temp_processes)
 
     if len(processes) > 0:
         pt_runner.main_run(
             processes,
             args=copy_args,
-            num_blocks=min(args["num_blocks"], num_possible_blocks - n_existing_blocks),
+            num_units=min(args["num_units"], num_possible_units - n_existing_units),
         )
     else:
         print("No processes to run - check if blocks already exists")
@@ -116,7 +117,7 @@ if __name__ == "__main__":
     arg_parser.add_argument("--pert_mode", default="random", type=str)
     arg_parser.add_argument("--seed_mode", default=False, type=bool)
     arg_parser.add_argument("--single_shell_perturb", default=None, type=int)
-    arg_parser.add_argument("--num_blocks", default=np.inf, type=int)
+    arg_parser.add_argument("--num_units", default=np.inf, type=int)
     arg_parser.add_argument("--endpoint", action="store_true")
     arg_parser.add_argument("--erda_run", action="store_true")
     arg_parser.add_argument("--exp_setup", default=None, type=str)

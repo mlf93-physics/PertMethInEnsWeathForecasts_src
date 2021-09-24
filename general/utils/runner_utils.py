@@ -22,10 +22,7 @@ def generate_start_times(exp_setup, args):
             int(ref_header_dict["time_to_run"] - ref_header_dict["burn_in_time"])
             // exp_setup[offset_var]
         )
-        start_times = [
-            exp_setup["day_offset"] + exp_setup[offset_var] * i
-            for i in range(num_possible_blocks)
-        ]
+        start_times = [exp_setup[offset_var] * i for i in range(num_possible_blocks)]
     elif "start_times" in exp_setup:
         num_possible_blocks = len(exp_setup["start_times"])
         start_times = exp_setup["start_times"]
