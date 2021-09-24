@@ -69,10 +69,14 @@ def main(args):
 
         # Start off with None value in order to invoke random perturbations
         rescaled_data = None
-        for cy in range(exp_setup["n_cycles"]):
+        perturb_positions = None
+        for _ in range(exp_setup["n_cycles"]):
 
             processes, data_out_list, perturb_positions = pt_runner.main_setup(
-                copy_args, u_profiles_perturbed=rescaled_data, exp_setup=exp_setup
+                copy_args,
+                u_profiles_perturbed=rescaled_data,
+                perturb_positions=perturb_positions,
+                exp_setup=exp_setup,
             )
 
             if len(processes) > 0:
@@ -86,20 +90,20 @@ def main(args):
                 )
                 # Offset time to prepare for next run and import of reference data
                 # for rescaling
-                copy_args["start_time"][0] += copy_args["time_to_run"] + params.stt
+                copy_args["start_time"][0] += copy_args["time_to_run"]
 
                 # The rescaled data is used to start off cycle 1+
                 rescaled_data = pt_utils.rescale_perturbations(data_out_list, copy_args)
-
-            if cy == 0:
-                # Save perturb_positions to temp var
-                _save_perturb_positions = perturb_positions
         else:
             print("No processes to run - check if units already exists")
 
         # Save breed vector data
         br_save.save_breed_vector_unit(
-            rescaled_data, perturb_position=_save_perturb_positions, b_unit=i, args=args
+            rescaled_data,
+            perturb_position=perturb_positions,
+            br_unit=i,
+            args=args,
+            exp_setup=exp_setup,
         )
 
     if args["erda_run"]:

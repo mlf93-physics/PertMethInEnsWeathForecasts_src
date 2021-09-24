@@ -1,4 +1,6 @@
-from pathlib import Path
+import pathlib as pl
+import random
+import itertools as it
 import numpy as np
 import shell_model_experiments.params as sh_params
 import lorentz63_experiments.params.params as l63_params
@@ -34,10 +36,10 @@ def import_lorentz_block_perturbations(args=None, rel_ref=True):
         raise ValueError("No path specified")
 
     # Check if ref path exists
-    ref_file_path = Path(args["path"], "ref_data")
+    ref_file_path = pl.Path(args["path"], "ref_data")
 
     # Get ref info text file
-    ref_header_path = list(Path(ref_file_path).glob("*.txt"))[0]
+    ref_header_path = list(pl.Path(ref_file_path).glob("*.txt"))[0]
     # Import header info
     ref_header_dict = g_import.import_header(file_name=ref_header_path)
 
@@ -118,3 +120,81 @@ def import_lorentz_block_perturbations(args=None, rel_ref=True):
         perturb_time_pos_list_legend,
         perturb_header_dicts,
     )
+
+
+def import_profiles_for_nm_analysis(args=None):
+    """Import random positioned u profiles for normal mode analysis
+
+    Parameters
+    ----------
+    args : dict, optional
+        Run-time arguments, by default None
+
+    Returns
+    -------
+    tuple
+        profiles, ref_header_dict : The imported profiles and the reference header dict
+    """
+
+    n_profiles = args["n_profiles"]
+    n_runs_per_profile = args["n_runs_per_profile"]
+    num_profiles = n_profiles * n_runs_per_profile
+
+    # Get sorted file paths
+    ref_record_names_sorted = g_utils.get_sorted_ref_record_names(args=args)
+
+    ref_header_dict = g_import.import_info_file(pl.Path(args["path"], "ref_data"))
+
+    num_ref_records = len(ref_record_names_sorted)
+    profiles = []
+
+    for ifile, ref_file in enumerate(ref_record_names_sorted):
+        with open(ref_file) as file:
+            lines = random.sample(
+                list(it.chain(file)),
+                num_profiles // num_ref_records
+                + (ifile + 1 == num_ref_records) * num_profiles % num_ref_records,
+            )
+
+        lines = map(lambda x: x.strip().split(","), lines)
+        profiles.extend(list(lines))
+
+    profiles = np.array(profiles, dtype=l63_params.dtype)[:, 1:]
+
+    # Pad profiles if necessary
+    if params.bd_size > 0:
+        profiles = np.pad(
+            profiles,
+            pad_width=((0, 0), (params.bd_size, params.bd_size)),
+            mode="constant",
+        )
+
+    profiles = profiles.T
+
+    return profiles, ref_header_dict
+
+
+def import_breed_vectors(args):
+
+    args["perturb_folder"] = args["experiment"]
+
+    (
+        perturb_time_pos_list,
+        perturb_time_pos_list_legend,
+        perturb_header_dicts,
+        perturb_file_names,
+    ) = g_import.imported_sorted_perturbation_info(args)
+
+    breed_vector_units = []
+
+    for i, file_name in enumerate(perturb_file_names):
+        breed_vector_unit, _ = g_import.import_data(file_name)
+
+        breed_vector_units.append(breed_vector_unit)
+
+        if i + 1 >= args["num_units"]:
+            break
+
+    breed_vector_units = np.array(breed_vector_units)
+
+    return breed_vector_units, perturb_header_dicts

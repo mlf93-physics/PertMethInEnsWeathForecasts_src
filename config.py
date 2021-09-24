@@ -1,6 +1,7 @@
 __all__ = ["MODEL", "LICENCE", "NUMBA_CACHE"]
 
 import os
+import sys
 import pathlib as pl
 from general.params.model_licences import Models
 from general.params.experiment_licences import Experiments
@@ -40,9 +41,12 @@ print(f"\nRunning with model {MODEL}\n")
 
 # Set experiment license
 exp = Experiments()
-LICENCE = exp.LORENTZ_BLOCK
+LICENCE = exp.BREEDING_VECTORS
 
 # Other general configurations
 NUMBA_CACHE = True
 
 confirm_run_setup()
+
+# Disable stdout
+# sys.stdout = open(os.devnull, "w")

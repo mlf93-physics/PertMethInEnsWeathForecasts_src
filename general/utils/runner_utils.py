@@ -1,6 +1,7 @@
 import sys
 
 sys.path.append("..")
+import pathlib as pl
 import general.utils.importing.import_data_funcs as g_import
 from general.params.experiment_licences import Experiments as EXP
 import general.utils.exceptions as g_exceptions
@@ -8,7 +9,7 @@ from config import LICENCE
 
 
 def generate_start_times(exp_setup, args):
-    ref_header_dict = g_import.import_ref_header(args)
+    ref_header_dict = g_import.import_info_file(pl.Path(args["path"], "ref_data"))
 
     if LICENCE == EXP.LORENTZ_BLOCK:
         offset_var = "block_offset"
