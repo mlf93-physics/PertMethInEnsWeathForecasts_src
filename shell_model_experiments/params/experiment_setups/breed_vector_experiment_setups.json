@@ -1,0 +1,16 @@
+{
+    "TestRun1": {
+        "folder_name": "shell_model_breed_vectors1",
+        "time_per_cycle": 0.1,
+        "n_cycles": 20,
+        "n_vectors": 40,
+        "vector_offset": 20
+    },
+    "TestRun2": {
+        "folder_name": "shell_model_breed_vectors_test",
+        "time_per_cycle": 0.05,
+        "n_cycles": 1,
+        "n_vectors": 4,
+        "vector_offset": 2
+    }
+}

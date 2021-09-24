@@ -51,6 +51,8 @@ def perturbation_runner(
         + f" {run_count // args['n_runs_per_profile']}, profile run"
         + f" {run_count % args['n_runs_per_profile']}"
     )
+    print("args", args)
+    print("u_old", u_old)
     if MODEL == Models.SHELL_MODEL:
         sh_model(
             u_old,
@@ -282,6 +284,12 @@ def main_setup(
 
     if u_profiles_perturbed is None or perturb_positions is None:
         u_profiles_perturbed, perturb_positions = prepare_perturbations(args)
+
+    print(
+        "u_profiles_perturbed, perturb_positions",
+        u_profiles_perturbed,
+        perturb_positions,
+    )
 
     # Detect if other perturbations exist in the perturbation_folder and calculate
     # perturbation count to start at

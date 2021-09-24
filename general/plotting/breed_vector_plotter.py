@@ -68,31 +68,33 @@ def plot_breed_vectors(args):
         + f", r={pert_info_dict['r_const']}, b={pert_info_dict['b_const']:.2f}"
     )
 
-    origin = np.zeros(args["n_profiles"])
+    # Only make 3D plot if possible according to the dimension of the system
+    if normed_mean_breed_vector_units.shape[0] == 3:
+        origin = np.zeros(args["n_profiles"])
 
-    plt.figure()
-    ax3 = plt.axes(projection="3d")
-    ax3.quiver(
-        origin,
-        origin,
-        origin,
-        normed_mean_breed_vector_units[0, :],
-        normed_mean_breed_vector_units[1, :],
-        normed_mean_breed_vector_units[2, :],
-        # normalize=True,
-        # length=0.5,
-    )
-    ax3.set_xlabel("x")
-    ax3.set_ylabel("y")
-    ax3.set_zlabel("z")
-    ax3.set_xlim(-1, 1)
-    ax3.set_ylim(-1, 1)
-    ax3.set_zlim(-1, 1)
-    ax3.set_title(
-        "Breed Vectors 3D | Lorentz63 model \n"
-        + f"$N_{{vectors}}$={args['n_profiles']}, $\\sigma={pert_info_dict['sigma']}$"
-        + f", r={pert_info_dict['r_const']}, b={pert_info_dict['b_const']:.2f}"
-    )
+        plt.figure()
+        ax3 = plt.axes(projection="3d")
+        ax3.quiver(
+            origin,
+            origin,
+            origin,
+            normed_mean_breed_vector_units[0, :],
+            normed_mean_breed_vector_units[1, :],
+            normed_mean_breed_vector_units[2, :],
+            # normalize=True,
+            # length=0.5,
+        )
+        ax3.set_xlabel("x")
+        ax3.set_ylabel("y")
+        ax3.set_zlabel("z")
+        ax3.set_xlim(-1, 1)
+        ax3.set_ylim(-1, 1)
+        ax3.set_zlim(-1, 1)
+        ax3.set_title(
+            "Breed Vectors 3D | Lorentz63 model \n"
+            + f"$N_{{vectors}}$={args['n_profiles']}, $\\sigma={pert_info_dict['sigma']}$"
+            + f", r={pert_info_dict['r_const']}, b={pert_info_dict['b_const']:.2f}"
+        )
 
 
 def plot_breed_comparison_to_nm(args):

@@ -9,6 +9,7 @@ from pyinstrument import Profiler
 from shell_model_experiments.sabra_model.runge_kutta4 import runge_kutta4_vec
 from shell_model_experiments.params.params import *
 import general.utils.saving.save_data_funcs as g_save
+from config import NUMBA_CACHE
 
 profiler = Profiler()
 
@@ -22,7 +23,7 @@ profiler = Profiler()
         types.float64,
         types.float64,
     ),
-    cache=True,
+    cache=NUMBA_CACHE,
 )
 def run_model(u_old, du_array, data_out, Nt_local, ny, forcing):
     """Execute the integration of the sabra shell model.
