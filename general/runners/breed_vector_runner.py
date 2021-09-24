@@ -8,14 +8,15 @@ import numpy as np
 import shell_model_experiments.params as sh_params
 import lorentz63_experiments.params.params as l63_params
 import perturbation_runner as pt_runner
-from general.params.model_licences import Models
 import general.utils.experiments.exp_utils as exp_utils
 import general.utils.experiments.validate_exp_setups as ut_exp_val
 import general.utils.runner_utils as r_utils
 import general.utils.util_funcs as g_utils
 import general.utils.save_data_funcs as g_save
+import general.utils.saving.save_breed_vector_funcs as br_save
 import general.utils.exceptions as g_exceptions
 import general.utils.perturb_utils as pt_utils
+from general.params.model_licences import Models
 from config import MODEL
 
 # Get parameters for model
@@ -68,11 +69,10 @@ def main(args):
 
         # Start off with None value in order to invoke random perturbations
         rescaled_data = None
-        for _ in range(exp_setup["n_cycles"]):
+        for cy in range(exp_setup["n_cycles"]):
 
-            processes, data_out_list = pt_runner.main_setup(
-                copy_args,
-                u_profiles_perturbed=rescaled_data,
+            processes, data_out_list, perturb_positions = pt_runner.main_setup(
+                copy_args, u_profiles_perturbed=rescaled_data, exp_setup=exp_setup
             )
 
             if len(processes) > 0:
@@ -90,12 +90,21 @@ def main(args):
 
                 # The rescaled data is used to start off cycle 1+
                 rescaled_data = pt_utils.rescale_perturbations(data_out_list, copy_args)
+
+            if cy == 0:
+                # Save perturb_positions to temp var
+                _save_perturb_positions = perturb_positions
         else:
             print("No processes to run - check if units already exists")
 
-        if args["erda_run"]:
-            path = pl.Path(args["path"], exp_setup["folder_name"])
-            g_save.compress_dir(path, "test_temp1")
+        # Save breed vector data
+        br_save.save_breed_vector_unit(
+            rescaled_data, perturb_position=_save_perturb_positions, b_unit=i, args=args
+        )
+
+    if args["erda_run"]:
+        path = pl.Path(args["path"], exp_setup["folder_name"])
+        g_save.compress_dir(path, "test_temp1")
 
 
 if __name__ == "__main__":

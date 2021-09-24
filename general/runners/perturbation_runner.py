@@ -280,7 +280,9 @@ def prepare_processes(
     return processes, data_out_list
 
 
-def main_setup(args=None, u_profiles_perturbed=None, perturb_positions=None):
+def main_setup(
+    args=None, u_profiles_perturbed=None, perturb_positions=None, exp_setup=None
+):
 
     times_to_run, Nt_array = prepare_run_times(args)
     args["burn_in_lines"] = int(args["burn_in_time"] * params.tts)
@@ -307,9 +309,9 @@ def main_setup(args=None, u_profiles_perturbed=None, perturb_positions=None):
         args=args,
     )
 
-    g_save.save_perturb_info(args=args)
+    g_save.save_perturb_info(args=args, exp_setup=exp_setup)
 
-    return processes, data_out_list
+    return processes, data_out_list, perturb_positions
 
 
 def main_run(processes, args=None, num_units=None):
@@ -425,5 +427,5 @@ if __name__ == "__main__":
     if args["seed_mode"]:
         np.random.seed(seed=1)
 
-    processes = main_setup(args=args)
+    processes, _, _ = main_setup(args=args)
     main_run(processes, args=args)

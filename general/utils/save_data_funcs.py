@@ -21,6 +21,9 @@ def args_to_string(args):
         A dictionary containing run-time arguments
 
     """
+    if args is None:
+        return ""
+
     arg_str_list = [f"{key}={value}" for key, value in args.items()]
     arg_str = ", ".join(arg_str_list)
 
@@ -260,7 +263,7 @@ def save_data(data_out, subfolder="", prefix="", perturb_position=None, args=Non
     )
 
 
-def save_perturb_info(args=None):
+def save_perturb_info(args=None, exp_setup=None):
     """Save info textfile about the perturbation runs
 
     Parameters
@@ -299,6 +302,8 @@ def save_perturb_info(args=None):
 
     # Prepare line to write
     info_line_args = args_to_string(args)
+    exp_setup_line = args_to_string(exp_setup)
+
     if MODEL == Models.SHELL_MODEL:
         info_line = (
             f"n_f={sh_params.n_forcing}, dt={sh_params.dt}, "
@@ -308,7 +313,9 @@ def save_perturb_info(args=None):
     elif MODEL == Models.LORENTZ63:
         info_line = f"sample_rate={sh_params.sample_rate}, dt={sh_params.dt}, "
 
-    info_line += info_line_args
+    append_extra = f", experiment={config.LICENCE}, "
+
+    info_line += info_line_args + append_extra + exp_setup_line
 
     # Write to file
     with open(str(perturb_data_info_name), "w") as file:
