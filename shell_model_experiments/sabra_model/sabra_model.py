@@ -8,7 +8,7 @@ from numba import njit, types
 from pyinstrument import Profiler
 from shell_model_experiments.sabra_model.runge_kutta4 import runge_kutta4_vec
 from shell_model_experiments.params.params import *
-import general.utils.save_data_funcs as g_save
+import general.utils.saving.save_data_funcs as g_save
 
 profiler = Profiler()
 

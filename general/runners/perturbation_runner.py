@@ -19,8 +19,8 @@ import lorentz63_experiments.utils.util_funcs as ut_funcs
 import general.utils.util_funcs as g_utils
 import general.utils.import_data_funcs as g_import
 from general.params.experiment_licences import Experiments as EXP
-import general.utils.save_data_funcs as g_save
-import general.utils.saving.save_lorentz_block_funcs as lb_save
+import general.utils.saving.save_data_funcs as g_save
+import general.utils.saving.save_perturbation as pt_save
 import general.utils.perturb_utils as p_utils
 import general.utils.exceptions as g_exceptions
 from general.params.model_licences import Models
@@ -67,20 +67,13 @@ def perturbation_runner(
             u_old, du_array, derivMatrix, data_out, args["Nt"] + args["endpoint"] * 1
         )
 
-    if LICENCE == EXP.NORMAL_PERTURBATION:  # or LICENCE == EXP.BREEDING_VECTORS:
-        g_save.save_data(
-            data_out,
-            prefix=f"perturb{perturb_count}_",
-            perturb_position=perturb_positions[run_count // args["n_runs_per_profile"]],
-            args=args,
-        )
-    elif LICENCE == EXP.LORENTZ_BLOCK:
-        lb_save.save_lorentz_block_data(
-            data_out,
-            prefix=f"lorentz{perturb_count}_",
-            perturb_position=perturb_positions[run_count // args["n_runs_per_profile"]],
-            args=args,
-        )
+    pt_save.save_perturbation_data(
+        data_out,
+        perturb_position=perturb_positions[run_count // args["n_runs_per_profile"]],
+        perturb_count=perturb_count,
+        args=args,
+    )
+
     if LICENCE == EXP.BREEDING_VECTORS:
         # Save latest state vector to output dir
         data_out_list.append(data_out[-1, 1:])
