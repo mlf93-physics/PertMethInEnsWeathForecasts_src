@@ -77,11 +77,25 @@ def import_info_file(path):
     return info_dict
 
 
-def imported_sorted_perturbation_info(args):
+def imported_sorted_perturbation_info(folder_name, args):
+    """Import sorted lists of perturbation info
+
+    Both time positions, legend strings, header dicts and file names are imported
+
+    Parameters
+    ----------
+    folder_name : str, Path
+        The sub folder to args["path"] in which to search for perturbation info
+    args : dict
+        Run-time arguments
+
+    Returns
+    -------
+    tuple
+        Tuple with all perturbation info
+    """
     # Initiate lists
-    perturb_file_names = list(
-        pl.Path(args["path"], args["perturb_folder"]).glob("*.csv")
-    )
+    perturb_file_names = list(pl.Path(args["path"], folder_name).glob("*.csv"))
     perturb_time_pos_list_legend = []
     perturb_time_pos_list = []
     perturb_header_dicts = []
@@ -224,7 +238,7 @@ def import_perturbation_velocities(args=None):
         perturb_time_pos_list_legend,
         perturb_header_dicts,
         perturb_file_names,
-    ) = imported_sorted_perturbation_info(args)
+    ) = imported_sorted_perturbation_info(args["perturb_folder"], args)
 
     # Match the positions to the relevant ref files
     ref_file_match = g_utils.match_start_positions_to_ref_file(

@@ -48,7 +48,7 @@ def import_lorentz_block_perturbations(args=None, rel_ref=True):
         perturb_time_pos_list_legend,
         perturb_header_dicts,
         perturb_file_names,
-    ) = g_import.imported_sorted_perturbation_info(args)
+    ) = g_import.imported_sorted_perturbation_info(args["perturb_folder"], args)
 
     # Match the positions to the relevant ref files
     ref_file_match = g_utils.match_start_positions_to_ref_file(
@@ -175,20 +175,24 @@ def import_profiles_for_nm_analysis(args=None):
 
 
 def import_breed_vectors(args):
-
-    args["perturb_folder"] = args["experiment"]
+    # Set arguments
+    args["num_units"] = args["n_files"] = args["n_profiles"]
 
     (
         perturb_time_pos_list,
         perturb_time_pos_list_legend,
         perturb_header_dicts,
         perturb_file_names,
-    ) = g_import.imported_sorted_perturbation_info(args)
+    ) = g_import.imported_sorted_perturbation_info(
+        pl.Path("pt_vectors", args["vectors"]), args
+    )
 
     breed_vector_units = []
 
     for i, file_name in enumerate(perturb_file_names):
-        breed_vector_unit, _ = g_import.import_data(file_name)
+        breed_vector_unit, _ = g_import.import_data(
+            file_name, max_lines=args["n_runs_per_profile"] + 1
+        )
 
         breed_vector_units.append(breed_vector_unit)
 

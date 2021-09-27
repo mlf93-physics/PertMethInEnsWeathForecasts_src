@@ -5,7 +5,7 @@ sys.path.append("..")
 import math
 import copy
 import argparse
-from pathlib import Path
+import pathlib as pl
 import numpy as np
 import multiprocessing
 from pyinstrument import Profiler
@@ -21,7 +21,7 @@ import general.utils.importing.import_data_funcs as g_import
 from general.params.experiment_licences import Experiments as EXP
 import general.utils.saving.save_data_funcs as g_save
 import general.utils.saving.save_perturbation as pt_save
-import general.utils.perturb_utils as p_utils
+import general.utils.perturb_utils as pt_utils
 import general.utils.exceptions as g_exceptions
 from general.params.model_licences import Models
 from config import MODEL, LICENCE
@@ -102,19 +102,17 @@ def prepare_run_times(args):
 
 def prepare_perturbations(args):
 
-    # Import start profiles
-    u_init_profiles, perturb_positions, header_dict = g_import.import_start_u_profiles(
-        args=args
-    )
-    header_dict = g_utils.handle_different_headers(header_dict)
+    # Import reference info file
+    ref_header_dict = g_import.import_info_file(pl.Path(args["path"], "ref_data"))
+    # header_dict = g_utils.handle_different_headers(header_dict)
 
     if MODEL == Models.SHELL_MODEL:
 
         # Save parameters to args dict:
-        args["forcing"] = header_dict["forcing"].real
+        args["forcing"] = ref_header_dict["forcing"].real
 
         if args["ny_n"] is None:
-            args["ny"] = header_dict["ny"]
+            args["ny"] = ref_header_dict["ny"]
 
             if args["forcing"] == 0:
                 args["ny_n"] = 0
@@ -122,7 +120,7 @@ def prepare_perturbations(args):
                 args["ny_n"] = int(
                     3
                     / 8
-                    * math.log10(args["forcing"] / (header_dict["ny"] ** 2))
+                    * math.log10(args["forcing"] / (ref_header_dict["ny"] ** 2))
                     / math.log10(params.lambda_const)
                 )
             # Take ny from reference file
@@ -134,10 +132,18 @@ def prepare_perturbations(args):
     elif MODEL == Models.LORENTZ63:
         print("Nothing specific to do with args in lorentz63 model yet")
 
+    # Only import start profiles beforehand for specific perturbation modes
+    if args["pert_mode"] == "normal_mode" or args["pert_mode"] == "random":
+        (
+            u_init_profiles,
+            perturb_positions,
+            header_dict,
+        ) = g_import.import_start_u_profiles(args=args)
+
     if args["pert_mode"] == "normal_mode":
         print("\nRunning with NORMAL MODE perturbations\n")
         if MODEL == Models.SHELL_MODEL:
-            perturb_e_vectors, _, _ = sh_lp_estimator.find_eigenvector_for_perturbation(
+            perturb_vectors, _, _ = sh_lp_estimator.find_eigenvector_for_perturbation(
                 u_init_profiles[
                     :,
                     0 : args["n_profiles"]
@@ -148,7 +154,7 @@ def prepare_perturbations(args):
                 local_ny=header_dict["ny"],
             )
         elif MODEL == Models.LORENTZ63:
-            perturb_e_vectors, _, _ = l63_nm_estimator.find_normal_modes(
+            perturb_vectors, _, _, _ = l63_nm_estimator.find_normal_modes(
                 u_init_profiles[
                     :,
                     0 : args["n_profiles"]
@@ -158,11 +164,17 @@ def prepare_perturbations(args):
                 dev_plot_active=False,
                 n_profiles=args["n_profiles"],
             )
+    elif args["pert_mode"] == "breed_vectors":
+        print("\nRunning with BREED VECTOR perturbations\n")
+        (
+            u_init_profiles,
+            perturb_positions,
+            perturb_vectors,
+        ) = pt_utils.prepare_breed_vectors(args)
+
     elif args["pert_mode"] == "random":
         print("\nRunning with RANDOM perturbations\n")
-        perturb_e_vectors = np.ones(
-            (params.sdim, args["n_profiles"]), dtype=params.dtype
-        )
+        perturb_vectors = np.ones((params.sdim, args["n_profiles"]), dtype=params.dtype)
     else:
         raise g_exceptions.InvalidArgument(
             "Not a valid perturbation mode", argument=args["pert_mode"]
@@ -174,8 +186,8 @@ def prepare_perturbations(args):
             print("\nRunning in single shell perturb mode\n")
 
     # Make perturbations
-    perturbations = p_utils.calculate_perturbations(
-        perturb_e_vectors, dev_plot_active=False, args=args
+    perturbations = pt_utils.calculate_perturbations(
+        perturb_vectors, dev_plot_active=False, args=args
     )
 
     # Apply perturbations
@@ -269,7 +281,7 @@ def main_setup(
     # Detect if other perturbations exist in the perturbation_folder and calculate
     # perturbation count to start at
     # Check if path exists
-    expected_path = Path(args["path"], args["perturb_folder"])
+    expected_path = pl.Path(args["path"], args["perturb_folder"])
     dir_exists = os.path.isdir(expected_path)
     if dir_exists:
         n_perturbation_files = len(list(expected_path.glob("*.csv")))
@@ -371,12 +383,13 @@ if __name__ == "__main__":
     arg_parser.add_argument("--b_const", default=8 / 3, type=float)
     arg_parser.add_argument("--n_runs_per_profile", default=1, type=int)
     arg_parser.add_argument("--n_profiles", default=1, type=int)
-    arg_parser.add_argument("--start_time", nargs="+", type=float, required=True)
+    arg_parser.add_argument("--start_time", nargs="+", type=float)
     arg_parser.add_argument("--pert_mode", default="random", type=str)
     arg_parser.add_argument("--seed_mode", default=False, type=bool)
     arg_parser.add_argument("--single_shell_perturb", default=None, type=int)
     arg_parser.add_argument("--start_time_offset", default=None, type=float)
     arg_parser.add_argument("--endpoint", action="store_true")
+    arg_parser.add_argument("--vectors", default=None, type=str)
 
     args = vars(arg_parser.parse_args())
 
