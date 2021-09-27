@@ -142,6 +142,10 @@ def rescale_perturbations(perturb_data, args):
 def prepare_breed_vectors(args):
     # Get BVs
     perturb_vectors, perturb_header_dicts = pt_import.import_breed_vectors(args)
+
+    if perturb_vectors.size == 0:
+        raise ValueError("No perturbation vectors imported")
+
     # Reshape and transpose
     perturb_vectors = np.reshape(
         perturb_vectors,
@@ -150,7 +154,8 @@ def prepare_breed_vectors(args):
 
     # Prepare start times for import
     args["start_time"] = [
-        perturb_header_dicts[i]["val_pos"] for i in range(len(perturb_header_dicts))
+        perturb_header_dicts[i]["val_pos"] * params.stt
+        for i in range(len(perturb_header_dicts))
     ]
 
     # Import start u profiles

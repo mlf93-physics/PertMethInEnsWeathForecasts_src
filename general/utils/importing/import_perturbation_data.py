@@ -1,3 +1,4 @@
+import os
 import pathlib as pl
 import random
 import itertools as it
@@ -178,13 +179,18 @@ def import_breed_vectors(args):
     # Set arguments
     args["num_units"] = args["n_files"] = args["n_profiles"]
 
+    pt_vector_dirname = "pt_vectors"
+
+    if not os.path.isdir(pl.Path(args["path"], pt_vector_dirname)):
+        raise ImportError(f"No perturbation path named {pt_vector_dirname}")
+
     (
         perturb_time_pos_list,
         perturb_time_pos_list_legend,
         perturb_header_dicts,
         perturb_file_names,
     ) = g_import.imported_sorted_perturbation_info(
-        pl.Path("pt_vectors", args["vectors"]), args
+        pl.Path(pt_vector_dirname, args["vectors"]), args
     )
 
     breed_vector_units = []
