@@ -12,7 +12,7 @@ import shell_model_experiments.params as sh_params
 import lorentz63_experiments.params.params as l63_params
 import shell_model_experiments.plotting.plot_data as pl_data
 import general.analyses.lorentz_block_analysis as lr_analysis
-import general.utils.import_data_funcs as g_import
+import general.utils.importing.import_data_funcs as g_import
 import general.utils.plot_utils as g_plt_utils
 from general.params.model_licences import Models
 from config import MODEL

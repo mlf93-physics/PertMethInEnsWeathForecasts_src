@@ -4,7 +4,7 @@ sys.path.append("..")
 import numpy as np
 import shell_model_experiments.params as sh_params
 import lorentz63_experiments.params.params as l63_params
-import general.utils.save_data_funcs as g_save
+import general.utils.saving.save_data_funcs as g_save
 from general.params.model_licences import Models
 from config import MODEL
 

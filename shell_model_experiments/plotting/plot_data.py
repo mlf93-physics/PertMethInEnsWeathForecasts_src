@@ -11,7 +11,7 @@ from shell_model_experiments.lyaponov.lyaponov_exp_estimator import (
     find_eigenvector_for_perturbation,
 )
 import general.plotting.plot_data as g_plt_data
-from general.utils.import_data_funcs import (
+from general.utils.importing.import_data_funcs import (
     import_data,
     import_header,
     import_ref_data,

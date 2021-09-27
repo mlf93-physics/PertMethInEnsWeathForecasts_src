@@ -1,5 +1,6 @@
 from numba import njit, types
 from shell_model_experiments.params.params import *
+from config import NUMBA_CACHE
 
 
 @njit(
@@ -9,7 +10,7 @@ from shell_model_experiments.params.params import *
         types.float64,
         types.float64,
     ),
-    cache=True,
+    cache=NUMBA_CACHE,
 )
 def derivative_evaluator(u_old=None, du=None, ny=None, forcing=None):
     """Derivative evaluator used in the Runge-Kutta method.
@@ -56,7 +57,7 @@ def derivative_evaluator(u_old=None, du=None, ny=None, forcing=None):
         types.float64,
         types.float64,
     ),
-    cache=True,
+    cache=NUMBA_CACHE,
 )
 def runge_kutta4_vec(y0=0, h=1, du=None, ny=None, forcing=None):
     """Performs the Runge-Kutta-4 integration of the shell velocities.

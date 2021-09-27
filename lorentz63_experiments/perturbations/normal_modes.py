@@ -32,6 +32,7 @@ def find_normal_modes(u_init_profiles, args, dev_plot_active=False, n_profiles=N
     e_value_collection = []
 
     e_vector_matrix = np.zeros((sdim, n_profiles), dtype=np.complex128)
+    e_values_max = np.zeros(n_profiles, dtype=np.complex128)
 
     # Perform calculation for all u_profiles
     for i in range(n_profiles):
@@ -55,6 +56,8 @@ def find_normal_modes(u_init_profiles, args, dev_plot_active=False, n_profiles=N
         chosen_e_value_index = np.argmax(e_values.real)
 
         e_vector_matrix[:, i] = e_vectors[:, chosen_e_value_index]
+        e_values_max[i] = e_values[chosen_e_value_index]
+        # Reset matrix
         J_matrix.fill(0)
 
         # if dev_plot_active:
@@ -63,4 +66,4 @@ def find_normal_modes(u_init_profiles, args, dev_plot_active=False, n_profiles=N
         #     dev_plot_eigen_mode_analysis(e_values, J_matrix, e_vectors,
         #         header=header, perturb_pos=perturb_positions[i])
 
-    return e_vector_matrix, e_vector_collection, e_value_collection
+    return e_vector_matrix, e_values_max, e_vector_collection, e_value_collection

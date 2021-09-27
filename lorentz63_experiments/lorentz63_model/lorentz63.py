@@ -9,7 +9,7 @@ from numba import njit, types
 import lorentz63_experiments.lorentz63_model.runge_kutta4 as rk4
 from lorentz63_experiments.params.params import *
 import lorentz63_experiments.utils.util_funcs as ut_funcs
-import general.utils.save_data_funcs as g_save
+import general.utils.saving.save_data_funcs as g_save
 from config import NUMBA_CACHE
 
 

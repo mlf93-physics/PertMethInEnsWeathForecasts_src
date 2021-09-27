@@ -7,7 +7,7 @@ import matplotlib.colors as mpl_colors
 import matplotlib.pyplot as plt
 from lorentz63_experiments.params.params import *
 import lorentz63_experiments.analyses.normal_mode_analysis as nm_analysis
-import general.utils.import_data_funcs as g_import
+import general.utils.importing.import_data_funcs as g_import
 import general.plotting.plot_data as g_plt_data
 import general.utils.plot_utils as g_plt_utils
 

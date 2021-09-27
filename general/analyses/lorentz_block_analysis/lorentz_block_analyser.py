@@ -5,9 +5,7 @@ import re
 import argparse
 import pathlib as pl
 import numpy as np
-from shell_model_experiments.utils.import_data_funcs import (
-    import_lorentz_block_perturbations,
-)
+import general.utils.importing.import_perturbation_data as pt_import
 
 
 def calculate_rmse_of_block(args):
@@ -23,7 +21,7 @@ def calculate_rmse_of_block(args):
         _,
         _,
         _,
-    ) = import_lorentz_block_perturbations(args, rel_ref=False)
+    ) = pt_import.import_lorentz_block_perturbations(args, rel_ref=False)
 
     # Import analyses forecasts
     args["perturb_folder"] = parent_pert_folder + "/analysis_forecasts"
@@ -35,7 +33,7 @@ def calculate_rmse_of_block(args):
         _,
         _,
         ana_forecast_pert_header_dicts,
-    ) = import_lorentz_block_perturbations(args, rel_ref=False)
+    ) = pt_import.import_lorentz_block_perturbations(args, rel_ref=False)
 
     num_ana_forecasts = len(ana_forecast_pert_u_stores)
     num_forecasts = len(forecast_pert_u_stores)

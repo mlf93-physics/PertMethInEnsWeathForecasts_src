@@ -4,7 +4,6 @@ sys.path.append("..")
 import itertools as it
 import re
 import pathlib as pl
-import random
 import numpy as np
 import shell_model_experiments.params as sh_params
 import lorentz63_experiments.params.params as l63_params
@@ -52,26 +51,51 @@ def import_header(folder="", file_name=None):
     return header_dict
 
 
-def import_ref_header(args):
+def import_info_file(path):
+    """Import an info file from a given dir
+
+    Parameters
+    ----------
+    path : str, Path
+        The path to the dir containing the info file
+
+    Returns
+    -------
+    dict
+        The info
+    """
 
     # Import reference header dict
-    ref_header_path = list(pl.Path(args["path"], "ref_data").glob("*.txt"))
-    if len(ref_header_path) > 1:
+    info_file_path = list(pl.Path(path).glob("*.txt"))
+    if len(info_file_path) > 1:
         raise ValueError(
-            f"To many reference header files. Found "
-            + f"{len(ref_header_path)}; expected 1."
+            f"To many info files. Found " + f"{len(info_file_path)}; expected 1."
         )
 
-    ref_header_dict = import_header(file_name=ref_header_path[0])
+    info_dict = import_header(file_name=info_file_path[0])
 
-    return ref_header_dict
+    return info_dict
 
 
-def imported_sorted_perturbation_info(args):
+def imported_sorted_perturbation_info(folder_name, args):
+    """Import sorted lists of perturbation info
+
+    Both time positions, legend strings, header dicts and file names are imported
+
+    Parameters
+    ----------
+    folder_name : str, Path
+        The sub folder to args["path"] in which to search for perturbation info
+    args : dict
+        Run-time arguments
+
+    Returns
+    -------
+    tuple
+        Tuple with all perturbation info
+    """
     # Initiate lists
-    perturb_file_names = list(
-        pl.Path(args["path"], args["perturb_folder"]).glob("*.csv")
-    )
+    perturb_file_names = list(pl.Path(args["path"], folder_name).glob("*.csv"))
     perturb_time_pos_list_legend = []
     perturb_time_pos_list = []
     perturb_header_dicts = []
@@ -195,7 +219,7 @@ def import_ref_data(args=None):
     time = np.concatenate(time_concat)
     u_data = np.concatenate(u_data_concat)
 
-    ref_header_dict = import_ref_header(args)
+    ref_header_dict = import_info_file(pl.Path(args["path"], "ref_data"))
 
     return time, u_data, ref_header_dict
 
@@ -207,19 +231,14 @@ def import_perturbation_velocities(args=None):
         raise ValueError("No path specified")
 
     # Check if ref path exists
-    ref_file_path = pl.Path(args["path"], "ref_data")
-
-    # Get ref info text file
-    ref_header_path = list(pl.Path(ref_file_path).glob("*.txt"))[0]
-    # Import header info
-    ref_header_dict = import_header(file_name=ref_header_path)
+    ref_header_dict = import_info_file(pl.Path(args["path"], "ref_data"))
 
     (
         perturb_time_pos_list,
         perturb_time_pos_list_legend,
         perturb_header_dicts,
         perturb_file_names,
-    ) = imported_sorted_perturbation_info(args)
+    ) = imported_sorted_perturbation_info(args["perturb_folder"], args)
 
     # Match the positions to the relevant ref files
     ref_file_match = g_utils.match_start_positions_to_ref_file(
@@ -325,10 +344,7 @@ def import_start_u_profiles(args=None):
     ref_file_path = pl.Path(args["path"], "ref_data")
 
     # Get ref info text file
-    ref_header_path = list(pl.Path(ref_file_path).glob("*.txt"))[0]
-
-    # Import header info
-    ref_header_dict = import_header(file_name=ref_header_path)
+    ref_header_dict = import_info_file(ref_file_path)
 
     if args["start_time"] is None:
         print(
@@ -422,43 +438,3 @@ def import_start_u_profiles(args=None):
             counter += 1
 
     return u_init_profiles, positions + burn_in * args["burn_in_lines"], ref_header_dict
-
-
-def import_profiles_for_nm_analysis(args=None):
-
-    n_profiles = args["n_profiles"]
-    n_runs_per_profile = args["n_runs_per_profile"]
-    num_profiles = n_profiles * n_runs_per_profile
-
-    # Get sorted file paths
-    ref_record_names_sorted = g_utils.get_sorted_ref_record_names(args=args)
-
-    ref_header_dict = import_ref_header(args)
-
-    num_ref_records = len(ref_record_names_sorted)
-    profiles = []
-
-    for ifile, ref_file in enumerate(ref_record_names_sorted):
-        with open(ref_file) as file:
-            lines = random.sample(
-                list(it.chain(file)),
-                num_profiles // num_ref_records
-                + (ifile + 1 == num_ref_records) * num_profiles % num_ref_records,
-            )
-
-        lines = map(lambda x: x.strip().split(","), lines)
-        profiles.extend(list(lines))
-
-    profiles = np.array(profiles, dtype=l63_params.dtype)[:, 1:]
-
-    # Pad profiles if necessary
-    if params.bd_size > 0:
-        profiles = np.pad(
-            profiles,
-            pad_width=((0, 0), (params.bd_size, params.bd_size)),
-            mode="constant",
-        )
-
-    profiles = profiles.T
-
-    return profiles, ref_header_dict

@@ -1,21 +1,22 @@
 import sys
 
 sys.path.append("..")
-import copy
 import argparse
 import pathlib as pl
+import copy
 import numpy as np
 import shell_model_experiments.params as sh_params
 import lorentz63_experiments.params.params as l63_params
 import perturbation_runner as pt_runner
+import general.utils.experiments.exp_utils as exp_utils
+import general.utils.experiments.validate_exp_setups as ut_exp_val
+import general.utils.runner_utils as r_utils
 import general.utils.util_funcs as g_utils
 import general.utils.saving.save_data_funcs as g_save
-from general.params.env_params import *
-from general.params.model_licences import Models
+import general.utils.saving.save_breed_vector_funcs as br_save
 import general.utils.exceptions as g_exceptions
-import general.utils.experiments.validate_exp_setups as ut_exp_val
-import general.utils.experiments.exp_utils as exp_utils
-import general.utils.runner_utils as r_utils
+import general.utils.perturb_utils as pt_utils
+from general.params.model_licences import Models
 from config import MODEL
 
 # Get parameters for model
@@ -26,71 +27,84 @@ elif MODEL == Models.LORENTZ63:
 
 
 def main(args):
+    # Set exp_setup path
     exp_file_path = pl.Path(
-        "./params/experiment_setups/lorentz_block_experiment_setups.json"
+        "./params/experiment_setups/breed_vector_experiment_setups.json"
     )
+    # Get the current experiment setup
     exp_setup = exp_utils.get_exp_setup(exp_file_path, args)
-
-    # Validate setup
-    ut_exp_val.validate_lorentz_block_setup(exp_setup=exp_setup)
 
     # Get number of existing blocks
     n_existing_units = g_utils.count_existing_files_or_dirs(
-        search_path=pl.Path(args["path"], exp_setup["folder_name"]), search_pattern="/"
+        search_path=pl.Path(args["path"], exp_setup["folder_name"]),
+        search_pattern=".csv",
     )
 
-    # Determine how to infer start times (from start_times in exp_setup or
-    # calculated from block_offset)
+    # Validate the start time method
     ut_exp_val.validate_start_time_method(exp_setup=exp_setup)
 
+    # Generate start times
     start_times, num_possible_units = r_utils.generate_start_times(exp_setup, args)
 
     processes = []
 
+    # Calculate the desired number of units
     for i in range(
         n_existing_units,
         min(args["num_units"] + n_existing_units, num_possible_units),
     ):
 
-        parent_perturb_folder = f"{exp_setup['folder_name']}/lorentz_block{i}"
-
         # Make analysis forecasts
-        args["time_to_run"] = exp_setup["time_to_run"]
-        args["start_time"] = [start_times[i] + exp_setup["day_offset"]]
-        args["start_time_offset"] = exp_setup["day_offset"]
+        args["time_to_run"] = exp_setup["time_per_cycle"]
+        args["start_time"] = [start_times[i]]
+        args["start_time_offset"] = exp_setup["vector_offset"]
         args["endpoint"] = True
-        args["n_profiles"] = exp_setup["n_analyses"]
-        args["n_runs_per_profile"] = 1
-        args["perturb_folder"] = f"{parent_perturb_folder}/analysis_forecasts"
-
+        args["n_profiles"] = 1
+        args["n_runs_per_profile"] = exp_setup["n_vectors"]
+        args["perturb_folder"] = f"{exp_setup['folder_name']}"
         args = g_utils.adjust_start_times_with_offset(args)
 
         # Copy args in order not override in forecast processes
         copy_args = copy.deepcopy(args)
 
-        temp_processes, _, _ = pt_runner.main_setup(copy_args)
-        processes.extend(temp_processes)
+        # Start off with None value in order to invoke random perturbations
+        rescaled_data = None
+        perturb_positions = None
+        for _ in range(exp_setup["n_cycles"]):
 
-        # Make forecasts
-        args["start_time"] = [start_times[i]]
-        args["time_to_run"] = exp_setup["time_to_run"] + exp_setup["day_offset"]
-        args["endpoint"] = True
-        args["n_profiles"] = 1
-        args["n_runs_per_profile"] = exp_setup["n_analyses"]
-        args["perturb_folder"] = f"{parent_perturb_folder}/forecasts"
+            processes, data_out_list, perturb_positions = pt_runner.main_setup(
+                copy_args,
+                u_profiles_perturbed=rescaled_data,
+                perturb_positions=perturb_positions,
+                exp_setup=exp_setup,
+            )
 
-        copy_args = copy.deepcopy(args)
-        temp_processes, _, _ = pt_runner.main_setup(copy_args)
-        processes.extend(temp_processes)
+            if len(processes) > 0:
+                # Run specified number of cycles
+                pt_runner.main_run(
+                    processes,
+                    args=copy_args,
+                    num_units=min(
+                        copy_args["num_units"], num_possible_units - n_existing_units
+                    ),
+                )
+                # Offset time to prepare for next run and import of reference data
+                # for rescaling
+                copy_args["start_time"][0] += copy_args["time_to_run"]
 
-    if len(processes) > 0:
-        pt_runner.main_run(
-            processes,
-            args=copy_args,
-            num_units=min(args["num_units"], num_possible_units - n_existing_units),
+                # The rescaled data is used to start off cycle 1+
+                rescaled_data = pt_utils.rescale_perturbations(data_out_list, copy_args)
+        else:
+            print("No processes to run - check if units already exists")
+
+        # Save breed vector data
+        br_save.save_breed_vector_unit(
+            rescaled_data,
+            perturb_position=perturb_positions,
+            br_unit=i,
+            args=args,
+            exp_setup=exp_setup,
         )
-    else:
-        print("No processes to run - check if blocks already exists")
 
     if args["erda_run"]:
         path = pl.Path(args["path"], exp_setup["folder_name"])
@@ -107,7 +121,8 @@ if __name__ == "__main__":
     )
     arg_parser.add_argument("--time_to_run", default=0.1, type=float)
     arg_parser.add_argument("--burn_in_time", default=0.0, type=float)
-    arg_parser.add_argument("--ny_n", default=None, type=int)
+    arg_parser.add_argument("--ny_n", default=19, type=int)
+    arg_parser.add_argument("--forcing", default=1, type=float)
     arg_parser.add_argument("--sigma", default=10, type=float)
     arg_parser.add_argument("--r_const", default=28, type=float)
     arg_parser.add_argument("--b_const", default=8 / 3, type=float)
@@ -125,6 +140,9 @@ if __name__ == "__main__":
     args = vars(arg_parser.parse_args())
 
     args["ref_run"] = False
+    args["ny"] = (
+        args["forcing"] / (sh_params.lambda_const ** (8 / 3 * args["ny_n"]))
+    ) ** (1 / 2)
 
     # Set seed if wished
     if args["seed_mode"]:
@@ -146,9 +164,3 @@ if __name__ == "__main__":
             )
 
     main(args)
-
-    # Find DONE sound to play
-    done_file = pl.Path("/home/martin/Music/done_sound.mp3")
-
-    # if os.path.isfile(done_file):
-    #     playsound(done_file)

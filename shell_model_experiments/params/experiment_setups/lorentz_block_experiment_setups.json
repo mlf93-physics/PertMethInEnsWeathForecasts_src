@@ -1,8 +1,8 @@
 {
     "DistinctPredictabilityRegimesLong": {
         "folder_name": "lorentz_distinct_pred_regimes_long",
-        "day_offset": 0.0625,
-        "time_to_run": 1.0,
+        "day_offset": 0.12,
+        "time_to_run": 2,
         "n_analyses": 16,
         "start_times": [
             5.5,
@@ -11,7 +11,32 @@
             18.5,
             21.5,
             23.7,
-            26
+            26,
+            31.25,
+            35.55,
+            38.75,
+            52.23,
+            71.82,
+            75.2,
+            86.5,
+            102,
+            106.5,
+            111.9,
+            115.5,
+            119.5,
+            130,
+            147,
+            153.15,
+            165.75,
+            173.5,
+            194.5,
+            199,
+            230.4,
+            221.5,
+            250,
+            258,
+            274.5,
+            282
         ]
     },
     "DistinctPredictabilityRegimesShort": {
@@ -126,10 +151,10 @@
         ]
     },
     "DistinctPredictabilityRegimesShort_n_ny13": {
-        "folder_name": "lorentz_block_short_pred_n_ny13_ttr4",
+        "folder_name": "lorentz_block_short_pred_n_ny13_ttr8",
         "day_offset": 0.24,
-        "time_to_run": 4.0,
-        "n_analyses": 16,
+        "time_to_run": 8.0,
+        "n_analyses": 32,
         "start_times": [
             2.9,
             6.9,
@@ -144,7 +169,6 @@
             74.3,
             80.7,
             84.7,
-            90.1,
             94.1,
             98.1,
             102.1,
