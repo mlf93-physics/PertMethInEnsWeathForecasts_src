@@ -3,6 +3,7 @@ import sys
 sys.path.append("..")
 import itertools as it
 import re
+import json
 import pathlib as pl
 import numpy as np
 import shell_model_experiments.params as sh_params
@@ -69,7 +70,7 @@ def import_info_file(path):
     info_file_path = list(pl.Path(path).glob("*.txt"))
     if len(info_file_path) > 1:
         raise ValueError(
-            f"To many info files. Found " + f"{len(info_file_path)}; expected 1."
+            f"To many data info files. Found " + f"{len(info_file_path)}; expected 1."
         )
 
     info_dict = import_header(file_name=info_file_path[0])
@@ -438,3 +439,22 @@ def import_start_u_profiles(args=None):
             counter += 1
 
     return u_init_profiles, positions + burn_in * args["burn_in_lines"], ref_header_dict
+
+
+def import_exp_info_file(args):
+
+    path = pl.Path(args["path"], args["experiment"])
+
+    json_files = list(path.glob("*.json"))
+    len_files = len(json_files)
+
+    if len_files > 1:
+        raise ValueError(
+            f"To many experiment info files. Found " + f"{len_files}; expected 1."
+        )
+
+    # Get experiment setup
+    with open(json_files[0], "r") as file:
+        exp_info_file = json.load(file)
+
+    return exp_info_file

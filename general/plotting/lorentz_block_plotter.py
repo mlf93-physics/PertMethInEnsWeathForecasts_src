@@ -95,88 +95,106 @@ def plt_lorentz_block_from_full_perturbation_data(args):
 
 def plt_lorentz_block(args):
 
-    (
-        rmse,
-        ana_forecast_header_dicts,
-    ) = lr_analysis.lorentz_block_analyser.analysis_executer(args)
+    experiments = args["experiment"]
 
-    num_blocks = len(ana_forecast_header_dicts)
-    num_forecasts = rmse.shape[0]
+    for experiment in experiments:
+        args["experiment"] = experiment
 
-    if num_blocks == 0:
-        raise ValueError(f"No blocks to plot. num_blocks = {num_blocks}")
-
-    legend = [f"$\\Delta = {i + 1}$" for i in range(num_forecasts)]
-    # Get non-repeating colorcycle
-    cmap_list = g_plt_utils.get_non_repeating_colors(n_colors=num_forecasts)
-
-    # Make average plot...
-    if args["average"]:
-        # Get diagonal elements
-        legend.append("The black")
-        # Set colors
-        ax = plt.gca()
-        ax.set_prop_cycle("color", cmap_list)
-
-        plt.plot(
-            rmse.T,
-            linewidth=1.5,
+        # Get experiment info
+        exp_info = g_import.import_exp_info_file(args)
+        # Prepare time series
+        time_array = np.array(
+            [exp_info["day_offset"] * (i + 1) for i in range(exp_info["n_analyses"])]
         )
 
-        # Reset color cycle
-        ax.set_prop_cycle("color", cmap_list)
+        # Get Lorentz rmse block
+        (
+            rmse,
+            ana_forecast_header_dicts,
+        ) = lr_analysis.lorentz_block_analyser.analysis_executer(args)
 
-        plt.plot(rmse.T, ".", markersize=8, label="_nolegend_")
+        num_blocks = len(ana_forecast_header_dicts)
+        num_forecasts = rmse.shape[0]
 
-        plt.xlabel("Forecast day; $k$")
-        plt.ylabel("RMSE; log($\\sqrt{E_{jk}²})$")
-        plt.title(f"Lorentz block average | $N_{{blocks}}$={num_blocks}")
-        # Plot diagonal, i.e. bold curve from [Lorentz 1982]
-        plt.plot(np.diagonal(rmse), "k-")
-        plt.plot(np.diagonal(rmse), "k.", markersize=8, linewidth=1.5)
-        plt.legend(legend)
-        # plt.yscale("log")
-    # or plot each rmse in its own axes
-    else:
-        num_subplot_cols = math.floor(num_blocks / 2) + 1
-        num_subplot_rows = math.ceil(num_blocks / num_subplot_cols)
-        fig, axes = plt.subplots(
-            ncols=num_subplot_cols,
-            nrows=num_subplot_rows,
-            sharex=True,
-            sharey=args["sharey"],
-        )
+        if num_blocks == 0:
+            raise ValueError(f"No blocks to plot. num_blocks = {num_blocks}")
 
-        # Catch if axes is one dimensional or not an array (if only one plot to make)
-        try:
-            if len(axes.shape) == 1:
-                axes = np.reshape(axes, (1, num_subplot_cols))
-        except AttributeError:
-            axes = np.reshape(np.array([axes]), (1, 1))
+        legend = [f"$\\Delta = {i + 1}$" for i in range(num_forecasts)]
+        # Get non-repeating colorcycle
+        cmap_list = g_plt_utils.get_non_repeating_colors(n_colors=num_forecasts)
 
-        for i in range(rmse.shape[-1]):
-            axes[i // num_subplot_cols, i % num_subplot_cols].set_prop_cycle(
-                "color", cmap_list
+        # Make average plot...
+        if args["average"]:
+            # Get diagonal elements
+            legend.append("The black")
+            # Set colors
+            ax = plt.gca()
+            # ax.set_prop_cycle("color", cmap_list)
+
+            plt.plot(
+                time_array,
+                rmse.T,
+                "b-",
+                alpha=0.6,
+                linewidth=1.5,
             )
-            line_plot = axes[i // num_subplot_cols, i % num_subplot_cols].plot(
-                rmse[:, :, i].T
-            )
-            axes[i // num_subplot_cols, i % num_subplot_cols].set_xlabel(
-                "Forecast day; $k$"
-            )
-            axes[i // num_subplot_cols, i % num_subplot_cols].set_ylabel(
-                "RMSE; $\\sqrt{E_{jk}²}$"
-            )
-            axes[i // num_subplot_cols, i % num_subplot_cols].set_title(
-                f"Lorentz block {i+1} | $T_{{start}}$="
-                + f"{ana_forecast_header_dicts[i]['perturb_pos']*params.stt:.1f}"
-            )
-            axes[i // num_subplot_cols, i % num_subplot_cols].set_yscale("log")
 
-            if i == 0:
-                fig.legend(line_plot, legend, loc="center right")
+            # Reset color cycle
+            # ax.set_prop_cycle("color", cmap_list)
 
-        plt.subplots_adjust(right=0.9)
+            plt.plot(
+                time_array, rmse.T, "b.", alpha=0.6, markersize=8, label="_nolegend_"
+            )
+
+            plt.xlabel("Forecast day; $k$")
+            plt.ylabel("RMSE; log($\\sqrt{E_{jk}²})$")
+            plt.title(f"Lorentz block average | $N_{{blocks}}$={num_blocks}")
+            # Plot diagonal, i.e. bold curve from [Lorentz 1982]
+            plt.plot(time_array, np.diagonal(rmse), "k-")
+            plt.plot(time_array, np.diagonal(rmse), "k.", markersize=8, linewidth=1.5)
+            # plt.legend(legend)
+            # plt.yscale("log")
+        # or plot each rmse in its own axes
+        else:
+            num_subplot_cols = math.floor(num_blocks / 2) + 1
+            num_subplot_rows = math.ceil(num_blocks / num_subplot_cols)
+            fig, axes = plt.subplots(
+                ncols=num_subplot_cols,
+                nrows=num_subplot_rows,
+                sharex=True,
+                sharey=args["sharey"],
+            )
+
+            # Catch if axes is one dimensional or not an array (if only one plot to make)
+            try:
+                if len(axes.shape) == 1:
+                    axes = np.reshape(axes, (1, num_subplot_cols))
+            except AttributeError:
+                axes = np.reshape(np.array([axes]), (1, 1))
+
+            for i in range(rmse.shape[-1]):
+                axes[i // num_subplot_cols, i % num_subplot_cols].set_prop_cycle(
+                    "color", cmap_list
+                )
+                line_plot = axes[i // num_subplot_cols, i % num_subplot_cols].plot(
+                    time_array, rmse[:, :, i].T
+                )
+                axes[i // num_subplot_cols, i % num_subplot_cols].set_xlabel(
+                    "Forecast time"
+                )
+                axes[i // num_subplot_cols, i % num_subplot_cols].set_ylabel(
+                    "RMSE; $\\sqrt{E_{jk}²}$"
+                )
+                axes[i // num_subplot_cols, i % num_subplot_cols].set_title(
+                    f"Lorentz block {i+1} | $T_{{start}}$="
+                    + f"{ana_forecast_header_dicts[i]['perturb_pos']*params.stt:.1f}"
+                )
+                axes[i // num_subplot_cols, i % num_subplot_cols].set_yscale("log")
+
+                if i == 0:
+                    fig.legend(line_plot, legend, loc="center right")
+
+            plt.subplots_adjust(right=0.9)
 
 
 def plt_blocks_energy_regions(args):
@@ -278,7 +296,7 @@ def plt_block_and_energy(args):
     axes[1].set_prop_cycle("color", cmap_list)
 
     axes[1].plot(rmse[:, :, 0].T, ".", markersize=8, label="_nolegend_")
-    axes[1].set_xlabel("Forecast day; $k$")
+    axes[1].set_xlabel("Forecast time")
     axes[1].set_ylabel("RMSE; $\\sqrt{E_{jk}²}$")
     axes[1].set_title(f"Lorentz block")
     # Plot diagonal, i.e. bold curve from [Lorentz 1982]
@@ -322,7 +340,7 @@ if __name__ == "__main__":
     arg_parser.add_argument("--perturb_folder", nargs="?", default=None, type=str)
     arg_parser.add_argument("--n_files", default=-1, type=int)
     arg_parser.add_argument("--plot_type", nargs="?", default=None, type=str)
-    arg_parser.add_argument("--experiment", nargs="?", default=None, type=str)
+    arg_parser.add_argument("--experiment", nargs="+", default=None, type=str)
     arg_parser.add_argument("--average", action="store_true")
     arg_parser.add_argument("--sharey", action="store_true")
     arg_parser.add_argument("--ref_start_time", default=0, type=float)
