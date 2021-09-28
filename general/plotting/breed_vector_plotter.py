@@ -11,8 +11,9 @@ import shell_model_experiments.params as sh_params
 import lorentz63_experiments.params.params as l63_params
 import lorentz63_experiments.perturbations.normal_modes as pert_nm
 import general.utils.importing.import_perturbation_data as pt_import
-from general.params.model_licences import Models
 import general.utils.importing.import_data_funcs as g_import
+import general.plotting.plot_data as g_plt_data
+from general.params.model_licences import Models
 from config import MODEL
 
 # Get parameters for model
@@ -153,6 +154,10 @@ def plot_breed_comparison_to_nm(args):
     )
 
 
+def plot_breed_error_norm(args):
+    g_plt_data.plot_error_norm_vs_time(args=args, normalize_start_time=False)
+
+
 if __name__ == "__main__":
     # Define arguments
     arg_parser = argparse.ArgumentParser()
@@ -160,12 +165,16 @@ if __name__ == "__main__":
     arg_parser.add_argument("--perturb_folder", nargs="?", default=None, type=str)
     arg_parser.add_argument("--n_files", default=np.inf, type=int)
     arg_parser.add_argument("--plot_type", nargs="?", default=None, type=str)
+    arg_parser.add_argument("--plot_mode", nargs="?", default="standard", type=str)
     arg_parser.add_argument("--experiment", nargs="?", default=None, type=str)
     arg_parser.add_argument("--sharey", action="store_true")
     arg_parser.add_argument("--sigma", default=10, type=float)
     arg_parser.add_argument("--r_const", default=28, type=float)
     arg_parser.add_argument("--b_const", default=8 / 3, type=float)
     arg_parser.add_argument("-np", "--noplot", action="store_true")
+    arg_parser.add_argument("--endpoint", action="store_true")
+    arg_parser.add_argument("--xlim", nargs=2, default=None, type=float)
+    arg_parser.add_argument("--ylim", nargs=2, default=None, type=float)
     # arg_parser.add_argument("--ref_start_time", default=0, type=float)
     # arg_parser.add_argument("--ref_end_time", default=-1, type=float)
     num_block_group = arg_parser.add_mutually_exclusive_group()
@@ -179,11 +188,15 @@ if __name__ == "__main__":
     args["file_offset"] = 0
     args["n_runs_per_profile"] = 1
     args["burn_in_lines"] = 0
+    args["combinations"] = False
+    args["specific_files"] = None
 
     if args["plot_type"] == "vectors":
         plot_breed_vectors(args)
     elif args["plot_type"] == "nm_compare":
         plot_breed_comparison_to_nm(args)
+    elif args["plot_type"] == "bv_error_norm":
+        plot_breed_error_norm(args)
     else:
         raise ValueError("No valid plot type given as input argument")
 

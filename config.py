@@ -41,7 +41,7 @@ print(f"\nRunning with model {MODEL}\n")
 
 # Set experiment license
 exp = Experiments()
-LICENCE = exp.NORMAL_PERTURBATION
+LICENCE = exp.BREEDING_VECTORS
 
 # Other general configurations
 NUMBA_CACHE = True

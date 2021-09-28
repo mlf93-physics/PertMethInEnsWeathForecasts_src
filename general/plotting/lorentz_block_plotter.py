@@ -14,6 +14,7 @@ import shell_model_experiments.plotting.plot_data as pl_data
 import general.analyses.lorentz_block_analysis as lr_analysis
 import general.utils.importing.import_data_funcs as g_import
 import general.utils.plot_utils as g_plt_utils
+import general.plotting.plot_params as plt_params
 from general.params.model_licences import Models
 from config import MODEL
 
@@ -96,8 +97,9 @@ def plt_lorentz_block_from_full_perturbation_data(args):
 def plt_lorentz_block(args):
 
     experiments = args["experiment"]
+    legend = []
 
-    for experiment in experiments:
+    for j, experiment in enumerate(experiments):
         args["experiment"] = experiment
 
         # Get experiment info
@@ -113,51 +115,76 @@ def plt_lorentz_block(args):
             ana_forecast_header_dicts,
         ) = lr_analysis.lorentz_block_analyser.analysis_executer(args)
 
-        num_blocks = len(ana_forecast_header_dicts)
+        num_units = len(ana_forecast_header_dicts)
         num_forecasts = rmse.shape[0]
 
-        if num_blocks == 0:
-            raise ValueError(f"No blocks to plot. num_blocks = {num_blocks}")
+        if num_units == 0:
+            raise ValueError(f"No blocks to plot. num_units = {num_units}")
 
-        legend = [f"$\\Delta = {i + 1}$" for i in range(num_forecasts)]
+        # Prepare legend
+        if len(experiments) > 1:
+            legend.append(experiment + f" | $N_{{blocks}}$={num_units}")
+        else:
+            legend = [f"$\\Delta = {i + 1}$" for i in range(num_forecasts)]
         # Get non-repeating colorcycle
         cmap_list = g_plt_utils.get_non_repeating_colors(n_colors=num_forecasts)
 
         # Make average plot...
         if args["average"]:
-            # Get diagonal elements
-            legend.append("The black")
+            legend.append(f"$\\Delta_{{0-{num_forecasts}}}$")
             # Set colors
             ax = plt.gca()
             # ax.set_prop_cycle("color", cmap_list)
 
-            plt.plot(
-                time_array,
-                rmse.T,
-                "b-",
-                alpha=0.6,
-                linewidth=1.5,
-            )
+            for k in range(num_forecasts):
+                plt.plot(
+                    time_array,
+                    rmse.T[:, k],
+                    "b",
+                    alpha=0.6,
+                    linewidth=1.5,
+                    linestyle=plt_params.linestyles[j],
+                    label="_nolegend"
+                    if k > 0
+                    else legend[int(len(legend) // len(experiments) * j)],
+                )
 
             # Reset color cycle
             # ax.set_prop_cycle("color", cmap_list)
 
+            # Plot diagonal elements
             plt.plot(
-                time_array, rmse.T, "b.", alpha=0.6, markersize=8, label="_nolegend_"
+                time_array,
+                rmse.T,
+                "b.",
+                alpha=0.6,
+                markersize=8,
+                label="_nolegend_",
             )
 
-            plt.xlabel("Forecast day; $k$")
+            plt.xlabel("Forecast time")
             plt.ylabel("RMSE; log($\\sqrt{E_{jk}²})$")
-            plt.title(f"Lorentz block average | $N_{{blocks}}$={num_blocks}")
+            plt.title(f"Lorentz block average")
             # Plot diagonal, i.e. bold curve from [Lorentz 1982]
-            plt.plot(time_array, np.diagonal(rmse), "k-")
-            plt.plot(time_array, np.diagonal(rmse), "k.", markersize=8, linewidth=1.5)
-            # plt.legend(legend)
-            # plt.yscale("log")
+            plt.plot(
+                time_array,
+                np.diagonal(rmse),
+                "k",
+                linestyle=plt_params.linestyles[j],
+                label=legend[int(len(legend) // len(experiments) * j + 1)],
+            )
+            plt.plot(
+                time_array,
+                np.diagonal(rmse),
+                "k.",
+                markersize=8,
+                linewidth=1.5,
+            )
+            plt.legend()
         # or plot each rmse in its own axes
         else:
-            num_subplot_cols = math.floor(num_blocks / 2) + 1
-            num_subplot_rows = math.ceil(num_blocks / num_subplot_cols)
+            num_subplot_cols = math.floor(num_units / 2) + 1
+            num_subplot_rows = math.ceil(num_units / num_subplot_cols)
             fig, axes = plt.subplots(
                 ncols=num_subplot_cols,
                 nrows=num_subplot_rows,
@@ -202,9 +229,9 @@ def plt_blocks_energy_regions(args):
     time, u_data, ref_header_dict = g_import.import_ref_data(args=args)
 
     block_dirs = lr_analysis.get_block_dirs(args)
-    num_blocks = len(block_dirs)
-    block_start_indices = np.zeros(num_blocks, dtype=np.int64)
-    block_end_indices = np.zeros(num_blocks, dtype=np.int64)
+    num_units = len(block_dirs)
+    block_start_indices = np.zeros(num_units, dtype=np.int64)
+    block_end_indices = np.zeros(num_units, dtype=np.int64)
     block_names = []
 
     # Import one forecast header to get perturb positions
@@ -238,7 +265,7 @@ def plt_blocks_energy_regions(args):
     # Calculate energy
     energy_vs_time = np.sum(u_data * np.conj(u_data), axis=1).real
 
-    for i in range(num_blocks):
+    for i in range(num_units):
         time_array = np.linspace(
             block_start_indices[i] * params.stt,
             block_end_indices[i] * params.stt,
@@ -269,7 +296,7 @@ def plt_blocks_energy_regions(args):
 def plt_block_and_energy(args):
 
     # Only plot one block
-    args["num_blocks"] = 1
+    args["num_units"] = 1
 
     (
         rmse,
@@ -345,9 +372,9 @@ if __name__ == "__main__":
     arg_parser.add_argument("--sharey", action="store_true")
     arg_parser.add_argument("--ref_start_time", default=0, type=float)
     arg_parser.add_argument("--ref_end_time", default=-1, type=float)
-    num_block_group = arg_parser.add_mutually_exclusive_group()
-    num_block_group.add_argument("--num_blocks", default=np.inf, type=int)
-    num_block_group.add_argument("--specific_blocks", nargs="+", default=None, type=int)
+    num_unit_group = arg_parser.add_mutually_exclusive_group()
+    num_unit_group.add_argument("--num_units", default=np.inf, type=int)
+    num_unit_group.add_argument("--specific_units", nargs="+", default=None, type=int)
 
     args = vars(arg_parser.parse_args())
 

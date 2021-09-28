@@ -77,7 +77,7 @@ def analyse_error_spread_vs_time_mean_of_norm(u_stores, args=None):
     return error_spread
 
 
-def plot_error_norm_vs_time(args=None):
+def plot_error_norm_vs_time(args=None, normalize_start_time=True):
 
     (
         u_stores,
@@ -86,6 +86,8 @@ def plot_error_norm_vs_time(args=None):
         header_dict,
         u_ref_stores,
     ) = g_import.import_perturbation_velocities(args)
+
+    num_perturbations = len(perturb_time_pos_list)
 
     error_norm_vs_time, error_norm_mean_vs_time = analyse_error_norm_vs_time(
         u_stores, args=args
@@ -102,6 +104,14 @@ def plot_error_norm_vs_time(args=None):
         dtype=np.float64,
         endpoint=args["endpoint"],
     )
+    if not normalize_start_time:
+        time_array = np.repeat(
+            np.reshape(time_array, (time_array.size, 1)), num_perturbations, axis=1
+        )
+
+        time_array += np.reshape(
+            np.array(perturb_time_pos_list) * params.stt, (1, num_perturbations)
+        )
 
     # Pick out specified runs
     if args["specific_files"] is not None:
@@ -117,9 +127,7 @@ def plot_error_norm_vs_time(args=None):
 
     fig, axes = plt.subplots(nrows=1, ncols=1, sharex=True, figsize=(10, 6))
     # Get non-repeating colorcycle
-    cmap_list = g_plt_utils.get_non_repeating_colors(
-        n_colors=error_norm_vs_time.shape[1]
-    )
+    cmap_list = g_plt_utils.get_non_repeating_colors(n_colors=num_perturbations)
     axes.set_prop_cycle("color", cmap_list)
     axes.plot(time_array, error_norm_vs_time)  # , 'k', linewidth=1)
 

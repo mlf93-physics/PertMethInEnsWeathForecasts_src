@@ -96,7 +96,7 @@ def imported_sorted_perturbation_info(folder_name, args):
         Tuple with all perturbation info
     """
     # Initiate lists
-    perturb_file_names = list(pl.Path(args["path"], folder_name).glob("*.csv"))
+    perturb_file_names = list(pl.Path(args["path"], folder_name).glob("*perturb*.csv"))
     perturb_time_pos_list_legend = []
     perturb_time_pos_list = []
     perturb_header_dicts = []
@@ -418,7 +418,7 @@ def import_start_u_profiles(args=None):
                 ref_record_names_sorted[int(file_id)],
                 dtype=params.dtype,
                 delimiter=",",
-                skip_header=np.int64(position),
+                skip_header=np.int64(round(position, 0)),
                 max_rows=1,
             )
 

@@ -37,7 +37,7 @@ def main(args):
     # Get number of existing blocks
     n_existing_units = g_utils.count_existing_files_or_dirs(
         search_path=pl.Path(args["path"], exp_setup["folder_name"]),
-        search_pattern=".csv",
+        search_pattern="breed_vector*.csv",
     )
 
     # Validate the start time method
@@ -94,6 +94,8 @@ def main(args):
 
                 # The rescaled data is used to start off cycle 1+
                 rescaled_data = pt_utils.rescale_perturbations(data_out_list, copy_args)
+                # Update perturb_positions
+                perturb_positions += int(exp_setup["time_per_cycle"] * params.tts)
         else:
             print("No processes to run - check if units already exists")
 
@@ -121,7 +123,7 @@ if __name__ == "__main__":
     )
     arg_parser.add_argument("--time_to_run", default=0.1, type=float)
     arg_parser.add_argument("--burn_in_time", default=0.0, type=float)
-    arg_parser.add_argument("--ny_n", default=19, type=int)
+    arg_parser.add_argument("--ny_n", default=None, type=int)
     arg_parser.add_argument("--forcing", default=1, type=float)
     arg_parser.add_argument("--sigma", default=10, type=float)
     arg_parser.add_argument("--r_const", default=28, type=float)
@@ -140,9 +142,9 @@ if __name__ == "__main__":
     args = vars(arg_parser.parse_args())
 
     args["ref_run"] = False
-    args["ny"] = (
-        args["forcing"] / (sh_params.lambda_const ** (8 / 3 * args["ny_n"]))
-    ) ** (1 / 2)
+    # args["ny"] = (
+    #     args["forcing"] / (sh_params.lambda_const ** (8 / 3 * args["ny_n"]))
+    # ) ** (1 / 2)
 
     # Set seed if wished
     if args["seed_mode"]:

@@ -150,7 +150,7 @@ def convert_arguments_to_string(args):
     return arguments
 
 
-def save_data(data_out, subfolder="", prefix="", perturb_position=None, args=None):
+def save_data(data_out, subsubfolder="", prefix="", perturb_position=None, args=None):
     """Save the data to disc.
 
     Parameters
@@ -192,7 +192,7 @@ def save_data(data_out, subfolder="", prefix="", perturb_position=None, args=Non
                 + f"_b{temp_args['b_const']}_r{temp_args['r_const']}"
             )
 
-        expected_path = generate_dir(expected_path + f"/{subsubfolder}", args=args)
+        expected_path = generate_dir(pl.Path(expected_path, subsubfolder), args=args)
 
         prefix = "ref_"
 
@@ -230,10 +230,11 @@ def save_data(data_out, subfolder="", prefix="", perturb_position=None, args=Non
 
     else:
         ref_filename_extra = ""
-        subsubfolder = args["perturb_folder"]
 
         # Generate path if not existing
-        expected_path = generate_dir(pl.Path(args["path"], subsubfolder), args=args)
+        expected_path = generate_dir(
+            pl.Path(args["path"], args["perturb_folder"], subsubfolder), args=args
+        )
 
         if perturb_position is not None:
             perturb_header_extra = f", perturb_pos={int(perturb_position)}"

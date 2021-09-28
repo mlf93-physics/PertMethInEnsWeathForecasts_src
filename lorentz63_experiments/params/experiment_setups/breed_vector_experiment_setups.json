@@ -2,8 +2,8 @@
     "TestRun1": {
         "folder_name": "lorentz63_breed_vectors3",
         "time_per_cycle": 0.1,
-        "n_cycles": 20,
-        "n_vectors": 40,
+        "n_cycles": 10,
+        "n_vectors": 1,
         "vector_offset": 20
     },
     "TestRun2": {
