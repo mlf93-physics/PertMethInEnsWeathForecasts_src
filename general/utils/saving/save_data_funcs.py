@@ -2,12 +2,14 @@ import os
 import sys
 
 sys.path.append("..")
+import json
 import pathlib as pl
 import subprocess as sp
 import numpy as np
 import shell_model_experiments.params as sh_params
 import config
 import lorentz63_experiments.params.params as l63_params
+import general.utils.saving.save_data_funcs as g_save
 from general.params.model_licences import Models
 from config import MODEL
 
@@ -321,6 +323,35 @@ def save_perturb_info(args=None, exp_setup=None):
     # Write to file
     with open(str(perturb_data_info_name), "w") as file:
         file.write(info_line)
+
+
+def save_exp_info(exp_info, args):
+    temp_args = g_save.convert_arguments_to_string(args)
+
+    # Generate out file name
+    if MODEL == Models.SHELL_MODEL:
+        out_name = (
+            f"_ny{temp_args['ny']}_t{temp_args['time_to_run']}"
+            + f"_n_f{sh_params.n_forcing}_f{temp_args['forcing']}"
+        )
+    elif MODEL == Models.LORENTZ63:
+        out_name = (
+            f"_sig{temp_args['sigma']}"
+            + f"_t{temp_args['time_to_run']}"
+            + f"_b{temp_args['b_const']}_r{temp_args['r_const']}"
+        )
+
+    prefix = "exp_info"
+
+    # Generate path if not existing
+    expected_path = g_save.generate_dir(
+        pl.Path(args["path"], args["perturb_folder"]), args=args
+    )
+
+    out_path = pl.Path(expected_path, f"{prefix}{out_name}.json")
+
+    with open(out_path, "w") as file:
+        json.dump(exp_info, file)
 
 
 if __name__ == "__main__":

@@ -57,7 +57,9 @@ def main(args):
         # Make analysis forecasts
         args["time_to_run"] = exp_setup["time_per_cycle"]
         args["start_time"] = [start_times[i]]
-        args["start_time_offset"] = exp_setup["vector_offset"]
+        args["start_time_offset"] = (
+            exp_setup["vector_offset"] if "vector_offset" in exp_setup else None
+        )
         args["endpoint"] = True
         args["n_profiles"] = 1
         args["n_runs_per_profile"] = exp_setup["n_vectors"]
@@ -107,6 +109,9 @@ def main(args):
             args=args,
             exp_setup=exp_setup,
         )
+
+    # Save exp setup to exp folder
+    g_save.save_exp_info(exp_setup, args)
 
     if args["erda_run"]:
         path = pl.Path(args["path"], exp_setup["folder_name"])

@@ -4,8 +4,9 @@ import shell_model_experiments.params as sh_params
 import lorentz63_experiments.params.params as l63_params
 import general.utils.importing.import_data_funcs as g_import
 import general.utils.plot_utils as g_plt_utils
+from general.params.experiment_licences import Experiments as EXP
 from general.params.model_licences import Models
-from config import MODEL
+from config import MODEL, LICENCE
 
 # Get parameters for model
 if MODEL == Models.SHELL_MODEL:
@@ -79,6 +80,8 @@ def analyse_error_spread_vs_time_mean_of_norm(u_stores, args=None):
 
 def plot_error_norm_vs_time(args=None, normalize_start_time=True):
 
+    exp_setup = g_import.import_exp_info_file(args)
+
     (
         u_stores,
         perturb_time_pos_list,
@@ -127,8 +130,14 @@ def plot_error_norm_vs_time(args=None, normalize_start_time=True):
 
     fig, axes = plt.subplots(nrows=1, ncols=1, sharex=True, figsize=(10, 6))
     # Get non-repeating colorcycle
-    cmap_list = g_plt_utils.get_non_repeating_colors(n_colors=num_perturbations)
+    if LICENCE == EXP.BREEDING_VECTORS:
+        n_colors = exp_setup["n_vectors"]
+    else:
+        n_colors = num_perturbations
+
+    cmap_list = g_plt_utils.get_non_repeating_colors(n_colors=n_colors)
     axes.set_prop_cycle("color", cmap_list)
+
     axes.plot(time_array, error_norm_vs_time)  # , 'k', linewidth=1)
 
     if args["plot_mode"] == "detailed":
@@ -141,7 +150,9 @@ def plot_error_norm_vs_time(args=None, normalize_start_time=True):
     axes.set_xlabel("Time")
     axes.set_ylabel("Error")
     axes.set_yscale("log")
-    axes.legend(perturb_time_pos_list_legend)
+
+    if not LICENCE == EXP.BREEDING_VECTORS:
+        axes.legend(perturb_time_pos_list_legend)
 
     if args["xlim"] is not None:
         axes.set_xlim(args["xlim"][0], args["xlim"][1])

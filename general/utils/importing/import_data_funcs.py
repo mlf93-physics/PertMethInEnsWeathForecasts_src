@@ -443,7 +443,14 @@ def import_start_u_profiles(args=None):
 
 def import_exp_info_file(args):
 
-    path = pl.Path(args["path"], args["experiment"])
+    if args["experiment"] is not None:
+        subfolder = args["experiment"]
+    elif args["perturb_folder"] is not None:
+        subfolder = args["perturb_folder"]
+    else:
+        raise ImportError("No valid subfolder to search for exp_setup")
+
+    path = pl.Path(args["path"], subfolder)
 
     json_files = list(path.glob("*.json"))
     len_files = len(json_files)
@@ -452,6 +459,8 @@ def import_exp_info_file(args):
         raise ValueError(
             f"To many experiment info files. Found " + f"{len_files}; expected 1."
         )
+    elif len_files == 0:
+        raise ImportError(f"No experiment info file found at path {path}")
 
     # Get experiment setup
     with open(json_files[0], "r") as file:
