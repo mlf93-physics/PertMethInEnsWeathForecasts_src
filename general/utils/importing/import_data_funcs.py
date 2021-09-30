@@ -86,7 +86,7 @@ def imported_sorted_perturbation_info(folder_name, args, search_pattern="*.csv")
     Parameters
     ----------
     folder_name : str, Path
-        The sub folder to args["path"] in which to search for perturbation info
+        The sub folder to args["datapath"] in which to search for perturbation info
     args : dict
         Run-time arguments
 
@@ -96,7 +96,7 @@ def imported_sorted_perturbation_info(folder_name, args, search_pattern="*.csv")
         Tuple with all perturbation info
     """
     # Initiate lists
-    path_to_search = pl.Path(args["path"], folder_name)
+    path_to_search = pl.Path(args["datapath"], folder_name)
     perturb_file_names = list(path_to_search.glob(search_pattern))
     perturb_time_pos_list_legend = []
     perturb_time_pos_list = []
@@ -184,7 +184,7 @@ def import_data(file_name, start_line=0, max_lines=None, step=1):
 def import_ref_data(args=None):
     """Import reference file consisting of multiple records"""
 
-    ref_record_names = list(pl.Path(args["path"], "ref_data").glob("*.csv"))
+    ref_record_names = list(pl.Path(args["datapath"], "ref_data").glob("*.csv"))
     ref_files_sort_index = np.argsort(
         [str(ref_record_name) for ref_record_name in ref_record_names]
     )
@@ -226,7 +226,7 @@ def import_ref_data(args=None):
     time = np.concatenate(time_concat)
     u_data = np.concatenate(u_data_concat)
 
-    ref_header_dict = import_info_file(pl.Path(args["path"], "ref_data"))
+    ref_header_dict = import_info_file(pl.Path(args["datapath"], "ref_data"))
 
     return time, u_data, ref_header_dict
 
@@ -234,11 +234,11 @@ def import_ref_data(args=None):
 def import_perturbation_velocities(args=None, search_pattern="*.csv"):
     u_stores = []
 
-    if args["path"] is None:
+    if args["datapath"] is None:
         raise ValueError("No path specified")
 
     # Check if ref path exists
-    ref_header_dict = import_info_file(pl.Path(args["path"], "ref_data"))
+    ref_header_dict = import_info_file(pl.Path(args["datapath"], "ref_data"))
 
     (
         perturb_time_pos_list,
@@ -350,12 +350,12 @@ def import_start_u_profiles(args=None):
     n_runs_per_profile = args["n_runs_per_profile"]
 
     # Check if ref path exists
-    ref_file_path = pl.Path(args["path"], "ref_data")
+    ref_file_path = pl.Path(args["datapath"], "ref_data")
 
     # Get ref info text file
     ref_header_dict = import_info_file(ref_file_path)
 
-    if args["start_time"] is None:
+    if args["start_times"] is None:
         print(
             f"\nImporting {n_profiles} velocity profiles randomly positioned "
             + "in reference datafile(s)\n"
@@ -392,7 +392,7 @@ def import_start_u_profiles(args=None):
             f"\nImporting {n_profiles} velocity profiles positioned as "
             + "requested in reference datafile\n"
         )
-        positions = np.array(args["start_time"]) * params.tts
+        positions = np.array(args["start_times"]) * params.tts
 
         burn_in = False
 
@@ -458,7 +458,7 @@ def import_exp_info_file(args):
     else:
         raise ImportError("No valid subfolder to search for exp_setup")
 
-    path = pl.Path(args["path"], subfolder)
+    path = pl.Path(args["datapath"], subfolder)
 
     json_files = list(path.glob("*.json"))
     len_files = len(json_files)

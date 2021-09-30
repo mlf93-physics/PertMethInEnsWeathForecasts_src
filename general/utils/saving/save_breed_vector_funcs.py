@@ -25,7 +25,9 @@ def save_breed_vector_unit(
     subsubfolder = args["exp_folder"]
 
     # Generate path if not existing
-    expected_path = g_save.generate_dir(pl.Path(args["path"], subsubfolder), args=args)
+    expected_path = g_save.generate_dir(
+        pl.Path(args["datapath"], subsubfolder), args=args
+    )
     # Calculate position of when the breed_vector is to be valid
     val_pos = int(
         perturb_position

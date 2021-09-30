@@ -118,7 +118,7 @@ def plot_inviscid_quantities(
     if "exp_folder" in args:
         if args["exp_folder"] is not None:
             perturb_file_names = list(
-                Path(args["path"], args["exp_folder"]).glob("*.csv")
+                Path(args["datapath"], args["exp_folder"]).glob("*.csv")
             )
 
             # Import headers to get perturb positions
@@ -178,7 +178,9 @@ def plot_inviscid_quantities_per_shell(
         # if ref_file_index is None:
         #     raise ValueError('No reference file found in specified directory')
 
-        perturb_file_names = list(Path(args["path"], args["exp_folder"]).glob("*.csv"))
+        perturb_file_names = list(
+            Path(args["datapath"], args["exp_folder"]).glob("*.csv")
+        )
 
         (
             pert_u_stores,
@@ -387,7 +389,7 @@ def plots_related_to_energy(args=None):
         time, u_data, header_dict, ax=axes[0], omit="ny", args=args
     )
     # plot_inviscid_quantities_per_shell(
-    #     time, u_data, header_dict, ax=axes[0], path=args["path"], args=args
+    #     time, u_data, header_dict, ax=axes[0], path=args["datapath"], args=args
     # )
 
     # Plot Kolmogorov scaling
@@ -806,11 +808,11 @@ def plot_error_vector_spectrogram(args=None):
         _,
     ) = import_perturbation_velocities(args)
 
-    args["start_time"] = np.array(
+    args["start_times"] = np.array(
         [perturb_time_pos_list[args["file_offset"]] * stt],
         dtype=np.float64,
     )
-    args["n_profiles"] = len(args["start_time"])
+    args["n_profiles"] = len(args["start_times"])
 
     # Import start u profiles at the perturbation
     u_init_profiles, perturb_positions, header_dict = import_start_u_profiles(args=args)
@@ -863,16 +865,16 @@ def plot_error_vector_spectrum(args=None):
         _,
     ) = import_perturbation_velocities(args)
 
-    args["start_time"] = np.array(
+    args["start_times"] = np.array(
         [
             perturb_time_pos_list[args["file_offset"] + i] * stt
             for i in range(args["n_files"])
         ],
         dtype=np.float64,
     )
-    args["n_profiles"] = len(args["start_time"])
+    args["n_profiles"] = len(args["start_times"])
 
-    print("start_times", args["start_time"])
+    print("start_times", args["start_times"])
 
     # Import start u profiles at the perturbation
     u_init_profiles, perturb_positions, header_dict = import_start_u_profiles(args=args)
@@ -964,7 +966,7 @@ if __name__ == "__main__":
     # plots_related_to_forcing()
 
     if "error_norm" in args["plot_type"]:
-        if args["path"] is None:
+        if args["datapath"] is None:
             print("No path specified to analyse error norms.")
         else:
             g_plt_data.plot_error_norm_vs_time(args=args)
@@ -973,7 +975,7 @@ if __name__ == "__main__":
         plot_error_energy_spectrum_vs_time_2D(args=args)
 
     if "shell_error" in args["plot_type"]:
-        if args["path"] is None:
+        if args["datapath"] is None:
             print("No path specified to analyse shell error.")
         else:
             plot_shell_error_vs_time(args=args)

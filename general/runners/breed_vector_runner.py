@@ -39,7 +39,7 @@ def main(args):
 
     # Get number of existing blocks
     n_existing_units = g_utils.count_existing_files_or_dirs(
-        search_path=pl.Path(args["path"], exp_setup["folder_name"]),
+        search_path=pl.Path(args["datapath"], exp_setup["folder_name"]),
         search_pattern="breed_vector*.csv",
     )
 
@@ -54,12 +54,12 @@ def main(args):
     # Calculate the desired number of units
     for i in range(
         n_existing_units,
-        min(args["num_units"] + n_existing_units, num_possible_units),
+        min(args["n_units"] + n_existing_units, num_possible_units),
     ):
 
         # Make analysis forecasts
         args["time_to_run"] = exp_setup["time_per_cycle"]
-        args["start_time"] = [start_times[i]]
+        args["start_times"] = [start_times[i]]
         args["start_time_offset"] = (
             exp_setup["vector_offset"] if "vector_offset" in exp_setup else None
         )
@@ -89,13 +89,13 @@ def main(args):
                 pt_runner.main_run(
                     processes,
                     args=copy_args,
-                    num_units=min(
-                        copy_args["num_units"], num_possible_units - n_existing_units
+                    n_units=min(
+                        copy_args["n_units"], num_possible_units - n_existing_units
                     ),
                 )
                 # Offset time to prepare for next run and import of reference data
                 # for rescaling
-                copy_args["start_time"][0] += copy_args["time_to_run"]
+                copy_args["start_times"][0] += copy_args["time_to_run"]
 
                 # The rescaled data is used to start off cycle 1+
                 rescaled_data = pt_utils.rescale_perturbations(data_out_list, copy_args)
@@ -117,7 +117,7 @@ def main(args):
     g_save.save_exp_info(exp_setup, args)
 
     if args["erda_run"]:
-        path = pl.Path(args["path"], exp_setup["folder_name"])
+        path = pl.Path(args["datapath"], exp_setup["folder_name"])
         g_save.compress_dir(path, "test_temp1")
 
 

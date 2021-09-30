@@ -33,11 +33,11 @@ def import_lorentz_block_perturbations(args=None, rel_ref=True):
     lorentz_block_stores = []
     lorentz_block_ref_stores = []
 
-    if args["path"] is None:
+    if args["datapath"] is None:
         raise ValueError("No path specified")
 
     # Check if ref path exists
-    ref_file_path = pl.Path(args["path"], "ref_data")
+    ref_file_path = pl.Path(args["datapath"], "ref_data")
 
     # Get ref info text file
     ref_header_path = list(pl.Path(ref_file_path).glob("*.txt"))[0]
@@ -143,7 +143,7 @@ def import_profiles_for_nm_analysis(args=None):
     # Get sorted file paths
     ref_record_names_sorted = g_utils.get_sorted_ref_record_names(args=args)
 
-    ref_header_dict = g_import.import_info_file(pl.Path(args["path"], "ref_data"))
+    ref_header_dict = g_import.import_info_file(pl.Path(args["datapath"], "ref_data"))
 
     num_ref_records = len(ref_record_names_sorted)
     profiles = []
@@ -176,11 +176,11 @@ def import_profiles_for_nm_analysis(args=None):
 
 def import_breed_vectors(args):
     # Set arguments
-    args["num_units"] = args["n_files"] = args["n_profiles"]
+    args["n_units"] = args["n_files"] = args["n_profiles"]
 
     pt_vector_dirname = "pt_vectors"
 
-    if not os.path.isdir(pl.Path(args["path"], pt_vector_dirname)):
+    if not os.path.isdir(pl.Path(args["datapath"], pt_vector_dirname)):
         raise ImportError(f"No perturbation path named {pt_vector_dirname}")
 
     (
@@ -189,7 +189,7 @@ def import_breed_vectors(args):
         perturb_header_dicts,
         perturb_file_names,
     ) = g_import.imported_sorted_perturbation_info(
-        pl.Path(pt_vector_dirname, args["vectors"]), args
+        pl.Path(pt_vector_dirname, args["pert_vector_folder"]), args
     )
 
     breed_vector_units = []
@@ -201,7 +201,7 @@ def import_breed_vectors(args):
 
         breed_vector_units.append(breed_vector_unit)
 
-        if i + 1 >= args["num_units"]:
+        if i + 1 >= args["n_units"]:
             break
 
     breed_vector_units = np.array(breed_vector_units)

@@ -38,7 +38,8 @@ def main(args):
 
     # Get number of existing blocks
     n_existing_units = g_utils.count_existing_files_or_dirs(
-        search_path=pl.Path(args["path"], exp_setup["folder_name"]), search_pattern="/"
+        search_path=pl.Path(args["datapath"], exp_setup["folder_name"]),
+        search_pattern="/",
     )
 
     # Determine how to infer start times (from start_times in exp_setup or
@@ -51,14 +52,14 @@ def main(args):
 
     for i in range(
         n_existing_units,
-        min(args["num_units"] + n_existing_units, num_possible_units),
+        min(args["n_units"] + n_existing_units, num_possible_units),
     ):
 
         parent_perturb_folder = f"{exp_setup['folder_name']}/lorentz_block{i}"
 
         # Make analysis forecasts
         args["time_to_run"] = exp_setup["time_to_run"]
-        args["start_time"] = [start_times[i] + exp_setup["day_offset"]]
+        args["start_times"] = [start_times[i] + exp_setup["day_offset"]]
         args["start_time_offset"] = exp_setup["day_offset"]
         args["endpoint"] = True
         args["n_profiles"] = exp_setup["n_analyses"]
@@ -74,7 +75,7 @@ def main(args):
         processes.extend(temp_processes)
 
         # Make forecasts
-        args["start_time"] = [start_times[i]]
+        args["start_times"] = [start_times[i]]
         args["time_to_run"] = exp_setup["time_to_run"] + exp_setup["day_offset"]
         args["endpoint"] = True
         args["n_profiles"] = 1
@@ -89,7 +90,7 @@ def main(args):
         pt_runner.main_run(
             processes,
             args=copy_args,
-            num_units=min(args["num_units"], num_possible_units - n_existing_units),
+            n_units=min(args["n_units"], num_possible_units - n_existing_units),
         )
     else:
         print("No processes to run - check if blocks already exists")
@@ -98,7 +99,7 @@ def main(args):
     g_save.save_exp_info(exp_setup, args)
 
     if args["erda_run"]:
-        path = pl.Path(args["path"], exp_setup["folder_name"])
+        path = pl.Path(args["datapath"], exp_setup["folder_name"])
         g_save.compress_dir(path, "test_temp1")
 
 

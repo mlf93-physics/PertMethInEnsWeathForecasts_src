@@ -57,7 +57,7 @@ def calculate_perturbations(perturb_vectors, dev_plot_active=False, args=None):
                 perturb.imag[args["single_shell_perturb"]] = (
                     np.random.rand(1)[0].astype(np.float64) * 2 - 1
                 )
-        elif args["pert_mode"] == "random":
+        elif args["pert_mode"] == "rd":
             # Generate random perturbation error
             # Reshape into complex array
             perturb = np.empty(params.sdim, dtype=params.dtype)
@@ -156,7 +156,7 @@ def prepare_breed_vectors(args):
     ).T
 
     # Prepare start times for import
-    args["start_time"] = [
+    args["start_times"] = [
         perturb_header_dicts[i]["val_pos"] * params.stt
         for i in range(len(perturb_header_dicts))
     ]

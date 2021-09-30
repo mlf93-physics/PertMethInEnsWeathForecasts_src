@@ -92,10 +92,10 @@ def prepare_run_times(args):
     elif LICENCE == EXP.LORENTZ_BLOCK:
         num_perturbations = args["n_runs_per_profile"] * args["n_profiles"]
 
-        if len(args["start_time"]) > 1:
-            start_times = np.array(args["start_time"])
+        if len(args["start_times"]) > 1:
+            start_times = np.array(args["start_times"])
         else:
-            start_times = np.ones(num_perturbations) * args["start_time"]
+            start_times = np.ones(num_perturbations) * args["start_times"]
 
         times_to_run = start_times[0] + args["time_to_run"] - start_times
         Nt_array = (times_to_run / params.dt).astype(np.int64)
@@ -106,7 +106,7 @@ def prepare_run_times(args):
 def prepare_perturbations(args):
 
     # Import reference info file
-    ref_header_dict = g_import.import_info_file(pl.Path(args["path"], "ref_data"))
+    ref_header_dict = g_import.import_info_file(pl.Path(args["datapath"], "ref_data"))
     # header_dict = g_utils.handle_different_headers(header_dict)
 
     if MODEL == Models.SHELL_MODEL:
@@ -136,7 +136,7 @@ def prepare_perturbations(args):
         print("Nothing specific to do with args in lorentz63 model yet")
 
     # Only import start profiles beforehand for specific perturbation modes
-    if args["pert_mode"] == "normal_mode" or args["pert_mode"] == "random":
+    if args["pert_mode"] == "normal_mode" or args["pert_mode"] == "rd":
         (
             u_init_profiles,
             perturb_positions,
@@ -175,7 +175,7 @@ def prepare_perturbations(args):
             perturb_vectors,
         ) = pt_utils.prepare_breed_vectors(args)
 
-    elif args["pert_mode"] == "random":
+    elif args["pert_mode"] == "rd":
         print("\nRunning with RANDOM perturbations\n")
         perturb_vectors = np.ones((params.sdim, args["n_profiles"]), dtype=params.dtype)
     else:
@@ -283,7 +283,7 @@ def main_setup(
     # Detect if other perturbations exist in the perturbation_folder and calculate
     # perturbation count to start at
     # Check if path exists
-    expected_path = pl.Path(args["path"], args["exp_folder"])
+    expected_path = pl.Path(args["datapath"], args["exp_folder"])
     dir_exists = os.path.isdir(expected_path)
     if dir_exists:
         n_perturbation_files = len(list(expected_path.glob("*.csv")))
@@ -304,7 +304,7 @@ def main_setup(
     return processes, data_out_list, perturb_positions
 
 
-def main_run(processes, args=None, num_units=None):
+def main_run(processes, args=None, n_units=None):
     """Run the processes in parallel. The processes are distributed according
     to the number of units to run
 
@@ -314,7 +314,7 @@ def main_run(processes, args=None, num_units=None):
         List of processes to run
     args : dict, optional
         Run-time arguments, by default None
-    num_units : int, optional
+    n_units : int, optional
         The number of units to run (e.g. blocks, vectors etc. depending on
         the experiment license), by default None
     """
@@ -322,7 +322,7 @@ def main_run(processes, args=None, num_units=None):
     cpu_count = multiprocessing.cpu_count()
     num_processes = len(processes)
 
-    # if num_units is not None:
+    # if n_units is not None:
     #     if LICENCE == EXP.NORMAL_PERTURBATION or LICENCE == EXP.BREEDING_VECTORS:
     #         num_processes_per_unit = args["n_profiles"] * args["n_runs_per_profile"]
     #     elif LICENCE == EXP.LORENTZ_BLOCK:
@@ -331,7 +331,7 @@ def main_run(processes, args=None, num_units=None):
     profiler.start()
 
     for j in range(num_processes // cpu_count):
-        # if num_units is not None:
+        # if n_units is not None:
         #     print(
         #         f"Unit {int(j*cpu_count // num_processes_per_unit)}-"
         #         + f"{int(((j + 1)*cpu_count // num_processes_per_unit))}"
@@ -346,7 +346,7 @@ def main_run(processes, args=None, num_units=None):
             processes[count].join()
             processes[count].close()
 
-    # if num_units is not None:
+    # if n_units is not None:
     #     _dummy_done_count = (j + 1) * cpu_count // num_processes_per_unit
     #     _dummy_remain_count = math.ceil(
     #         num_processes % cpu_count / num_processes_per_unit

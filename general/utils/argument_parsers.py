@@ -35,7 +35,7 @@ class StandardArgSetup:
             datapath = "./data/sig1.00e+01_t9.10e+03_b2.67e+00_r2.80e+01/"
 
         # Add general arguments
-        self._parser.add_argument("-dp", "--path", type=str, default=datapath)
+        self._parser.add_argument("-dp", "--datapath", type=str, default=datapath)
         self._parser.add_argument("-ttr", "--time_to_run", default=0.1, type=float)
         self._parser.add_argument("--burn_in_time", default=0.0, type=float)
         self._parser.add_argument("--seed_mode", action="store_true")
@@ -101,9 +101,9 @@ class PerturbationArgSetup:
         self._parser.add_argument("--n_runs_per_profile", default=1, type=int)
         self._parser.add_argument("--n_profiles", default=1, type=int)
         self._parser.add_argument(
-            "--pert_mode", default="random", choices=["nm", "bv"], type=str
+            "--pert_mode", default="rd", choices=["nm", "bv"], type=str
         )
-        self._parser.add_argument("--vectors", default=None, type=str)
+        self._parser.add_argument("--pert_vector_folder", default=None, type=str)
         self._parser.add_argument(
             "--start_time",
             nargs="+",
@@ -161,9 +161,9 @@ class MultiPerturbationArgSetup:
 
     def setup_parser(self):
         # Add optional arguments
-        num_units_group = self._parser.add_mutually_exclusive_group()
-        num_units_group.add_argument("--num_units", default=np.inf, type=int)
-        num_units_group.add_argument(
+        n_units_group = self._parser.add_mutually_exclusive_group()
+        n_units_group.add_argument("--n_units", default=np.inf, type=int)
+        n_units_group.add_argument(
             "--specific_units", nargs="+", default=None, type=int
         )
 

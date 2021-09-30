@@ -29,10 +29,10 @@ def plot_breed_vectors(args):
     breed_vector_units, _ = pt_import.import_breed_vectors(args)
     # Import info file
     pert_info_dict = g_import.import_info_file(
-        pl.Path(args["path"], args["exp_folder"])
+        pl.Path(args["datapath"], args["exp_folder"])
     )
     # Set number of vectors/profiles
-    args["n_profiles"] = min(args["num_units"], breed_vector_units.shape[0])
+    args["n_profiles"] = min(args["n_units"], breed_vector_units.shape[0])
 
     # Average and norm vectors
     mean_breed_vector_units = np.mean(breed_vector_units, axis=1)
@@ -105,14 +105,14 @@ def plot_breed_comparison_to_nm(args):
     breed_vector_units, breed_vec_header_dicts = pt_import.import_breed_vectors(args)
     # Import perturbation info file
     pert_info_dict = g_import.import_info_file(
-        pl.Path(args["path"], args["exp_folder"])
+        pl.Path(args["datapath"], args["exp_folder"])
     )
 
     # Average vectors for each unit
     mean_breed_vector_units = np.mean(breed_vector_units, axis=1)
 
     # Prepare arguments
-    args["n_profiles"] = min(args["num_units"], breed_vector_units.shape[0])
+    args["n_profiles"] = min(args["n_units"], breed_vector_units.shape[0])
 
     # Gather start times
     start_times = [
@@ -125,7 +125,7 @@ def plot_breed_comparison_to_nm(args):
         for i in range(args["n_profiles"])
     ]
 
-    args["start_time"] = start_times
+    args["start_times"] = start_times
 
     # Import u_profiles at breed vector positions
     u_init_profiles, profile_positions, _ = g_import.import_start_u_profiles(args)
@@ -169,7 +169,7 @@ if __name__ == "__main__":
     # Add missing arguments to make util funcs work
     args["burn_in_lines"] = 0
 
-    if "vectors" in args["plot_type"]:
+    if "pert_vector_folder" in args["plot_type"]:
         plot_breed_vectors(args)
     elif "nm_compare" in args["plot_type"]:
         plot_breed_comparison_to_nm(args)

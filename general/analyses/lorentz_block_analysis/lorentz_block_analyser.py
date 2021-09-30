@@ -79,7 +79,7 @@ def calculate_rmse_of_block(args):
 
 def get_block_dirs(args):
 
-    experiment_dir = pl.Path(args["path"], args["exp_folder"])
+    experiment_dir = pl.Path(args["datapath"], args["exp_folder"])
     block_dirs = list(experiment_dir.glob("*"))
 
     # Filter out anything else than directories
@@ -91,8 +91,8 @@ def get_block_dirs(args):
     block_dirs = [block_dirs[i] for i in np.argsort(block_dirs)]
 
     # Adjust number of blocks
-    if args["num_units"] < np.inf and args["num_units"] > 0:
-        block_dirs = block_dirs[: args["num_units"]]
+    if args["n_units"] < np.inf and args["n_units"] > 0:
+        block_dirs = block_dirs[: args["n_units"]]
 
     return block_dirs
 

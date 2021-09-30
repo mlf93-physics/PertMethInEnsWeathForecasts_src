@@ -40,7 +40,7 @@ def match_start_positions_to_ref_file(args=None, header_dict=None, positions=Non
 
 def get_sorted_ref_record_names(args=None):
     # Get file paths
-    ref_record_names = list(Path(args["path"], "ref_data").glob("*.csv"))
+    ref_record_names = list(Path(args["datapath"], "ref_data").glob("*.csv"))
     ref_files_sort_index = np.argsort(
         [str(ref_record_name) for ref_record_name in ref_record_names]
     )
@@ -51,29 +51,29 @@ def get_sorted_ref_record_names(args=None):
 
 def adjust_start_times_with_offset(args):
 
-    if args["start_time"] is not None:
+    if args["start_times"] is not None:
         if args["n_profiles"] > 1 and args["start_time_offset"] is None:
             np.testing.assert_equal(
-                len(args["start_time"]),
+                len(args["start_times"]),
                 args["n_profiles"],
                 "The number of start times do not equal the number of"
                 + " requested profiles.",
             )
         elif args["n_profiles"] > 1 and args["start_time_offset"] is not None:
             np.testing.assert_equal(
-                len(args["start_time"]), 1, "Too many start times given"
+                len(args["start_times"]), 1, "Too many start times given"
             )
             print(
                 "Determining starttimes from single starttime value and the"
                 + " start_time_offset parameter"
             )
-            args["start_time"] = [
-                args["start_time"][0] + args["start_time_offset"] * i
+            args["start_times"] = [
+                args["start_times"][0] + args["start_time_offset"] * i
                 for i in range(args["n_profiles"])
             ]
         else:
             np.testing.assert_equal(
-                len(args["start_time"]), 1, "Too many start times given"
+                len(args["start_times"]), 1, "Too many start times given"
             )
 
     return args
