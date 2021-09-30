@@ -23,8 +23,9 @@ import general.utils.saving.save_data_funcs as g_save
 import general.utils.saving.save_perturbation as pt_save
 import general.utils.perturb_utils as pt_utils
 import general.utils.exceptions as g_exceptions
+import general.utils.argument_parsers as a_parsers
 from general.params.model_licences import Models
-from config import MODEL, LICENCE
+from config import MODEL, LICENCE, GLOBAL_PARAMS
 
 profiler = Profiler()
 
@@ -33,6 +34,9 @@ if MODEL == Models.SHELL_MODEL:
     params = sh_params
 elif MODEL == Models.LORENTZ63:
     params = l63_params
+
+# Set global params
+GLOBAL_PARAMS.ref_run = False
 
 
 def perturbation_runner(
@@ -366,47 +370,13 @@ def main_run(processes, args=None, num_units=None):
 
 
 if __name__ == "__main__":
-    # Define arguments
-    arg_parser = argparse.ArgumentParser()
-    arg_parser.add_argument("--source", nargs="+", type=str)
-    arg_parser.add_argument("--path", nargs="?", type=str, required=True)
-    arg_parser.add_argument(
-        "--perturb_folder", nargs="?", default=None, required=True, type=str
-    )
-    arg_parser.add_argument("--time_to_run", default=0.1, type=float)
-    arg_parser.add_argument("--burn_in_time", default=0.0, type=float)
-    arg_parser.add_argument("--ny_n", default=None, type=int)
-    arg_parser.add_argument("--sigma", default=10, type=float)
-    arg_parser.add_argument("--r_const", default=28, type=float)
-    arg_parser.add_argument("--b_const", default=8 / 3, type=float)
-    arg_parser.add_argument("--n_runs_per_profile", default=1, type=int)
-    arg_parser.add_argument("--n_profiles", default=1, type=int)
-    arg_parser.add_argument("--start_time", nargs="+", type=float)
-    arg_parser.add_argument("--pert_mode", default="random", type=str)
-    arg_parser.add_argument("--seed_mode", default=False, type=bool)
-    arg_parser.add_argument("--single_shell_perturb", default=None, type=int)
-    arg_parser.add_argument("--start_time_offset", default=None, type=float)
-    arg_parser.add_argument("--endpoint", action="store_true")
-    arg_parser.add_argument("--vectors", default=None, type=str)
+    # Get arguments
+    # parser = argparse.ArgumentParser()
+    pert_arg_setup = a_parsers.PerturbationArgSetup()
+    pert_arg_setup.setup_parser()
+    pert_arg_setup.validate_arguments()
 
-    args = vars(arg_parser.parse_args())
-
-    args["ref_run"] = False
-
-    # Check if arguments apply to the model at use
-    if MODEL == Models.LORENTZ63:
-        if args["single_shell_perturb"] is not None:
-            raise g_exceptions.InvalidArgument(
-                "single_shell_perturb is not a valid option for current model."
-                + f" Model in use: {MODEL}",
-                argument="single_shell_perturb",
-            )
-        elif args["ny_n"] is not None:
-            raise g_exceptions.InvalidArgument(
-                "ny_n is not a valid option for current model."
-                + f" Model in use: {MODEL}",
-                argument="ny_n",
-            )
+    args = vars(pert_arg_setup.args)
 
     args = g_utils.adjust_start_times_with_offset(args)
 

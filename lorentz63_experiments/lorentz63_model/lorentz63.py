@@ -10,10 +10,12 @@ import lorentz63_experiments.lorentz63_model.runge_kutta4 as rk4
 from lorentz63_experiments.params.params import *
 import lorentz63_experiments.utils.util_funcs as ut_funcs
 import general.utils.saving.save_data_funcs as g_save
-from config import NUMBA_CACHE
-
+from config import NUMBA_CACHE, GLOBAL_PARAMS
 
 profiler = Profiler()
+
+# Set global params
+GLOBAL_PARAMS.record_max_time = 3000
 
 
 @njit(
@@ -67,14 +69,15 @@ def main(args=None):
 
     # Get number of records
     args["n_records"] = math.ceil(
-        (args["Nt"] - args["burn_in_time"] / dt) / int(args["record_max_time"] / dt)
+        (args["Nt"] - args["burn_in_time"] / dt)
+        / int(GLOBAL_PARAMS.record_max_time / dt)
     )
 
     profiler.start()
     print(
         f'\nRunning Lorentz63 model for {args["Nt"]*dt:.2f}s with a burn-in time'
         + f' of {args["burn_in_time"]:.2f}s, i.e. {args["n_records"]:d} records '
-        + f'are saved to disk each with {args["record_max_time"]:.1f}s data\n'
+        + f"are saved to disk each with {GLOBAL_PARAMS.record_max_time:.1f}s data\n"
     )
 
     # Burn in the model for the desired burn in time
@@ -88,19 +91,21 @@ def main(args=None):
         # Calculate data out size
         if ir == (args["n_records"] - 1):
             if (args["Nt"] - args["burn_in_time"] / dt) % int(
-                args["record_max_time"] / dt
+                GLOBAL_PARAMS.record_max_time / dt
             ) > 0:
                 out_array_size = int(
                     (
                         args["Nt"]
-                        - args["burn_in_time"] / dt % int(args["record_max_time"] / dt)
+                        - args["burn_in_time"]
+                        / dt
+                        % int(GLOBAL_PARAMS.record_max_time / dt)
                     )
                     * sample_rate
                 )
             else:
-                out_array_size = int(args["record_max_time"] * tts)
+                out_array_size = int(GLOBAL_PARAMS.record_max_time * tts)
         else:
-            out_array_size = int(args["record_max_time"] * tts)
+            out_array_size = int(GLOBAL_PARAMS.record_max_time * tts)
 
         data_out = np.zeros((out_array_size, sdim + 1), dtype=np.float64)
 
@@ -117,7 +122,7 @@ def main(args=None):
         # Add record_id to datafile header
         args["record_id"] = ir
 
-        if args["save_data"]:
+        if not args["skip_save_data"]:
             print(f"saving record\n")
             g_save.save_data(data_out, args=args)
 
@@ -128,9 +133,7 @@ def main(args=None):
 if __name__ == "__main__":
     arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument("--burn_in_time", default=0.0, type=float)
-    arg_parser.add_argument("--save_folder", nargs="?", default="data", type=str)
-    arg_parser.add_argument("--record_max_time", default=3000, type=float)
-    arg_parser.add_argument("--save_data", action="store_true")
+    arg_parser.add_argument("--skip_save_data", action="store_true")
     arg_parser.add_argument("--time_to_run", type=float, required=True)
     arg_parser.add_argument("--sigma", default=10, type=float)
     arg_parser.add_argument("--r_const", default=28, type=float)
@@ -139,7 +142,6 @@ if __name__ == "__main__":
     args = vars(arg_parser.parse_args())
 
     # Add/edit arguments
-    args["ref_run"] = True
     args["Nt"] = int(args["time_to_run"] / dt)
 
     main(args)

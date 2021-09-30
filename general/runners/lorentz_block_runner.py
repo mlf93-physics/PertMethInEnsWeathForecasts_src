@@ -16,13 +16,16 @@ import general.utils.exceptions as g_exceptions
 import general.utils.experiments.validate_exp_setups as ut_exp_val
 import general.utils.experiments.exp_utils as exp_utils
 import general.utils.runner_utils as r_utils
-from config import MODEL
+from config import MODEL, GLOBAL_PARAMS
 
 # Get parameters for model
 if MODEL == Models.SHELL_MODEL:
     params = sh_params
 elif MODEL == Models.LORENTZ63:
     params = l63_params
+
+# Set global params
+GLOBAL_PARAMS.ref_run = False
 
 
 def main(args):
@@ -103,7 +106,6 @@ def main(args):
 if __name__ == "__main__":
     # Define arguments
     arg_parser = argparse.ArgumentParser()
-    arg_parser.add_argument("--source", nargs="+", type=str)
     arg_parser.add_argument("--path", nargs="?", type=str)
     arg_parser.add_argument(
         "--perturb_folder", nargs="?", default=None, required=False, type=str
@@ -126,8 +128,6 @@ if __name__ == "__main__":
     arg_parser.add_argument("--exp_setup", default=None, type=str)
 
     args = vars(arg_parser.parse_args())
-
-    args["ref_run"] = False
 
     # Set seed if wished
     if args["seed_mode"]:

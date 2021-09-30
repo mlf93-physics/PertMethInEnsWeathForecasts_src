@@ -17,13 +17,16 @@ import general.utils.saving.save_breed_vector_funcs as br_save
 import general.utils.exceptions as g_exceptions
 import general.utils.perturb_utils as pt_utils
 from general.params.model_licences import Models
-from config import MODEL
+from config import MODEL, GLOBAL_PARAMS
 
 # Get parameters for model
 if MODEL == Models.SHELL_MODEL:
     params = sh_params
 elif MODEL == Models.LORENTZ63:
     params = l63_params
+
+# Set global params
+GLOBAL_PARAMS.ref_run = False
 
 
 def main(args):
@@ -121,7 +124,6 @@ def main(args):
 if __name__ == "__main__":
     # Define arguments
     arg_parser = argparse.ArgumentParser()
-    arg_parser.add_argument("--source", nargs="+", type=str)
     arg_parser.add_argument("--path", nargs="?", type=str)
     arg_parser.add_argument(
         "--perturb_folder", nargs="?", default=None, required=False, type=str
@@ -146,7 +148,6 @@ if __name__ == "__main__":
 
     args = vars(arg_parser.parse_args())
 
-    args["ref_run"] = False
     args["ny"] = (
         args["forcing"] / (sh_params.lambda_const ** (8 / 3 * args["ny_n"]))
     ) ** (1 / 2)

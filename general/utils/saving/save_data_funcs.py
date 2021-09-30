@@ -11,7 +11,7 @@ import config
 import lorentz63_experiments.params.params as l63_params
 import general.utils.saving.save_data_funcs as g_save
 from general.params.model_licences import Models
-from config import MODEL
+from config import MODEL, GLOBAL_PARAMS
 
 
 def args_to_string(args):
@@ -180,7 +180,7 @@ def save_data(data_out, subsubfolder="", prefix="", perturb_position=None, args=
 
     # expected_path = generate_dir(expected_name, subfolder=subfolder, args=args)
 
-    if args["ref_run"]:
+    if GLOBAL_PARAMS.ref_run:
         subsubfolder = "ref_data"
         # Generate path if not existing
         if MODEL == Models.SHELL_MODEL:

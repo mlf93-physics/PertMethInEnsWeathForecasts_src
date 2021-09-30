@@ -48,14 +48,15 @@ def calculate_perturbations(perturb_vectors, dev_plot_active=False, args=None):
     # Perform perturbation for all eigenvectors
     for i in range(n_profiles * n_runs_per_profile):
         # Apply single shell perturbation
-        if args["single_shell_perturb"] is not None:
-            perturb = np.zeros(params.sdim, dtype=params.dtype)
-            perturb.real[args["single_shell_perturb"]] = (
-                np.random.rand(1)[0].astype(np.float64) * 2 - 1
-            )
-            perturb.imag[args["single_shell_perturb"]] = (
-                np.random.rand(1)[0].astype(np.float64) * 2 - 1
-            )
+        if "single_shell_perturb" in args:
+            if args["single_shell_perturb"] is not None:
+                perturb = np.zeros(params.sdim, dtype=params.dtype)
+                perturb.real[args["single_shell_perturb"]] = (
+                    np.random.rand(1)[0].astype(np.float64) * 2 - 1
+                )
+                perturb.imag[args["single_shell_perturb"]] = (
+                    np.random.rand(1)[0].astype(np.float64) * 2 - 1
+                )
         elif args["pert_mode"] == "random":
             # Generate random perturbation error
             # Reshape into complex array
