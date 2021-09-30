@@ -1,7 +1,6 @@
 import sys
 
 sys.path.append("..")
-import argparse
 from math import ceil
 import numpy as np
 from numba import njit, types
@@ -9,6 +8,7 @@ from pyinstrument import Profiler
 from shell_model_experiments.sabra_model.runge_kutta4 import runge_kutta4_vec
 from shell_model_experiments.params.params import *
 import general.utils.saving.save_data_funcs as g_save
+import general.utils.argument_parsers as a_parsers
 from config import NUMBA_CACHE, GLOBAL_PARAMS
 
 profiler = Profiler()
@@ -132,24 +132,13 @@ def main(args=None):
 
 
 if __name__ == "__main__":
-    # Define arguments
-    arg_parser = argparse.ArgumentParser()
-    arg_parser.add_argument("--burn_in_time", default=0.0, type=float)
-    arg_parser.add_argument("--ny_n", default=19, type=int)
-    arg_parser.add_argument("--forcing", default=1, type=float)
-    arg_parser.add_argument("--skip_save_data", action="store_true")
-    arg_parser.add_argument("--time_to_run", type=float)
+    # Get arguments
+    stand_arg_setup = a_parsers.StandardArgSetup()
+    stand_arg_setup.setup_parser()
+    args = vars(stand_arg_setup.args)
 
-    args = vars(arg_parser.parse_args())
+    args["ny"] = (args["forcing"] / (lambda_const ** (8 / 3 * args["ny_n"]))) ** (1 / 2)
 
-    args["ny"] = (args["forcing"] / (lambda_const ** (8 / 3 * args["ny_n"]))) ** (
-        1 / 2
-    )  # 1e-8
-
-    # if args["n_turnovers"] is not None:
-    #     args["time_to_run"] = ceil(eddy0_turnover_time * args["n_turnovers"])  # [s]
-    #     args["Nt"] = int(args["time_to_run"] / dt)
-    # else:
     args["Nt"] = int(args["time_to_run"] / dt)
 
     main(args=args)

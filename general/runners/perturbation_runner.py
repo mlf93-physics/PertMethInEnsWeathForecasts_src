@@ -371,11 +371,9 @@ def main_run(processes, args=None, num_units=None):
 
 if __name__ == "__main__":
     # Get arguments
-    # parser = argparse.ArgumentParser()
     pert_arg_setup = a_parsers.PerturbationArgSetup()
     pert_arg_setup.setup_parser()
     pert_arg_setup.validate_arguments()
-
     args = vars(pert_arg_setup.args)
 
     args = g_utils.adjust_start_times_with_offset(args)

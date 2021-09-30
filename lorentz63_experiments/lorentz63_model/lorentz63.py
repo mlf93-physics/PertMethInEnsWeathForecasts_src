@@ -2,7 +2,6 @@ import sys
 
 sys.path.append("..")
 import math
-import argparse
 from pyinstrument import Profiler
 import numpy as np
 from numba import njit, types
@@ -10,6 +9,7 @@ import lorentz63_experiments.lorentz63_model.runge_kutta4 as rk4
 from lorentz63_experiments.params.params import *
 import lorentz63_experiments.utils.util_funcs as ut_funcs
 import general.utils.saving.save_data_funcs as g_save
+import general.utils.argument_parsers as a_parsers
 from config import NUMBA_CACHE, GLOBAL_PARAMS
 
 profiler = Profiler()
@@ -131,15 +131,10 @@ def main(args=None):
 
 
 if __name__ == "__main__":
-    arg_parser = argparse.ArgumentParser()
-    arg_parser.add_argument("--burn_in_time", default=0.0, type=float)
-    arg_parser.add_argument("--skip_save_data", action="store_true")
-    arg_parser.add_argument("--time_to_run", type=float, required=True)
-    arg_parser.add_argument("--sigma", default=10, type=float)
-    arg_parser.add_argument("--r_const", default=28, type=float)
-    arg_parser.add_argument("--b_const", default=8 / 3, type=float)
-
-    args = vars(arg_parser.parse_args())
+    # Get arguments
+    stand_arg_setup = a_parsers.StandardArgSetup()
+    stand_arg_setup.setup_parser()
+    args = vars(stand_arg_setup.args)
 
     # Add/edit arguments
     args["Nt"] = int(args["time_to_run"] / dt)

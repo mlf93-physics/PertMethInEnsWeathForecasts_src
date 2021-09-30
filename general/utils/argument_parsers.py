@@ -6,7 +6,8 @@ sys.path.append("..")
 import argparse
 import numpy as np
 from general.params.model_licences import Models
-from config import MODEL
+from general.params.experiment_licences import Experiments as EXP
+from config import MODEL, LICENCE
 
 # Instantiate ArgumentParser
 parser = argparse.ArgumentParser()
@@ -69,7 +70,7 @@ class PerturbationArgSetup:
             The parsed arguments
         """
         if not isinstance(self._args, argparse.Namespace):
-            self._args = self._parser.parse_args()
+            self._args = self._parser.parse_known_args()[0]
 
         return self._args
 
@@ -87,7 +88,7 @@ class PerturbationArgSetup:
             "--start_time",
             nargs="+",
             type=float,
-            required=True,
+            required=LICENCE == EXP.NORMAL_PERTURBATION,
         )
         self._parser.add_argument("--start_time_offset", default=None, type=float)
         self._parser.add_argument("--endpoint", action="store_true")
@@ -133,7 +134,7 @@ class MultiPerturbationArgSetup:
             The parsed arguments
         """
         if not isinstance(self._args, argparse.Namespace):
-            self._args = self._parser.parse_args()
+            self._args = self._parser.parse_known_args()[0]
 
         return self._args
 

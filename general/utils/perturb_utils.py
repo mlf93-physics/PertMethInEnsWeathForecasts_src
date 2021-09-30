@@ -120,7 +120,6 @@ def rescale_perturbations(perturb_data, args):
 
     # Transform into 2d array
     perturb_data = np.array(perturb_data)
-
     # Pad array if necessary
     perturb_data = np.pad(
         perturb_data,
