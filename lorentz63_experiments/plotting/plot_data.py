@@ -176,6 +176,7 @@ if __name__ == "__main__":
     arg_parser.add_argument("--sigma", default=10, type=float)
     arg_parser.add_argument("--r_const", default=28, type=float)
     arg_parser.add_argument("--b_const", default=8 / 3, type=float)
+    arg_parser.add_argument("--experiment", nargs="?", default=None, type=str)
 
     subparsers = arg_parser.add_subparsers()
     perturb_parser = subparsers.add_parser(

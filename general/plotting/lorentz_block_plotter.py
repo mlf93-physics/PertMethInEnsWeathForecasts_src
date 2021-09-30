@@ -122,10 +122,10 @@ def plt_lorentz_block(args):
             raise ValueError(f"No blocks to plot. num_units = {num_units}")
 
         # Prepare legend
-        if len(experiments) > 1:
-            legend.append(experiment + f" | $N_{{blocks}}$={num_units}")
-        else:
-            legend = [f"$\\Delta = {i + 1}$" for i in range(num_forecasts)]
+        # if len(experiments) > 1:
+        legend.append(experiment + f" | $N_{{blocks}}$={num_units}")
+        # else:
+        #     legend = [f"$\\Delta_{{{i + 1}}}$" for i in range(num_forecasts)]
         # Get non-repeating colorcycle
         cmap_list = g_plt_utils.get_non_repeating_colors(n_colors=num_forecasts)
 

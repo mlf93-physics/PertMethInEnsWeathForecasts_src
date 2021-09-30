@@ -88,7 +88,7 @@ def plot_error_norm_vs_time(args=None, normalize_start_time=True):
         perturb_time_pos_list_legend,
         header_dict,
         u_ref_stores,
-    ) = g_import.import_perturbation_velocities(args)
+    ) = g_import.import_perturbation_velocities(args, search_pattern="*perturb*.csv")
 
     num_perturbations = len(perturb_time_pos_list)
 

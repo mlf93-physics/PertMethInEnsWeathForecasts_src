@@ -128,7 +128,7 @@ if __name__ == "__main__":
     )
     arg_parser.add_argument("--time_to_run", default=0.1, type=float)
     arg_parser.add_argument("--burn_in_time", default=0.0, type=float)
-    arg_parser.add_argument("--ny_n", default=None, type=int)
+    arg_parser.add_argument("--ny_n", default=19, type=int)
     arg_parser.add_argument("--forcing", default=1, type=float)
     arg_parser.add_argument("--sigma", default=10, type=float)
     arg_parser.add_argument("--r_const", default=28, type=float)
@@ -147,9 +147,9 @@ if __name__ == "__main__":
     args = vars(arg_parser.parse_args())
 
     args["ref_run"] = False
-    # args["ny"] = (
-    #     args["forcing"] / (sh_params.lambda_const ** (8 / 3 * args["ny_n"]))
-    # ) ** (1 / 2)
+    args["ny"] = (
+        args["forcing"] / (sh_params.lambda_const ** (8 / 3 * args["ny_n"]))
+    ) ** (1 / 2)
 
     # Set seed if wished
     if args["seed_mode"]:
