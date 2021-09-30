@@ -134,7 +134,7 @@ if __name__ == "__main__":
     # Get arguments
     stand_arg_setup = a_parsers.StandardRunnerArgSetup()
     stand_arg_setup.setup_parser()
-    args = vars(stand_arg_setup.args)
+    args = stand_arg_setup.args
 
     # Add/edit arguments
     args["Nt"] = int(args["time_to_run"] / dt)

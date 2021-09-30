@@ -41,7 +41,7 @@ print(f"\nRunning with model {MODEL}\n")
 
 # Set experiment license
 exp = Experiments()
-LICENCE = exp.BREEDING_VECTORS
+LICENCE = exp.NORMAL_PERTURBATION
 
 # Get global params
 GLOBAL_PARAMS = GlobalParams()

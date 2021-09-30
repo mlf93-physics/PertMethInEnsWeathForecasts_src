@@ -1,10 +1,8 @@
 import sys
 
 sys.path.append("..")
-import argparse
 import pathlib as pl
 import copy
-import numpy as np
 import shell_model_experiments.params as sh_params
 import lorentz63_experiments.params.params as l63_params
 import perturbation_runner as pt_runner
@@ -125,14 +123,10 @@ if __name__ == "__main__":
     # Get arguments
     mult_pert_arg_setup = a_parsers.MultiPerturbationArgSetup()
     mult_pert_arg_setup.setup_parser()
-    args = vars(mult_pert_arg_setup.args)
+    args = mult_pert_arg_setup.args
 
-    # args["ny"] = (
-    #     args["forcing"] / (sh_params.lambda_const ** (8 / 3 * args["ny_n"]))
-    # ) ** (1 / 2)
-
-    # Set seed if wished
-    if args["seed_mode"]:
-        np.random.seed(seed=1)
+    # Add ny argument
+    if MODEL == Models.SHELL_MODEL:
+        args["ny"] = params.ny_from_ny_n_and_forcing(args["forcing"], args["ny_n"])
 
     main(args)

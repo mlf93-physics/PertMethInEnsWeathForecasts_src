@@ -135,9 +135,9 @@ if __name__ == "__main__":
     # Get arguments
     stand_arg_setup = a_parsers.StandardRunnerArgSetup()
     stand_arg_setup.setup_parser()
-    args = vars(stand_arg_setup.args)
+    args = stand_arg_setup.args
 
-    args["ny"] = (args["forcing"] / (lambda_const ** (8 / 3 * args["ny_n"]))) ** (1 / 2)
+    args["ny"] = ny_from_ny_n_and_forcing(args["forcing"], args["ny_n"])
 
     args["Nt"] = int(args["time_to_run"] / dt)
 

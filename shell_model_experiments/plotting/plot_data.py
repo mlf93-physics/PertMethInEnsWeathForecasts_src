@@ -935,12 +935,8 @@ if __name__ == "__main__":
     stand_plot_arg_parser = a_parsers.StandardPlottingArgParser()
     stand_plot_arg_parser.setup_parser()
 
-    args = vars(stand_plot_arg_parser.args)
+    args = stand_plot_arg_parser.args
     print("args", args)
-
-    # Set seed if wished
-    if args["seed_mode"]:
-        np.random.seed(seed=1)
 
     if "burn_in_time" in args:
         args["burn_in_lines"] = int(args["burn_in_time"] / dt * sample_rate)

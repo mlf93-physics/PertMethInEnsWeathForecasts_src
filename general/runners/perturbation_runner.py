@@ -109,84 +109,78 @@ def prepare_perturbations(args):
     ref_header_dict = g_import.import_info_file(pl.Path(args["datapath"], "ref_data"))
     # header_dict = g_utils.handle_different_headers(header_dict)
 
-    if MODEL == Models.SHELL_MODEL:
+    # Adjust parameters to have the correct ny/ny_n for shell model
+    g_utils.determine_params_from_header_dict(ref_header_dict, args)
 
-        # Save parameters to args dict:
-        args["forcing"] = ref_header_dict["forcing"].real
-
-        if args["ny_n"] is None:
-            args["ny"] = ref_header_dict["ny"]
-
-            if args["forcing"] == 0:
-                args["ny_n"] = 0
-            else:
-                args["ny_n"] = int(
-                    3
-                    / 8
-                    * math.log10(args["forcing"] / (ref_header_dict["ny"] ** 2))
-                    / math.log10(params.lambda_const)
-                )
-            # Take ny from reference file
-        else:
-            args["ny"] = (
-                args["forcing"] / (params.lambda_const ** (8 / 3 * args["ny_n"]))
-            ) ** (1 / 2)
-
-    elif MODEL == Models.LORENTZ63:
-        print("Nothing specific to do with args in lorentz63 model yet")
-
-    # Only import start profiles beforehand for specific perturbation modes
-    if args["pert_mode"] == "normal_mode" or args["pert_mode"] == "rd":
+    # Only import start profiles beforehand if not using breed_vector perturbations,
+    # i.e. also when running in singel_shell_perturb mode
+    if args["pert_mode"] != "breed_vectors":
         (
             u_init_profiles,
             perturb_positions,
             header_dict,
         ) = g_import.import_start_u_profiles(args=args)
 
-    if args["pert_mode"] == "normal_mode":
-        print("\nRunning with NORMAL MODE perturbations\n")
+    if args["pert_mode"] is not None:
+
+        if args["pert_mode"] == "normal_mode":
+            print("\nRunning with NORMAL MODE perturbations\n")
+            if MODEL == Models.SHELL_MODEL:
+                (
+                    perturb_vectors,
+                    _,
+                    _,
+                ) = sh_lp_estimator.find_eigenvector_for_perturbation(
+                    u_init_profiles[
+                        :,
+                        0 : args["n_profiles"]
+                        * args["n_runs_per_profile"] : args["n_runs_per_profile"],
+                    ],
+                    dev_plot_active=False,
+                    n_profiles=args["n_profiles"],
+                    local_ny=header_dict["ny"],
+                )
+            elif MODEL == Models.LORENTZ63:
+                perturb_vectors, _, _, _ = l63_nm_estimator.find_normal_modes(
+                    u_init_profiles[
+                        :,
+                        0 : args["n_profiles"]
+                        * args["n_runs_per_profile"] : args["n_runs_per_profile"],
+                    ],
+                    args,
+                    dev_plot_active=False,
+                    n_profiles=args["n_profiles"],
+                )
+        elif args["pert_mode"] == "breed_vectors":
+            print("\nRunning with BREED VECTOR perturbations\n")
+            (
+                u_init_profiles,
+                perturb_positions,
+                perturb_vectors,
+            ) = pt_utils.prepare_breed_vectors(args)
+
+        elif args["pert_mode"] == "rd":
+            print("\nRunning with RANDOM perturbations\n")
+            perturb_vectors = np.ones(
+                (params.sdim, args["n_profiles"]), dtype=params.dtype
+            )
+    # Check if single shell perturb should be activated
+    elif args["single_shell_perturb"] is not None:
+        # Specific to shell model setup
         if MODEL == Models.SHELL_MODEL:
-            perturb_vectors, _, _ = sh_lp_estimator.find_eigenvector_for_perturbation(
-                u_init_profiles[
-                    :,
-                    0 : args["n_profiles"]
-                    * args["n_runs_per_profile"] : args["n_runs_per_profile"],
-                ],
-                dev_plot_active=False,
-                n_profiles=args["n_profiles"],
-                local_ny=header_dict["ny"],
-            )
-        elif MODEL == Models.LORENTZ63:
-            perturb_vectors, _, _, _ = l63_nm_estimator.find_normal_modes(
-                u_init_profiles[
-                    :,
-                    0 : args["n_profiles"]
-                    * args["n_runs_per_profile"] : args["n_runs_per_profile"],
-                ],
-                args,
-                dev_plot_active=False,
-                n_profiles=args["n_profiles"],
-            )
-    elif args["pert_mode"] == "breed_vectors":
-        print("\nRunning with BREED VECTOR perturbations\n")
-        (
-            u_init_profiles,
-            perturb_positions,
-            perturb_vectors,
-        ) = pt_utils.prepare_breed_vectors(args)
-
-    elif args["pert_mode"] == "rd":
-        print("\nRunning with RANDOM perturbations\n")
-        perturb_vectors = np.ones((params.sdim, args["n_profiles"]), dtype=params.dtype)
-    else:
-        raise g_exceptions.InvalidArgument(
-            "Not a valid perturbation mode", argument=args["pert_mode"]
-        )
-
-    # Specific to shell model setup
-    if MODEL == Models.SHELL_MODEL:
-        if args["single_shell_perturb"] is not None:
             print("\nRunning in single shell perturb mode\n")
+            perturb_vectors = None
+        else:
+            raise g_exceptions.ModelError(model=MODEL)
+    else:
+        _pert_arg = (
+            "pert_mode: " + args["pert_mode"]
+            if "pert_mode" in args
+            else "single_shell_perturb: " + args["single_shell_perturb"]
+        )
+        raise g_exceptions.InvalidArgument(
+            "Not a valid perturbation mode", argument=_pert_arg
+        )
 
     # Make perturbations
     perturbations = pt_utils.calculate_perturbations(
@@ -195,7 +189,6 @@ def prepare_perturbations(args):
 
     # Apply perturbations
     u_profiles_perturbed = u_init_profiles + perturbations
-
     return u_profiles_perturbed, perturb_positions
 
 
@@ -374,13 +367,11 @@ if __name__ == "__main__":
     pert_arg_setup = a_parsers.PerturbationArgSetup()
     pert_arg_setup.setup_parser()
     pert_arg_setup.validate_arguments()
-    args = vars(pert_arg_setup.args)
+    args = pert_arg_setup.args
 
     args = g_utils.adjust_start_times_with_offset(args)
 
-    # Set seed if wished
-    if args["seed_mode"]:
-        np.random.seed(seed=1)
+    print("args", args)
 
     processes, _, _ = main_setup(args=args)
     main_run(processes, args=args)

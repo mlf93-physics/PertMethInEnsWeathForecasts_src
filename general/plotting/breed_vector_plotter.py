@@ -162,8 +162,7 @@ if __name__ == "__main__":
     # Get arguments
     stand_plot_arg_parser = a_parsers.StandardPlottingArgParser()
     stand_plot_arg_parser.setup_parser()
-
-    args = vars(stand_plot_arg_parser.args)
+    args = stand_plot_arg_parser.args
     print("args", args)
 
     # Add missing arguments to make util funcs work

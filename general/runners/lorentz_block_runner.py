@@ -107,11 +107,7 @@ if __name__ == "__main__":
     # Get arguments
     mult_pert_arg_setup = a_parsers.MultiPerturbationArgSetup()
     mult_pert_arg_setup.setup_parser()
-    args = vars(mult_pert_arg_setup.args)
-
-    # Set seed if wished
-    if args["seed_mode"]:
-        np.random.seed(seed=1)
+    args = mult_pert_arg_setup.args
 
     main(args)
 

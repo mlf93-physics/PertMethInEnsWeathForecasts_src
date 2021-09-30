@@ -47,43 +47,47 @@ def calculate_perturbations(perturb_vectors, dev_plot_active=False, args=None):
 
     # Perform perturbation for all eigenvectors
     for i in range(n_profiles * n_runs_per_profile):
+        if args["pert_mode"] is not None:
+            # Apply random perturbation
+            if args["pert_mode"] == "rd":
+                # Generate random perturbation error
+                # Reshape into complex array
+                perturb = np.empty(params.sdim, dtype=params.dtype)
+                # Generate random error
+                error = np.random.rand(2 * params.sdim).astype(np.float64) * 2 - 1
+
+                if MODEL == Models.SHELL_MODEL:
+                    perturb.real = error[: params.sdim]
+                    perturb.imag = error[params.sdim :]
+                elif MODEL == Models.LORENTZ63:
+                    perturb = error[: params.sdim]
+
+            # Apply normal mode perturbation
+            elif args["pert_mode"] == "nm":
+                # Generate random weights of the complex-conjugate eigenvector pair
+                _weights = np.random.rand(2) * 2 - 1
+                # Make perturbation vector
+                perturb = (
+                    _weights[0] * perturb_vectors_conj[:, i // n_runs_per_profile]
+                    + _weights[1] * perturb_vectors[:, i // n_runs_per_profile]
+                ).real
+
+            # Apply breed vector perturbation
+            elif args["pert_mode"] == "bv":
+                # Generate random weights of the complex-conjugate eigenvector pair
+                _weight = np.random.rand() * 2 - 1
+                # Make perturbation vector
+                perturb = _weight * perturb_vectors[:, i]
+
         # Apply single shell perturbation
-        if "single_shell_perturb" in args:
-            if args["single_shell_perturb"] is not None:
-                perturb = np.zeros(params.sdim, dtype=params.dtype)
-                perturb.real[args["single_shell_perturb"]] = (
-                    np.random.rand(1)[0].astype(np.float64) * 2 - 1
-                )
-                perturb.imag[args["single_shell_perturb"]] = (
-                    np.random.rand(1)[0].astype(np.float64) * 2 - 1
-                )
-        elif args["pert_mode"] == "rd":
-            # Generate random perturbation error
-            # Reshape into complex array
-            perturb = np.empty(params.sdim, dtype=params.dtype)
-            # Generate random error
-            error = np.random.rand(2 * params.sdim).astype(np.float64) * 2 - 1
-
-            if MODEL == Models.SHELL_MODEL:
-                perturb.real = error[: params.sdim]
-                perturb.imag = error[params.sdim :]
-            elif MODEL == Models.LORENTZ63:
-                perturb = error[: params.sdim]
-
-        elif args["pert_mode"] == "normal_mode":
-            # Generate random weights of the complex-conjugate eigenvector pair
-            _weights = np.random.rand(2) * 2 - 1
-            # Make perturbation vector
-            perturb = (
-                _weights[0] * perturb_vectors_conj[:, i // n_runs_per_profile]
-                + _weights[1] * perturb_vectors[:, i // n_runs_per_profile]
-            ).real
-
-        elif args["pert_mode"] == "breed_vectors":
-            # Generate random weights of the complex-conjugate eigenvector pair
-            _weight = np.random.rand() * 2 - 1
-            # Make perturbation vector
-            perturb = _weight * perturb_vectors[:, i]
+        elif args["single_shell_perturb"] is not None:
+            perturb = np.zeros(params.sdim, dtype=params.dtype)
+            perturb.real[args["single_shell_perturb"]] = (
+                np.random.rand(1)[0].astype(np.float64) * 2 - 1
+            )
+            perturb.imag[args["single_shell_perturb"]] = (
+                np.random.rand(1)[0].astype(np.float64) * 2 - 1
+            )
 
         # Copy array for plotting
         perturb_temp = np.copy(perturb)
