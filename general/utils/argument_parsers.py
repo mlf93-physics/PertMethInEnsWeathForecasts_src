@@ -1,4 +1,9 @@
-__all__ = ["StandardArgSetup", "PerturbationArgSetup", "MultiPerturbationArgSetup"]
+__all__ = [
+    "StandardArgSetup",
+    "StandardRunnerArgSetup",
+    "PerturbationArgSetup",
+    "MultiPerturbationArgSetup",
+]
 
 import sys
 
@@ -34,6 +39,21 @@ class StandardArgSetup:
         self._parser.add_argument("-ttr", "--time_to_run", default=0.1, type=float)
         self._parser.add_argument("--burn_in_time", default=0.0, type=float)
         self._parser.add_argument("--seed_mode", action="store_true")
+
+
+class StandardRunnerArgSetup:
+    def __init__(self):
+        self._parser = parser
+
+        __standard_arg_setup = StandardArgSetup
+        __standard_arg_setup.setup_parser()
+
+    @property
+    def args(self):
+        return self._parser.parse_args()
+
+    def setup_parser(self):
+        # Add general arguments
         self._parser.add_argument("--erda_run", action="store_true")
         self._parser.add_argument("--skip_save_data", action="store_true")
 
@@ -54,7 +74,7 @@ class PerturbationArgSetup:
         self._args = None
 
         # Setup standard setup
-        stand_arg_setup = StandardArgSetup()
+        stand_arg_setup = StandardRunnerArgSetup()
         stand_arg_setup.setup_parser()
 
     @property
@@ -76,7 +96,7 @@ class PerturbationArgSetup:
 
     def setup_parser(self):
         # Add required arguments
-        self._parser.add_argument("--perturb_folder", required=False, type=str)
+        self._parser.add_argument("--exp_folder", required=False, type=str)
         # Add optional arguments
         self._parser.add_argument("--n_runs_per_profile", default=1, type=int)
         self._parser.add_argument("--n_profiles", default=1, type=int)
@@ -112,14 +132,15 @@ class PerturbationArgSetup:
 
 
 class MultiPerturbationArgSetup:
-    def __init__(self):
+    def __init__(self, setup_parents=True):
         self._parser = parser
         self._args = None
 
-        # Setup perturbation setup
-        __pert_arg_setup = PerturbationArgSetup()
-        __pert_arg_setup.setup_parser()
-        __pert_arg_setup.validate_arguments()
+        # Setup parent perturbation setup
+        if setup_parents:
+            __pert_arg_setup = PerturbationArgSetup()
+            __pert_arg_setup.setup_parser()
+            __pert_arg_setup.validate_arguments()
 
     @property
     def args(self):
@@ -140,4 +161,76 @@ class MultiPerturbationArgSetup:
 
     def setup_parser(self):
         # Add optional arguments
-        self._parser.add_argument("--num_units", default=np.inf, type=int)
+        num_units_group = self._parser.add_mutually_exclusive_group()
+        num_units_group.add_argument("--num_units", default=np.inf, type=int)
+        num_units_group.add_argument(
+            "--specific_units", nargs="+", default=None, type=int
+        )
+
+
+class StandardPlottingArgParser:
+    def __init__(self):
+        self._parser = parser
+        self._args = None
+
+        # Setup standard setup
+        __standard_arg_setup = StandardArgSetup()
+        __standard_arg_setup.setup_parser()
+        # Add arguments from MultiPerturbationArgSetup
+        __multi_pert_arg_setup = MultiPerturbationArgSetup(setup_parents=False)
+        __multi_pert_arg_setup.setup_parser()
+
+    @property
+    def args(self):
+        """The parsed arguments.
+
+        The parsed args are saved to a local attribute if not already present
+        to avoid multiple calls to parse_args()
+
+        Returns
+        -------
+        argparse.Namespace
+            The parsed arguments
+        """
+        if not isinstance(self._args, argparse.Namespace):
+            self._args = self._parser.parse_known_args()[0]
+
+        return self._args
+
+    def setup_parser(self):
+
+        # Add optional arguments
+        # General plot args
+        self._parser.add_argument("--plot_type", nargs="+", default=None, type=str)
+        self._parser.add_argument(
+            "--plot_mode",
+            nargs="?",
+            default="standard",
+            type=str,
+            help="standard : plot everything with the standard plot setup;"
+            + " detailed : plot extra details in plots",
+        )
+        self._parser.add_argument("-np", "--noplot", action="store_true")
+
+        # x, y and time limits
+        self._parser.add_argument("--ref_start_time", default=0, type=float)
+        self._parser.add_argument("--ref_end_time", default=-1, type=float)
+        self._parser.add_argument("--xlim", nargs=2, default=None, type=float)
+        self._parser.add_argument("--ylim", nargs=2, default=None, type=float)
+        self._parser.add_argument(
+            "--specific_ref_records", nargs="+", default=[0], type=int
+        )
+        self._parser.add_argument("--sharey", action="store_true")
+
+        # If running perturbations before plotting
+        self._parser.add_argument("--start_time", nargs="+", type=float)
+        self._parser.add_argument("--n_profiles", default=1, type=int)
+        self._parser.add_argument("--n_runs_per_profile", default=1, type=int)
+
+        # experiment plot speicific
+        self._parser.add_argument("--exp_folder", nargs="?", default=None, type=str)
+        self._parser.add_argument("--n_files", default=np.inf, type=int)
+        self._parser.add_argument("--file_offset", default=0, type=int)
+        self._parser.add_argument("--specific_files", nargs="+", default=None, type=int)
+        self._parser.add_argument("--combinations", action="store_true")
+        self._parser.add_argument("--endpoint", action="store_true")

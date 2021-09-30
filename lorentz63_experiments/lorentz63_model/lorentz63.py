@@ -132,7 +132,7 @@ def main(args=None):
 
 if __name__ == "__main__":
     # Get arguments
-    stand_arg_setup = a_parsers.StandardArgSetup()
+    stand_arg_setup = a_parsers.StandardRunnerArgSetup()
     stand_arg_setup.setup_parser()
     args = vars(stand_arg_setup.args)
 

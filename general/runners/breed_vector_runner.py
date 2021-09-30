@@ -66,7 +66,7 @@ def main(args):
         args["endpoint"] = True
         args["n_profiles"] = 1
         args["n_runs_per_profile"] = exp_setup["n_vectors"]
-        args["perturb_folder"] = f"{exp_setup['folder_name']}"
+        args["exp_folder"] = f"{exp_setup['folder_name']}"
         args = g_utils.adjust_start_times_with_offset(args)
 
         # Copy args in order not override in forecast processes

@@ -32,11 +32,11 @@ profiler = Profiler()
 
 def plt_lorentz_block_from_full_perturbation_data(args):
 
-    if "perturb_folder" in args:
+    if "exp_folder" in args:
 
-        parent_pert_folder = args["perturb_folder"]
+        parent_pert_folder = args["exp_folder"]
         # Import forecasts
-        args["perturb_folder"] = parent_pert_folder + "/forecasts"
+        args["exp_folder"] = parent_pert_folder + "/forecasts"
         args["n_files"] = np.inf
 
         (
@@ -48,7 +48,7 @@ def plt_lorentz_block_from_full_perturbation_data(args):
         ) = g_import.import_perturbation_velocities(args)
 
         # Import forecasts
-        args["perturb_folder"] = parent_pert_folder + "/analysis_forecasts"
+        args["exp_folder"] = parent_pert_folder + "/analysis_forecasts"
         args["n_files"] = np.inf
 
         (
@@ -96,11 +96,11 @@ def plt_lorentz_block_from_full_perturbation_data(args):
 
 def plt_lorentz_block(args):
 
-    experiments = args["experiment"]
+    experiments = args["exp_folder"]
     legend = []
 
     for j, experiment in enumerate(experiments):
-        args["experiment"] = experiment
+        args["exp_folder"] = experiment
 
         # Get experiment info
         exp_info = g_import.import_exp_info_file(args)
@@ -237,13 +237,13 @@ def plt_blocks_energy_regions(args):
     # Import one forecast header to get perturb positions
     for i, block in enumerate(block_dirs):
         # Get perturb_folder
-        args["perturb_folder"] = str(
+        args["exp_folder"] = str(
             pl.Path(block.parents[0].name, block.name, "forecasts")
         )
 
         # Get perturb file names
         perturb_file_names = list(
-            pl.Path(args["path"], args["perturb_folder"]).glob("*.csv")
+            pl.Path(args["path"], args["exp_folder"]).glob("*.csv")
         )
         # Import header
         header_dict = g_import.import_header(file_name=perturb_file_names[0])
@@ -285,7 +285,7 @@ def plt_blocks_energy_regions(args):
         )
 
     # Remove perturb_folder to not plot perturbation start positions
-    args["perturb_folder"] = None
+    args["exp_folder"] = None
     pl_data.plot_inviscid_quantities(
         time, u_data, ref_header_dict, ax=ax, omit="ny", args=args
     )
@@ -350,7 +350,7 @@ def plt_block_and_energy(args):
     time, u_data, ref_header_dict = g_import.import_ref_data(args=args)
 
     # Remove perturb_folder to not plot perturbation start positions
-    args["perturb_folder"] = None
+    args["exp_folder"] = None
     pl_data.plot_inviscid_quantities(
         time, u_data, ref_header_dict, ax=axes[0], omit="ny", args=args
     )
@@ -391,5 +391,6 @@ if __name__ == "__main__":
     else:
         raise ValueError("No valid plot type given as input argument")
 
-    plt.tight_layout()
-    plt.show()
+    if not args["noplot"]:
+        plt.tight_layout()
+        plt.show()

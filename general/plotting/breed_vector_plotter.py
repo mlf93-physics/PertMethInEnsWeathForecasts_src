@@ -1,7 +1,6 @@
 import sys
 
 sys.path.append("..")
-import argparse
 import pathlib as pl
 import itertools as it
 import matplotlib.pyplot as plt
@@ -13,6 +12,7 @@ import lorentz63_experiments.perturbations.normal_modes as pert_nm
 import general.utils.importing.import_perturbation_data as pt_import
 import general.utils.importing.import_data_funcs as g_import
 import general.plotting.plot_data as g_plt_data
+import general.utils.argument_parsers as a_parsers
 from general.params.model_licences import Models
 from config import MODEL
 
@@ -29,7 +29,7 @@ def plot_breed_vectors(args):
     breed_vector_units, _ = pt_import.import_breed_vectors(args)
     # Import info file
     pert_info_dict = g_import.import_info_file(
-        pl.Path(args["path"], args["experiment"])
+        pl.Path(args["path"], args["exp_folder"])
     )
     # Set number of vectors/profiles
     args["n_profiles"] = min(args["num_units"], breed_vector_units.shape[0])
@@ -105,7 +105,7 @@ def plot_breed_comparison_to_nm(args):
     breed_vector_units, breed_vec_header_dicts = pt_import.import_breed_vectors(args)
     # Import perturbation info file
     pert_info_dict = g_import.import_info_file(
-        pl.Path(args["path"], args["experiment"])
+        pl.Path(args["path"], args["exp_folder"])
     )
 
     # Average vectors for each unit
@@ -159,43 +159,21 @@ def plot_breed_error_norm(args):
 
 
 if __name__ == "__main__":
-    # Define arguments
-    arg_parser = argparse.ArgumentParser()
-    arg_parser.add_argument("--path", nargs="?", default=None, type=str)
-    arg_parser.add_argument("--perturb_folder", nargs="?", default=None, type=str)
-    arg_parser.add_argument("--n_files", default=np.inf, type=int)
-    arg_parser.add_argument("--plot_type", nargs="?", default=None, type=str)
-    arg_parser.add_argument("--plot_mode", nargs="?", default="standard", type=str)
-    arg_parser.add_argument("--experiment", nargs="?", default=None, type=str)
-    arg_parser.add_argument("--sharey", action="store_true")
-    arg_parser.add_argument("--sigma", default=10, type=float)
-    arg_parser.add_argument("--r_const", default=28, type=float)
-    arg_parser.add_argument("--b_const", default=8 / 3, type=float)
-    arg_parser.add_argument("-np", "--noplot", action="store_true")
-    arg_parser.add_argument("--endpoint", action="store_true")
-    arg_parser.add_argument("--xlim", nargs=2, default=None, type=float)
-    arg_parser.add_argument("--ylim", nargs=2, default=None, type=float)
-    # arg_parser.add_argument("--ref_start_time", default=0, type=float)
-    # arg_parser.add_argument("--ref_end_time", default=-1, type=float)
-    num_block_group = arg_parser.add_mutually_exclusive_group()
-    num_block_group.add_argument("--num_units", default=np.inf, type=int)
-    num_block_group.add_argument("--specific_units", nargs="+", default=None, type=int)
+    # Get arguments
+    stand_plot_arg_parser = a_parsers.StandardPlottingArgParser()
+    stand_plot_arg_parser.setup_parser()
 
-    args = vars(arg_parser.parse_args())
+    args = vars(stand_plot_arg_parser.args)
+    print("args", args)
 
     # Add missing arguments to make util funcs work
-    args["specific_ref_records"] = [0]
-    args["file_offset"] = 0
-    args["n_runs_per_profile"] = 1
     args["burn_in_lines"] = 0
-    args["combinations"] = False
-    args["specific_files"] = None
 
-    if args["plot_type"] == "vectors":
+    if "vectors" in args["plot_type"]:
         plot_breed_vectors(args)
-    elif args["plot_type"] == "nm_compare":
+    elif "nm_compare" in args["plot_type"]:
         plot_breed_comparison_to_nm(args)
-    elif args["plot_type"] == "bv_error_norm":
+    elif "bv_error_norm" in args["plot_type"]:
         plot_breed_error_norm(args)
     else:
         raise ValueError("No valid plot type given as input argument")

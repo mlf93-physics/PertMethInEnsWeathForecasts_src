@@ -22,7 +22,7 @@ def save_breed_vector_unit(
     n_data = breed_data.shape[0]
     temp_args = g_save.convert_arguments_to_string(args)
 
-    subsubfolder = args["perturb_folder"]
+    subsubfolder = args["exp_folder"]
 
     # Generate path if not existing
     expected_path = g_save.generate_dir(pl.Path(args["path"], subsubfolder), args=args)

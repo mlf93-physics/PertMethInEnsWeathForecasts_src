@@ -1,7 +1,6 @@
 import sys
 
 sys.path.append("..")
-import argparse
 from mpl_toolkits import mplot3d
 import matplotlib.colors as mpl_colors
 import matplotlib.pyplot as plt
@@ -10,6 +9,7 @@ import lorentz63_experiments.analyses.normal_mode_analysis as nm_analysis
 import general.utils.importing.import_data_funcs as g_import
 import general.plotting.plot_data as g_plt_data
 import general.utils.plot_utils as g_plt_utils
+import general.utils.argument_parsers as a_parsers
 
 
 def plot_attractor(args):
@@ -152,45 +152,11 @@ def plot_normal_mode_dist(args):
 
 
 if __name__ == "__main__":
-    # Define arguments
-    arg_parser = argparse.ArgumentParser()
-    arg_parser.add_argument("--path", nargs="?", default=None, type=str)
-    arg_parser.add_argument("--plot_type", nargs="+", default=None, type=str)
-    """
-    plot_mode :
-        standard : plot everything with the standard plot setup
-        detailed : plot extra details in plots
-    """
-    arg_parser.add_argument("--plot_mode", nargs="?", default="standard", type=str)
-    arg_parser.add_argument("--seed_mode", default=False, type=bool)
-    arg_parser.add_argument("--start_time", nargs="+", type=float)
-    arg_parser.add_argument("--specific_ref_records", nargs="+", default=[0], type=int)
-    arg_parser.add_argument("--burn_in_time", default=0.0, type=float)
-    arg_parser.add_argument("--n_profiles", default=1, type=int)
-    arg_parser.add_argument("--n_runs_per_profile", default=1, type=int)
-    arg_parser.add_argument("--time_to_run", default=0.1, type=float)
-    arg_parser.add_argument("--ref_start_time", default=0, type=float)
-    arg_parser.add_argument("--ref_end_time", default=-1, type=float)
-    arg_parser.add_argument("--xlim", nargs=2, default=None, type=float)
-    arg_parser.add_argument("--ylim", nargs=2, default=None, type=float)
-    arg_parser.add_argument("--sigma", default=10, type=float)
-    arg_parser.add_argument("--r_const", default=28, type=float)
-    arg_parser.add_argument("--b_const", default=8 / 3, type=float)
-    arg_parser.add_argument("--experiment", nargs="?", default=None, type=str)
+    # Get arguments
+    stand_plot_arg_parser = a_parsers.StandardPlottingArgParser()
+    stand_plot_arg_parser.setup_parser()
 
-    subparsers = arg_parser.add_subparsers()
-    perturb_parser = subparsers.add_parser(
-        "perturb_plot",
-        help="Arguments needed for plotting the perturbation vs time plot.",
-    )
-    perturb_parser.add_argument("--perturb_folder", nargs="?", default=None, type=str)
-    perturb_parser.add_argument("--n_files", default=np.inf, type=int)
-    perturb_parser.add_argument("--file_offset", default=0, type=int)
-    perturb_parser.add_argument("--specific_files", nargs="+", default=None, type=int)
-    perturb_parser.add_argument("--endpoint", action="store_true")
-    perturb_parser.add_argument("--combinations", action="store_true")
-
-    args = vars(arg_parser.parse_args())
+    args = vars(stand_plot_arg_parser.args)
     print("args", args)
 
     # Set seed if wished
@@ -213,4 +179,6 @@ if __name__ == "__main__":
     elif "nm_dist" in args["plot_type"]:
         plot_normal_mode_dist(args)
 
-    plt.show()
+    if not args["noplot"]:
+        plt.tight_layout()
+        plt.show()

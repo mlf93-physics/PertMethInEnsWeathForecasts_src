@@ -283,7 +283,7 @@ def main_setup(
     # Detect if other perturbations exist in the perturbation_folder and calculate
     # perturbation count to start at
     # Check if path exists
-    expected_path = pl.Path(args["path"], args["perturb_folder"])
+    expected_path = pl.Path(args["path"], args["exp_folder"])
     dir_exists = os.path.isdir(expected_path)
     if dir_exists:
         n_perturbation_files = len(list(expected_path.glob("*.csv")))

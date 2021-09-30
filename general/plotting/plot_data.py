@@ -80,7 +80,13 @@ def analyse_error_spread_vs_time_mean_of_norm(u_stores, args=None):
 
 def plot_error_norm_vs_time(args=None, normalize_start_time=True):
 
-    exp_setup = g_import.import_exp_info_file(args)
+    try:
+        exp_setup = g_import.import_exp_info_file(args)
+    except ImportError:
+        print(
+            "The .json config file was not found, so this plot doesnt work "
+            + "if the file is needed"
+        )
 
     (
         u_stores,
@@ -163,14 +169,14 @@ def plot_error_norm_vs_time(args=None, normalize_start_time=True):
         axes.set_title(
             f'Error vs time; f={header_dict["forcing"]}'
             + f', $n_f$={int(header_dict["n_f"])}, $\\nu$={header_dict["ny"]:.2e}'
-            + f', time={header_dict["time_to_run"]} | Folder: {args["perturb_folder"]};'
+            + f', time={header_dict["time_to_run"]} | Experiment: {args["exp_folder"]};'
             + f'Files: {args["file_offset"]}-{args["file_offset"] + args["n_files"]}'
         )
     elif MODEL == Models.LORENTZ63:
         axes.set_title(
             f'Error vs time; sigma={header_dict["sigma"]}'
             + f', $b$={header_dict["b_const"]:.2e}, r={header_dict["r_const"]}'
-            + f', time={header_dict["time_to_run"]} | Folder: {args["perturb_folder"]};'
+            + f', time={header_dict["time_to_run"]} | Experiment: {args["exp_folder"]};'
             + f'Files: {args["file_offset"]}-{args["file_offset"] + args["n_files"]}'
         )
 

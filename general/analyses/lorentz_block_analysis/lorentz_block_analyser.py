@@ -10,9 +10,9 @@ import general.utils.importing.import_perturbation_data as pt_import
 
 def calculate_rmse_of_block(args):
 
-    parent_pert_folder = args["perturb_folder"]
+    parent_pert_folder = args["exp_folder"]
     # Import forecasts
-    args["perturb_folder"] = parent_pert_folder + "/forecasts"
+    args["exp_folder"] = parent_pert_folder + "/forecasts"
     args["n_files"] = np.inf
 
     (
@@ -24,7 +24,7 @@ def calculate_rmse_of_block(args):
     ) = pt_import.import_lorentz_block_perturbations(args, rel_ref=False)
 
     # Import analyses forecasts
-    args["perturb_folder"] = parent_pert_folder + "/analysis_forecasts"
+    args["exp_folder"] = parent_pert_folder + "/analysis_forecasts"
     args["n_files"] = np.inf
 
     (
@@ -79,7 +79,7 @@ def calculate_rmse_of_block(args):
 
 def get_block_dirs(args):
 
-    experiment_dir = pl.Path(args["path"], args["experiment"])
+    experiment_dir = pl.Path(args["path"], args["exp_folder"])
     block_dirs = list(experiment_dir.glob("*"))
 
     # Filter out anything else than directories
@@ -105,7 +105,7 @@ def analysis_executer(args):
     header_dicts = []
 
     for block in block_dirs:
-        args["perturb_folder"] = str(pl.Path(block.parents[0].name, block.name))
+        args["exp_folder"] = str(pl.Path(block.parents[0].name, block.name))
 
         # Only import selected blocks if specified
         if args["specific_units"] is not None:

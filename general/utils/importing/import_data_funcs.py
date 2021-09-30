@@ -96,10 +96,16 @@ def imported_sorted_perturbation_info(folder_name, args, search_pattern="*.csv")
         Tuple with all perturbation info
     """
     # Initiate lists
-    perturb_file_names = list(pl.Path(args["path"], folder_name).glob(search_pattern))
+    path_to_search = pl.Path(args["path"], folder_name)
+    perturb_file_names = list(path_to_search.glob(search_pattern))
     perturb_time_pos_list_legend = []
     perturb_time_pos_list = []
     perturb_header_dicts = []
+
+    if len(perturb_file_names) == 0:
+        raise ImportError(
+            f"No perturb files to import in the following dir: {str(path_to_search)}"
+        )
 
     # Import headers and extract info
     for perturb_file in perturb_file_names:
@@ -240,7 +246,7 @@ def import_perturbation_velocities(args=None, search_pattern="*.csv"):
         perturb_header_dicts,
         perturb_file_names,
     ) = imported_sorted_perturbation_info(
-        args["perturb_folder"], args, search_pattern=search_pattern
+        args["exp_folder"], args, search_pattern=search_pattern
     )
 
     # Match the positions to the relevant ref files
@@ -445,10 +451,10 @@ def import_start_u_profiles(args=None):
 
 def import_exp_info_file(args):
 
-    if args["experiment"] is not None:
-        subfolder = args["experiment"]
-    elif args["perturb_folder"] is not None:
-        subfolder = args["perturb_folder"]
+    if args["exp_folder"] is not None:
+        subfolder = args["exp_folder"]
+    elif args["exp_folder"] is not None:
+        subfolder = args["exp_folder"]
     else:
         raise ImportError("No valid subfolder to search for exp_setup")
 
