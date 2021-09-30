@@ -4,8 +4,9 @@ import shell_model_experiments.params as sh_params
 import lorentz63_experiments.params.params as l63_params
 import general.utils.importing.import_data_funcs as g_import
 import general.utils.plot_utils as g_plt_utils
+from general.params.experiment_licences import Experiments as EXP
 from general.params.model_licences import Models
-from config import MODEL
+from config import MODEL, LICENCE
 
 # Get parameters for model
 if MODEL == Models.SHELL_MODEL:
@@ -77,7 +78,9 @@ def analyse_error_spread_vs_time_mean_of_norm(u_stores, args=None):
     return error_spread
 
 
-def plot_error_norm_vs_time(args=None):
+def plot_error_norm_vs_time(args=None, normalize_start_time=True):
+
+    exp_setup = g_import.import_exp_info_file(args)
 
     (
         u_stores,
@@ -85,7 +88,9 @@ def plot_error_norm_vs_time(args=None):
         perturb_time_pos_list_legend,
         header_dict,
         u_ref_stores,
-    ) = g_import.import_perturbation_velocities(args)
+    ) = g_import.import_perturbation_velocities(args, search_pattern="*perturb*.csv")
+
+    num_perturbations = len(perturb_time_pos_list)
 
     error_norm_vs_time, error_norm_mean_vs_time = analyse_error_norm_vs_time(
         u_stores, args=args
@@ -102,6 +107,14 @@ def plot_error_norm_vs_time(args=None):
         dtype=np.float64,
         endpoint=args["endpoint"],
     )
+    if not normalize_start_time:
+        time_array = np.repeat(
+            np.reshape(time_array, (time_array.size, 1)), num_perturbations, axis=1
+        )
+
+        time_array += np.reshape(
+            np.array(perturb_time_pos_list) * params.stt, (1, num_perturbations)
+        )
 
     # Pick out specified runs
     if args["specific_files"] is not None:
@@ -117,10 +130,14 @@ def plot_error_norm_vs_time(args=None):
 
     fig, axes = plt.subplots(nrows=1, ncols=1, sharex=True, figsize=(10, 6))
     # Get non-repeating colorcycle
-    cmap_list = g_plt_utils.get_non_repeating_colors(
-        n_colors=error_norm_vs_time.shape[1]
-    )
+    if LICENCE == EXP.BREEDING_VECTORS:
+        n_colors = exp_setup["n_vectors"]
+    else:
+        n_colors = num_perturbations
+
+    cmap_list = g_plt_utils.get_non_repeating_colors(n_colors=n_colors)
     axes.set_prop_cycle("color", cmap_list)
+
     axes.plot(time_array, error_norm_vs_time)  # , 'k', linewidth=1)
 
     if args["plot_mode"] == "detailed":
@@ -133,7 +150,9 @@ def plot_error_norm_vs_time(args=None):
     axes.set_xlabel("Time")
     axes.set_ylabel("Error")
     axes.set_yscale("log")
-    axes.legend(perturb_time_pos_list_legend)
+
+    if not LICENCE == EXP.BREEDING_VECTORS:
+        axes.legend(perturb_time_pos_list_legend)
 
     if args["xlim"] is not None:
         axes.set_xlim(args["xlim"][0], args["xlim"][1])

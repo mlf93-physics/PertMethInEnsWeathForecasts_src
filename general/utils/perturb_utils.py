@@ -136,7 +136,10 @@ def rescale_perturbations(perturb_data, args):
         * params.seeked_error_norm
     )
 
-    return rescaled_data
+    # Add rescaled data to u_init_profiles
+    u_init_profiles += rescaled_data
+
+    return u_init_profiles
 
 
 def prepare_breed_vectors(args):

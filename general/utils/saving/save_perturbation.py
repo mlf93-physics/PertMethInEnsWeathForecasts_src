@@ -20,7 +20,7 @@ def save_perturbation_data(
     args : dict, optional
         Run-time arguments, by default None
     """
-    if LICENCE == EXP.NORMAL_PERTURBATION:  # or LICENCE == EXP.BREEDING_VECTORS:
+    if LICENCE == EXP.NORMAL_PERTURBATION:
         g_save.save_data(
             data_out,
             prefix=f"perturb{perturb_count}_",
@@ -31,6 +31,13 @@ def save_perturbation_data(
         lb_save.save_lorentz_block_data(
             data_out,
             prefix=f"lorentz{perturb_count}_",
+            perturb_position=perturb_position,
+            args=args,
+        )
+    elif LICENCE == EXP.BREEDING_VECTORS:
+        g_save.save_data(
+            data_out,
+            prefix=f"breed_perturb{perturb_count}_",
             perturb_position=perturb_position,
             args=args,
         )

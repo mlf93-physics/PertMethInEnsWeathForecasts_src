@@ -37,7 +37,7 @@ def main(args):
     # Get number of existing blocks
     n_existing_units = g_utils.count_existing_files_or_dirs(
         search_path=pl.Path(args["path"], exp_setup["folder_name"]),
-        search_pattern=".csv",
+        search_pattern="breed_vector*.csv",
     )
 
     # Validate the start time method
@@ -57,7 +57,9 @@ def main(args):
         # Make analysis forecasts
         args["time_to_run"] = exp_setup["time_per_cycle"]
         args["start_time"] = [start_times[i]]
-        args["start_time_offset"] = exp_setup["vector_offset"]
+        args["start_time_offset"] = (
+            exp_setup["vector_offset"] if "vector_offset" in exp_setup else None
+        )
         args["endpoint"] = True
         args["n_profiles"] = 1
         args["n_runs_per_profile"] = exp_setup["n_vectors"]
@@ -94,6 +96,8 @@ def main(args):
 
                 # The rescaled data is used to start off cycle 1+
                 rescaled_data = pt_utils.rescale_perturbations(data_out_list, copy_args)
+                # Update perturb_positions
+                perturb_positions += int(exp_setup["time_per_cycle"] * params.tts)
         else:
             print("No processes to run - check if units already exists")
 
@@ -105,6 +109,9 @@ def main(args):
             args=args,
             exp_setup=exp_setup,
         )
+
+    # Save exp setup to exp folder
+    g_save.save_exp_info(exp_setup, args)
 
     if args["erda_run"]:
         path = pl.Path(args["path"], exp_setup["folder_name"])

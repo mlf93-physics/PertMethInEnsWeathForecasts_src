@@ -92,6 +92,9 @@ def main(args):
     else:
         print("No processes to run - check if blocks already exists")
 
+    # Save exp setup to exp folder
+    g_save.save_exp_info(exp_setup, args)
+
     if args["erda_run"]:
         path = pl.Path(args["path"], exp_setup["folder_name"])
         g_save.compress_dir(path, "test_temp1")

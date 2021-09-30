@@ -3,6 +3,7 @@ import sys
 sys.path.append("..")
 import itertools as it
 import re
+import json
 import pathlib as pl
 import numpy as np
 import shell_model_experiments.params as sh_params
@@ -69,7 +70,7 @@ def import_info_file(path):
     info_file_path = list(pl.Path(path).glob("*.txt"))
     if len(info_file_path) > 1:
         raise ValueError(
-            f"To many info files. Found " + f"{len(info_file_path)}; expected 1."
+            f"To many data info files. Found " + f"{len(info_file_path)}; expected 1."
         )
 
     info_dict = import_header(file_name=info_file_path[0])
@@ -77,7 +78,7 @@ def import_info_file(path):
     return info_dict
 
 
-def imported_sorted_perturbation_info(folder_name, args):
+def imported_sorted_perturbation_info(folder_name, args, search_pattern="*.csv"):
     """Import sorted lists of perturbation info
 
     Both time positions, legend strings, header dicts and file names are imported
@@ -95,7 +96,7 @@ def imported_sorted_perturbation_info(folder_name, args):
         Tuple with all perturbation info
     """
     # Initiate lists
-    perturb_file_names = list(pl.Path(args["path"], folder_name).glob("*.csv"))
+    perturb_file_names = list(pl.Path(args["path"], folder_name).glob(search_pattern))
     perturb_time_pos_list_legend = []
     perturb_time_pos_list = []
     perturb_header_dicts = []
@@ -224,7 +225,7 @@ def import_ref_data(args=None):
     return time, u_data, ref_header_dict
 
 
-def import_perturbation_velocities(args=None):
+def import_perturbation_velocities(args=None, search_pattern="*.csv"):
     u_stores = []
 
     if args["path"] is None:
@@ -238,7 +239,9 @@ def import_perturbation_velocities(args=None):
         perturb_time_pos_list_legend,
         perturb_header_dicts,
         perturb_file_names,
-    ) = imported_sorted_perturbation_info(args["perturb_folder"], args)
+    ) = imported_sorted_perturbation_info(
+        args["perturb_folder"], args, search_pattern=search_pattern
+    )
 
     # Match the positions to the relevant ref files
     ref_file_match = g_utils.match_start_positions_to_ref_file(
@@ -417,7 +420,7 @@ def import_start_u_profiles(args=None):
                 ref_record_names_sorted[int(file_id)],
                 dtype=params.dtype,
                 delimiter=",",
-                skip_header=np.int64(position),
+                skip_header=np.int64(round(position, 0)),
                 max_rows=1,
             )
 
@@ -438,3 +441,31 @@ def import_start_u_profiles(args=None):
             counter += 1
 
     return u_init_profiles, positions + burn_in * args["burn_in_lines"], ref_header_dict
+
+
+def import_exp_info_file(args):
+
+    if args["experiment"] is not None:
+        subfolder = args["experiment"]
+    elif args["perturb_folder"] is not None:
+        subfolder = args["perturb_folder"]
+    else:
+        raise ImportError("No valid subfolder to search for exp_setup")
+
+    path = pl.Path(args["path"], subfolder)
+
+    json_files = list(path.glob("*.json"))
+    len_files = len(json_files)
+
+    if len_files > 1:
+        raise ValueError(
+            f"To many experiment info files. Found " + f"{len_files}; expected 1."
+        )
+    elif len_files == 0:
+        raise ImportError(f"No experiment info file found at path {path}")
+
+    # Get experiment setup
+    with open(json_files[0], "r") as file:
+        exp_info_file = json.load(file)
+
+    return exp_info_file

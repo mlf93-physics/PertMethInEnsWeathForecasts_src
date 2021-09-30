@@ -91,8 +91,8 @@ def get_block_dirs(args):
     block_dirs = [block_dirs[i] for i in np.argsort(block_dirs)]
 
     # Adjust number of blocks
-    if args["num_blocks"] < np.inf and args["num_blocks"] > 0:
-        block_dirs = block_dirs[: args["num_blocks"]]
+    if args["num_units"] < np.inf and args["num_units"] > 0:
+        block_dirs = block_dirs[: args["num_units"]]
 
     return block_dirs
 
@@ -108,7 +108,7 @@ def analysis_executer(args):
         args["perturb_folder"] = str(pl.Path(block.parents[0].name, block.name))
 
         # Only import selected blocks if specified
-        if args["specific_blocks"] is not None:
+        if args["specific_units"] is not None:
             block_numbers = re.findall(r"\d+", block.name)
 
             if len(block_numbers) > 1:
@@ -119,7 +119,7 @@ def analysis_executer(args):
 
             block_number = int(block_numbers[0])
 
-            if not block_number in args["specific_blocks"]:
+            if not block_number in args["specific_units"]:
                 continue
 
         temp_rmse, ana_forecast_header_dict = calculate_rmse_of_block(args)
@@ -128,10 +128,10 @@ def analysis_executer(args):
         rmse.append(temp_rmse)
         header_dicts.append(ana_forecast_header_dict)
 
-    if args["specific_blocks"] is None:
+    if args["specific_units"] is None:
         num_imported_blocks = len(block_dirs)
     else:
-        num_imported_blocks = len(args["specific_blocks"])
+        num_imported_blocks = len(args["specific_units"])
 
     # Sort rmse and header_dicts lists
     perturb_pos = [header_dicts[i]["perturb_pos"] for i in range(num_imported_blocks)]

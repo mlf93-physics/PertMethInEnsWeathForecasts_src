@@ -50,7 +50,6 @@ def import_lorentz_block_perturbations(args=None, rel_ref=True):
         perturb_header_dicts,
         perturb_file_names,
     ) = g_import.imported_sorted_perturbation_info(args["perturb_folder"], args)
-
     # Match the positions to the relevant ref files
     ref_file_match = g_utils.match_start_positions_to_ref_file(
         args=args, header_dict=ref_header_dict, positions=perturb_time_pos_list

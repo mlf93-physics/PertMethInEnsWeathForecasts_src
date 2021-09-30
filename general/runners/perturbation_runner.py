@@ -66,7 +66,6 @@ def perturbation_runner(
         l63_model(
             u_old, du_array, derivMatrix, data_out, args["Nt"] + args["endpoint"] * 1
         )
-
     pt_save.save_perturbation_data(
         data_out,
         perturb_position=perturb_positions[run_count // args["n_runs_per_profile"]],
@@ -209,7 +208,6 @@ def prepare_processes(
     # Prepare return data list
     manager = multiprocessing.Manager()
     data_out_list = manager.list()
-
     # Get number of threads
     cpu_count = multiprocessing.cpu_count()
 
