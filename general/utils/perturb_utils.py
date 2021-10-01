@@ -47,8 +47,40 @@ def calculate_perturbations(perturb_vectors, dev_plot_active=False, args=None):
 
     # Perform perturbation for all eigenvectors
     for i in range(n_profiles * n_runs_per_profile):
+        if args["pert_mode"] is not None:
+            # Apply random perturbation
+            if args["pert_mode"] == "rd":
+                # Generate random perturbation error
+                # Reshape into complex array
+                perturb = np.empty(params.sdim, dtype=params.dtype)
+                # Generate random error
+                error = np.random.rand(2 * params.sdim).astype(np.float64) * 2 - 1
+
+                if MODEL == Models.SHELL_MODEL:
+                    perturb.real = error[: params.sdim]
+                    perturb.imag = error[params.sdim :]
+                elif MODEL == Models.LORENTZ63:
+                    perturb = error[: params.sdim]
+
+            # Apply normal mode perturbation
+            elif args["pert_mode"] == "nm":
+                # Generate random weights of the complex-conjugate eigenvector pair
+                _weights = np.random.rand(2) * 2 - 1
+                # Make perturbation vector
+                perturb = (
+                    _weights[0] * perturb_vectors_conj[:, i // n_runs_per_profile]
+                    + _weights[1] * perturb_vectors[:, i // n_runs_per_profile]
+                ).real
+
+            # Apply breed vector perturbation
+            elif args["pert_mode"] == "bv":
+                # Generate random weights of the complex-conjugate eigenvector pair
+                _weight = np.random.rand() * 2 - 1
+                # Make perturbation vector
+                perturb = _weight * perturb_vectors[:, i]
+
         # Apply single shell perturbation
-        if args["single_shell_perturb"] is not None:
+        elif args["single_shell_perturb"] is not None:
             perturb = np.zeros(params.sdim, dtype=params.dtype)
             perturb.real[args["single_shell_perturb"]] = (
                 np.random.rand(1)[0].astype(np.float64) * 2 - 1
@@ -56,33 +88,6 @@ def calculate_perturbations(perturb_vectors, dev_plot_active=False, args=None):
             perturb.imag[args["single_shell_perturb"]] = (
                 np.random.rand(1)[0].astype(np.float64) * 2 - 1
             )
-        elif args["pert_mode"] == "random":
-            # Generate random perturbation error
-            # Reshape into complex array
-            perturb = np.empty(params.sdim, dtype=params.dtype)
-            # Generate random error
-            error = np.random.rand(2 * params.sdim).astype(np.float64) * 2 - 1
-
-            if MODEL == Models.SHELL_MODEL:
-                perturb.real = error[: params.sdim]
-                perturb.imag = error[params.sdim :]
-            elif MODEL == Models.LORENTZ63:
-                perturb = error[: params.sdim]
-
-        elif args["pert_mode"] == "normal_mode":
-            # Generate random weights of the complex-conjugate eigenvector pair
-            _weights = np.random.rand(2) * 2 - 1
-            # Make perturbation vector
-            perturb = (
-                _weights[0] * perturb_vectors_conj[:, i // n_runs_per_profile]
-                + _weights[1] * perturb_vectors[:, i // n_runs_per_profile]
-            ).real
-
-        elif args["pert_mode"] == "breed_vectors":
-            # Generate random weights of the complex-conjugate eigenvector pair
-            _weight = np.random.rand() * 2 - 1
-            # Make perturbation vector
-            perturb = _weight * perturb_vectors[:, i]
 
         # Copy array for plotting
         perturb_temp = np.copy(perturb)
@@ -119,7 +124,6 @@ def rescale_perturbations(perturb_data, args):
 
     # Transform into 2d array
     perturb_data = np.array(perturb_data)
-
     # Pad array if necessary
     perturb_data = np.pad(
         perturb_data,
@@ -156,7 +160,7 @@ def prepare_breed_vectors(args):
     ).T
 
     # Prepare start times for import
-    args["start_time"] = [
+    args["start_times"] = [
         perturb_header_dicts[i]["val_pos"] * params.stt
         for i in range(len(perturb_header_dicts))
     ]

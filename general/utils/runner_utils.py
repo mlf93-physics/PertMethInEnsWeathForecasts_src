@@ -9,7 +9,7 @@ from config import LICENCE
 
 
 def generate_start_times(exp_setup, args):
-    ref_header_dict = g_import.import_info_file(pl.Path(args["path"], "ref_data"))
+    ref_header_dict = g_import.import_info_file(pl.Path(args["datapath"], "ref_data"))
 
     if LICENCE == EXP.LORENTZ_BLOCK:
         offset_var = "block_offset"

@@ -15,6 +15,6 @@ def model_runner(args):
 if __name__ == "__main__":
     # Define arguments
     arg_parser = argparse.ArgumentParser()
-    args = vars(arg_parser.parse_args())
+    args = arg_parser.parse_args()
 
     model_runner(args)

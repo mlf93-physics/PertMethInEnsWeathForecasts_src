@@ -1,10 +1,8 @@
 import sys
 
 sys.path.append("..")
-import argparse
 import pathlib as pl
 import copy
-import numpy as np
 import shell_model_experiments.params as sh_params
 import lorentz63_experiments.params.params as l63_params
 import perturbation_runner as pt_runner
@@ -14,16 +12,19 @@ import general.utils.runner_utils as r_utils
 import general.utils.util_funcs as g_utils
 import general.utils.saving.save_data_funcs as g_save
 import general.utils.saving.save_breed_vector_funcs as br_save
-import general.utils.exceptions as g_exceptions
 import general.utils.perturb_utils as pt_utils
+import general.utils.argument_parsers as a_parsers
 from general.params.model_licences import Models
-from config import MODEL
+from config import MODEL, GLOBAL_PARAMS
 
 # Get parameters for model
 if MODEL == Models.SHELL_MODEL:
     params = sh_params
 elif MODEL == Models.LORENTZ63:
     params = l63_params
+
+# Set global params
+GLOBAL_PARAMS.ref_run = False
 
 
 def main(args):
@@ -36,7 +37,7 @@ def main(args):
 
     # Get number of existing blocks
     n_existing_units = g_utils.count_existing_files_or_dirs(
-        search_path=pl.Path(args["path"], exp_setup["folder_name"]),
+        search_path=pl.Path(args["datapath"], exp_setup["folder_name"]),
         search_pattern="breed_vector*.csv",
     )
 
@@ -51,19 +52,19 @@ def main(args):
     # Calculate the desired number of units
     for i in range(
         n_existing_units,
-        min(args["num_units"] + n_existing_units, num_possible_units),
+        min(args["n_units"] + n_existing_units, num_possible_units),
     ):
 
         # Make analysis forecasts
         args["time_to_run"] = exp_setup["time_per_cycle"]
-        args["start_time"] = [start_times[i]]
+        args["start_times"] = [start_times[i]]
         args["start_time_offset"] = (
             exp_setup["vector_offset"] if "vector_offset" in exp_setup else None
         )
         args["endpoint"] = True
         args["n_profiles"] = 1
         args["n_runs_per_profile"] = exp_setup["n_vectors"]
-        args["perturb_folder"] = f"{exp_setup['folder_name']}"
+        args["exp_folder"] = f"{exp_setup['folder_name']}"
         args = g_utils.adjust_start_times_with_offset(args)
 
         # Copy args in order not override in forecast processes
@@ -86,13 +87,13 @@ def main(args):
                 pt_runner.main_run(
                     processes,
                     args=copy_args,
-                    num_units=min(
-                        copy_args["num_units"], num_possible_units - n_existing_units
+                    n_units=min(
+                        copy_args["n_units"], num_possible_units - n_existing_units
                     ),
                 )
                 # Offset time to prepare for next run and import of reference data
                 # for rescaling
-                copy_args["start_time"][0] += copy_args["time_to_run"]
+                copy_args["start_times"][0] += copy_args["time_to_run"]
 
                 # The rescaled data is used to start off cycle 1+
                 rescaled_data = pt_utils.rescale_perturbations(data_out_list, copy_args)
@@ -114,60 +115,18 @@ def main(args):
     g_save.save_exp_info(exp_setup, args)
 
     if args["erda_run"]:
-        path = pl.Path(args["path"], exp_setup["folder_name"])
+        path = pl.Path(args["datapath"], exp_setup["folder_name"])
         g_save.compress_dir(path, "test_temp1")
 
 
 if __name__ == "__main__":
-    # Define arguments
-    arg_parser = argparse.ArgumentParser()
-    arg_parser.add_argument("--source", nargs="+", type=str)
-    arg_parser.add_argument("--path", nargs="?", type=str)
-    arg_parser.add_argument(
-        "--perturb_folder", nargs="?", default=None, required=False, type=str
-    )
-    arg_parser.add_argument("--time_to_run", default=0.1, type=float)
-    arg_parser.add_argument("--burn_in_time", default=0.0, type=float)
-    arg_parser.add_argument("--ny_n", default=19, type=int)
-    arg_parser.add_argument("--forcing", default=1, type=float)
-    arg_parser.add_argument("--sigma", default=10, type=float)
-    arg_parser.add_argument("--r_const", default=28, type=float)
-    arg_parser.add_argument("--b_const", default=8 / 3, type=float)
-    arg_parser.add_argument("--n_runs_per_profile", default=1, type=int)
-    arg_parser.add_argument("--n_profiles", default=1, type=int)
-    arg_parser.add_argument("--start_time", nargs="+", type=float)
-    arg_parser.add_argument("--pert_mode", default="random", type=str)
-    arg_parser.add_argument("--seed_mode", default=False, type=bool)
-    arg_parser.add_argument("--single_shell_perturb", default=None, type=int)
-    arg_parser.add_argument("--num_units", default=np.inf, type=int)
-    arg_parser.add_argument("--endpoint", action="store_true")
-    arg_parser.add_argument("--erda_run", action="store_true")
-    arg_parser.add_argument("--exp_setup", default=None, type=str)
+    # Get arguments
+    mult_pert_arg_setup = a_parsers.MultiPerturbationArgSetup()
+    mult_pert_arg_setup.setup_parser()
+    args = mult_pert_arg_setup.args
 
-    args = vars(arg_parser.parse_args())
-
-    args["ref_run"] = False
-    args["ny"] = (
-        args["forcing"] / (sh_params.lambda_const ** (8 / 3 * args["ny_n"]))
-    ) ** (1 / 2)
-
-    # Set seed if wished
-    if args["seed_mode"]:
-        np.random.seed(seed=1)
-
-    # Check if arguments apply to the model at use
-    if MODEL == Models.LORENTZ63:
-        if args["single_shell_perturb"] is not None:
-            raise g_exceptions.InvalidArgument(
-                "single_shell_perturb is not a valid option for current model."
-                + f" Model in use: {MODEL}",
-                argument="single_shell_perturb",
-            )
-        elif args["ny_n"] is not None:
-            raise g_exceptions.InvalidArgument(
-                "ny_n is not a valid option for current model."
-                + f" Model in use: {MODEL}",
-                argument="ny_n",
-            )
+    # Add ny argument
+    if MODEL == Models.SHELL_MODEL:
+        args["ny"] = params.ny_from_ny_n_and_forcing(args["forcing"], args["ny_n"])
 
     main(args)

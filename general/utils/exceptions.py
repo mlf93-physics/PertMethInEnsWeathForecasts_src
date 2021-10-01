@@ -37,3 +37,22 @@ class LicenceImplementationError(Exception):
             self.message = message
 
         super().__init__(f"{self.message}. Licence: {self.licence}")
+
+
+class ModelError(Exception):
+    """Exception raised for an invalid model
+
+    Attributes:
+        message -- explanation of the error
+        model -- the invalid model
+    """
+
+    def __init__(self, message="", model=None):
+        self.model = model
+
+        if len(message) == 0:
+            self.message = "Model is invalid"
+        else:
+            self.message = message
+
+        super().__init__(f"{self.message}. Model: {self.model}")

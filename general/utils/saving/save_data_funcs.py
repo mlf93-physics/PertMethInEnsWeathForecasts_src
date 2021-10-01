@@ -11,7 +11,7 @@ import config
 import lorentz63_experiments.params.params as l63_params
 import general.utils.saving.save_data_funcs as g_save
 from general.params.model_licences import Models
-from config import MODEL
+from config import MODEL, GLOBAL_PARAMS
 
 
 def args_to_string(args):
@@ -180,7 +180,7 @@ def save_data(data_out, subsubfolder="", prefix="", perturb_position=None, args=
 
     # expected_path = generate_dir(expected_name, subfolder=subfolder, args=args)
 
-    if args["ref_run"]:
+    if GLOBAL_PARAMS.ref_run:
         subsubfolder = "ref_data"
         # Generate path if not existing
         if MODEL == Models.SHELL_MODEL:
@@ -235,7 +235,7 @@ def save_data(data_out, subsubfolder="", prefix="", perturb_position=None, args=
 
         # Generate path if not existing
         expected_path = generate_dir(
-            pl.Path(args["path"], args["perturb_folder"], subsubfolder), args=args
+            pl.Path(args["datapath"], args["exp_folder"], subsubfolder), args=args
         )
 
         if perturb_position is not None:
@@ -279,7 +279,7 @@ def save_perturb_info(args=None, exp_setup=None):
     temp_args = convert_arguments_to_string(args)
 
     expected_path = generate_dir(
-        pl.Path(args["path"], args["perturb_folder"]), args=args
+        pl.Path(args["datapath"], args["exp_folder"]), args=args
     )
     # Prepare filename
     perturb_data_info_name = pl.Path(expected_path)
@@ -345,7 +345,7 @@ def save_exp_info(exp_info, args):
 
     # Generate path if not existing
     expected_path = g_save.generate_dir(
-        pl.Path(args["path"], args["perturb_folder"]), args=args
+        pl.Path(args["datapath"], args["exp_folder"]), args=args
     )
 
     out_path = pl.Path(expected_path, f"{prefix}{out_name}.json")

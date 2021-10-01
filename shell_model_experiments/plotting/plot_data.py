@@ -2,7 +2,6 @@ import sys
 
 sys.path.append("..")
 from pathlib import Path
-import argparse
 import numpy as np
 import matplotlib.pyplot as plt
 from math import floor, ceil, sqrt
@@ -19,6 +18,7 @@ from general.utils.importing.import_data_funcs import (
     import_start_u_profiles,
 )
 import general.utils.util_funcs as g_utils
+import general.utils.argument_parsers as a_parsers
 
 
 def plot_shells_vs_time(k_vectors_to_plot=None):
@@ -115,10 +115,10 @@ def plot_inviscid_quantities(
             f'Energy over time vs $n_f$; f={header_dict["forcing"]}, $\\nu$={header_dict["ny"]:.2e}, time={header_dict["time_to_run"]}'
         )
 
-    if "perturb_folder" in args:
-        if args["perturb_folder"] is not None:
+    if "exp_folder" in args:
+        if args["exp_folder"] is not None:
             perturb_file_names = list(
-                Path(args["path"], args["perturb_folder"]).glob("*.csv")
+                Path(args["datapath"], args["exp_folder"]).glob("*.csv")
             )
 
             # Import headers to get perturb positions
@@ -166,7 +166,7 @@ def plot_inviscid_quantities_per_shell(
             + f', time={header_dict["time"]}s'
         )
 
-    if "perturb_folder" in args:
+    if "exp_folder" in args:
         # file_names = list(Path(path).glob('*.csv'))
         # Find reference file
         # ref_file_index = None
@@ -179,7 +179,7 @@ def plot_inviscid_quantities_per_shell(
         #     raise ValueError('No reference file found in specified directory')
 
         perturb_file_names = list(
-            Path(args["path"], args["perturb_folder"]).glob("*.csv")
+            Path(args["datapath"], args["exp_folder"]).glob("*.csv")
         )
 
         (
@@ -389,7 +389,7 @@ def plots_related_to_energy(args=None):
         time, u_data, header_dict, ax=axes[0], omit="ny", args=args
     )
     # plot_inviscid_quantities_per_shell(
-    #     time, u_data, header_dict, ax=axes[0], path=args["path"], args=args
+    #     time, u_data, header_dict, ax=axes[0], path=args["datapath"], args=args
     # )
 
     # Plot Kolmogorov scaling
@@ -444,7 +444,9 @@ def plot_eddie_freqs(args=None):
     # file_names = ['../data/udata_ny0_t1.000000e+00_n_f0_f0_j0.csv']
 
     for ifile, file_name in enumerate(file_names):
-        data_in, header_dict = import_data(file_name, start_line=args["burn_in_lines"])
+        data_in, header_dict = import_data(
+            file_name, start_line=int(args["burn_in_time"] * tts)
+        )
         time = data_in[:, 0]
         u_store = data_in[:, 1:]
 
@@ -486,7 +488,7 @@ def plot_shell_error_vs_time(args=None):
         plt.title(
             f'Error vs time; f={header_dict["f"]}'
             + f', $n_f$={int(header_dict["n_f"])}, $\\nu$={header_dict["ny"]:.2e}'
-            + f', time={header_dict["time"]} | Folder: {args["perturb_folder"]}'
+            + f', time={header_dict["time"]} | Folder: {args["exp_folder"]}'
         )
 
 
@@ -787,7 +789,7 @@ def plot_error_energy_spectrum_vs_time_2D(args=None):
     plt.title(
         f'Error energy spectrum vs time; f={header_dict["f"]}'
         + f', $n_f$={int(header_dict["n_f"])}, $\\nu$={header_dict["ny"]:.2e}'
-        + f', time={header_dict["time"]}, N_tot={n_files} | Folder: {args["perturb_folder"]}'
+        + f', time={header_dict["time"]}, N_tot={n_files} | Folder: {args["exp_folder"]}'
     )
     plt.savefig(
         f'../figures/week6/error_spectra_vs_time/single_shell5_perturb/error_spectra_vs_time_ref_ny_n_19_folder_single_shell5_perturb_ny_n{int(header_dict["n_ny"]):d}_files_{n_files}',
@@ -808,11 +810,11 @@ def plot_error_vector_spectrogram(args=None):
         _,
     ) = import_perturbation_velocities(args)
 
-    args["start_time"] = np.array(
+    args["start_times"] = np.array(
         [perturb_time_pos_list[args["file_offset"]] * stt],
         dtype=np.float64,
     )
-    args["n_profiles"] = len(args["start_time"])
+    args["n_profiles"] = len(args["start_times"])
 
     # Import start u profiles at the perturbation
     u_init_profiles, perturb_positions, header_dict = import_start_u_profiles(args=args)
@@ -865,16 +867,16 @@ def plot_error_vector_spectrum(args=None):
         _,
     ) = import_perturbation_velocities(args)
 
-    args["start_time"] = np.array(
+    args["start_times"] = np.array(
         [
             perturb_time_pos_list[args["file_offset"] + i] * stt
             for i in range(args["n_files"])
         ],
         dtype=np.float64,
     )
-    args["n_profiles"] = len(args["start_time"])
+    args["n_profiles"] = len(args["start_times"])
 
-    print("start_times", args["start_time"])
+    print("start_times", args["start_times"])
 
     # Import start u profiles at the perturbation
     u_init_profiles, perturb_positions, header_dict = import_start_u_profiles(args=args)
@@ -931,51 +933,13 @@ def plot_error_vector_spectrum(args=None):
 
 
 if __name__ == "__main__":
-    # Define arguments
-    arg_parser = argparse.ArgumentParser()
-    arg_parser.add_argument("--path", nargs="?", default=None, type=str)
-    arg_parser.add_argument("--plot_type", nargs="+", default=None, type=str)
-    """
-    plot_mode :
-        standard : plot everything with the standard plot setup
-        detailted : plot extra details in plots
-    """
-    arg_parser.add_argument("--plot_mode", nargs="?", default="standard", type=str)
-    arg_parser.add_argument("--seed_mode", default=False, type=bool)
-    arg_parser.add_argument("--start_time", nargs="+", type=float)
-    arg_parser.add_argument("--specific_ref_records", nargs="+", default=[0], type=int)
+    # Get arguments
+    stand_plot_arg_parser = a_parsers.StandardPlottingArgParser()
+    stand_plot_arg_parser.setup_parser()
 
-    subparsers = arg_parser.add_subparsers()
-    perturb_parser = subparsers.add_parser(
-        "perturb_plot",
-        help="Arguments needed for plotting the perturbation vs time plot.",
-    )
-    perturb_parser.add_argument("--perturb_folder", nargs="?", default=None, type=str)
-    perturb_parser.add_argument("--n_files", default=np.inf, type=int)
-    perturb_parser.add_argument("--file_offset", default=0, type=int)
-    perturb_parser.add_argument("--specific_files", nargs="+", default=None, type=int)
-    perturb_parser.add_argument("--combinations", action="store_true")
-    perturb_parser.add_argument("--endpoint", action="store_true")
-    # eigen_mode_parser = subparsers.add_parser("eigen_mode_plot", help=
-    #     'Arguments needed for plotting 3D eigenmode analysis.')
-    arg_parser.add_argument("--burn_in_time", default=0.0, type=float)
-    arg_parser.add_argument("--n_profiles", default=1, type=int)
-    arg_parser.add_argument("--n_runs_per_profile", default=1, type=int)
-    arg_parser.add_argument("--time_to_run", default=0.1, type=float)
-    arg_parser.add_argument("--ref_start_time", default=0, type=float)
-    arg_parser.add_argument("--ref_end_time", default=-1, type=float)
-    arg_parser.add_argument("--xlim", nargs=2, default=None, type=float)
-    arg_parser.add_argument("--ylim", nargs=2, default=None, type=float)
-
-    args = vars(arg_parser.parse_args())
+    args = stand_plot_arg_parser.args
     print("args", args)
 
-    # Set seed if wished
-    if args["seed_mode"]:
-        np.random.seed(seed=1)
-
-    if "burn_in_time" in args:
-        args["burn_in_lines"] = int(args["burn_in_time"] / dt * sample_rate)
     if "time_to_run" in args:
         args["Nt"] = int(args["time_to_run"] / dt * sample_rate)
 
@@ -998,7 +962,7 @@ if __name__ == "__main__":
     # plots_related_to_forcing()
 
     if "error_norm" in args["plot_type"]:
-        if args["path"] is None:
+        if args["datapath"] is None:
             print("No path specified to analyse error norms.")
         else:
             g_plt_data.plot_error_norm_vs_time(args=args)
@@ -1007,7 +971,7 @@ if __name__ == "__main__":
         plot_error_energy_spectrum_vs_time_2D(args=args)
 
     if "shell_error" in args["plot_type"]:
-        if args["path"] is None:
+        if args["datapath"] is None:
             print("No path specified to analyse shell error.")
         else:
             plot_shell_error_vs_time(args=args)
@@ -1027,4 +991,6 @@ if __name__ == "__main__":
     if "error_vector_spectrum" in args["plot_type"]:
         plot_error_vector_spectrum(args=args)
 
-    plt.show()
+    if not args["noplot"]:
+        plt.tight_layout()
+        plt.show()

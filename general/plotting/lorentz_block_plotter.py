@@ -32,11 +32,11 @@ profiler = Profiler()
 
 def plt_lorentz_block_from_full_perturbation_data(args):
 
-    if "perturb_folder" in args:
+    if "exp_folder" in args:
 
-        parent_pert_folder = args["perturb_folder"]
+        parent_pert_folder = args["exp_folder"]
         # Import forecasts
-        args["perturb_folder"] = parent_pert_folder + "/forecasts"
+        args["exp_folder"] = parent_pert_folder + "/forecasts"
         args["n_files"] = np.inf
 
         (
@@ -48,7 +48,7 @@ def plt_lorentz_block_from_full_perturbation_data(args):
         ) = g_import.import_perturbation_velocities(args)
 
         # Import forecasts
-        args["perturb_folder"] = parent_pert_folder + "/analysis_forecasts"
+        args["exp_folder"] = parent_pert_folder + "/analysis_forecasts"
         args["n_files"] = np.inf
 
         (
@@ -96,11 +96,11 @@ def plt_lorentz_block_from_full_perturbation_data(args):
 
 def plt_lorentz_block(args):
 
-    experiments = args["experiment"]
+    experiments = args["exp_folder"]
     legend = []
 
     for j, experiment in enumerate(experiments):
-        args["experiment"] = experiment
+        args["exp_folder"] = experiment
 
         # Get experiment info
         exp_info = g_import.import_exp_info_file(args)
@@ -115,15 +115,15 @@ def plt_lorentz_block(args):
             ana_forecast_header_dicts,
         ) = lr_analysis.lorentz_block_analyser.analysis_executer(args)
 
-        num_units = len(ana_forecast_header_dicts)
+        n_units = len(ana_forecast_header_dicts)
         num_forecasts = rmse.shape[0]
 
-        if num_units == 0:
-            raise ValueError(f"No blocks to plot. num_units = {num_units}")
+        if n_units == 0:
+            raise ValueError(f"No blocks to plot. n_units = {n_units}")
 
         # Prepare legend
         # if len(experiments) > 1:
-        legend.append(experiment + f" | $N_{{blocks}}$={num_units}")
+        legend.append(experiment + f" | $N_{{blocks}}$={n_units}")
         # else:
         #     legend = [f"$\\Delta_{{{i + 1}}}$" for i in range(num_forecasts)]
         # Get non-repeating colorcycle
@@ -183,8 +183,8 @@ def plt_lorentz_block(args):
             plt.legend()
         # or plot each rmse in its own axes
         else:
-            num_subplot_cols = math.floor(num_units / 2) + 1
-            num_subplot_rows = math.ceil(num_units / num_subplot_cols)
+            num_subplot_cols = math.floor(n_units / 2) + 1
+            num_subplot_rows = math.ceil(n_units / num_subplot_cols)
             fig, axes = plt.subplots(
                 ncols=num_subplot_cols,
                 nrows=num_subplot_rows,
@@ -229,21 +229,21 @@ def plt_blocks_energy_regions(args):
     time, u_data, ref_header_dict = g_import.import_ref_data(args=args)
 
     block_dirs = lr_analysis.get_block_dirs(args)
-    num_units = len(block_dirs)
-    block_start_indices = np.zeros(num_units, dtype=np.int64)
-    block_end_indices = np.zeros(num_units, dtype=np.int64)
+    n_units = len(block_dirs)
+    block_start_indices = np.zeros(n_units, dtype=np.int64)
+    block_end_indices = np.zeros(n_units, dtype=np.int64)
     block_names = []
 
     # Import one forecast header to get perturb positions
     for i, block in enumerate(block_dirs):
         # Get perturb_folder
-        args["perturb_folder"] = str(
+        args["exp_folder"] = str(
             pl.Path(block.parents[0].name, block.name, "forecasts")
         )
 
         # Get perturb file names
         perturb_file_names = list(
-            pl.Path(args["path"], args["perturb_folder"]).glob("*.csv")
+            pl.Path(args["datapath"], args["exp_folder"]).glob("*.csv")
         )
         # Import header
         header_dict = g_import.import_header(file_name=perturb_file_names[0])
@@ -265,7 +265,7 @@ def plt_blocks_energy_regions(args):
     # Calculate energy
     energy_vs_time = np.sum(u_data * np.conj(u_data), axis=1).real
 
-    for i in range(num_units):
+    for i in range(n_units):
         time_array = np.linspace(
             block_start_indices[i] * params.stt,
             block_end_indices[i] * params.stt,
@@ -285,7 +285,7 @@ def plt_blocks_energy_regions(args):
         )
 
     # Remove perturb_folder to not plot perturbation start positions
-    args["perturb_folder"] = None
+    args["exp_folder"] = None
     pl_data.plot_inviscid_quantities(
         time, u_data, ref_header_dict, ax=ax, omit="ny", args=args
     )
@@ -296,7 +296,7 @@ def plt_blocks_energy_regions(args):
 def plt_block_and_energy(args):
 
     # Only plot one block
-    args["num_units"] = 1
+    args["n_units"] = 1
 
     (
         rmse,
@@ -350,7 +350,7 @@ def plt_block_and_energy(args):
     time, u_data, ref_header_dict = g_import.import_ref_data(args=args)
 
     # Remove perturb_folder to not plot perturbation start positions
-    args["perturb_folder"] = None
+    args["exp_folder"] = None
     pl_data.plot_inviscid_quantities(
         time, u_data, ref_header_dict, ax=axes[0], omit="ny", args=args
     )
@@ -373,7 +373,7 @@ if __name__ == "__main__":
     arg_parser.add_argument("--ref_start_time", default=0, type=float)
     arg_parser.add_argument("--ref_end_time", default=-1, type=float)
     num_unit_group = arg_parser.add_mutually_exclusive_group()
-    num_unit_group.add_argument("--num_units", default=np.inf, type=int)
+    num_unit_group.add_argument("--n_units", default=np.inf, type=int)
     num_unit_group.add_argument("--specific_units", nargs="+", default=None, type=int)
 
     args = vars(arg_parser.parse_args())
@@ -391,5 +391,6 @@ if __name__ == "__main__":
     else:
         raise ValueError("No valid plot type given as input argument")
 
-    plt.tight_layout()
-    plt.show()
+    if not args["noplot"]:
+        plt.tight_layout()
+        plt.show()

@@ -1,10 +1,10 @@
 __all__ = ["MODEL", "LICENCE", "NUMBA_CACHE"]
 
 import os
-import sys
 import pathlib as pl
 from general.params.model_licences import Models
 from general.params.experiment_licences import Experiments
+from general.params.params import GlobalParams
 import general.utils.user_interface as g_ui
 
 models = Models()
@@ -43,10 +43,12 @@ print(f"\nRunning with model {MODEL}\n")
 exp = Experiments()
 LICENCE = exp.NORMAL_PERTURBATION
 
+# Get global params
+GLOBAL_PARAMS = GlobalParams()
+
 # Other general configurations
 NUMBA_CACHE = True
-
-confirm_run_setup()
-
 # Disable stdout
 # sys.stdout = open(os.devnull, "w")
+
+confirm_run_setup()

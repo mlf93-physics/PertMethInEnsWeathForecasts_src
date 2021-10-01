@@ -1,7 +1,6 @@
 import sys
 
 sys.path.append("..")
-import argparse
 from math import ceil
 import numpy as np
 from numba import njit, types
@@ -9,9 +8,13 @@ from pyinstrument import Profiler
 from shell_model_experiments.sabra_model.runge_kutta4 import runge_kutta4_vec
 from shell_model_experiments.params.params import *
 import general.utils.saving.save_data_funcs as g_save
-from config import NUMBA_CACHE
+import general.utils.argument_parsers as a_parsers
+from config import NUMBA_CACHE, GLOBAL_PARAMS
 
 profiler = Profiler()
+
+# Set global params
+GLOBAL_PARAMS.record_max_time = 30
 
 
 @njit(
@@ -62,14 +65,15 @@ def main(args=None):
 
     # Get number of records
     args["n_records"] = ceil(
-        (args["Nt"] - args["burn_in_time"] / dt) / int(args["record_max_time"] / dt)
+        (args["Nt"] - args["burn_in_time"] / dt)
+        / int(GLOBAL_PARAMS.record_max_time / dt)
     )
 
     profiler.start()
     print(
         f'\nRunning sabra model for {args["Nt"]*dt:.2f}s with a burn-in time'
         + f' of {args["burn_in_time"]:.2f}s, i.e. {args["n_records"]:d} records '
-        + f'are saved to disk each with {args["record_max_time"]:.1f}s data\n'
+        + f"are saved to disk each with {GLOBAL_PARAMS.record_max_time:.1f}s data\n"
     )
 
     # Burn in the model for the desired burn in time
@@ -90,17 +94,19 @@ def main(args=None):
         # Calculate data out size
         if ir == (args["n_records"] - 1):
             if (args["Nt"] - args["burn_in_time"] / dt) % int(
-                args["record_max_time"] / dt
+                GLOBAL_PARAMS.record_max_time / dt
             ) > 0:
                 out_array_size = int(
                     (
                         args["Nt"]
-                        - args["burn_in_time"] / dt % int(args["record_max_time"] / dt)
+                        - args["burn_in_time"]
+                        / dt
+                        % int(GLOBAL_PARAMS.record_max_time / dt)
                     )
                     * sample_rate
                 )
         else:
-            out_array_size = int(args["record_max_time"] * tts)
+            out_array_size = int(GLOBAL_PARAMS.record_max_time * tts)
 
         data_out = np.zeros((out_array_size, n_k_vec + 1), dtype=np.complex128)
 
@@ -117,37 +123,22 @@ def main(args=None):
 
         # Add record_id to datafile header
         args["record_id"] = ir
-        print(f"saving record\n")
-        g_save.save_data(data_out, args=args)
+        if not args["skip_save_data"]:
+            print(f"saving record\n")
+            g_save.save_data(data_out, args=args)
 
     profiler.stop()
     print(profiler.output_text())
 
 
 if __name__ == "__main__":
-    # Define arguments
-    arg_parser = argparse.ArgumentParser()
-    arg_parser.add_argument("--burn_in_time", default=0.0, type=float)
-    arg_parser.add_argument("--ny_n", default=19, type=int)
-    arg_parser.add_argument("--forcing", default=1, type=float)
-    arg_parser.add_argument("--save_folder", nargs="?", default="data", type=str)
-    arg_parser.add_argument("--record_max_time", default=30, type=float)
-    arg_parser.add_argument("--save_data", action="store_true")
-    time_group = arg_parser.add_mutually_exclusive_group(required=True)
-    time_group.add_argument("--time_to_run", type=float)
-    time_group.add_argument("--n_turnovers", type=float)
+    # Get arguments
+    stand_arg_setup = a_parsers.StandardRunnerArgSetup()
+    stand_arg_setup.setup_parser()
+    args = stand_arg_setup.args
 
-    args = vars(arg_parser.parse_args())
+    args["ny"] = ny_from_ny_n_and_forcing(args["forcing"], args["ny_n"])
 
-    args["ny"] = (args["forcing"] / (lambda_const ** (8 / 3 * args["ny_n"]))) ** (
-        1 / 2
-    )  # 1e-8
-    args["ref_run"] = True
-
-    if args["n_turnovers"] is not None:
-        args["time_to_run"] = ceil(eddy0_turnover_time * args["n_turnovers"])  # [s]
-        args["Nt"] = int(args["time_to_run"] / dt)
-    else:
-        args["Nt"] = int(args["time_to_run"] / dt)
+    args["Nt"] = int(args["time_to_run"] / dt)
 
     main(args=args)

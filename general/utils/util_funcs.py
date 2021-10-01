@@ -1,4 +1,5 @@
 import os
+import math
 import pathlib as pl
 from collections import OrderedDict
 import numpy as np
@@ -7,6 +8,12 @@ import shell_model_experiments.params as sh_params
 import lorentz63_experiments.params.params as l63_params
 from general.params.model_licences import Models
 from config import MODEL
+
+# Get parameters for model
+if MODEL == Models.SHELL_MODEL:
+    params = sh_params
+elif MODEL == Models.LORENTZ63:
+    params = l63_params
 
 
 def match_start_positions_to_ref_file(args=None, header_dict=None, positions=None):
@@ -40,7 +47,7 @@ def match_start_positions_to_ref_file(args=None, header_dict=None, positions=Non
 
 def get_sorted_ref_record_names(args=None):
     # Get file paths
-    ref_record_names = list(Path(args["path"], "ref_data").glob("*.csv"))
+    ref_record_names = list(Path(args["datapath"], "ref_data").glob("*.csv"))
     ref_files_sort_index = np.argsort(
         [str(ref_record_name) for ref_record_name in ref_record_names]
     )
@@ -51,29 +58,29 @@ def get_sorted_ref_record_names(args=None):
 
 def adjust_start_times_with_offset(args):
 
-    if args["start_time"] is not None:
+    if args["start_times"] is not None:
         if args["n_profiles"] > 1 and args["start_time_offset"] is None:
             np.testing.assert_equal(
-                len(args["start_time"]),
+                len(args["start_times"]),
                 args["n_profiles"],
                 "The number of start times do not equal the number of"
                 + " requested profiles.",
             )
         elif args["n_profiles"] > 1 and args["start_time_offset"] is not None:
             np.testing.assert_equal(
-                len(args["start_time"]), 1, "Too many start times given"
+                len(args["start_times"]), 1, "Too many start times given"
             )
             print(
                 "Determining starttimes from single starttime value and the"
                 + " start_time_offset parameter"
             )
-            args["start_time"] = [
-                args["start_time"][0] + args["start_time_offset"] * i
+            args["start_times"] = [
+                args["start_times"][0] + args["start_time_offset"] * i
                 for i in range(args["n_profiles"])
             ]
         else:
             np.testing.assert_equal(
-                len(args["start_time"]), 1, "Too many start times given"
+                len(args["start_times"]), 1, "Too many start times given"
             )
 
     return args
@@ -118,3 +125,26 @@ def handle_different_headers(header_dict):
         del header_dict["time"]
 
     return header_dict
+
+
+def determine_params_from_header_dict(header_dict, args):
+    if MODEL == Models.SHELL_MODEL:
+
+        # Save parameters to args dict:
+        args["forcing"] = header_dict["forcing"].real
+
+        if args["ny_n"] is None:
+            args["ny"] = header_dict["ny"]
+
+            if args["forcing"] == 0:
+                args["ny_n"] = 0
+            else:
+                args["ny_n"] = params.ny_n_from_ny_and_forcing(
+                    args["forcing"], header_dict["ny"]
+                )
+            # Take ny from reference file
+        else:
+            args["ny"] = params.ny_from_ny_n_and_forcing(args["forcing"], args["ny_n"])
+
+    elif MODEL == Models.LORENTZ63:
+        print("Nothing specific to do with args in lorentz63 model yet")
