@@ -28,7 +28,7 @@ GLOBAL_PARAMS.record_max_time = 3000
     ),
     cache=NUMBA_CACHE,
 )
-def run_model(x_old, du_array, derivMatrix, data_out, Nt_local):
+def run_model(x_old, du_array, deriv_matrix, data_out, Nt_local):
     """Execute the integration of the sabra shell model.
 
     Parameters
@@ -54,7 +54,7 @@ def run_model(x_old, du_array, derivMatrix, data_out, Nt_local):
 
         # Update x_old
         x_old = rk4.runge_kutta4_vec(
-            y0=x_old, h=dt, dx=du_array, derivMatrix=derivMatrix
+            y0=x_old, h=dt, dx=du_array, deriv_matrix=deriv_matrix
         )
 
     return x_old
@@ -65,7 +65,7 @@ def main(args=None):
     # Define x_old
     x_old = np.array([1, 1, 1], dtype=np.float64)
 
-    derivMatrix = ut_funcs.setup_deriv_matrix(args)
+    deriv_matrix = ut_funcs.setup_deriv_matrix(args)
 
     # Get number of records
     args["n_records"] = math.ceil(
@@ -84,7 +84,7 @@ def main(args=None):
     data_out = np.zeros((int(args["burn_in_time"] * tts), sdim + 1), dtype=np.float64)
     print(f'Running burn-in phase of {args["burn_in_time"]}s\n')
     x_old = run_model(
-        x_old, du_array, derivMatrix, data_out, int(args["burn_in_time"] / dt)
+        x_old, du_array, deriv_matrix, data_out, int(args["burn_in_time"] / dt)
     )
 
     for ir in range(args["n_records"]):
@@ -114,7 +114,7 @@ def main(args=None):
         x_old = run_model(
             x_old,
             du_array,
-            derivMatrix,
+            deriv_matrix,
             data_out,
             int(out_array_size / sample_rate),
         )

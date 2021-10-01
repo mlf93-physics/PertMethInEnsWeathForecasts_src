@@ -4,7 +4,10 @@
         "time_per_cycle": 1.0,
         "n_cycles": 10,
         "n_vectors": 10,
-        "vector_offset": 20
+        "vector_offset": 20,
+        "start_times": [
+            0
+        ]
     },
     "TestRun2": {
         "folder_name": "lorentz63_breed_vectors5",

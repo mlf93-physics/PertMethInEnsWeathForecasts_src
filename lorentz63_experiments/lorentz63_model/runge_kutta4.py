@@ -13,7 +13,7 @@ from config import NUMBA_CACHE
     ),
     cache=NUMBA_CACHE,
 )
-def derivative_evaluator(x_old=None, dx=None, derivMatrix=None):
+def derivative_evaluator(x_old=None, dx=None, deriv_matrix=None):
     """Derivative evaluator used in the Runge-Kutta method.
 
     Calculates the derivatives in the lorentz model.
@@ -32,12 +32,12 @@ def derivative_evaluator(x_old=None, dx=None, derivMatrix=None):
         The updated derivative of the lorentz positions
 
     """
-    # Update the derivMatrix
-    derivMatrix[1, 2] = -x_old[0]
-    derivMatrix[2, 0] = x_old[1]
+    # Update the deriv_matrix
+    deriv_matrix[1, 2] = -x_old[0]
+    deriv_matrix[2, 0] = x_old[1]
 
     # Calculate change in u (du)
-    dx = derivMatrix @ x_old
+    dx = deriv_matrix @ x_old
 
     return dx
 
@@ -51,7 +51,7 @@ def derivative_evaluator(x_old=None, dx=None, derivMatrix=None):
     ),
     cache=NUMBA_CACHE,
 )
-def runge_kutta4_vec(y0=0, h=1, dx=None, derivMatrix=None):
+def runge_kutta4_vec(y0=0, h=1, dx=None, deriv_matrix=None):
     """Performs the Runge-Kutta-4 integration of the lorentz model.
 
     Parameters
@@ -73,10 +73,14 @@ def runge_kutta4_vec(y0=0, h=1, dx=None, derivMatrix=None):
 
     """
     # Calculate the k's
-    k1 = h * derivative_evaluator(x_old=y0, dx=dx, derivMatrix=derivMatrix)
-    k2 = h * derivative_evaluator(x_old=y0 + 1 / 2 * k1, dx=dx, derivMatrix=derivMatrix)
-    k3 = h * derivative_evaluator(x_old=y0 + 1 / 2 * k2, dx=dx, derivMatrix=derivMatrix)
-    k4 = h * derivative_evaluator(x_old=y0 + k3, dx=dx, derivMatrix=derivMatrix)
+    k1 = h * derivative_evaluator(x_old=y0, dx=dx, deriv_matrix=deriv_matrix)
+    k2 = h * derivative_evaluator(
+        x_old=y0 + 1 / 2 * k1, dx=dx, deriv_matrix=deriv_matrix
+    )
+    k3 = h * derivative_evaluator(
+        x_old=y0 + 1 / 2 * k2, dx=dx, deriv_matrix=deriv_matrix
+    )
+    k4 = h * derivative_evaluator(x_old=y0 + k3, dx=dx, deriv_matrix=deriv_matrix)
 
     # Update y
     y0 = y0 + 1 / 6 * k1 + 1 / 3 * k2 + 1 / 3 * k3 + 1 / 6 * k4

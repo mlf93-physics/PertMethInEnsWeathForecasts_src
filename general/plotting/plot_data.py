@@ -78,7 +78,7 @@ def analyse_error_spread_vs_time_mean_of_norm(u_stores, args=None):
     return error_spread
 
 
-def plot_error_norm_vs_time(args=None, normalize_start_time=True):
+def plot_error_norm_vs_time(args=None, normalize_start_time=True, axes=None):
 
     try:
         exp_setup = g_import.import_exp_info_file(args)
@@ -134,7 +134,10 @@ def plot_error_norm_vs_time(args=None, normalize_start_time=True):
             perturb_time_pos_list_legend, ["Mean error norm", "Std of error"]
         )
 
-    fig, axes = plt.subplots(nrows=1, ncols=1, sharex=True, figsize=(10, 6))
+    # Prepare axes
+    if axes is None:
+        axes = plt.gca()
+
     # Get non-repeating colorcycle
     if LICENCE == EXP.BREEDING_VECTORS:
         n_colors = exp_setup["n_vectors"]
@@ -194,3 +197,5 @@ def plot_error_norm_vs_time(args=None, normalize_start_time=True):
     # plot_inviscid_quantities(data_in[:, 0] - perturb_time_pos_list[0],
     #     data_in[:, 1:], ref_header_dict, ax=axes[1], args=args,
     #     zero_time_ref=int(perturb_time_pos_list[0]*sample_rate/dt))
+
+    return axes

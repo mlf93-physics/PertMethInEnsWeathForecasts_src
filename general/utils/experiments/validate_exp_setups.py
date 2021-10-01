@@ -25,10 +25,11 @@ def validate_start_time_method(exp_setup: dict = {}):
         raise g_exceptions.LicenceImplementationError(licence=LICENCE)
 
     if offset_var in exp_setup and "start_times" in exp_setup:
-        raise ValueError(
-            f"Exp. setup invalid: Both {offset_var} and start_times entries ARE"
-            + " set in the experiment setup. This is not valid; choose one of them."
-        )
+        if len(exp_setup["start_times"]) > 1:
+            raise ValueError(
+                f"Exp. setup invalid: Both {offset_var} and start_times (more than one) entries ARE"
+                + " set in the experiment setup. This is not valid; choose one of them to govern start times."
+            )
     elif offset_var not in exp_setup and "start_times" not in exp_setup:
         raise ValueError(
             f"Exp. setup invalid: Both {offset_var} and start_times entries are"

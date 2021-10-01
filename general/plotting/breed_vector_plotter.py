@@ -7,8 +7,10 @@ import matplotlib.pyplot as plt
 from mpl_toolkits import mplot3d
 import numpy as np
 import shell_model_experiments.params as sh_params
+import shell_model_experiments.plotting.plot_data as sh_plot
 import lorentz63_experiments.params.params as l63_params
 import lorentz63_experiments.perturbations.normal_modes as pert_nm
+import lorentz63_experiments.plotting.plot_data as l63_plot
 import general.utils.importing.import_perturbation_data as pt_import
 import general.utils.importing.import_data_funcs as g_import
 import general.plotting.plot_data as g_plt_data
@@ -155,7 +157,25 @@ def plot_breed_comparison_to_nm(args):
 
 
 def plot_breed_error_norm(args):
-    g_plt_data.plot_error_norm_vs_time(args=args, normalize_start_time=False)
+    fig, axes = plt.subplots(nrows=2, ncols=1, sharex=True)
+
+    exp_setup = g_import.import_exp_info_file(args)
+
+    g_plt_data.plot_error_norm_vs_time(
+        args=args, normalize_start_time=False, axes=axes[0]
+    )
+
+    # Prepare ref import
+    args["ref_start_time"] = exp_setup["start_times"][0]
+    args["ref_end_time"] = (
+        exp_setup["start_times"][0]
+        + exp_setup["n_cycles"] * exp_setup["time_per_cycle"]
+    )
+
+    if MODEL == Models.SHELL_MODEL:
+        sh_plot.plots_related_to_energy(args, axes=axes[1])
+    elif MODEL == Models.LORENTZ63:
+        l63_plot.plot_energy(args, axes=axes[1])
 
 
 if __name__ == "__main__":
