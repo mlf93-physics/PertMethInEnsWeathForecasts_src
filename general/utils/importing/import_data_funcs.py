@@ -372,7 +372,7 @@ def import_start_u_profiles(args=None):
         # Generate random start positions
         # division = total #datapoints - burn_in #datapoints - #datapoints per perturbation
         division_size = int(
-            (n_data - args["burn_in_lines"]) // n_profiles
+            (n_data - args["burn_in_time"] * params.tts) // n_profiles
             - args["Nt"] * params.sample_rate
         )
         rand_division_start = np.random.randint(
@@ -398,7 +398,7 @@ def import_start_u_profiles(args=None):
 
     print(
         "\nPositions of perturbation start: ",
-        (positions + burn_in * args["burn_in_lines"]) * params.stt,
+        positions * params.stt + burn_in * args["burn_in_time"],
         "(in seconds)",
     )
 
@@ -406,7 +406,7 @@ def import_start_u_profiles(args=None):
     ref_file_match = g_utils.match_start_positions_to_ref_file(
         args=args,
         header_dict=ref_header_dict,
-        positions=positions + burn_in * args["burn_in_lines"],
+        positions=positions + burn_in * int(args["burn_in_time"] * params.tts),
     )
 
     # Get sorted file paths
@@ -446,7 +446,11 @@ def import_start_u_profiles(args=None):
 
             counter += 1
 
-    return u_init_profiles, positions + burn_in * args["burn_in_lines"], ref_header_dict
+    return (
+        u_init_profiles,
+        positions + burn_in * int(args["burn_in_time"] * params.tts),
+        ref_header_dict,
+    )
 
 
 def import_exp_info_file(args):

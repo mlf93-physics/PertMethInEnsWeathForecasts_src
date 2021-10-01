@@ -444,7 +444,9 @@ def plot_eddie_freqs(args=None):
     # file_names = ['../data/udata_ny0_t1.000000e+00_n_f0_f0_j0.csv']
 
     for ifile, file_name in enumerate(file_names):
-        data_in, header_dict = import_data(file_name, start_line=args["burn_in_lines"])
+        data_in, header_dict = import_data(
+            file_name, start_line=int(args["burn_in_time"] * tts)
+        )
         time = data_in[:, 0]
         u_store = data_in[:, 1:]
 
@@ -938,8 +940,6 @@ if __name__ == "__main__":
     args = stand_plot_arg_parser.args
     print("args", args)
 
-    if "burn_in_time" in args:
-        args["burn_in_lines"] = int(args["burn_in_time"] / dt * sample_rate)
     if "time_to_run" in args:
         args["Nt"] = int(args["time_to_run"] / dt * sample_rate)
 

@@ -159,8 +159,6 @@ if __name__ == "__main__":
     args = stand_plot_arg_parser.args
     print("args", args)
 
-    if "burn_in_time" in args:
-        args["burn_in_lines"] = int(args["burn_in_time"] / dt * sample_rate)
     if "time_to_run" in args:
         args["Nt"] = int(args["time_to_run"] / dt * sample_rate)
 

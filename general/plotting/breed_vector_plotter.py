@@ -165,9 +165,6 @@ if __name__ == "__main__":
     args = stand_plot_arg_parser.args
     print("args", args)
 
-    # Add missing arguments to make util funcs work
-    args["burn_in_lines"] = 0
-
     if "pert_vector_folder" in args["plot_type"]:
         plot_breed_vectors(args)
     elif "nm_compare" in args["plot_type"]:

@@ -268,7 +268,6 @@ def main_setup(
 ):
 
     times_to_run, Nt_array = prepare_run_times(args)
-    args["burn_in_lines"] = int(args["burn_in_time"] * params.tts)
 
     if u_profiles_perturbed is None or perturb_positions is None:
         u_profiles_perturbed, perturb_positions = prepare_perturbations(args)
