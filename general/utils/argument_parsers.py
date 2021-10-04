@@ -61,6 +61,23 @@ class StandardArgSetup:
             np.random.seed(seed=1)
 
 
+class StandardModelArgSetup:
+    def __init__(self):
+        self._parser = parser
+        self._args = None
+
+    def setup_parser(self):
+        # Add model specific arguments
+        if MODEL == Models.SHELL_MODEL:
+            self._parser.add_argument("--ny_n", default=19, type=int)
+            self._parser.add_argument("--forcing", default=1, type=float)
+
+        elif MODEL == Models.LORENTZ63:
+            self._parser.add_argument("--sigma", default=10, type=float)
+            self._parser.add_argument("--r_const", default=28, type=float)
+            self._parser.add_argument("--b_const", default=8 / 3, type=float)
+
+
 class StandardRunnerArgSetup:
     def __init__(self):
         self._parser = parser
@@ -69,6 +86,8 @@ class StandardRunnerArgSetup:
         __standard_arg_setup = StandardArgSetup()
         __standard_arg_setup.setup_parser()
         __standard_arg_setup.react_on_arguments()
+        __standard_model_arg_setup = StandardModelArgSetup()
+        __standard_model_arg_setup.setup_parser()
 
     @property
     def args(self):
@@ -91,16 +110,6 @@ class StandardRunnerArgSetup:
         # Add general arguments
         self._parser.add_argument("--erda_run", action="store_true")
         self._parser.add_argument("--skip_save_data", action="store_true")
-
-        # Add model specific arguments
-        if MODEL == Models.SHELL_MODEL:
-            self._parser.add_argument("--ny_n", default=19, type=int)
-            self._parser.add_argument("--forcing", default=1, type=float)
-
-        elif MODEL == Models.LORENTZ63:
-            self._parser.add_argument("--sigma", default=10, type=float)
-            self._parser.add_argument("--r_const", default=28, type=float)
-            self._parser.add_argument("--b_const", default=8 / 3, type=float)
 
 
 class PerturbationArgSetup:
@@ -217,6 +226,9 @@ class StandardPlottingArgParser:
         __standard_arg_setup.setup_parser()
         __standard_arg_setup.react_on_arguments()
 
+        __standard_model_arg_setup = StandardModelArgSetup()
+        __standard_model_arg_setup.setup_parser()
+
         # Add arguments from MultiPerturbationArgSetup
         __multi_pert_arg_setup = MultiPerturbationArgSetup(setup_parents=False)
         __multi_pert_arg_setup.setup_parser()
@@ -252,6 +264,7 @@ class StandardPlottingArgParser:
             + " detailed : plot extra details in plots",
         )
         self._parser.add_argument("-np", "--noplot", action="store_true")
+        self._parser.add_argument("-s", "--save_plot", action="store_true")
 
         # x, y and time limits
         self._parser.add_argument("--ref_start_time", default=0, type=float)

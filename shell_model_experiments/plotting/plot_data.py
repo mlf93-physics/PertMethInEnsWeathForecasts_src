@@ -93,25 +93,25 @@ def plot_energy_spectrum(u_store, header_dict, ax=None, omit=None):
 
 
 def plot_inviscid_quantities(
-    time, u_store, header_dict, ax=None, omit=None, args=None, zero_time_ref=None
+    time, u_store, header_dict, axes=None, omit=None, args=None, zero_time_ref=None
 ):
 
-    if ax is None:
-        ax = plt.axes()
+    if axes is None:
+        axes = plt.axes()
     # Plot total energy vs time
     energy_vs_time = np.sum(u_store * np.conj(u_store), axis=1).real
-    ax.plot(time.real, energy_vs_time, "k")
-    ax.set_xlabel("Time")
-    ax.set_ylabel("Energy")
+    axes.plot(time.real, energy_vs_time, "k")
+    axes.set_xlabel("Time")
+    axes.set_ylabel("Energy")
 
     header_dict = g_utils.handle_different_headers(header_dict)
 
     if omit == "ny":
-        ax.set_title(
+        axes.set_title(
             f'Energy over time vs $\\nu$; f={header_dict["forcing"]}, $n_f$={header_dict["n_f"]}, time={header_dict["time_to_run"]}'
         )
     if omit == "n_f":
-        ax.set_title(
+        axes.set_title(
             f'Energy over time vs $n_f$; f={header_dict["forcing"]}, $\\nu$={header_dict["ny"]:.2e}, time={header_dict["time_to_run"]}'
         )
 
@@ -368,35 +368,20 @@ def plot_eddy_vel_histograms():
     plt.suptitle(f"u eddy prop dist; f={forcing}, ny={ny}, runs={Nt}")
 
 
-def plots_related_to_energy(args=None):
-    figs = []
-    axes = []
-
-    num_plots = 1
-
-    for i in range(num_plots):
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-        figs.append(fig)
-        axes.append(ax)
+def plots_related_to_energy(args=None, axes=None):
 
     # Import reference data
     time, u_data, header_dict = import_ref_data(args=args)
 
     # Conserning ny
     # plot_energy_spectrum(u_data, header_dict, ax = axes[0], omit='ny')
-    plot_inviscid_quantities(
-        time, u_data, header_dict, ax=axes[0], omit="ny", args=args
-    )
+    plot_inviscid_quantities(time, u_data, header_dict, axes=axes, omit="ny", args=args)
     # plot_inviscid_quantities_per_shell(
     #     time, u_data, header_dict, ax=axes[0], path=args["datapath"], args=args
     # )
 
     # Plot Kolmogorov scaling
     # axes[0].plot(np.log2(k_vec_temp), k_vec_temp**(-2/3), 'k--')
-
-    for i in range(num_plots):
-        axes[i].grid()
 
 
 def plots_related_to_forcing():
@@ -427,7 +412,7 @@ def plots_related_to_forcing():
 
         # Conserning forcing
         plot_energy_spectrum(u_store, header_dict, ax=axes[0], omit="n_f")
-        plot_inviscid_quantities(time, u_store, header_dict, ax=axes[1], omit="n_f")
+        plot_inviscid_quantities(time, u_store, header_dict, axes=axes[1], omit="n_f")
         if ifile == 0:
             legend_forcing.append("No forcing")
         else:

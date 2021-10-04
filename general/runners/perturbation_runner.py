@@ -66,9 +66,9 @@ def perturbation_runner(
         )
     elif MODEL == Models.LORENTZ63:
         # Model specific setup
-        derivMatrix = ut_funcs.setup_deriv_matrix(args)
+        deriv_matrix = ut_funcs.setup_deriv_matrix(args)
         l63_model(
-            u_old, du_array, derivMatrix, data_out, args["Nt"] + args["endpoint"] * 1
+            u_old, du_array, deriv_matrix, data_out, args["Nt"] + args["endpoint"] * 1
         )
     pt_save.save_perturbation_data(
         data_out,

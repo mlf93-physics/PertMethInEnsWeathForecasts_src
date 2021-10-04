@@ -23,4 +23,4 @@ u_slice = np.s_[0::]
 
 # Arrays
 du_array = np.zeros(sdim, dtype=np.float64)
-derivMatrix = np.zeros((sdim, sdim))
+deriv_matrix = np.zeros((sdim, sdim))
