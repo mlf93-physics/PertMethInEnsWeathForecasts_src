@@ -189,7 +189,9 @@ def import_breed_vectors(args):
         perturb_header_dicts,
         perturb_file_names,
     ) = g_import.imported_sorted_perturbation_info(
-        pl.Path(pt_vector_dirname, args["pert_vector_folder"]), args
+        pl.Path(pt_vector_dirname, args["exp_folder"]),
+        args,
+        search_pattern="breed_vectors*.csv",
     )
 
     breed_vector_units = []

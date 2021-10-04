@@ -41,7 +41,7 @@ def calculate_perturbations(perturb_vectors, dev_plot_active=False, args=None):
         dtype=params.dtype,
     )
 
-    if args["pert_mode"] == "normal_mode":
+    if args["pert_mode"] == "nm":
         # Get complex-conjugate vector pair
         perturb_vectors_conj = np.conj(perturb_vectors)
 

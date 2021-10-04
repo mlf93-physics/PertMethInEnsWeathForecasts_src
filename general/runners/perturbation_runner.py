@@ -123,7 +123,7 @@ def prepare_perturbations(args):
 
     if args["pert_mode"] is not None:
 
-        if args["pert_mode"] == "normal_mode":
+        if args["pert_mode"] == "nm":
             print("\nRunning with NORMAL MODE perturbations\n")
             if MODEL == Models.SHELL_MODEL:
                 (perturb_vectors, _, _,) = sh_nm_estimator.find_normal_modes(
@@ -147,7 +147,7 @@ def prepare_perturbations(args):
                     dev_plot_active=False,
                     n_profiles=args["n_profiles"],
                 )
-        elif args["pert_mode"] == "breed_vectors":
+        elif args["pert_mode"] == "bv":
             print("\nRunning with BREED VECTOR perturbations\n")
             (
                 u_init_profiles,

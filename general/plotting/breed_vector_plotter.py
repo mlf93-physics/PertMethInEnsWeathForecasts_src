@@ -149,6 +149,7 @@ def plot_breed_comparison_to_nm(args):
     normed_e_vector_matrix = e_vector_matrix.real / np.reshape(
         np.linalg.norm(e_vector_matrix.real, axis=0), (1, args["n_profiles"])
     )
+    orthogonality = normed_e_vector_matrix.T @ normed_mean_breed_vector_units
 
     plt.plot(normed_mean_breed_vector_units)
     plt.gca().set_prop_cycle(None)
@@ -156,6 +157,11 @@ def plot_breed_comparison_to_nm(args):
         normed_e_vector_matrix,
         linestyle="--",
     )
+
+    plt.figure()
+    plt.imshow(orthogonality, cmap="Reds")
+    plt.xlabel("BV index")
+    plt.ylabel("NM index")
 
 
 def plot_breed_error_norm(args):
