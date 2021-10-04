@@ -19,6 +19,11 @@ def get_cmap_distributed_around_zero(vmin=-1, vmax=1):
     all_colors = np.vstack((colors_neg, colors_pos))
     cmap = colors.LinearSegmentedColormap.from_list("energy_map", all_colors)
 
+    # if vmin == 0:
+    #     vmin = -1
+    # if vmax == 0:
+    #     vmax = 1
+
     norm = colors.TwoSlopeNorm(
         vmin=vmin,
         vcenter=0,

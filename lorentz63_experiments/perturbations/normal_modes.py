@@ -34,20 +34,17 @@ def find_normal_modes(u_init_profiles, args, dev_plot_active=False, n_profiles=N
     e_vector_matrix = np.zeros((sdim, n_profiles), dtype=np.complex128)
     e_values_max = np.zeros(n_profiles, dtype=np.complex128)
 
+    # Initialise the jacobian
+    j_matrix = init_jacobian(args)
+
     # Perform calculation for all u_profiles
     for i in range(n_profiles):
         # Calculate the Jacobian matrix
-        J_matrix = np.zeros((sdim, sdim), dtype=dtype)
-        J_matrix[0, 0] = -args["sigma"]
-        J_matrix[0, 1] = args["sigma"]
-        J_matrix[1, 0] = args["r_const"] - u_init_profiles[2, i]
-        J_matrix[1, 1] = 1
-        J_matrix[1, 2] = -u_init_profiles[0, i]
-        J_matrix[2, 0] = u_init_profiles[1, i]
-        J_matrix[2, 1] = u_init_profiles[0, i]
-        J_matrix[2, 2] = -args["b_const"]
+        j_matrix = calc_jacobian(
+            j_matrix, u_init_profiles[:, i], r_const=args["r_const"]
+        )
 
-        e_values, e_vectors = np.linalg.eig(J_matrix)
+        e_values, e_vectors = np.linalg.eig(j_matrix)
 
         e_vector_collection.append(e_vectors)
         e_value_collection.append(e_values)
@@ -57,13 +54,42 @@ def find_normal_modes(u_init_profiles, args, dev_plot_active=False, n_profiles=N
 
         e_vector_matrix[:, i] = e_vectors[:, chosen_e_value_index]
         e_values_max[i] = e_values[chosen_e_value_index]
-        # Reset matrix
-        J_matrix.fill(0)
-
-        # if dev_plot_active:
-        #     print('Largest positive eigenvalue', e_values[chosen_e_value_index])
-
-        #     dev_plot_eigen_mode_analysis(e_values, J_matrix, e_vectors,
-        #         header=header, perturb_pos=perturb_positions[i])
 
     return e_vector_matrix, e_values_max, e_vector_collection, e_value_collection
+
+
+def init_jacobian(args):
+
+    j_matrix = np.zeros((sdim, sdim), dtype=np.float64)
+
+    j_matrix[0, 0] = -args["sigma"]
+    j_matrix[0, 1] = args["sigma"]
+    j_matrix[1, 1] = 1
+    j_matrix[2, 2] = -args["b_const"]
+
+    return j_matrix
+
+
+def calc_jacobian(j_matrix, u_profile, r_const):
+    """Calculate the jacobian at a given point in time given through the u_profile
+
+    Parameters
+    ----------
+    j_matrix : numpy.ndarray
+        The initialized jacobian matrix
+    u_profile : numpy.ndarray
+        The velocity profile
+    args : dict
+        Run-time arguments
+
+    Returns
+    -------
+    numpy.ndarray
+        The jacobian
+    """
+    j_matrix[1, 0] = r_const - u_profile[2]
+    j_matrix[1, 2] = -u_profile[0]
+    j_matrix[2, 0] = u_profile[1]
+    j_matrix[2, 1] = u_profile[0]
+
+    return j_matrix
