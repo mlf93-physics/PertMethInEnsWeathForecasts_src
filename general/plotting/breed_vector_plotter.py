@@ -9,7 +9,7 @@ import numpy as np
 import shell_model_experiments.params as sh_params
 import shell_model_experiments.plotting.plot_data as sh_plot
 import lorentz63_experiments.params.params as l63_params
-import lorentz63_experiments.perturbations.normal_modes as pert_nm
+import lorentz63_experiments.perturbations.normal_modes as l63_nm_estimator
 import lorentz63_experiments.plotting.plot_data as l63_plot
 import general.utils.importing.import_perturbation_data as pt_import
 import general.utils.importing.import_data_funcs as g_import
@@ -138,7 +138,9 @@ def plot_breed_comparison_to_nm(args):
         e_values_max,
         e_vector_collection,
         e_value_collection,
-    ) = pert_nm.find_normal_modes(u_init_profiles, args, n_profiles=args["n_profiles"])
+    ) = l63_nm_estimator.find_normal_modes(
+        u_init_profiles, args, n_profiles=args["n_profiles"]
+    )
 
     normed_mean_breed_vector_units = mean_breed_vector_units.T / np.reshape(
         np.linalg.norm(mean_breed_vector_units.T, axis=0), (1, args["n_profiles"])

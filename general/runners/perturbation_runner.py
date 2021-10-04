@@ -11,7 +11,7 @@ import multiprocessing
 from pyinstrument import Profiler
 from shell_model_experiments.sabra_model.sabra_model import run_model as sh_model
 import shell_model_experiments.params as sh_params
-import shell_model_experiments.lyaponov.lyaponov_exp_estimator as sh_lp_estimator
+import shell_model_experiments.perturbations.normal_modes as sh_nm_estimator
 import lorentz63_experiments.perturbations.normal_modes as l63_nm_estimator
 from lorentz63_experiments.lorentz63_model.lorentz63 import run_model as l63_model
 import lorentz63_experiments.params.params as l63_params
@@ -126,11 +126,7 @@ def prepare_perturbations(args):
         if args["pert_mode"] == "normal_mode":
             print("\nRunning with NORMAL MODE perturbations\n")
             if MODEL == Models.SHELL_MODEL:
-                (
-                    perturb_vectors,
-                    _,
-                    _,
-                ) = sh_lp_estimator.find_eigenvector_for_perturbation(
+                (perturb_vectors, _, _,) = sh_nm_estimator.find_normal_modes(
                     u_init_profiles[
                         :,
                         0 : args["n_profiles"]

@@ -6,9 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from math import floor, ceil, sqrt
 from shell_model_experiments.params.params import *
-from shell_model_experiments.lyaponov.lyaponov_exp_estimator import (
-    find_eigenvector_for_perturbation,
-)
+import shell_model_experiments.perturbations.normal_modes as sh_nm_estimator
 import general.plotting.plot_data as g_plt_data
 from general.utils.importing.import_data_funcs import (
     import_data,
@@ -480,7 +478,7 @@ def plot_shell_error_vs_time(args=None):
 def plot_2D_eigen_mode_analysis(args=None):
     u_init_profiles, perturb_positions, header_dict = import_start_u_profiles(args=args)
 
-    _, e_vector_collection, e_value_collection = find_eigenvector_for_perturbation(
+    _, e_vector_collection, e_value_collection = sh_nm_estimator.find_normal_modes(
         u_init_profiles,
         dev_plot_active=False,
         n_profiles=args["n_profiles"],
@@ -527,7 +525,7 @@ def plot_2D_eigen_mode_analysis(args=None):
 def plot_3D_eigen_mode_analysis(args=None, right_handed=True):
     u_init_profiles, perturb_positions, header_dict = import_start_u_profiles(args=args)
 
-    _, e_vector_collection, e_value_collection = find_eigenvector_for_perturbation(
+    _, e_vector_collection, e_value_collection = sh_nm_estimator.find_normal_modes(
         u_init_profiles,
         dev_plot_active=False,
         n_profiles=args["n_profiles"],
@@ -590,7 +588,7 @@ def plot_3D_eigen_mode_analysis(args=None, right_handed=True):
 def plot_eigen_vector_comparison(args=None):
     u_init_profiles, perturb_positions, header_dict = import_start_u_profiles(args=args)
 
-    _, e_vector_collection, e_value_collection = find_eigenvector_for_perturbation(
+    _, e_vector_collection, e_value_collection = sh_nm_estimator.find_normal_modes(
         u_init_profiles,
         dev_plot_active=False,
         n_profiles=args["n_profiles"],
@@ -804,7 +802,7 @@ def plot_error_vector_spectrogram(args=None):
     # Import start u profiles at the perturbation
     u_init_profiles, perturb_positions, header_dict = import_start_u_profiles(args=args)
 
-    _, e_vector_collection, e_value_collection = find_eigenvector_for_perturbation(
+    _, e_vector_collection, e_value_collection = sh_nm_estimator.find_normal_modes(
         u_init_profiles,
         dev_plot_active=False,
         n_profiles=args["n_profiles"],
@@ -866,7 +864,7 @@ def plot_error_vector_spectrum(args=None):
     # Import start u profiles at the perturbation
     u_init_profiles, perturb_positions, header_dict = import_start_u_profiles(args=args)
 
-    _, e_vector_collection, e_value_collection = find_eigenvector_for_perturbation(
+    _, e_vector_collection, e_value_collection = sh_nm_estimator.find_normal_modes(
         u_init_profiles,
         dev_plot_active=False,
         n_profiles=args["n_profiles"],
