@@ -5,7 +5,7 @@ from math import ceil
 import numpy as np
 from numba import njit, types
 from pyinstrument import Profiler
-from shell_model_experiments.sabra_model.runge_kutta4 import runge_kutta4_vec
+from shell_model_experiments.sabra_model.runge_kutta4 import runge_kutta4
 from shell_model_experiments.params.params import *
 import general.utils.saving.save_data_funcs as g_save
 import general.utils.argument_parsers as a_parsers
@@ -52,7 +52,7 @@ def run_model(u_old, du_array, data_out, Nt_local, ny, forcing):
             sample_number += 1
 
         # Update u_old
-        u_old = runge_kutta4_vec(y0=u_old, h=dt, du=du_array, ny=ny, forcing=forcing)
+        u_old = runge_kutta4(y0=u_old, h=dt, du=du_array, ny=ny, forcing=forcing)
 
     return u_old
 

@@ -28,18 +28,18 @@ GLOBAL_PARAMS.record_max_time = 3000
     ),
     cache=NUMBA_CACHE,
 )
-def run_model(x_old, du_array, deriv_matrix, data_out, Nt_local):
-    """Execute the integration of the sabra shell model.
+def run_model(u_old, du_array, deriv_matrix, data_out, Nt_local):
+    """Execute the integration of the Lorentz-63 model.
 
     Parameters
     ----------
-    x_old : ndarray
-        The initial lorentz positions
+    u_old : ndarray
+        The initial lorentz velocities
     du_array : ndarray
         A helper array used to store the current derivative of the lorentz
-        positions.
+        velocities.
     data_out : ndarray
-        An array to store samples of the integrated lorentz_positions.
+        An array to store samples of the integrated lorentz_velocities.
 
     """
 
@@ -49,21 +49,19 @@ def run_model(x_old, du_array, deriv_matrix, data_out, Nt_local):
         # Save samples for plotting
         if i % int(1 / sample_rate) == 0:
             data_out[sample_number, 0] = dt * i
-            data_out[sample_number, 1:] = x_old
+            data_out[sample_number, 1:] = u_old
             sample_number += 1
 
-        # Update x_old
-        x_old = rk4.runge_kutta4_vec(
-            y0=x_old, h=dt, dx=du_array, deriv_matrix=deriv_matrix
-        )
+        # Update u_old
+        u_old = rk4.runge_kutta4(y0=u_old, h=dt, dx=du_array, deriv_matrix=deriv_matrix)
 
-    return x_old
+    return u_old
 
 
 def main(args=None):
 
-    # Define x_old
-    x_old = np.array([1, 1, 1], dtype=np.float64)
+    # Define u_old
+    u_old = np.array([1, 1, 1], dtype=np.float64)
 
     deriv_matrix = ut_funcs.setup_deriv_matrix(args)
 
@@ -83,8 +81,8 @@ def main(args=None):
     # Burn in the model for the desired burn in time
     data_out = np.zeros((int(args["burn_in_time"] * tts), sdim + 1), dtype=np.float64)
     print(f'Running burn-in phase of {args["burn_in_time"]}s\n')
-    x_old = run_model(
-        x_old, du_array, deriv_matrix, data_out, int(args["burn_in_time"] / dt)
+    u_old = run_model(
+        u_old, du_array, deriv_matrix, data_out, int(args["burn_in_time"] / dt)
     )
 
     for ir in range(args["n_records"]):
@@ -111,8 +109,8 @@ def main(args=None):
 
         # Run model
         print(f'running record {ir + 1}/{args["n_records"]}')
-        x_old = run_model(
-            x_old,
+        u_old = run_model(
+            u_old,
             du_array,
             deriv_matrix,
             data_out,

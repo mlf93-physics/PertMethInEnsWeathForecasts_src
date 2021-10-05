@@ -1,8 +1,10 @@
 __all__ = [
     "StandardArgSetup",
+    "StandardModelArgSetup",
     "StandardRunnerArgSetup",
     "PerturbationArgSetup",
     "MultiPerturbationArgSetup",
+    "ReferenceAnalysisArgParser",
     "StandardPlottingArgParser",
 ]
 
@@ -112,7 +114,7 @@ class StandardRunnerArgSetup:
         self._parser.add_argument("--skip_save_data", action="store_true")
 
 
-class PerturbationArgSetup:
+class RelReferenceArgSetup:
     def __init__(self):
         self._parser = parser
         self._args = None
@@ -148,11 +150,42 @@ class PerturbationArgSetup:
             "--start_times",
             nargs="+",
             type=float,
-            required=LICENCE == EXP.NORMAL_PERTURBATION,
+            required=LICENCE == EXP.NORMAL_PERTURBATION
+            or LICENCE == EXP.LYAPUNOV_VECTORS,
         )
         self._parser.add_argument("--start_time_offset", default=None, type=float)
-        self._parser.add_argument("--endpoint", action="store_true")
         self._parser.add_argument("--exp_setup", default=None, type=str)
+
+
+class PerturbationArgSetup:
+    def __init__(self):
+        self._parser = parser
+        self._args = None
+
+        # Setup standard setup
+        __relref_arg_setup = RelReferenceArgSetup()
+        __relref_arg_setup.setup_parser()
+
+    @property
+    def args(self):
+        """The vars(parsed arguments.)
+
+        The parsed args are saved to a local attribute if not already present
+        to avoid multiple calls to parse_args()
+
+        Returns
+        -------
+        argparse.Namespace
+            The parsed arguments
+        """
+        if not isinstance(self._args, argparse.Namespace):
+            self._args = vars(self._parser.parse_known_args()[0])
+
+        return self._args
+
+    def setup_parser(self):
+        # Add optional arguments
+        self._parser.add_argument("--endpoint", action="store_true")
         self._parser.add_argument("--pert_vector_folder", default=None, type=str)
         pert_mode_group = self._parser.add_mutually_exclusive_group(required=True)
         pert_mode_group.add_argument(

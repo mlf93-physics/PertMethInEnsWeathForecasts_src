@@ -12,3 +12,4 @@ class Experiments:
     LORENTZ_BLOCK = Experiment(id=2, name="LORENTZ_BLOCK")
     BREEDING_VECTORS = Experiment(id=3, name="BREEDING_VECTORS")
     SINGULAR_VECTORS = Experiment(id=4, name="SINGULAR_VECTORS")
+    LYAPUNOV_VECTORS = Experiment(id=5, name="LYAPUNOV_VECTORS")
