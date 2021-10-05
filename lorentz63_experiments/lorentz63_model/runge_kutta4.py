@@ -7,7 +7,7 @@ from config import NUMBA_CACHE
 
 
 @njit(
-    (
+    types.Array(types.float64, 1, "C", readonly=False)(
         types.Array(types.float64, 1, "C", readonly=True),
         types.Array(types.float64, 1, "C", readonly=False),
         types.Array(types.float64, 2, "C", readonly=False),
@@ -89,6 +89,16 @@ def runge_kutta4(y0=0, h=1, du=None, deriv_matrix=None):
     return y0
 
 
+@njit(
+    (
+        types.Array(types.float64, 1, "C", readonly=True),
+        types.Array(types.float64, 1, "C", readonly=False),
+        types.Array(types.float64, 1, "C", readonly=True),
+        types.Array(types.float64, 2, "C", readonly=False),
+        types.float64,
+    ),
+    cache=NUMBA_CACHE,
+)
 def tl_derivative_evaluator(
     u_old=None, du=None, u_ref=None, deriv_matrix=None, r_const=None
 ):
@@ -111,7 +121,7 @@ def tl_derivative_evaluator(
 
     """
     # Update the deriv_matrix
-    deriv_matrix = l63_nm_estimator.calc_jacobian(deriv_matrix, u_ref, r_const=r_const)
+    l63_nm_estimator.calc_jacobian(deriv_matrix, u_ref, r_const=r_const)
 
     # Calculate change in u (du)
     du = deriv_matrix @ u_old
@@ -119,15 +129,17 @@ def tl_derivative_evaluator(
     return du
 
 
-# @njit(
-#     types.Array(types.float64, 1, "C", readonly=False)(
-#         types.Array(types.float64, 1, "C", readonly=False),
-#         types.float64,
-#         types.Array(types.float64, 1, "C", readonly=False),
-#         types.Array(types.float64, 2, "C", readonly=False),
-#     ),
-#     cache=NUMBA_CACHE,
-# )
+@njit(
+    types.Array(types.float64, 1, "C", readonly=False)(
+        types.Array(types.float64, 1, "C", readonly=False),
+        types.float64,
+        types.Array(types.float64, 1, "C", readonly=False),
+        types.Array(types.float64, 1, "C", readonly=True),
+        types.Array(types.float64, 2, "C", readonly=False),
+        types.float64,
+    ),
+    cache=NUMBA_CACHE,
+)
 def tl_runge_kutta4(y0=0, h=1, du=None, u_ref=None, deriv_matrix=None, r_const=28):
     """Performs the Runge-Kutta-4 integration of the lorentz model.
 

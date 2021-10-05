@@ -1,5 +1,7 @@
 import numpy as np
+from numba import njit, types
 from lorentz63_experiments.params.params import *
+from config import NUMBA_CACHE
 
 
 def find_normal_modes(u_init_profiles, args, dev_plot_active=False, n_profiles=None):
@@ -70,6 +72,14 @@ def init_jacobian(args):
     return j_matrix
 
 
+@njit(
+    (
+        types.Array(types.float64, 2, "C", readonly=False),
+        types.Array(types.float64, 1, "C", readonly=True),
+        types.float64,
+    ),
+    cache=NUMBA_CACHE,
+)
 def calc_jacobian(j_matrix, u_profile, r_const):
     """Calculate the jacobian at a given point in time given through the u_profile
 
@@ -91,5 +101,3 @@ def calc_jacobian(j_matrix, u_profile, r_const):
     j_matrix[1, 2] = -u_profile[0]
     j_matrix[2, 0] = u_profile[1]
     j_matrix[2, 1] = u_profile[0]
-
-    return j_matrix

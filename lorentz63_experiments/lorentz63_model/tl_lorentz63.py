@@ -21,16 +21,18 @@ profiler = Profiler()
 GLOBAL_PARAMS.record_max_time = 3000
 
 
-# @njit(
-#     (
-#         types.Array(types.float64, 1, "C", readonly=False),
-#         types.Array(types.float64, 1, "C", readonly=False),
-#         types.Array(types.float64, 2, "C", readonly=False),
-#         types.Array(types.float64, 2, "C", readonly=False),
-#         types.int64,
-#     ),
-#     cache=NUMBA_CACHE,
-# )
+@njit(
+    (
+        types.Array(types.float64, 1, "C", readonly=False),
+        types.Array(types.float64, 1, "C", readonly=False),
+        types.Array(types.float64, 2, "C", readonly=True),
+        types.Array(types.float64, 2, "C", readonly=False),
+        types.Array(types.float64, 2, "C", readonly=False),
+        types.int64,
+        types.float64,
+    ),
+    cache=NUMBA_CACHE,
+)
 def run_model(u_old, du_array, u_ref, deriv_matrix, data_out, Nt_local, r_const):
     """Execute the integration of the tangent linear Lorentz63 model.
 
@@ -65,8 +67,6 @@ def run_model(u_old, du_array, u_ref, deriv_matrix, data_out, Nt_local, r_const)
             r_const=r_const,
         )
 
-    return u_old
-
 
 def main(args=None):
 
@@ -81,7 +81,7 @@ def main(args=None):
     data_out = np.zeros((args["Nt"], sdim + 1), dtype=np.float64)
 
     # Run model
-    u_old = run_model(
+    run_model(
         u_ref[0, :],
         du_array,
         u_ref,
