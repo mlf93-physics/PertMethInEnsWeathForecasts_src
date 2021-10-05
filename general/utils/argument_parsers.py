@@ -142,7 +142,7 @@ class RelReferenceArgSetup:
 
     def setup_parser(self):
         # Add required arguments
-        self._parser.add_argument("--exp_folder", required=True, type=str)
+        self._parser.add_argument("--exp_folder", required=False, type=str)
         # Add optional arguments
         self._parser.add_argument("--n_runs_per_profile", default=1, type=int)
         self._parser.add_argument("--n_profiles", default=1, type=int)
@@ -150,8 +150,7 @@ class RelReferenceArgSetup:
             "--start_times",
             nargs="+",
             type=float,
-            required=LICENCE == EXP.NORMAL_PERTURBATION
-            or LICENCE == EXP.LYAPUNOV_VECTORS,
+            required=LICENCE == EXP.NORMAL_PERTURBATION,
         )
         self._parser.add_argument("--start_time_offset", default=None, type=float)
         self._parser.add_argument("--exp_setup", default=None, type=str)

@@ -207,7 +207,12 @@ def import_ref_data(args=None):
             file_name,
             start_line=int(args["ref_start_time"] * params.tts),
             max_lines=int(
-                (args["ref_end_time"] - args["ref_start_time"]) * params.tts + 1
+                round(
+                    (args["ref_end_time"] - args["ref_start_time"]) * params.tts
+                    + (args["ref_start_time"] == 0)
+                    + args["endpoint"],
+                    0,
+                )
             )
             if args["ref_end_time"] > args["ref_start_time"]
             else None,

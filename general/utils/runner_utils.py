@@ -13,14 +13,14 @@ def generate_start_times(exp_setup, args):
 
     if LICENCE == EXP.LORENTZ_BLOCK:
         offset_var = "block_offset"
-    elif LICENCE == EXP.BREEDING_VECTORS:
+    elif LICENCE == EXP.BREEDING_VECTORS or LICENCE == EXP.LYAPUNOV_VECTORS:
         offset_var = "vector_offset"
     else:
         raise g_exceptions.LicenceImplementationError(licence=LICENCE)
 
     if offset_var in exp_setup:
-        num_possible_units = (
-            int(ref_header_dict["time_to_run"] - ref_header_dict["burn_in_time"])
+        num_possible_units = int(
+            (ref_header_dict["time_to_run"] - ref_header_dict["burn_in_time"])
             // exp_setup[offset_var]
         )
         start_times = [exp_setup[offset_var] * i for i in range(num_possible_units)]

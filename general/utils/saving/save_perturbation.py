@@ -41,3 +41,12 @@ def save_perturbation_data(
             perturb_position=perturb_position,
             args=args,
         )
+    elif LICENCE == EXP.LYAPUNOV_VECTORS:
+        g_save.save_data(
+            data_out,
+            prefix=f"lyapunov_vector{perturb_count}_",
+            perturb_position=perturb_position,
+            args=args,
+        )
+    else:
+        print(f"No saving method present for the current licence ({LICENCE})")

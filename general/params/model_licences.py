@@ -2,6 +2,7 @@ class Model:
     def __init__(self, id: int = None, name: str = None):
         self.id = id
         self.name = name
+        self.submodel = None
 
     def __repr__(self):
         return self.name

@@ -19,7 +19,7 @@ def validate_start_time_method(exp_setup: dict = {}):
 
     if LICENCE == EXP.LORENTZ_BLOCK:
         offset_var = "block_offset"
-    elif LICENCE == EXP.BREEDING_VECTORS:
+    elif LICENCE == EXP.BREEDING_VECTORS or LICENCE == EXP.LYAPUNOV_VECTORS:
         offset_var = "vector_offset"
     else:
         raise g_exceptions.LicenceImplementationError(licence=LICENCE)

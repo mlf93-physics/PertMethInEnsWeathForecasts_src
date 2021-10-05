@@ -191,7 +191,7 @@ def save_data(data_out, subsubfolder="", prefix="", perturb_position=None, args=
         elif MODEL == Models.LORENTZ63:
             expected_path = (
                 f"data/sig{temp_args['sigma']}_t{temp_args['time_to_run']}"
-                + f"_b{temp_args['b_const']}_r{temp_args['r_const']}"
+                + f"_b{temp_args['b_const']}_r{temp_args['r_const']}_dt{l63_params.dt}"
             )
 
         expected_path = generate_dir(pl.Path(expected_path, subsubfolder), args=args)

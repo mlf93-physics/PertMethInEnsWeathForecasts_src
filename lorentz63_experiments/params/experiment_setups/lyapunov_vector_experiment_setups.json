@@ -1,0 +1,8 @@
+{
+    "TestRun1": {
+        "folder_name": "lorentz63_lyapunov_vectors",
+        "integration_time": 0.1,
+        "n_vectors": 1,
+        "vector_offset": 0.1
+    }
+}

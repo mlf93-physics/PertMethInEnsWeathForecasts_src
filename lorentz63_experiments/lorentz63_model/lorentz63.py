@@ -53,7 +53,7 @@ def run_model(u_old, du_array, deriv_matrix, data_out, Nt_local):
             sample_number += 1
 
         # Update u_old
-        u_old = rk4.runge_kutta4(y0=u_old, h=dt, dx=du_array, deriv_matrix=deriv_matrix)
+        u_old = rk4.runge_kutta4(y0=u_old, h=dt, du=du_array, deriv_matrix=deriv_matrix)
 
     return u_old
 
