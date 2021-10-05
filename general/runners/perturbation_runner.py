@@ -243,10 +243,13 @@ def prepare_processes(
     # Get number of threads
     cpu_count = multiprocessing.cpu_count()
 
+    print("n_perturbation_files", n_perturbation_files)
+
     # Append processes
     for j in range(args["n_runs_per_profile"] * args["n_profiles"] // cpu_count):
         for i in range(cpu_count):
             count = j * cpu_count + i
+            print("count", count)
 
             args["time_to_run"] = times_to_run[count]
             args["Nt"] = Nt_array[count]

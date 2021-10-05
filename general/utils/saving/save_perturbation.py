@@ -44,7 +44,7 @@ def save_perturbation_data(
     elif LICENCE == EXP.LYAPUNOV_VECTORS:
         g_save.save_data(
             data_out,
-            prefix=f"lyapunov_vector{perturb_count}_",
+            prefix=f"lyapunov_perturb{perturb_count}_",
             perturb_position=perturb_position,
             args=args,
         )

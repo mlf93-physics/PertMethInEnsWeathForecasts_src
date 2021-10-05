@@ -1,6 +1,7 @@
 {
     "TestRun1": {
         "folder_name": "lorentz63_breed_vectors4",
+        "sub_exp_folder": "perturb_data",
         "time_per_cycle": 1.0,
         "n_cycles": 10,
         "n_vectors": 10,
@@ -10,12 +11,14 @@
         ]
     },
     "TestRun2": {
-        "folder_name": "lorentz63_breed_vectors5",
+        "folder_name": "lorentz63_breed_vectors_compare_lyapunov",
+        "sub_exp_folder": "perturb_data",
         "time_per_cycle": 0.1,
-        "n_cycles": 30,
-        "n_vectors": 10,
+        "n_cycles": 4,
+        "n_vectors": 2,
+        "vector_offset": 0.1,
         "start_times": [
-            0
+            0.1
         ]
     }
 }

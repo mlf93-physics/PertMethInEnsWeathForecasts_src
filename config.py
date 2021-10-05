@@ -41,7 +41,7 @@ print(f"\nRunning with model {MODEL}\n")
 
 # Set experiment license
 exp = Experiments()
-LICENCE = exp.LYAPUNOV_VECTORS
+LICENCE = exp.BREEDING_VECTORS
 
 # Get global params
 GLOBAL_PARAMS = GlobalParams()

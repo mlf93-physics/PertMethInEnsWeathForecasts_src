@@ -53,7 +53,6 @@ def generate_dir(expected_path, subfolder="", args=None):
         if not dir_exists:
             os.makedirs(expected_path)
 
-        subfolder = expected_path
     else:
         # Check if path exists
         expected_path = str(pl.Path(expected_path, subfolder))
@@ -232,7 +231,6 @@ def save_data(data_out, subsubfolder="", prefix="", perturb_position=None, args=
 
     else:
         ref_filename_extra = ""
-
         # Generate path if not existing
         expected_path = generate_dir(
             pl.Path(args["datapath"], args["exp_folder"], subsubfolder), args=args

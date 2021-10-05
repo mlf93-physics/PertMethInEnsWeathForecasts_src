@@ -139,7 +139,7 @@ def plot_error_norm_vs_time(args=None, normalize_start_time=True, axes=None):
         axes = plt.gca()
 
     # Get non-repeating colorcycle
-    if LICENCE == EXP.BREEDING_VECTORS:
+    if LICENCE == EXP.BREEDING_VECTORS or LICENCE == EXP.LYAPUNOV_VECTORS:
         n_colors = exp_setup["n_vectors"]
     else:
         n_colors = num_perturbations
@@ -160,7 +160,7 @@ def plot_error_norm_vs_time(args=None, normalize_start_time=True, axes=None):
     axes.set_ylabel("Error")
     axes.set_yscale("log")
 
-    if not LICENCE == EXP.BREEDING_VECTORS:
+    if not LICENCE == EXP.BREEDING_VECTORS or LICENCE == EXP.LYAPUNOV_VECTORS:
         axes.legend(perturb_time_pos_list_legend)
 
     if args["xlim"] is not None:

@@ -19,11 +19,22 @@ def generate_start_times(exp_setup, args):
         raise g_exceptions.LicenceImplementationError(licence=LICENCE)
 
     if offset_var in exp_setup:
+        if "start_times" in exp_setup:
+            _time_offset = exp_setup["start_times"][0]
+        else:
+            _time_offset = 0
+
         num_possible_units = int(
-            (ref_header_dict["time_to_run"] - ref_header_dict["burn_in_time"])
+            (
+                ref_header_dict["time_to_run"]
+                - ref_header_dict["burn_in_time"]
+                - _time_offset
+            )
             // exp_setup[offset_var]
         )
-        start_times = [exp_setup[offset_var] * i for i in range(num_possible_units)]
+        start_times = [
+            exp_setup[offset_var] * i + _time_offset for i in range(num_possible_units)
+        ]
     elif "start_times" in exp_setup:
         num_possible_units = len(exp_setup["start_times"])
         start_times = exp_setup["start_times"]
