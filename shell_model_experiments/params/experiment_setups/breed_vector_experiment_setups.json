@@ -1,7 +1,7 @@
 {
     "BV_in_short_pred_regime": {
         "folder_name": "pt_vectors/shell_model_breed_vectors_short_pred",
-        "time_per_cycle": 0.05,
+        "integration_time": 0.05,
         "n_cycles": 20,
         "n_vectors": 8,
         "start_times": [
@@ -10,7 +10,7 @@
     },
     "BV_in_long_pred_regime": {
         "folder_name": "pt_vectors/shell_model_breed_vectors_long_pred",
-        "time_per_cycle": 0.1,
+        "integration_time": 0.1,
         "n_cycles": 20,
         "n_vectors": 8,
         "start_times": [
@@ -19,7 +19,7 @@
     },
     "TestRun2": {
         "folder_name": "shell_model_breed_vectors_test",
-        "time_per_cycle": 0.05,
+        "integration_time": 0.05,
         "n_cycles": 1,
         "n_vectors": 4,
         "vector_offset": 2

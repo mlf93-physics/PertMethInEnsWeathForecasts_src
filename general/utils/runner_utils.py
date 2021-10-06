@@ -21,6 +21,8 @@ def generate_start_times(exp_setup, args):
     if offset_var in exp_setup:
         if "start_times" in exp_setup:
             _time_offset = exp_setup["start_times"][0]
+        elif "eval_times" in exp_setup:
+            _time_offset = exp_setup["eval_times"][0] - exp_setup["integration_time"]
         else:
             _time_offset = 0
 

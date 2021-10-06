@@ -24,14 +24,33 @@ def validate_start_time_method(exp_setup: dict = {}):
     else:
         raise g_exceptions.LicenceImplementationError(licence=LICENCE)
 
+    if "start_times" in exp_setup and "eval_times" in exp_setup:
+        raise g_exceptions.ExperimentSetupError(
+            "Both 'start_times' and 'eval_times' present in experiment setup"
+        )
+
     if offset_var in exp_setup and "start_times" in exp_setup:
-        if len(exp_setup["start_times"]) > 1:
-            raise ValueError(
+        if len(exp_setup["start_times"]) != 1:
+            raise g_exceptions.ExperimentSetupError(
                 f"Exp. setup invalid: Both {offset_var} and start_times (more than one) entries ARE"
                 + " set in the experiment setup. This is not valid; choose one of them to govern start times."
             )
+    elif offset_var in exp_setup and "eval_times" in exp_setup:
+        if len(exp_setup["eval_times"]) != 1:
+            raise g_exceptions.ExperimentSetupError(
+                f"Exp. setup invalid: Both {offset_var} and eval_times (more than one) entries ARE"
+                + " set in the experiment setup. This is not valid; choose one of them to govern start times."
+            )
+        else:
+            if exp_setup["eval_times"][0] - exp_setup["integration_time"] < 0:
+                raise g_exceptions.ExperimentSetupError(
+                    "Too long integration time compared to the chosen evaluation time",
+                    exp_variable=f"eval_time = {exp_setup['eval_times'][0]};"
+                    + f" integration_time = {exp_setup['integration_time']}",
+                )
+
     elif offset_var not in exp_setup and "start_times" not in exp_setup:
-        raise ValueError(
-            f"Exp. setup invalid: Both {offset_var} and start_times entries are"
+        raise g_exceptions.ExperimentSetupError(
+            f"Exp. setup invalid: Both {offset_var}, start_times and eval_times entries are"
             + " NOT set in the experiment setup. This is not valid; choose one of them."
         )

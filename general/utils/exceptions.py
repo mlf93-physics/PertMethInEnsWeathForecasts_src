@@ -56,3 +56,22 @@ class ModelError(Exception):
             self.message = message
 
         super().__init__(f"{self.message}. Model: {self.model}")
+
+
+class ExperimentSetupError(Exception):
+    """Exception raised for an invalid experiment setup
+
+    Attributes:
+        message -- explanation of the error
+        exp_variable -- the invalid experiment variable
+    """
+
+    def __init__(self, message="", exp_variable=None):
+        self.exp_variable = exp_variable
+
+        if len(message) == 0:
+            self.message = "Experiment setup is invalid"
+        else:
+            self.message = message
+
+        super().__init__(f"{self.message}. Experiment variable: {self.exp_variable}")
