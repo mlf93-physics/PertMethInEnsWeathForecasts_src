@@ -11,7 +11,7 @@ import general.utils.experiments.validate_exp_setups as ut_exp_val
 import general.utils.runner_utils as r_utils
 import general.utils.util_funcs as g_utils
 import general.utils.saving.save_data_funcs as g_save
-import general.utils.saving.save_breed_vector_funcs as br_save
+import general.utils.saving.save_vector_funcs as v_save
 import general.utils.perturb_utils as pt_utils
 import general.utils.argument_parsers as a_parsers
 from general.params.model_licences import Models
@@ -107,10 +107,10 @@ def main(args):
         # Set out folder
         args["exp_folder"] = pl.Path(exp_setup["folder_name"])
         # Save breed vector data
-        br_save.save_breed_vector_unit(
+        v_save.save_vector_unit(
             rescaled_data,
             perturb_position=perturb_positions,
-            br_unit=i,
+            unit=i,
             args=args,
             exp_setup=exp_setup,
         )

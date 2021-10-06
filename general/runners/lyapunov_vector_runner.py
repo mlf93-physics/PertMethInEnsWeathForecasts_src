@@ -3,6 +3,7 @@ import sys
 sys.path.append("..")
 import pathlib as pl
 import copy
+import numpy as np
 import shell_model_experiments.params as sh_params
 import lorentz63_experiments.params.params as l63_params
 import perturbation_runner as pt_runner
@@ -12,8 +13,7 @@ import general.utils.runner_utils as r_utils
 import general.utils.util_funcs as g_utils
 import general.utils.saving.save_data_funcs as g_save
 import general.utils.importing.import_data_funcs as g_import
-import general.utils.saving.save_breed_vector_funcs as br_save
-import general.utils.perturb_utils as pt_utils
+import general.utils.saving.save_vector_funcs as v_save
 import general.utils.argument_parsers as a_parsers
 from general.params.model_licences import Models
 from config import MODEL, GLOBAL_PARAMS
@@ -79,7 +79,7 @@ def main(args):
         # Copy args in order not override in forecast processes
         copy_args = copy.deepcopy(args)
 
-        processes, _, _ = pt_runner.main_setup(
+        processes, data_out_list, _ = pt_runner.main_setup(
             copy_args, exp_setup=exp_setup, u_ref=u_ref
         )
 
@@ -92,6 +92,19 @@ def main(args):
 
         else:
             print("No processes to run - check if units already exists")
+
+        # Prepare Lyapunov vector data to be saved
+        data_out = np.array(data_out_list)
+        # Set out folder
+        args["exp_folder"] = pl.Path(exp_setup["folder_name"])
+        # Save lyapunov vectors
+        v_save.save_vector_unit(
+            data_out,
+            perturb_position=int(start_times[i] * params.tts),
+            unit=i,
+            args=args,
+            exp_setup=exp_setup,
+        )
 
     # Reset exp_folder
     args["exp_folder"] = exp_setup["folder_name"]

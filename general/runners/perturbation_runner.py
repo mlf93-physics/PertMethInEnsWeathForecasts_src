@@ -117,7 +117,7 @@ def perturbation_runner(
         args=args,
     )
 
-    if LICENCE == EXP.BREEDING_VECTORS:
+    if LICENCE == EXP.BREEDING_VECTORS or LICENCE == EXP.LYAPUNOV_VECTORS:
         # Save latest state vector to output dir
         data_out_list.append(data_out[-1, 1:])
 
