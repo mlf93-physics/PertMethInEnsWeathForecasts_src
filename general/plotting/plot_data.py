@@ -78,15 +78,18 @@ def analyse_error_spread_vs_time_mean_of_norm(u_stores, args=None):
     return error_spread
 
 
-def plot_error_norm_vs_time(args=None, normalize_start_time=True, axes=None):
+def plot_error_norm_vs_time(
+    args=None, normalize_start_time=True, axes=None, exp_setup=None
+):
 
-    try:
-        exp_setup = g_import.import_exp_info_file(args)
-    except ImportError:
-        print(
-            "The .json config file was not found, so this plot doesnt work "
-            + "if the file is needed"
-        )
+    if exp_setup is None:
+        try:
+            exp_setup = g_import.import_exp_info_file(args)
+        except ImportError:
+            print(
+                "The .json config file was not found, so this plot doesnt work "
+                + "if the file is needed"
+            )
 
     (
         u_stores,
@@ -160,7 +163,7 @@ def plot_error_norm_vs_time(args=None, normalize_start_time=True, axes=None):
     axes.set_ylabel("Error")
     axes.set_yscale("log")
 
-    if not LICENCE == EXP.BREEDING_VECTORS or LICENCE == EXP.LYAPUNOV_VECTORS:
+    if LICENCE not in [EXP.BREEDING_VECTORS, EXP.LYAPUNOV_VECTORS]:
         axes.legend(perturb_time_pos_list_legend)
 
     if args["xlim"] is not None:

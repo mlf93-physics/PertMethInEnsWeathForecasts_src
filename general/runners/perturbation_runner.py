@@ -2,9 +2,7 @@ import os
 import sys
 
 sys.path.append("..")
-import math
 import copy
-import argparse
 import pathlib as pl
 import numpy as np
 import multiprocessing
@@ -102,6 +100,10 @@ def perturbation_runner(
                 r_const=args["r_const"],
             )
 
+            # Add reference data to TL model trajectory, since only the perturbation
+            # is integrated in the model
+            data_out[:, 1:] += u_ref
+
         else:
             g_exceptions.ModelError(
                 "Submodel invalid or not implemented yet",
@@ -141,7 +143,31 @@ def prepare_run_times(args):
     return times_to_run, Nt_array
 
 
-def prepare_perturbations(args):
+def prepare_perturbations(args, raw_perturbations=False):
+    """Prepare the perturbed initial conditions according to the desired perturbation
+    type (given by args["pert_mode"])
+
+    Parameters
+    ----------
+    args : dict
+        Run-time arguments
+    raw_perturbations : bool, optional
+        If the raw perturbations should be returned instead of the perturbations
+        added to the u_init_profiles, by default False
+
+    Returns
+    -------
+    tuple
+        (perturbed u profiles, position of the perturbation (in samples))
+
+    Raises
+    ------
+    g_exceptions.ModelError
+        Raised if the single_shell_perturb option is set while not using the shell
+        model
+    g_exceptions.InvalidArgument
+        Raised if the perturbation mode is not valid
+    """
 
     # Import reference info file
     ref_header_dict = g_import.import_info_file(pl.Path(args["datapath"], "ref_data"))
@@ -221,9 +247,14 @@ def prepare_perturbations(args):
         perturb_vectors, dev_plot_active=False, args=args
     )
 
-    # Apply perturbations
-    u_profiles_perturbed = u_init_profiles + perturbations
-    return u_profiles_perturbed, perturb_positions
+    if raw_perturbations:
+        # Return raw perturbations
+        u_return = perturbations
+    else:
+        # Apply perturbations
+        u_return = u_init_profiles + perturbations
+
+    return u_return, perturb_positions
 
 
 def prepare_processes(
@@ -243,13 +274,10 @@ def prepare_processes(
     # Get number of threads
     cpu_count = multiprocessing.cpu_count()
 
-    print("n_perturbation_files", n_perturbation_files)
-
     # Append processes
     for j in range(args["n_runs_per_profile"] * args["n_profiles"] // cpu_count):
         for i in range(cpu_count):
             count = j * cpu_count + i
-            print("count", count)
 
             args["time_to_run"] = times_to_run[count]
             args["Nt"] = Nt_array[count]
@@ -313,8 +341,17 @@ def main_setup(
 
     times_to_run, Nt_array = prepare_run_times(args)
 
+    # If in 2. or higher breed cycle, the perturbation is given as input
     if u_profiles_perturbed is None or perturb_positions is None:
-        u_profiles_perturbed, perturb_positions = prepare_perturbations(args)
+
+        raw_perturbations = False
+        # Get only raw_perturbations if licence is LYAPUNOV_VECTORS
+        if LICENCE == EXP.LYAPUNOV_VECTORS:
+            raw_perturbations = True
+
+        u_profiles_perturbed, perturb_positions = prepare_perturbations(
+            args, raw_perturbations=raw_perturbations
+        )
 
     # Detect if other perturbations exist in the perturbation_folder and calculate
     # perturbation count to start at

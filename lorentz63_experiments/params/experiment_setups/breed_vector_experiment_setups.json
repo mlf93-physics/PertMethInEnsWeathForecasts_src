@@ -14,7 +14,7 @@
         "folder_name": "lorentz63_breed_vectors_compare_lyapunov",
         "sub_exp_folder": "perturb_data",
         "time_per_cycle": 0.1,
-        "n_cycles": 4,
+        "n_cycles": 10,
         "n_vectors": 2,
         "vector_offset": 0.1,
         "start_times": [

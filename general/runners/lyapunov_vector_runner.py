@@ -50,8 +50,6 @@ def main(args):
 
     processes = []
 
-    print("n_existing_units", n_existing_units)
-
     # Calculate the desired number of units
     for i in range(
         n_existing_units,
@@ -67,7 +65,9 @@ def main(args):
         args["endpoint"] = True
         args["n_profiles"] = 1
         args["n_runs_per_profile"] = exp_setup["n_vectors"]
-        args["exp_folder"] = f"{exp_setup['folder_name']}"
+        args["exp_folder"] = pl.Path(
+            exp_setup["folder_name"], exp_setup["sub_exp_folder"]
+        )
         args = g_utils.adjust_start_times_with_offset(args)
 
         # Prepare reference data import
@@ -93,6 +93,8 @@ def main(args):
         else:
             print("No processes to run - check if units already exists")
 
+    # Reset exp_folder
+    args["exp_folder"] = exp_setup["folder_name"]
     # Save exp setup to exp folder
     g_save.save_exp_info(exp_setup, args)
 

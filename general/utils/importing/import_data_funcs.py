@@ -203,6 +203,8 @@ def import_ref_data(args=None):
     for i, record in enumerate(records_to_import):
         file_name = ref_record_names_sorted[record]
 
+        endpoint = args["endpoint"] if "endpoint" in args else False
+
         data_in, header_dict = import_data(
             file_name,
             start_line=int(args["ref_start_time"] * params.tts),
@@ -210,7 +212,7 @@ def import_ref_data(args=None):
                 round(
                     (args["ref_end_time"] - args["ref_start_time"]) * params.tts
                     + (args["ref_start_time"] == 0)
-                    + args["endpoint"],
+                    + endpoint,
                     0,
                 )
             )

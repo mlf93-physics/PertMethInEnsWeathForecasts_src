@@ -2,7 +2,6 @@ import sys
 
 sys.path.append("..")
 import pathlib as pl
-import itertools as it
 import matplotlib.pyplot as plt
 from mpl_toolkits import mplot3d
 import numpy as np
@@ -14,6 +13,7 @@ import lorentz63_experiments.plotting.plot_data as l63_plot
 import general.utils.importing.import_perturbation_data as pt_import
 import general.utils.importing.import_data_funcs as g_import
 import general.plotting.plot_data as g_plt_data
+import general.analyses.plot_analyses as g_plt_anal
 import general.utils.argument_parsers as a_parsers
 from general.params.model_licences import Models
 from config import MODEL
@@ -38,17 +38,13 @@ def plot_breed_vectors(args):
 
     # Average and norm vectors
     mean_breed_vector_units = np.mean(breed_vector_units, axis=1)
-    normed_mean_breed_vector_units = mean_breed_vector_units.T / np.reshape(
-        np.linalg.norm(mean_breed_vector_units.T, axis=0), (1, args["n_profiles"])
+    normed_mean_breed_vector_units = mean_breed_vector_units / np.reshape(
+        np.linalg.norm(mean_breed_vector_units, axis=0), (1, args["n_profiles"])
     )
 
     # Calculate orthonormality
-    orthonormality = [
-        x.dot(y) for x, y in it.combinations(normed_mean_breed_vector_units.T, 2)
-    ]
-    orthonormality_matrix = np.zeros((args["n_profiles"], args["n_profiles"]))
-    orthonormality_matrix[np.triu_indices(args["n_profiles"], k=1)] = np.abs(
-        orthonormality
+    orthonormality_matrix = g_plt_anal.orthogonality_of_vectors(
+        normed_mean_breed_vector_units
     )
 
     # Plotting
@@ -74,7 +70,7 @@ def plot_breed_vectors(args):
     )
 
     # Only make 3D plot if possible according to the dimension of the system
-    if normed_mean_breed_vector_units.shape[0] == 3:
+    if normed_mean_breed_vector_units.shape[1] == 3:
         origin = np.zeros(args["n_profiles"])
 
         plt.figure()
@@ -169,8 +165,10 @@ def plot_breed_error_norm(args):
 
     exp_setup = g_import.import_exp_info_file(args)
 
+    # Add subfolder
+    args["exp_folder"] = pl.Path(args["exp_folder"], "perturb_data")
     g_plt_data.plot_error_norm_vs_time(
-        args=args, normalize_start_time=False, axes=axes[0]
+        args=args, normalize_start_time=False, axes=axes[0], exp_setup=exp_setup
     )
 
     # Prepare ref import

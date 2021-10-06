@@ -30,11 +30,9 @@ def lyapunov_analyser(u_data):
 
     j_matrix_old = np.ones((params.sdim, params.sdim), dtype=np.float64)
 
+    j_matrix_new = init_jacobian(args)
     for i in range(n_profiles):
-        j_matrix_new = init_jacobian(args)
-        j_matrix_new = calc_jacobian(
-            j_matrix_new, u_data[:, i], r_const=args["r_const"]
-        )
+        calc_jacobian(j_matrix_new, u_data[:, i], r_const=args["r_const"])
         j_matrix_old = j_matrix_old @ j_matrix_new
 
     e_values, e_vectors = np.linalg.eig(j_matrix_old)
