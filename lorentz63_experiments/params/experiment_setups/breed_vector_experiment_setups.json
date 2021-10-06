@@ -1,13 +1,13 @@
 {
     "TestRun1": {
-        "folder_name": "lorentz63_breed_vectors4",
+        "folder_name": "lorentz63_breed_vectors_eval",
         "sub_exp_folder": "perturb_data",
         "integration_time": 1.0,
         "n_cycles": 10,
         "n_vectors": 10,
         "vector_offset": 20,
-        "start_times": [
-            0
+        "eval_times": [
+            10
         ]
     },
     "TestRun2": {

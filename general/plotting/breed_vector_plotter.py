@@ -119,7 +119,7 @@ def plot_breed_comparison_to_nm(args):
     ]
     # Add offset to start_times to reach end times
     start_times = [
-        start_times[i] + pert_info_dict["n_cycles"] * pert_info_dict["time_per_cycle"]
+        start_times[i] + pert_info_dict["n_cycles"] * pert_info_dict["integration_time"]
         for i in range(args["n_profiles"])
     ]
 
@@ -175,7 +175,7 @@ def plot_breed_error_norm(args):
     args["ref_start_time"] = exp_setup["start_times"][0]
     args["ref_end_time"] = (
         exp_setup["start_times"][0]
-        + exp_setup["n_cycles"] * exp_setup["time_per_cycle"]
+        + exp_setup["n_cycles"] * exp_setup["integration_time"]
     )
 
     if MODEL == Models.SHELL_MODEL:

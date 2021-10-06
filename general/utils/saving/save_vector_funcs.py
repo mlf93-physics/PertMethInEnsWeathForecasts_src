@@ -30,7 +30,7 @@ def save_vector_unit(data, perturb_position=None, unit=0, args=None, exp_setup=N
     if LICENCE == EXP.BREEDING_VECTORS:
         val_pos = int(
             perturb_position
-            + exp_setup["n_cycles"] * exp_setup["time_per_cycle"] * params.tts
+            + exp_setup["n_cycles"] * exp_setup["integration_time"] * params.tts
         )
     elif LICENCE == EXP.LYAPUNOV_VECTORS:
         val_pos = int(perturb_position + exp_setup["integration_time"] * params.tts)

@@ -42,12 +42,25 @@ def validate_start_time_method(exp_setup: dict = {}):
                 + " set in the experiment setup. This is not valid; choose one of them to govern start times."
             )
         else:
-            if exp_setup["eval_times"][0] - exp_setup["integration_time"] < 0:
-                raise g_exceptions.ExperimentSetupError(
-                    "Too long integration time compared to the chosen evaluation time",
-                    exp_variable=f"eval_time = {exp_setup['eval_times'][0]};"
-                    + f" integration_time = {exp_setup['integration_time']}",
-                )
+            if LICENCE == EXP.BREEDING_VECTORS:
+                if (
+                    exp_setup["eval_times"][0]
+                    - exp_setup["integration_time"] * exp_setup["n_cycles"]
+                    < 0
+                ):
+                    raise g_exceptions.ExperimentSetupError(
+                        "Too long integration time, or too many cycles, compared"
+                        + "to the chosen evaluation time",
+                        exp_variable=f"eval_time = {exp_setup['eval_times'][0]};"
+                        + f" integration_time = {exp_setup['integration_time']}",
+                    )
+            elif LICENCE == EXP.LYAPUNOV_VECTORS:
+                if exp_setup["eval_times"][0] - exp_setup["integration_time"] < 0:
+                    raise g_exceptions.ExperimentSetupError(
+                        "Too long integration time compared to the chosen evaluation time",
+                        exp_variable=f"eval_time = {exp_setup['eval_times'][0]};"
+                        + f" integration_time = {exp_setup['integration_time']}",
+                    )
 
     elif offset_var not in exp_setup and "start_times" not in exp_setup:
         raise g_exceptions.ExperimentSetupError(

@@ -56,7 +56,7 @@ def main(args):
     ):
 
         # Make analysis forecasts
-        args["time_to_run"] = exp_setup["time_per_cycle"]
+        args["time_to_run"] = exp_setup["integration_time"]
         args["start_times"] = [start_times[i]]
         args["start_time_offset"] = (
             exp_setup["vector_offset"] if "vector_offset" in exp_setup else None
@@ -100,7 +100,7 @@ def main(args):
                 # The rescaled data is used to start off cycle 1+
                 rescaled_data = pt_utils.rescale_perturbations(data_out_list, copy_args)
                 # Update perturb_positions
-                perturb_positions += int(exp_setup["time_per_cycle"] * params.tts)
+                perturb_positions += int(exp_setup["integration_time"] * params.tts)
         else:
             print("No processes to run - check if units already exists")
 
