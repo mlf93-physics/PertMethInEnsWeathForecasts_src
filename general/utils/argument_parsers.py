@@ -278,6 +278,32 @@ class ReferenceAnalysisArgParser:
         )
 
 
+class ComparisonPlottingArgParser:
+    def __init__(self):
+        self._parser = parser
+        self._args = None
+
+    @property
+    def args(self):
+        """The vars(parsed arguments.)
+
+        The parsed args are saved to a local attribute if not already present
+        to avoid multiple calls to parse_args()
+
+        Returns
+        -------
+        argparse.Namespace
+            The parsed arguments
+        """
+        if not isinstance(self._args, argparse.Namespace):
+            self._args = vars(self._parser.parse_known_args()[0])
+
+        return self._args
+
+    def setup_parser(self):
+        self._parser.add_argument("--exp_folders", nargs="+", default=None, type=str)
+
+
 class StandardPlottingArgParser:
     def __init__(self):
         self._parser = parser
@@ -338,12 +364,12 @@ class StandardPlottingArgParser:
         self._parser.add_argument("--sharey", action="store_true")
 
         # If running perturbations before plotting
-        self._parser.add_argument("--start_time", nargs="+", type=float)
+        self._parser.add_argument("--start_times", nargs="+", type=float)
         self._parser.add_argument("--n_profiles", default=1, type=int)
         self._parser.add_argument("--n_runs_per_profile", default=1, type=int)
 
         # experiment plot speicific
-        self._parser.add_argument("--exp_folder", nargs="?", default=None, type=str)
+        self._parser.add_argument("--exp_folder", default=None, type=str)
         self._parser.add_argument("--n_files", default=np.inf, type=int)
         self._parser.add_argument("--file_offset", default=0, type=int)
         self._parser.add_argument("--specific_files", nargs="+", default=None, type=int)

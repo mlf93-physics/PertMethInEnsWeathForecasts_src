@@ -921,6 +921,7 @@ if __name__ == "__main__":
     stand_plot_arg_parser.setup_parser()
 
     args = stand_plot_arg_parser.args
+
     print("args", args)
 
     if "time_to_run" in args:

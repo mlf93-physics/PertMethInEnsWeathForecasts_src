@@ -1,5 +1,4 @@
 import os
-import math
 import pathlib as pl
 from collections import OrderedDict
 import numpy as np
@@ -148,3 +147,21 @@ def determine_params_from_header_dict(header_dict, args):
 
     elif MODEL == Models.LORENTZ63:
         print("Nothing specific to do with args in lorentz63 model yet")
+
+
+def normalize_array(array, norm_value=1e-2, axis=0):
+    # Find scaling factor in order to have the seeked norm of the vector
+    lambda_factor = norm_value / np.linalg.norm(array, axis=axis)
+
+    # If array is 2D, reshape lambda_factor
+    if array.ndim == 2:
+        lambda_factor = np.reshape(lambda_factor, (array.shape[-2], 1))
+    elif array.ndim == 3:
+        lambda_factor = np.reshape(lambda_factor, (array.shape[-3], array.shape[-2], 1))
+    elif array.ndim > 3:
+        raise ValueError(f"Normalization of {array.ndim} is currently not supported")
+
+    # Scale down the vector
+    array = lambda_factor * array
+
+    return array

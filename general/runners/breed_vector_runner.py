@@ -109,7 +109,7 @@ def main(args):
         # Save breed vector data
         v_save.save_vector_unit(
             rescaled_data,
-            perturb_position=perturb_positions,
+            perturb_position=start_times[i] * params.tts,
             unit=i,
             args=args,
             exp_setup=exp_setup,

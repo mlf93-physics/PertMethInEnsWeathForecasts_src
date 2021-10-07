@@ -466,8 +466,6 @@ def import_exp_info_file(args):
 
     if args["exp_folder"] is not None:
         subfolder = args["exp_folder"]
-    elif args["exp_folder"] is not None:
-        subfolder = args["exp_folder"]
     else:
         raise ImportError("No valid subfolder to search for exp_setup")
 

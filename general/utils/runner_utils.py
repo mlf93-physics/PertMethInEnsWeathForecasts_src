@@ -22,7 +22,15 @@ def generate_start_times(exp_setup, args):
         if "start_times" in exp_setup:
             _time_offset = exp_setup["start_times"][0]
         elif "eval_times" in exp_setup:
-            _time_offset = exp_setup["eval_times"][0] - exp_setup["integration_time"]
+            if LICENCE == EXP.BREEDING_VECTORS:
+                _time_offset = (
+                    exp_setup["eval_times"][0]
+                    - exp_setup["n_cycles"] * exp_setup["integration_time"]
+                )
+            elif LICENCE == EXP.LYAPUNOV_VECTORS:
+                _time_offset = (
+                    exp_setup["eval_times"][0] - exp_setup["integration_time"]
+                )
         else:
             _time_offset = 0
 

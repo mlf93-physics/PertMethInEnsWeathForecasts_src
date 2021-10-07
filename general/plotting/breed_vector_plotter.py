@@ -28,7 +28,8 @@ elif MODEL == Models.LORENTZ63:
 def plot_breed_vectors(args):
 
     # Import breed vectors
-    breed_vector_units, _ = pt_import.import_breed_vectors(args)
+    breed_vector_units, _ = pt_import.import_perturb_vectors(args)
+
     # Import info file
     pert_info_dict = g_import.import_info_file(
         pl.Path(args["datapath"], args["exp_folder"])
@@ -100,7 +101,8 @@ def plot_breed_vectors(args):
 
 def plot_breed_comparison_to_nm(args):
     # Import breed vectors
-    breed_vector_units, breed_vec_header_dicts = pt_import.import_breed_vectors(args)
+    breed_vector_units, breed_vec_header_dicts = pt_import.import_perturb_vectors(args)
+
     # Import perturbation info file
     pert_info_dict = g_import.import_info_file(
         pl.Path(args["datapath"], args["exp_folder"])
