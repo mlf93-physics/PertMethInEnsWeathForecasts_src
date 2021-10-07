@@ -169,6 +169,11 @@ def plot_breed_error_norm(args):
 
     # Add subfolder
     args["exp_folder"] = pl.Path(args["exp_folder"], "perturb_data")
+    # Import perturbation info file
+    pert_info_dict = g_import.import_info_file(
+        pl.Path(args["datapath"], args["exp_folder"])
+    )
+
     g_plt_data.plot_error_norm_vs_time(
         args=args, normalize_start_time=False, axes=axes[0], exp_setup=exp_setup
     )
@@ -181,11 +186,19 @@ def plot_breed_error_norm(args):
             + exp_setup["n_cycles"] * exp_setup["integration_time"]
         )
     elif "eval_times" in exp_setup:
-        start_time = (
-            exp_setup["eval_times"][0]
-            - exp_setup["n_cycles"] * exp_setup["integration_time"]
-        )
-        end_time = exp_setup["eval_times"][0]
+        # Adjust start- and endtime differently depending on if only last
+        # perturbation data is saved, or all perturbation data is saved.
+        if pert_info_dict["save_last_pert"]:
+            start_time = exp_setup["eval_times"][0] - exp_setup["integration_time"]
+            end_time = (
+                start_time + pert_info_dict["n_units"] * exp_setup["integration_time"]
+            )
+        else:
+            start_time = (
+                exp_setup["eval_times"][0]
+                - exp_setup["n_cycles"] * exp_setup["integration_time"]
+            )
+            end_time = exp_setup["eval_times"][0]
     else:
         raise ValueError("start_time could not be determined from exp setup")
 

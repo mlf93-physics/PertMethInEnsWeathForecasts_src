@@ -1,6 +1,7 @@
 __all__ = ["MODEL", "LICENCE", "NUMBA_CACHE"]
 
 import os
+import sys
 import pathlib as pl
 from general.params.model_licences import Models
 from general.params.experiment_licences import Experiments

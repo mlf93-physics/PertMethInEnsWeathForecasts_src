@@ -26,7 +26,6 @@ import general.utils.argument_parsers as a_parsers
 from general.params.model_licences import Models
 from config import MODEL, LICENCE, GLOBAL_PARAMS
 
-profiler = Profiler()
 
 # Get parameters for model
 if MODEL == Models.SHELL_MODEL:
@@ -110,12 +109,13 @@ def perturbation_runner(
                 model=f"{MODEL.submodel} {MODEL}",
             )
 
-    pt_save.save_perturbation_data(
-        data_out,
-        perturb_position=perturb_positions[run_count // args["n_runs_per_profile"]],
-        perturb_count=perturb_count,
-        args=args,
-    )
+    if not args["skip_save_data"]:
+        pt_save.save_perturbation_data(
+            data_out,
+            perturb_position=perturb_positions[run_count // args["n_runs_per_profile"]],
+            perturb_count=perturb_count,
+            args=args,
+        )
 
     if LICENCE == EXP.BREEDING_VECTORS or LICENCE == EXP.LYAPUNOV_VECTORS:
         # Save latest state vector to output dir
@@ -373,7 +373,8 @@ def main_setup(
         args=args,
     )
 
-    g_save.save_perturb_info(args=args, exp_setup=exp_setup)
+    if not args["skip_save_data"]:
+        g_save.save_perturb_info(args=args, exp_setup=exp_setup)
 
     return processes, data_out_list, perturb_positions
 
@@ -401,8 +402,6 @@ def main_run(processes, args=None, n_units=None):
     #         num_processes_per_unit = args["n_profiles"] * args["n_runs_per_profile"]
     #     elif LICENCE == EXP.LORENTZ_BLOCK:
     #         num_processes_per_unit = 2 * args["n_profiles"] * args["n_runs_per_profile"]
-
-    profiler.start()
 
     for j in range(num_processes // cpu_count):
         # if n_units is not None:
@@ -439,9 +438,6 @@ def main_run(processes, args=None, n_units=None):
         processes[count].join()
         processes[count].close()
 
-    profiler.stop()
-    print(profiler.output_text())
-
 
 if __name__ == "__main__":
     # Get arguments
@@ -454,5 +450,13 @@ if __name__ == "__main__":
 
     print("args", args)
 
+    # Make profiler
+    profiler = Profiler()
+    # Start profiler
+    profiler.start()
+
     processes, _, _ = main_setup(args=args)
     main_run(processes, args=args)
+
+    profiler.stop()
+    print(profiler.output_text())

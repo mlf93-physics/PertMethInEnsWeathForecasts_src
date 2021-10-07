@@ -69,8 +69,8 @@ def plt_vector_comparison(args):
     num_subplot_cols = math.floor(args["n_units"] / 2)
     num_subplot_rows = math.ceil(args["n_units"] / num_subplot_cols)
 
-    fig, axes1 = plt.subplots(num_subplot_rows, num_subplot_cols)
-    fig, axes2 = plt.subplots(num_subplot_rows, num_subplot_cols)
+    _, axes1 = plt.subplots(num_subplot_rows, num_subplot_cols)
+    _, axes2 = plt.subplots(num_subplot_rows, num_subplot_cols)
     axes1 = axes1.ravel()
     axes2 = axes2.ravel()
 
@@ -94,7 +94,7 @@ def plt_vector_comparison(args):
             vmin=-1,
             vmax=1,
             annot=True,
-            fmt=".2f",
+            fmt=".1f",
             ax=axes2[i],
             annot_kws={"fontsize": 8},
         )

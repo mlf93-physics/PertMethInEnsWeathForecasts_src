@@ -241,6 +241,11 @@ class MultiPerturbationArgSetup:
 
     def setup_parser(self):
         # Add optional arguments
+        self._parser.add_argument(
+            "--save_last_pert",
+            action="store_true",
+            help="Save only the data for the last perturbation of a unit",
+        )
         n_units_group = self._parser.add_mutually_exclusive_group()
         n_units_group.add_argument("--n_units", default=np.inf, type=int)
         n_units_group.add_argument(

@@ -10,13 +10,13 @@
         ]
     },
     "TestRun2": {
-        "folder_name": "lorentz63_lyapunov_vectors_it0.1",
+        "folder_name": "pt_vectors/lorentz63_lyapunov_vectors_it2.0_et100",
         "sub_exp_folder": "perturb_data",
-        "integration_time": 0.1,
-        "n_vectors": 8,
+        "integration_time": 2.0,
+        "n_vectors": 10,
         "vector_offset": 0.1,
-        "start_times": [
-            1
+        "eval_times": [
+            100
         ]
     },
     "TestRun3": {

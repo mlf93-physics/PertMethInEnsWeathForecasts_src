@@ -72,6 +72,8 @@ def import_info_file(path):
         raise ValueError(
             f"To many data info files. Found " + f"{len(info_file_path)}; expected 1."
         )
+    elif len(info_file_path) == 0:
+        raise ValueError(f"No data info files found in the dir {path}")
 
     info_dict = import_header(file_name=info_file_path[0])
 

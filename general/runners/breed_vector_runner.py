@@ -3,6 +3,7 @@ import sys
 sys.path.append("..")
 import pathlib as pl
 import copy
+from pyinstrument import Profiler
 import shell_model_experiments.params as sh_params
 import lorentz63_experiments.params.params as l63_params
 import perturbation_runner as pt_runner
@@ -72,10 +73,16 @@ def main(args):
         # Copy args in order not override in forecast processes
         copy_args = copy.deepcopy(args)
 
+        if copy_args["save_last_pert"]:
+            copy_args["skip_save_data"] = True
+
         # Start off with None value in order to invoke random perturbations
         rescaled_data = None
         perturb_positions = None
-        for _ in range(exp_setup["n_cycles"]):
+        for j in range(exp_setup["n_cycles"]):
+
+            if copy_args["save_last_pert"] and (j + 1) == exp_setup["n_cycles"]:
+                copy_args["skip_save_data"] = False
 
             processes, data_out_list, perturb_positions = pt_runner.main_setup(
                 copy_args,
@@ -133,4 +140,10 @@ if __name__ == "__main__":
     if MODEL == Models.SHELL_MODEL:
         args["ny"] = params.ny_from_ny_n_and_forcing(args["forcing"], args["ny_n"])
 
+    # Make profiler
+    profiler = Profiler()
+    # Start profiler
+    profiler.start()
     main(args)
+    profiler.stop()
+    print(profiler.output_text())

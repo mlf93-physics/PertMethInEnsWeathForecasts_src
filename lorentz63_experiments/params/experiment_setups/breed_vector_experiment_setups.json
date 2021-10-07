@@ -1,24 +1,90 @@
 {
     "TestRun1": {
-        "folder_name": "pt_vectors/lorentz63_breed_vectors_it1.0_eval",
+        "folder_name": "pt_vectors/lorentz63_breed_vectors_it1.0_ncycles2",
+        "sub_exp_folder": "perturb_data",
+        "integration_time": 1.0,
+        "n_cycles": 2,
+        "n_vectors": 8,
+        "vector_offset": 1.0,
+        "eval_times": [
+            100
+        ]
+    },
+    "TestRun2": {
+        "folder_name": "pt_vectors/lorentz63_breed_vectors_it1.0_ncycles4",
+        "sub_exp_folder": "perturb_data",
+        "integration_time": 1.0,
+        "n_cycles": 4,
+        "n_vectors": 8,
+        "vector_offset": 1.0,
+        "eval_times": [
+            100
+        ]
+    },
+    "TestRun3": {
+        "folder_name": "pt_vectors/lorentz63_breed_vectors_it1.0_ncycles10",
         "sub_exp_folder": "perturb_data",
         "integration_time": 1.0,
         "n_cycles": 10,
         "n_vectors": 8,
         "vector_offset": 1.0,
         "eval_times": [
-            10
+            100
         ]
     },
-    "TestRun2": {
-        "folder_name": "lorentz63_breed_vectors_compare_lyapunov",
+    "TestRun4": {
+        "folder_name": "pt_vectors/lorentz63_breed_vectors_it1.0_ncycles20",
+        "sub_exp_folder": "perturb_data",
+        "integration_time": 1.0,
+        "n_cycles": 20,
+        "n_vectors": 8,
+        "vector_offset": 1.0,
+        "eval_times": [
+            100
+        ]
+    },
+    "TestRun5": {
+        "folder_name": "pt_vectors/lorentz63_breed_vectors_it0.1_ncycles2",
+        "sub_exp_folder": "perturb_data",
+        "integration_time": 0.1,
+        "n_cycles": 2,
+        "n_vectors": 8,
+        "vector_offset": 0.1,
+        "eval_times": [
+            100
+        ]
+    },
+    "TestRun6": {
+        "folder_name": "pt_vectors/lorentz63_breed_vectors_it0.1_ncycles4",
+        "sub_exp_folder": "perturb_data",
+        "integration_time": 0.1,
+        "n_cycles": 4,
+        "n_vectors": 8,
+        "vector_offset": 0.1,
+        "eval_times": [
+            100
+        ]
+    },
+    "TestRun7": {
+        "folder_name": "pt_vectors/lorentz63_breed_vectors_it0.1_ncycles10",
         "sub_exp_folder": "perturb_data",
         "integration_time": 0.1,
         "n_cycles": 10,
-        "n_vectors": 2,
+        "n_vectors": 8,
         "vector_offset": 0.1,
-        "start_times": [
-            0.1
+        "eval_times": [
+            100
+        ]
+    },
+    "TestRun8": {
+        "folder_name": "pt_vectors/lorentz63_breed_vectors_it0.1_ncycles100",
+        "sub_exp_folder": "perturb_data",
+        "integration_time": 0.1,
+        "n_cycles": 100,
+        "n_vectors": 8,
+        "vector_offset": 0.1,
+        "eval_times": [
+            100
         ]
     }
 }
