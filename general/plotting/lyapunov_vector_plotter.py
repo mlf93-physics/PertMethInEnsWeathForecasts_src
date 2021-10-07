@@ -45,7 +45,13 @@ def plot_tlm_solution(args, axes=None):
     )
 
     # Prepare ref import
-    start_time = exp_setup["start_times"][0] if "start_times" in exp_setup else 0
+    if "start_times" in exp_setup:
+        start_time = exp_setup["start_times"][0]
+    elif "eval_times" in exp_setup:
+        start_time = exp_setup["eval_times"][0] - exp_setup["integration_time"]
+    else:
+        raise ValueError("start_time could not be determined from exp setup")
+
     args["ref_start_time"] = start_time
     args["ref_end_time"] = start_time + 6 * exp_setup["vector_offset"]
 
@@ -163,7 +169,7 @@ if __name__ == "__main__":
         plot_tlm_solution(args)
     elif "tlm_orth_vs_time" in args["plot_type"]:
         plot_tlm_solution_orthogonality_vs_time(args)
-    elif "tlm_error_and_orth" in args["plot_type"]:
+    elif "tlm_error_norm_and_orth" in args["plot_type"]:
         plot_tlm_solution_and_orthogonality(args)
     else:
         raise ValueError("No valid plot type given as input argument")

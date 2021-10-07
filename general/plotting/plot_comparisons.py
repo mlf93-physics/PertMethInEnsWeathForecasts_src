@@ -2,7 +2,7 @@ import sys
 
 sys.path.append("..")
 import pathlib as pl
-import copy
+import math
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sb
@@ -66,28 +66,42 @@ def plt_vector_comparison(args):
 
     n_vectors = args["n_runs_per_profile"]
 
-    for i in range(args["n_units"]):
-        # fig, ax1 = plt.subplots(1, 1)
-        # cmap_list = g_plt_utils.get_non_repeating_colors(n_colors=n_vectors)
-        # ax1.set_prop_cycle("color", cmap_list)
-        # ax1.plot(lyapunov_vector_units[i, :, :].T, "--")
+    num_subplot_cols = math.floor(args["n_units"] / 2)
+    num_subplot_rows = math.ceil(args["n_units"] / num_subplot_cols)
 
-        # # Reset color cycle
-        # ax1.set_prop_cycle("color", cmap_list)
-        # ax1.plot(breed_vector_units[i, :, :].T, "-")
-        # ax1.set_title(f"Breed/Lyapunov vectors | unit {i}")
+    fig, axes1 = plt.subplots(num_subplot_rows, num_subplot_cols)
+    fig, axes2 = plt.subplots(num_subplot_rows, num_subplot_cols)
+    axes1 = axes1.ravel()
+    axes2 = axes2.ravel()
+
+    for i in range(args["n_units"]):
+        cmap_list = g_plt_utils.get_non_repeating_colors(n_colors=n_vectors)
+        axes1[i].set_prop_cycle("color", cmap_list)
+        axes1[i].plot(lyapunov_vector_units[i, :, :].T, "--")
+
+        # Reset color cycle
+        axes1[i].set_prop_cycle("color", cmap_list)
+        axes1[i].plot(breed_vector_units[i, :, :].T, "-")
+        axes1[i].set_title(f"Breed(-)/Lyapunov(--) vectors | unit {i}")
 
         orthogonality_matrix = (
             breed_vector_units[i, :, :] @ lyapunov_vector_units[i, :, :].T
         )
 
-        fig, ax2 = plt.subplots(1, 1)
         sb.heatmap(
-            orthogonality_matrix, cmap="Reds", vmin=-1, vmax=1, annot=True, fmt=".2f"
+            orthogonality_matrix,
+            cmap="Reds",
+            vmin=-1,
+            vmax=1,
+            annot=True,
+            fmt=".2f",
+            ax=axes2[i],
+            annot_kws={"fontsize": 8},
         )
-        ax2.set_xlabel("Lyapunov vector index")
-        ax2.set_ylabel("Breed vector index")
-        ax2.set_title(f"Orthogonality between Breed/Lyapunov vectors | unit {i}")
+        axes2[i].invert_yaxis()
+        axes2[i].set_xlabel("Lyapunov vector index")
+        axes2[i].set_ylabel("Breed vector index")
+        axes2[i].set_title(f"Orthogonality between\nBreed/Lyapunov vectors | unit {i}")
 
 
 if __name__ == "__main__":

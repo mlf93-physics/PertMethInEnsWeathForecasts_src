@@ -174,11 +174,23 @@ def plot_breed_error_norm(args):
     )
 
     # Prepare ref import
-    args["ref_start_time"] = exp_setup["start_times"][0]
-    args["ref_end_time"] = (
-        exp_setup["start_times"][0]
-        + exp_setup["n_cycles"] * exp_setup["integration_time"]
-    )
+    if "start_times" in exp_setup:
+        start_time = exp_setup["start_times"][0]
+        end_time = (
+            exp_setup["start_times"][0]
+            + exp_setup["n_cycles"] * exp_setup["integration_time"]
+        )
+    elif "eval_times" in exp_setup:
+        start_time = (
+            exp_setup["eval_times"][0]
+            - exp_setup["n_cycles"] * exp_setup["integration_time"]
+        )
+        end_time = exp_setup["eval_times"][0]
+    else:
+        raise ValueError("start_time could not be determined from exp setup")
+
+    args["ref_start_time"] = start_time
+    args["ref_end_time"] = end_time
 
     if MODEL == Models.SHELL_MODEL:
         sh_plot.plots_related_to_energy(args, axes=axes[1])
