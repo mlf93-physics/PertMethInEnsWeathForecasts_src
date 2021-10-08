@@ -3,12 +3,12 @@ import sys
 sys.path.append("..")
 import copy
 import pathlib as pl
-import numpy as np
 import shell_model_experiments.params as sh_params
 import lorentz63_experiments.params.params as l63_params
 import perturbation_runner as pt_runner
 import general.utils.util_funcs as g_utils
 import general.utils.saving.save_data_funcs as g_save
+import general.utils.saving.save_utils as g_save_utils
 from general.params.env_params import *
 from general.params.model_licences import Models
 import general.utils.experiments.validate_exp_setups as ut_exp_val
@@ -100,7 +100,7 @@ def main(args):
 
     if args["erda_run"]:
         path = pl.Path(args["datapath"], exp_setup["folder_name"])
-        g_save.compress_dir(path, "test_temp1")
+        g_save_utils.compress_dir(path, "test_temp1")
 
 
 if __name__ == "__main__":

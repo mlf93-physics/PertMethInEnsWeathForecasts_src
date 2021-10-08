@@ -4,7 +4,7 @@ sys.path.append("..")
 import numpy as np
 import shell_model_experiments.params as sh_params
 import lorentz63_experiments.params.params as l63_params
-import general.utils.saving.save_data_funcs as g_save
+import general.utils.saving.save_utils as g_save_utils
 from general.params.model_licences import Models
 from config import MODEL
 
@@ -33,33 +33,21 @@ def save_lorentz_block_data(
     ]
     data_out = perturb_data[slice, :]
 
-    expected_path = g_save.generate_dir(
+    expected_path = g_save_utils.generate_dir(
         args["datapath"], subfolder=f"{args['perturb_folder']}", args=args
     )
     if perturb_position is not None:
         lorentz_header_extra = f", perturb_pos={int(perturb_position)}"
-        header = g_save.generate_header(
+        header = g_save_utils.generate_header(
             args, n_data=num_forecasts, append_extra=lorentz_header_extra
         )
 
-    temp_args = g_save.convert_arguments_to_string(args)
-
-    if MODEL == Models.SHELL_MODEL:
-        out_name = (
-            f"udata_ny{temp_args['ny']}_t{temp_args['time_to_run']}"
-            + f"_n_f{params.n_forcing}_f{temp_args['forcing']}.csv"
-        )
-
-    elif MODEL == Models.LORENTZ63:
-        out_name = (
-            f"udata_sig{temp_args['sigma']}"
-            + f"_t{temp_args['time_to_run']}"
-            + f"_b{temp_args['b_const']}_r{temp_args['r_const']}.csv"
-        )
+    stand_data_name = g_save_utils.generate_standard_data_name(args)
+    out_name = f"udata_{stand_data_name}"
 
     # Save data
     np.savetxt(
-        f"{expected_path}/{prefix}{out_name}",
+        f"{expected_path}/{prefix}{out_name}.csv",
         data_out,
         delimiter=",",
         header=header,

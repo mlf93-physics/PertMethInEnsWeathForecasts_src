@@ -25,10 +25,19 @@ GLOBAL_PARAMS.record_max_time = 30
         types.int64,
         types.float64,
         types.float64,
+        types.float64,
     ),
     cache=NUMBA_CACHE,
 )
-def run_model(u_old, du_array, data_out, Nt_local, ny, forcing):
+def run_model(
+    u_old: np.ndarray,
+    du_array: np.ndarray,
+    data_out: np.ndarray,
+    Nt_local: int,
+    ny: float,
+    forcing: float,
+    diff_exponent: int,
+):
     """Execute the integration of the sabra shell model.
 
     Parameters
@@ -52,7 +61,14 @@ def run_model(u_old, du_array, data_out, Nt_local, ny, forcing):
             sample_number += 1
 
         # Update u_old
-        u_old = runge_kutta4(y0=u_old, h=dt, du=du_array, ny=ny, forcing=forcing)
+        u_old = runge_kutta4(
+            y0=u_old,
+            h=dt,
+            du=du_array,
+            ny=ny,
+            forcing=forcing,
+            diff_exponent=diff_exponent,
+        )
 
     return u_old
 
