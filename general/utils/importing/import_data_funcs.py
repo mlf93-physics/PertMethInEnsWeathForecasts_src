@@ -72,6 +72,8 @@ def import_info_file(path):
         raise ValueError(
             f"To many data info files. Found " + f"{len(info_file_path)}; expected 1."
         )
+    elif len(info_file_path) == 0:
+        raise ValueError(f"No data info files found in the dir {path}")
 
     info_dict = import_header(file_name=info_file_path[0])
 
@@ -203,10 +205,19 @@ def import_ref_data(args=None):
     for i, record in enumerate(records_to_import):
         file_name = ref_record_names_sorted[record]
 
+        endpoint = args["endpoint"] if "endpoint" in args else False
+
         data_in, header_dict = import_data(
             file_name,
             start_line=int(args["ref_start_time"] * params.tts),
-            max_lines=int((args["ref_end_time"] - args["ref_start_time"]) * params.tts)
+            max_lines=int(
+                round(
+                    (args["ref_end_time"] - args["ref_start_time"]) * params.tts
+                    + (args["ref_start_time"] == 0)
+                    + endpoint,
+                    0,
+                )
+            )
             if args["ref_end_time"] > args["ref_start_time"]
             else None,
         )
@@ -456,8 +467,6 @@ def import_start_u_profiles(args=None):
 def import_exp_info_file(args):
 
     if args["exp_folder"] is not None:
-        subfolder = args["exp_folder"]
-    elif args["exp_folder"] is not None:
         subfolder = args["exp_folder"]
     else:
         raise ImportError("No valid subfolder to search for exp_setup")

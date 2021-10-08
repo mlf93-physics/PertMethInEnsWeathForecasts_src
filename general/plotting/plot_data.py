@@ -78,15 +78,18 @@ def analyse_error_spread_vs_time_mean_of_norm(u_stores, args=None):
     return error_spread
 
 
-def plot_error_norm_vs_time(args=None, normalize_start_time=True, axes=None):
+def plot_error_norm_vs_time(
+    args=None, normalize_start_time=True, axes=None, exp_setup=None
+):
 
-    try:
-        exp_setup = g_import.import_exp_info_file(args)
-    except ImportError:
-        print(
-            "The .json config file was not found, so this plot doesnt work "
-            + "if the file is needed"
-        )
+    if exp_setup is None:
+        try:
+            exp_setup = g_import.import_exp_info_file(args)
+        except ImportError:
+            print(
+                "The .json config file was not found, so this plot doesnt work "
+                + "if the file is needed"
+            )
 
     (
         u_stores,
@@ -139,7 +142,7 @@ def plot_error_norm_vs_time(args=None, normalize_start_time=True, axes=None):
         axes = plt.gca()
 
     # Get non-repeating colorcycle
-    if LICENCE == EXP.BREEDING_VECTORS:
+    if LICENCE == EXP.BREEDING_VECTORS or LICENCE == EXP.LYAPUNOV_VECTORS:
         n_colors = exp_setup["n_vectors"]
     else:
         n_colors = num_perturbations
@@ -160,7 +163,7 @@ def plot_error_norm_vs_time(args=None, normalize_start_time=True, axes=None):
     axes.set_ylabel("Error")
     axes.set_yscale("log")
 
-    if not LICENCE == EXP.BREEDING_VECTORS:
+    if LICENCE not in [EXP.BREEDING_VECTORS, EXP.LYAPUNOV_VECTORS]:
         axes.legend(perturb_time_pos_list_legend)
 
     if args["xlim"] is not None:
@@ -172,14 +175,14 @@ def plot_error_norm_vs_time(args=None, normalize_start_time=True, axes=None):
         axes.set_title(
             f'Error vs time; f={header_dict["forcing"]}'
             + f', $n_f$={int(header_dict["n_f"])}, $\\nu$={header_dict["ny"]:.2e}'
-            + f', time={header_dict["time_to_run"]} | Experiment: {args["exp_folder"]};'
+            + f', time={header_dict["time_to_run"]}\nExperiment: {args["exp_folder"]};'
             + f'Files: {args["file_offset"]}-{args["file_offset"] + args["n_files"]}'
         )
     elif MODEL == Models.LORENTZ63:
         axes.set_title(
             f'Error vs time; sigma={header_dict["sigma"]}'
             + f', $b$={header_dict["b_const"]:.2e}, r={header_dict["r_const"]}'
-            + f', time={header_dict["time_to_run"]} | Experiment: {args["exp_folder"]};'
+            + f', time={header_dict["time_to_run"]}\nExperiment: {args["exp_folder"]};'
             + f'Files: {args["file_offset"]}-{args["file_offset"] + args["n_files"]}'
         )
 

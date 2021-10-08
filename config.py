@@ -1,11 +1,13 @@
 __all__ = ["MODEL", "LICENCE", "NUMBA_CACHE"]
 
 import os
+import sys
 import pathlib as pl
 from general.params.model_licences import Models
 from general.params.experiment_licences import Experiments
 from general.params.params import GlobalParams
 import general.utils.user_interface as g_ui
+import general.plotting.plot_config as plt_config
 
 models = Models()
 
@@ -45,6 +47,9 @@ LICENCE = exp.BREEDING_VECTORS
 
 # Get global params
 GLOBAL_PARAMS = GlobalParams()
+
+# Set plotting config
+plt_config.latex_plot_settings()
 
 # Other general configurations
 NUMBA_CACHE = True

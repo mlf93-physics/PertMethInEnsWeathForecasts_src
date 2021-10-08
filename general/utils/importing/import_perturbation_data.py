@@ -174,9 +174,9 @@ def import_profiles_for_nm_analysis(args=None):
     return profiles, ref_header_dict
 
 
-def import_breed_vectors(args):
+def import_perturb_vectors(args):
     # Set arguments
-    args["n_units"] = args["n_files"] = args["n_profiles"]
+    args["n_files"] = args["n_units"]
 
     pt_vector_dirname = "pt_vectors"
 
@@ -189,21 +189,32 @@ def import_breed_vectors(args):
         perturb_header_dicts,
         perturb_file_names,
     ) = g_import.imported_sorted_perturbation_info(
-        pl.Path(pt_vector_dirname, args["pert_vector_folder"]), args
+        pl.Path(pt_vector_dirname, args["exp_folder"]),
+        args,
+        search_pattern="*vectors*.csv",
     )
 
-    breed_vector_units = []
+    vector_units = []
 
     for i, file_name in enumerate(perturb_file_names):
-        breed_vector_unit, _ = g_import.import_data(
+        vector_unit, _ = g_import.import_data(
             file_name, max_lines=args["n_runs_per_profile"] + 1
         )
 
-        breed_vector_units.append(breed_vector_unit)
+        # Prepare start_time to import correct u_profiles
+        args["start_times"] = [perturb_header_dicts[i]["val_pos"] * params.stt]
 
+        # Import reference data
+        (
+            u_init_profiles,
+            _,
+            _,
+        ) = g_import.import_start_u_profiles(args=args)
+
+        vector_units.append(vector_unit - u_init_profiles.T)
         if i + 1 >= args["n_units"]:
             break
 
-    breed_vector_units = np.array(breed_vector_units)
+    vector_units = np.array(vector_units)
 
-    return breed_vector_units, perturb_header_dicts
+    return vector_units, perturb_header_dicts

@@ -59,7 +59,7 @@ def derivative_evaluator(u_old=None, du=None, ny=None, forcing=None):
     ),
     cache=NUMBA_CACHE,
 )
-def runge_kutta4_vec(y0=0, h=1, du=None, ny=None, forcing=None):
+def runge_kutta4(y0=0, h=1, du=None, ny=None, forcing=None):
     """Performs the Runge-Kutta-4 integration of the shell velocities.
 
     Parameters

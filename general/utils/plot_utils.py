@@ -1,9 +1,13 @@
+import sys
+
+sys.path.append("..")
 import argparse
 import pathlib as pl
 import pickle
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 import numpy as np
+from general.plotting.plot_params import *
 
 
 def get_non_repeating_colors(n_colors=1):
@@ -40,6 +44,33 @@ def load_interactive_fig(args):
     with open(args["file_path"], "rb") as file:
         fig = pickle.load(file)
         fig.show()
+
+
+def save_figure(subpath: pl.Path = None, file_name="figure1"):
+    print("\nSaving figure...\n")
+    # Prepare layout
+    plt.tight_layout()
+
+    if subpath is None:
+        full_path = FIG_ROOT
+    else:
+        full_path = FIG_ROOT / subpath
+
+    # Save png
+    plt.savefig(
+        full_path / (file_name + ".png"),
+        dpi=400,
+        format="png",
+    )
+
+    # Save pgf
+    plt.savefig(
+        full_path / (file_name + ".pgf"),
+        dpi=400,
+        format="pgf",
+    )
+
+    print(f"\nFigures (png, pgf) saved as {file_name} at figures/{str(subpath)}\n")
 
 
 if __name__ == "__main__":

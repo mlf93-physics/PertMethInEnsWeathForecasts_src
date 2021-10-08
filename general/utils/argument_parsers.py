@@ -1,8 +1,10 @@
 __all__ = [
     "StandardArgSetup",
+    "StandardModelArgSetup",
     "StandardRunnerArgSetup",
     "PerturbationArgSetup",
     "MultiPerturbationArgSetup",
+    "ReferenceAnalysisArgParser",
     "StandardPlottingArgParser",
 ]
 
@@ -112,7 +114,7 @@ class StandardRunnerArgSetup:
         self._parser.add_argument("--skip_save_data", action="store_true")
 
 
-class PerturbationArgSetup:
+class RelReferenceArgSetup:
     def __init__(self):
         self._parser = parser
         self._args = None
@@ -140,7 +142,7 @@ class PerturbationArgSetup:
 
     def setup_parser(self):
         # Add required arguments
-        self._parser.add_argument("--exp_folder", required=True, type=str)
+        self._parser.add_argument("--exp_folder", required=False, type=str)
         # Add optional arguments
         self._parser.add_argument("--n_runs_per_profile", default=1, type=int)
         self._parser.add_argument("--n_profiles", default=1, type=int)
@@ -151,8 +153,38 @@ class PerturbationArgSetup:
             required=LICENCE == EXP.NORMAL_PERTURBATION,
         )
         self._parser.add_argument("--start_time_offset", default=None, type=float)
-        self._parser.add_argument("--endpoint", action="store_true")
         self._parser.add_argument("--exp_setup", default=None, type=str)
+
+
+class PerturbationArgSetup:
+    def __init__(self):
+        self._parser = parser
+        self._args = None
+
+        # Setup standard setup
+        __relref_arg_setup = RelReferenceArgSetup()
+        __relref_arg_setup.setup_parser()
+
+    @property
+    def args(self):
+        """The vars(parsed arguments.)
+
+        The parsed args are saved to a local attribute if not already present
+        to avoid multiple calls to parse_args()
+
+        Returns
+        -------
+        argparse.Namespace
+            The parsed arguments
+        """
+        if not isinstance(self._args, argparse.Namespace):
+            self._args = vars(self._parser.parse_known_args()[0])
+
+        return self._args
+
+    def setup_parser(self):
+        # Add optional arguments
+        self._parser.add_argument("--endpoint", action="store_true")
         self._parser.add_argument("--pert_vector_folder", default=None, type=str)
         pert_mode_group = self._parser.add_mutually_exclusive_group(required=True)
         pert_mode_group.add_argument(
@@ -209,11 +241,72 @@ class MultiPerturbationArgSetup:
 
     def setup_parser(self):
         # Add optional arguments
+        self._parser.add_argument(
+            "--save_last_pert",
+            action="store_true",
+            help="Save only the data for the last perturbation of a unit",
+        )
         n_units_group = self._parser.add_mutually_exclusive_group()
         n_units_group.add_argument("--n_units", default=np.inf, type=int)
         n_units_group.add_argument(
             "--specific_units", nargs="+", default=None, type=int
         )
+
+
+class ReferenceAnalysisArgParser:
+    def __init__(self):
+        self._parser = parser
+        self._args = None
+
+    @property
+    def args(self):
+        """The vars(parsed arguments.)
+
+        The parsed args are saved to a local attribute if not already present
+        to avoid multiple calls to parse_args()
+
+        Returns
+        -------
+        argparse.Namespace
+            The parsed arguments
+        """
+        if not isinstance(self._args, argparse.Namespace):
+            self._args = vars(self._parser.parse_known_args()[0])
+
+        return self._args
+
+    def setup_parser(self):
+        self._parser.add_argument("--ref_start_time", default=0, type=float)
+        self._parser.add_argument("--ref_end_time", default=-1, type=float)
+        self._parser.add_argument(
+            "--specific_ref_records", nargs="+", default=[0], type=int
+        )
+
+
+class ComparisonPlottingArgParser:
+    def __init__(self):
+        self._parser = parser
+        self._args = None
+
+    @property
+    def args(self):
+        """The vars(parsed arguments.)
+
+        The parsed args are saved to a local attribute if not already present
+        to avoid multiple calls to parse_args()
+
+        Returns
+        -------
+        argparse.Namespace
+            The parsed arguments
+        """
+        if not isinstance(self._args, argparse.Namespace):
+            self._args = vars(self._parser.parse_known_args()[0])
+
+        return self._args
+
+    def setup_parser(self):
+        self._parser.add_argument("--exp_folders", nargs="+", default=None, type=str)
 
 
 class StandardPlottingArgParser:
@@ -232,6 +325,10 @@ class StandardPlottingArgParser:
         # Add arguments from MultiPerturbationArgSetup
         __multi_pert_arg_setup = MultiPerturbationArgSetup(setup_parents=False)
         __multi_pert_arg_setup.setup_parser()
+
+        # Add arguments for reference analysis
+        __ref_arg_setup = ReferenceAnalysisArgParser()
+        __ref_arg_setup.setup_parser()
 
     @property
     def args(self):
@@ -264,25 +361,20 @@ class StandardPlottingArgParser:
             + " detailed : plot extra details in plots",
         )
         self._parser.add_argument("-np", "--noplot", action="store_true")
-        self._parser.add_argument("-s", "--save_plot", action="store_true")
+        self._parser.add_argument("-s", "--save_fig", action="store_true")
 
-        # x, y and time limits
-        self._parser.add_argument("--ref_start_time", default=0, type=float)
-        self._parser.add_argument("--ref_end_time", default=-1, type=float)
+        # x, y limits
         self._parser.add_argument("--xlim", nargs=2, default=None, type=float)
         self._parser.add_argument("--ylim", nargs=2, default=None, type=float)
-        self._parser.add_argument(
-            "--specific_ref_records", nargs="+", default=[0], type=int
-        )
         self._parser.add_argument("--sharey", action="store_true")
 
         # If running perturbations before plotting
-        self._parser.add_argument("--start_time", nargs="+", type=float)
+        self._parser.add_argument("--start_times", nargs="+", type=float)
         self._parser.add_argument("--n_profiles", default=1, type=int)
         self._parser.add_argument("--n_runs_per_profile", default=1, type=int)
 
         # experiment plot speicific
-        self._parser.add_argument("--exp_folder", nargs="?", default=None, type=str)
+        self._parser.add_argument("--exp_folder", default=None, type=str)
         self._parser.add_argument("--n_files", default=np.inf, type=int)
         self._parser.add_argument("--file_offset", default=0, type=int)
         self._parser.add_argument("--specific_files", nargs="+", default=None, type=int)

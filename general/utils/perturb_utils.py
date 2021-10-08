@@ -8,6 +8,7 @@ import lorentz63_experiments.params.params as l63_params
 import general.utils.dev_plots as g_dev_plots
 import general.utils.importing.import_data_funcs as g_import
 import general.utils.importing.import_perturbation_data as pt_import
+import general.utils.util_funcs as g_utils
 from general.params.model_licences import Models
 from config import MODEL
 
@@ -41,7 +42,7 @@ def calculate_perturbations(perturb_vectors, dev_plot_active=False, args=None):
         dtype=params.dtype,
     )
 
-    if args["pert_mode"] == "normal_mode":
+    if args["pert_mode"] == "nm":
         # Get complex-conjugate vector pair
         perturb_vectors_conj = np.conj(perturb_vectors)
 
@@ -91,10 +92,8 @@ def calculate_perturbations(perturb_vectors, dev_plot_active=False, args=None):
 
         # Copy array for plotting
         perturb_temp = np.copy(perturb)
-        # Find scaling factor in order to have the seeked norm of the error
-        lambda_factor = params.seeked_error_norm / np.linalg.norm(perturb)
-        # Scale down the perturbation
-        perturb = lambda_factor * perturb
+        # Normalize perturbation
+        perturb = g_utils.normalize_array(perturb, norm_value=params.seeked_error_norm)
 
         # Perform small test to be noticed if the perturbation is not as expected
         np.testing.assert_almost_equal(
@@ -148,7 +147,7 @@ def rescale_perturbations(perturb_data, args):
 
 def prepare_breed_vectors(args):
     # Get BVs
-    perturb_vectors, perturb_header_dicts = pt_import.import_breed_vectors(args)
+    perturb_vectors, perturb_header_dicts = pt_import.import_perturb_vectors(args)
 
     if perturb_vectors.size == 0:
         raise ValueError("No perturbation vectors imported")

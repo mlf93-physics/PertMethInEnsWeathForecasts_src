@@ -3,7 +3,7 @@ import sys
 sys.path.append("..")
 import pathlib as pl
 import copy
-from pyinstrument import Profiler
+import numpy as np
 import shell_model_experiments.params as sh_params
 import lorentz63_experiments.params.params as l63_params
 import perturbation_runner as pt_runner
@@ -12,8 +12,8 @@ import general.utils.experiments.validate_exp_setups as ut_exp_val
 import general.utils.runner_utils as r_utils
 import general.utils.util_funcs as g_utils
 import general.utils.saving.save_data_funcs as g_save
+import general.utils.importing.import_data_funcs as g_import
 import general.utils.saving.save_vector_funcs as v_save
-import general.utils.perturb_utils as pt_utils
 import general.utils.argument_parsers as a_parsers
 from general.params.model_licences import Models
 from config import MODEL, GLOBAL_PARAMS
@@ -31,7 +31,7 @@ GLOBAL_PARAMS.ref_run = False
 def main(args):
     # Set exp_setup path
     exp_file_path = pl.Path(
-        "./params/experiment_setups/breed_vector_experiment_setups.json"
+        "./params/experiment_setups/lyapunov_vector_experiment_setups.json"
     )
     # Get the current experiment setup
     exp_setup = exp_utils.get_exp_setup(exp_file_path, args)
@@ -39,7 +39,7 @@ def main(args):
     # Get number of existing blocks
     n_existing_units = g_utils.count_existing_files_or_dirs(
         search_path=pl.Path(args["datapath"], exp_setup["folder_name"]),
-        search_pattern="breed_vector*.csv",
+        search_pattern="lyapunov_vector*.csv",
     )
 
     # Validate the start time method
@@ -70,58 +70,44 @@ def main(args):
         )
         args = g_utils.adjust_start_times_with_offset(args)
 
+        # Prepare reference data import
+        args["ref_start_time"] = start_times[i]
+        args["ref_end_time"] = start_times[i] + args["time_to_run"]
+        # Import reference data
+        _, u_ref, ref_header_dict = g_import.import_ref_data(args=args)
+
         # Copy args in order not override in forecast processes
         copy_args = copy.deepcopy(args)
 
-        if copy_args["save_last_pert"]:
-            copy_args["skip_save_data"] = True
+        processes, data_out_list, _ = pt_runner.main_setup(
+            copy_args, exp_setup=exp_setup, u_ref=u_ref
+        )
 
-        # Start off with None value in order to invoke random perturbations
-        rescaled_data = None
-        perturb_positions = None
-        for j in range(exp_setup["n_cycles"]):
-
-            if copy_args["save_last_pert"] and (j + 1) == exp_setup["n_cycles"]:
-                copy_args["skip_save_data"] = False
-
-            processes, data_out_list, perturb_positions = pt_runner.main_setup(
-                copy_args,
-                u_profiles_perturbed=rescaled_data,
-                perturb_positions=perturb_positions,
-                exp_setup=exp_setup,
+        if len(processes) > 0:
+            # Run specified number of cycles
+            pt_runner.main_run(
+                processes,
+                args=copy_args,
             )
 
-            if len(processes) > 0:
-                # Run specified number of cycles
-                pt_runner.main_run(
-                    processes,
-                    args=copy_args,
-                    n_units=min(
-                        copy_args["n_units"], num_possible_units - n_existing_units
-                    ),
-                )
-                # Offset time to prepare for next run and import of reference data
-                # for rescaling
-                copy_args["start_times"][0] += copy_args["time_to_run"]
-
-                # The rescaled data is used to start off cycle 1+
-                rescaled_data = pt_utils.rescale_perturbations(data_out_list, copy_args)
-                # Update perturb_positions
-                perturb_positions += int(exp_setup["integration_time"] * params.tts)
         else:
             print("No processes to run - check if units already exists")
 
+        # Prepare Lyapunov vector data to be saved
+        data_out = np.array(data_out_list)
         # Set out folder
         args["exp_folder"] = pl.Path(exp_setup["folder_name"])
-        # Save breed vector data
+        # Save lyapunov vectors
         v_save.save_vector_unit(
-            rescaled_data,
-            perturb_position=start_times[i] * params.tts,
+            data_out,
+            perturb_position=int(start_times[i] * params.tts),
             unit=i,
             args=args,
             exp_setup=exp_setup,
         )
 
+    # Reset exp_folder
+    args["exp_folder"] = exp_setup["folder_name"]
     # Save exp setup to exp folder
     g_save.save_exp_info(exp_setup, args)
 
@@ -134,16 +120,15 @@ if __name__ == "__main__":
     # Get arguments
     mult_pert_arg_setup = a_parsers.MultiPerturbationArgSetup()
     mult_pert_arg_setup.setup_parser()
-    args = mult_pert_arg_setup.args
+    ref_arg_setup = a_parsers.ReferenceAnalysisArgParser()
+    ref_arg_setup.setup_parser()
+    args = ref_arg_setup.args
+
+    # Add submodel attribute
+    MODEL.submodel = "TL"
 
     # Add ny argument
     if MODEL == Models.SHELL_MODEL:
         args["ny"] = params.ny_from_ny_n_and_forcing(args["forcing"], args["ny_n"])
 
-    # Make profiler
-    profiler = Profiler()
-    # Start profiler
-    profiler.start()
     main(args)
-    profiler.stop()
-    print(profiler.output_text())

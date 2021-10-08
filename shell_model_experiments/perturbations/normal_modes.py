@@ -9,7 +9,7 @@ from shell_model_experiments.params.params import *
 #        types.Array(types.complex128, 2, 'C', readonly=False),
 #        types.Array(types.complex128, 2, 'C', readonly=False),
 #        types.boolean, types.int64, types.float64), parallel=True, cache=True)
-def find_eigenvector_for_perturbation(
+def find_normal_modes(
     u_init_profiles, dev_plot_active=False, n_profiles=None, local_ny=None
 ):
     """Find the eigenvector corresponding to the minimal of the positive
