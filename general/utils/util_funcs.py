@@ -139,11 +139,13 @@ def determine_params_from_header_dict(header_dict, args):
                 args["ny_n"] = 0
             else:
                 args["ny_n"] = params.ny_n_from_ny_and_forcing(
-                    args["forcing"], header_dict["ny"]
+                    args["forcing"], header_dict["ny"], header_dict["diff_exponent"]
                 )
             # Take ny from reference file
         else:
-            args["ny"] = params.ny_from_ny_n_and_forcing(args["forcing"], args["ny_n"])
+            args["ny"] = params.ny_from_ny_n_and_forcing(
+                args["forcing"], args["ny_n"], args["diff_exponent"]
+            )
 
     elif MODEL == Models.LORENTZ63:
         print("Nothing specific to do with args in lorentz63 model yet")

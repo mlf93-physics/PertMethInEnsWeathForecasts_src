@@ -104,6 +104,7 @@ def main(args=None):
         int(args["burn_in_time"] / dt),
         args["ny"],
         args["forcing"],
+        args["diff_exponent"],
     )
 
     for ir in range(args["n_records"]):
@@ -132,9 +133,10 @@ def main(args=None):
             u_old,
             du_array,
             data_out,
-            out_array_size / sample_rate,
+            int(out_array_size / sample_rate),
             args["ny"],
             args["forcing"],
+            args["diff_exponent"],
         )
 
         # Add record_id to datafile header
@@ -153,7 +155,9 @@ if __name__ == "__main__":
     stand_arg_setup.setup_parser()
     args = stand_arg_setup.args
 
-    args["ny"] = ny_from_ny_n_and_forcing(args["forcing"], args["ny_n"])
+    args["ny"] = ny_from_ny_n_and_forcing(
+        args["forcing"], args["ny_n"], args["diff_exponent"]
+    )
 
     args["Nt"] = int(args["time_to_run"] / dt)
 

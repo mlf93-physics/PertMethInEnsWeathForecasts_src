@@ -25,7 +25,9 @@ factor3 = (1 - epsilon) / lambda_const ** 2
 
 #### Initialise sabra model arrays ####
 # Define k vector indices
-k_vec_temp = np.array([lambda_const ** (n + 1) for n in range(n_k_vec)], dtype=np.int64)
+k_vec_temp = np.array(
+    [lambda_const ** (n + 1) for n in range(n_k_vec)], dtype=np.float64
+)
 pre_factor = 1j * k_vec_temp
 # Define du array to store derivative
 du_array = np.zeros(n_k_vec + 2 * bd_size, dtype=np.complex128)
@@ -39,7 +41,7 @@ initial_k_vec = k_vec_temp ** (-1 / 3)
 seeked_error_norm = 1e-14
 
 
-def ny_from_ny_n_and_forcing(forcing, ny_n):
+def ny_from_ny_n_and_forcing(forcing, ny_n, diff_exponent):
     """Util func to calculate ny from forcing and ny_n
 
     Parameters
@@ -54,12 +56,12 @@ def ny_from_ny_n_and_forcing(forcing, ny_n):
     float
         The viscosity
     """
-    ny = (forcing / (lambda_const ** (8 / 3 * ny_n))) ** (1 / 2)
+    ny = (forcing / (lambda_const ** (2 * ny_n * (diff_exponent - 2 / 3)))) ** (1 / 2)
 
     return ny
 
 
-def ny_n_from_ny_and_forcing(forcing, ny):
+def ny_n_from_ny_and_forcing(forcing, ny, diff_exponent):
     """Util func to calculate ny_n from forcing and ny
 
     Parameters
@@ -74,6 +76,9 @@ def ny_n_from_ny_and_forcing(forcing, ny):
     int
         The shell at which to apply the viscosity
     """
-    ny_n = int(3 / 8 * math.log10(forcing / (ny ** 2)) / math.log10(lambda_const))
+    ny_n = int(
+        math.log10(forcing / (ny ** 2))
+        / (2 * (diff_exponent - 2 / 3) * math.log10(lambda_const))
+    )
 
     return ny_n

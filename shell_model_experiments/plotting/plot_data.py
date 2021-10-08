@@ -480,8 +480,8 @@ def plot_2D_eigen_mode_analysis(args=None):
 
     _, e_vector_collection, e_value_collection = sh_nm_estimator.find_normal_modes(
         u_init_profiles,
+        args,
         dev_plot_active=False,
-        n_profiles=args["n_profiles"],
         local_ny=header_dict["ny"],
     )
 
@@ -527,8 +527,8 @@ def plot_3D_eigen_mode_analysis(args=None, right_handed=True):
 
     _, e_vector_collection, e_value_collection = sh_nm_estimator.find_normal_modes(
         u_init_profiles,
+        args,
         dev_plot_active=False,
-        n_profiles=args["n_profiles"],
         local_ny=header_dict["ny"],
     )
 
@@ -590,8 +590,8 @@ def plot_eigen_vector_comparison(args=None):
 
     _, e_vector_collection, e_value_collection = sh_nm_estimator.find_normal_modes(
         u_init_profiles,
+        args,
         dev_plot_active=False,
-        n_profiles=args["n_profiles"],
         local_ny=header_dict["ny"],
     )
 
@@ -804,8 +804,8 @@ def plot_error_vector_spectrogram(args=None):
 
     _, e_vector_collection, e_value_collection = sh_nm_estimator.find_normal_modes(
         u_init_profiles,
+        args,
         dev_plot_active=False,
-        n_profiles=args["n_profiles"],
         local_ny=header_dict["ny"],
     )
 
@@ -866,8 +866,8 @@ def plot_error_vector_spectrum(args=None):
 
     _, e_vector_collection, e_value_collection = sh_nm_estimator.find_normal_modes(
         u_init_profiles,
+        args,
         dev_plot_active=False,
-        n_profiles=args["n_profiles"],
         local_ny=header_dict["ny"],
     )
 

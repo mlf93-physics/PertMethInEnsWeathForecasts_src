@@ -1,3 +1,19 @@
+"""The perturbation runner.
+
+Run a desired number of perturbation, given a desired perturbation method,
+in parallel. The start times, number of runs, time to run etc. can be specified
+
+Example to run:
+
+python ../general/runners/perturbation_runner.py
+--exp_folder=test1_perturbations
+--time_to_run=0.1
+--n_profiles=2
+--start_times 4 8
+--pert_mode=rd
+
+"""
+
 import os
 import sys
 
@@ -69,6 +85,7 @@ def perturbation_runner(
                 args["Nt"] + args["endpoint"] * 1,
                 args["ny"],
                 args["forcing"],
+                args["diff_exponent"],
             )
         else:
             g_exceptions.ModelError(
@@ -196,8 +213,8 @@ def prepare_perturbations(args, raw_perturbations=False):
                         0 : args["n_profiles"]
                         * args["n_runs_per_profile"] : args["n_runs_per_profile"],
                     ],
+                    args,
                     dev_plot_active=False,
-                    n_profiles=args["n_profiles"],
                     local_ny=header_dict["ny"],
                 )
             elif MODEL == Models.LORENTZ63:

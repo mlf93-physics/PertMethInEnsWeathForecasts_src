@@ -139,7 +139,9 @@ if __name__ == "__main__":
 
     # Add ny argument
     if MODEL == Models.SHELL_MODEL:
-        args["ny"] = params.ny_from_ny_n_and_forcing(args["forcing"], args["ny_n"])
+        args["ny"] = params.ny_from_ny_n_and_forcing(
+            args["forcing"], args["ny_n"], args["diff_exponent"]
+        )
 
     # Make profiler
     profiler = Profiler()

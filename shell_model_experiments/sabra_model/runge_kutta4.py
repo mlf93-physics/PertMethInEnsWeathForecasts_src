@@ -1,6 +1,10 @@
+import sys
+
+sys.path.append("..")
 from numba import njit, types
 from shell_model_experiments.params.params import *
-from config import NUMBA_CACHE
+import general.utils.custom_decorators as c_dec
+from config import NUMBA_CACHE, NUMBA_ON
 
 
 @njit(
