@@ -143,7 +143,7 @@ def plt_lorentz_block(args):
                     "b",
                     alpha=0.6,
                     linewidth=1.5,
-                    linestyle=plt_params.linestyles[j],
+                    linestyle=plt_params.LINESTYLES[j],
                     label="_nolegend"
                     if k > 0
                     else legend[int(len(legend) // len(experiments) * j)],
@@ -170,7 +170,7 @@ def plt_lorentz_block(args):
                 time_array,
                 np.diagonal(rmse),
                 "k",
-                linestyle=plt_params.linestyles[j],
+                linestyle=plt_params.LINESTYLES[j],
                 label=legend[int(len(legend) // len(experiments) * j + 1)],
             )
             plt.plot(

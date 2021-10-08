@@ -94,7 +94,7 @@ def plt_vector_comparison(args):
             vmin=-1,
             vmax=1,
             annot=True,
-            fmt=".1f",
+            fmt=".2f",
             ax=axes2[i],
             annot_kws={"fontsize": 8},
         )

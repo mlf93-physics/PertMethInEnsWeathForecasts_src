@@ -13,6 +13,7 @@ import lorentz63_experiments.plotting.plot_data as l63_plot
 import general.utils.importing.import_perturbation_data as pt_import
 import general.utils.importing.import_data_funcs as g_import
 import general.plotting.plot_data as g_plt_data
+import general.utils.plot_utils as plt_utils
 import general.analyses.plot_analyses as g_plt_anal
 import general.utils.argument_parsers as a_parsers
 from general.params.model_licences import Models
@@ -227,6 +228,13 @@ if __name__ == "__main__":
     else:
         raise ValueError("No valid plot type given as input argument")
 
-    if not args["noplot"]:
+    if args["save_fig"]:
+        plt_utils.save_figure(
+            subpath=pl.Path(
+                "lorentz63_experiments/breed_vectors/n_cycles_investigation"
+            ),
+            file_name="breed_vectors_ncycles2_nunits10_it1.0",
+        )
+    elif not args["noplot"]:
         plt.tight_layout()
         plt.show()

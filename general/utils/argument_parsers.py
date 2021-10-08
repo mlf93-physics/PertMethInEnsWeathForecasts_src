@@ -361,7 +361,7 @@ class StandardPlottingArgParser:
             + " detailed : plot extra details in plots",
         )
         self._parser.add_argument("-np", "--noplot", action="store_true")
-        self._parser.add_argument("-s", "--save_plot", action="store_true")
+        self._parser.add_argument("-s", "--save_fig", action="store_true")
 
         # x, y limits
         self._parser.add_argument("--xlim", nargs=2, default=None, type=float)
