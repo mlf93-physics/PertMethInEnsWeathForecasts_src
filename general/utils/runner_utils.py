@@ -35,12 +35,7 @@ def generate_start_times(exp_setup, args):
             _time_offset = 0
 
         num_possible_units = int(
-            (
-                ref_header_dict["time_to_run"]
-                - ref_header_dict["burn_in_time"]
-                - _time_offset
-            )
-            // exp_setup[offset_var]
+            (ref_header_dict["time_to_run"] - _time_offset) // exp_setup[offset_var]
         )
         start_times = [
             exp_setup[offset_var] * i + _time_offset for i in range(num_possible_units)
