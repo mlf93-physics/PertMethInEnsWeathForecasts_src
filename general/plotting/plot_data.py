@@ -1,9 +1,11 @@
+import pathlib as pl
 import numpy as np
 import matplotlib.pyplot as plt
 import shell_model_experiments.params as sh_params
 import lorentz63_experiments.params.params as l63_params
 import general.utils.importing.import_data_funcs as g_import
 import general.utils.plot_utils as g_plt_utils
+import general.utils.util_funcs as g_utils
 from general.params.experiment_licences import Experiments as EXP
 from general.params.model_licences import Models
 from config import MODEL, LICENCE
@@ -171,34 +173,61 @@ def plot_error_norm_vs_time(
     if args["ylim"] is not None:
         axes.set_ylim(args["ylim"][0], args["ylim"][1])
 
-    if MODEL == Models.SHELL_MODEL:
-        axes.set_title(
-            f'Error vs time; f={header_dict["forcing"]}'
-            + f', $n_f$={int(header_dict["n_f"])}, $\\nu$={header_dict["ny"]:.2e}'
-            + f', time={header_dict["time_to_run"]}\nExperiment: {args["exp_folder"]};'
-            + f'Files: {args["file_offset"]}-{args["file_offset"] + args["n_files"]}'
-        )
-    elif MODEL == Models.LORENTZ63:
-        axes.set_title(
-            f'Error vs time; sigma={header_dict["sigma"]}'
-            + f', $b$={header_dict["b_const"]:.2e}, r={header_dict["r_const"]}'
-            + f', time={header_dict["time_to_run"]}\nExperiment: {args["exp_folder"]};'
-            + f'Files: {args["file_offset"]}-{args["file_offset"] + args["n_files"]}'
-        )
+    title = g_plt_utils.generate_title(header_dict, args, title_header="Error vs time")
+    axes.set_title(title)
 
-    # plt.savefig(f'../figures/week6/error_eigen_spectrogram/error_norm_ny{header_dict["ny"]:.2e}_file_{args["file_offset"]}', format='png')
+    return axes
 
-    # print('perturb_time_pos_list', perturb_time_pos_list)
 
-    # Plot energy below
-    # ref_file_name = list(Path(args['path']).glob('*.csv'))
-    # data_in, ref_header_dict = g_import.import_data(ref_file_name[0],
-    #     start_line=int(perturb_time_pos_list[0]*sample_rate/dt) + 1,
-    #     max_lines=int((perturb_time_pos_list[-1] - perturb_time_pos_list[0])*sample_rate/dt + header_dict['N_data']))
+def plot_energy(
+    time=None, u_data=None, header_dict=None, axes=None, args=None, zero_time_ref=None
+):
+    # If data is not present, import it
+    if time is None or u_data is None or header_dict is None:
+        # Import reference data
+        time, u_data, header_dict = g_import.import_ref_data(args=args)
 
-    # # print('perturb_time_pos_list[0]', perturb_time_pos_list[0])
-    # plot_inviscid_quantities(data_in[:, 0] - perturb_time_pos_list[0],
-    #     data_in[:, 1:], ref_header_dict, ax=axes[1], args=args,
-    #     zero_time_ref=int(perturb_time_pos_list[0]*sample_rate/dt))
+    if axes is None:
+        fig = plt.figure()
+        axes = plt.axes()
+
+    # Plot total energy vs time
+    energy_vs_time = np.sum(u_data * np.conj(u_data), axis=1).real
+    axes.plot(time.real, energy_vs_time, "k")
+    axes.set_xlabel("Time")
+    axes.set_ylabel("Energy")
+
+    header_dict = g_utils.handle_different_headers(header_dict)
+
+    title = g_plt_utils.generate_title(
+        header_dict, args, title_header="Energy vs. time"
+    )
+    axes.set_title(title)
+
+    if "exp_folder" in args:
+        if args["exp_folder"] is not None:
+            perturb_file_names = list(
+                pl.Path(args["datapath"], args["exp_folder"]).glob("*.csv")
+            )
+
+            # Import headers to get perturb positions
+            index = []
+            for ifile, file_name in enumerate(perturb_file_names):
+                header_dict = g_import.import_header(file_name=file_name)
+
+                if zero_time_ref:
+                    index.append(header_dict["perturb_pos"] - zero_time_ref)
+                else:
+                    index.append(header_dict["perturb_pos"])
+
+                if ifile + 1 >= args["n_files"]:
+                    break
+
+            for idx in sorted(index):
+                plt.plot(
+                    idx * params.stt,
+                    energy_vs_time[int(idx * params.sample_rate)],
+                    marker="o",
+                )
 
     return axes

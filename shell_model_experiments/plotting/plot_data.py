@@ -4,25 +4,17 @@ sys.path.append("..")
 from pathlib import Path
 import numpy as np
 import matplotlib.pyplot as plt
-from math import floor, ceil, sqrt
 from shell_model_experiments.params.params import *
 import shell_model_experiments.perturbations.normal_modes as sh_nm_estimator
 import general.plotting.plot_data as g_plt_data
-from general.utils.importing.import_data_funcs import (
-    import_data,
-    import_header,
-    import_ref_data,
-    import_perturbation_velocities,
-    import_start_u_profiles,
-)
-import general.utils.util_funcs as g_utils
+import general.utils.importing.import_data_funcs as g_import
 import general.utils.argument_parsers as a_parsers
 
 
 def plot_shells_vs_time(k_vectors_to_plot=None):
 
     for ifile, file_name in enumerate(file_names):
-        data_in, header_dict = import_data(file_name)
+        data_in, header_dict = g_import.import_data(file_name)
         time = data_in[:, 0]
         u_store = data_in[:, 1:]
 
@@ -52,21 +44,23 @@ def plot_shells_vs_time(k_vectors_to_plot=None):
     axes[1].set_ylabel("Velocity", fontsize=12)
     axes[1].set_title("Imaginary part")
     # axes[1].set_title(f'Shell velocity vs. time')
-    # plt.suptitle(f'Parameters: f={header_dict["f"]}, $\\nu$={header_dict["ny"]:.2e}, time={header_dict["time"]}')
+    # plt.suptitle(f'Parameters: f={header_dict["f"]}, $\\nu$={header_dict["ny"]:.2e}, time={header_dict["time_to_run"]}')
     plt.legend(legend, loc="center right", bbox_to_anchor=(1.6, 0.5))
     plt.subplots_adjust(left=0.086, right=0.805, wspace=0.3)
-    # plt.suptitle(f'Shell velocity vs. time; f={header_dict["f"]}, $\\nu$={header_dict["ny"]:.2e}, time={header_dict["time"]}')
+    # plt.suptitle(f'Shell velocity vs. time; f={header_dict["f"]}, $\\nu$={header_dict["ny"]:.2e}, time={header_dict["time_to_run"]}')
 
     # handles, labels = axes[1].get_legend_handles_labels()
     # plt.figlegend(handles, labels, loc='center right', bbox_to_anchor=(1.0, 0.5))
 
 
-def plot_energy_spectrum(u_store, header_dict, ax=None, omit=None):
-    # Plot energy
-    # for i in range(10):
-    #     start = i*1000
-    #     plt.plot(k_vec_temp, np.mean((u_store[start:(start + 1000)] * np.conj(u_store[start:(start + 1000)])).real, axis=0))
-    ax.plot(
+def plot_energy_spectrum(u_store, header_dict, axes=None, omit=None):
+
+    if axes is None:
+        fig = plt.figure()
+        axes = plt.axes()
+
+    # Plot energy spectrum
+    axes.plot(
         np.log2(k_vec_temp),
         np.mean(
             (
@@ -76,71 +70,24 @@ def plot_energy_spectrum(u_store, header_dict, ax=None, omit=None):
             axis=0,
         ),
     )
-    ax.set_yscale("log")
-    ax.set_xlabel("k")
-    ax.set_ylim(1e-15, 1)
-    ax.set_ylabel("Energy")
-    if omit == "ny":
-        ax.set_title(
-            f'Energy spectrum vs. $\\nu$; f={header_dict["f"]}, $n_f$={header_dict["n_f"]}, time={header_dict["time"]}'
-        )
-    if omit == "n_f":
-        ax.set_title(
-            f'Energy spectrum vs. $n_f$; f={header_dict["f"]}, $\\nu$={header_dict["ny"]:.2e}, time={header_dict["time"]}'
-        )
-
-
-def plot_energy_spectrum(
-    time, u_store, header_dict, axes=None, omit=None, args=None, zero_time_ref=None
-):
-
-    if axes is None:
-        axes = plt.axes()
-    # Plot total energy vs time
-    energy_vs_time = np.sum(u_store * np.conj(u_store), axis=1).real
-    axes.plot(time.real, energy_vs_time, "k")
-    axes.set_xlabel("Time")
+    # Plot Kolmogorov scaling
+    axes.plot(np.log2(k_vec_temp), k_vec_temp ** (-2 / 3), "k--")
+    axes.set_yscale("log")
+    axes.set_xlabel("k")
     axes.set_ylabel("Energy")
-
-    header_dict = g_utils.handle_different_headers(header_dict)
-
     if omit == "ny":
         axes.set_title(
-            f'Energy over time vs $\\nu$; f={header_dict["forcing"]}, $n_f$={header_dict["n_f"]}, time={header_dict["time_to_run"]}'
+            f'Energy spectrum vs. $\\nu$; f={header_dict["forcing"]}, '
+            + f'$n_f$={header_dict["n_f"]}, time={header_dict["time_to_run"]}'
         )
     if omit == "n_f":
         axes.set_title(
-            f'Energy over time vs $n_f$; f={header_dict["forcing"]}, $\\nu$={header_dict["ny"]:.2e}, time={header_dict["time_to_run"]}'
+            f'Energy spectrum vs. $n_f$; f={header_dict["forcing"]}, '
+            + f'$\\nu$={header_dict["ny"]:.2e}, time={header_dict["time_to_run"]}'
         )
 
-    if "exp_folder" in args:
-        if args["exp_folder"] is not None:
-            perturb_file_names = list(
-                Path(args["datapath"], args["exp_folder"]).glob("*.csv")
-            )
 
-            # Import headers to get perturb positions
-            index = []
-            for ifile, file_name in enumerate(perturb_file_names):
-                header_dict = import_header(file_name=file_name)
-
-                if zero_time_ref:
-                    index.append(header_dict["perturb_pos"] - zero_time_ref)
-                else:
-                    index.append(header_dict["perturb_pos"])
-
-                if ifile + 1 >= args["n_files"]:
-                    break
-
-            for idx in sorted(index):
-                plt.plot(
-                    idx * stt,
-                    energy_vs_time[int(idx * sample_rate)],
-                    marker="o",
-                )
-
-
-def plot_energy_spectrum_per_shell(
+def plot_energy_per_shell(
     time, u_store, header_dict, ax=None, omit=None, path=None, args=None
 ):
     # Plot total energy vs time
@@ -151,17 +98,17 @@ def plot_energy_spectrum_per_shell(
 
     if omit == "ny":
         ax.set_title(
-            f'Energy over time vs $\\nu$; f={header_dict["f"]}, $n_f$={header_dict["n_f"]}, time={header_dict["time"]}'
+            f'Energy over time vs $\\nu$; f={header_dict["f"]}, $n_f$={header_dict["n_f"]}, time={header_dict["time_to_run"]}'
         )
     elif omit == "n_f":
         ax.set_title(
-            f'Energy over time vs $n_f$; f={header_dict["f"]}, $\\nu$={header_dict["ny"]:.2e}, time={header_dict["time"]}'
+            f'Energy over time vs $n_f$; f={header_dict["f"]}, $\\nu$={header_dict["ny"]:.2e}, time={header_dict["time_to_run"]}'
         )
     else:
         ax.set_title(
             f'Energy over time; f={header_dict["f"]}'
             + f', $n_f$={int(header_dict["n_f"])}, $\\nu$={header_dict["ny"]:.2e}'
-            + f', time={header_dict["time"]}s'
+            + f', time={header_dict["time_to_run"]}s'
         )
 
     if "exp_folder" in args:
@@ -186,12 +133,12 @@ def plot_energy_spectrum_per_shell(
             perturb_time_pos_list_legend,
             header_dict,
             _,
-        ) = import_perturbation_velocities(args)
+        ) = g_import.import_perturbation_velocities(args)
 
         index = []
         header_dicts = []
         for ifile, file_name in enumerate(perturb_file_names):
-            header_dicts.append(import_header(file_name=file_name))
+            header_dicts.append(g_import.import_header(file_name=file_name))
             index.append(header_dicts[-1]["perturb_pos"])
 
         header_dicts = [header_dicts[i] for _, i in enumerate(np.argsort(index))]
@@ -273,7 +220,7 @@ def analyse_eddie_turnovertime(u_store, header_dict, args=None):
     axes[0].set_title(
         'Eddy frequencies vs k; f={header_dict["f"]}'
         + f', $n_f$={int(header_dict["n_f"])}, $\\nu$={header_dict["ny"]:.2e}'
-        + f', time={header_dict["time"]}s'
+        + f', time={header_dict["time_to_run"]}s'
     )
 
     axes[1].plot(
@@ -289,7 +236,7 @@ def analyse_eddie_turnovertime(u_store, header_dict, args=None):
     axes[1].set_title(
         'Eddy turnover time vs k; f={header_dict["f"]}'
         + f', $n_f$={int(header_dict["n_f"])}, $\\nu$={header_dict["ny"]:.2e}'
-        + f', time={header_dict["time"]}s'
+        + f', time={header_dict["time_to_run"]}s'
     )
 
     # fig, axes = plt.subplots(5, 4, sharex=True)
@@ -324,24 +271,21 @@ def analyse_eddie_turnovertime(u_store, header_dict, args=None):
 def plots_related_to_energy(args=None, axes=None):
 
     # Import reference data
-    time, u_data, header_dict = import_ref_data(args=args)
+    time, u_data, header_dict = g_import.import_ref_data(args=args)
 
     # Conserning ny
-    # plot_energy_spectrum(u_data, header_dict, ax = axes[0], omit='ny')
-    plot_energy_spectrum(time, u_data, header_dict, axes=axes, omit="ny", args=args)
-    # plot_energy_spectrum_per_shell(
+    plot_energy_spectrum(u_data, header_dict, omit="ny")
+    g_plt_data.plot_energy(time, u_data, header_dict, axes=axes, args=args)
+    # plot_energy_per_shell(
     #     time, u_data, header_dict, ax=axes[0], path=args["datapath"], args=args
     # )
-
-    # Plot Kolmogorov scaling
-    # axes[0].plot(np.log2(k_vec_temp), k_vec_temp**(-2/3), 'k--')
 
 
 def plot_eddie_freqs(args=None):
     # file_names = ['../data/udata_ny0_t1.000000e+00_n_f0_f0_j0.csv']
 
     for ifile, file_name in enumerate(file_names):
-        data_in, header_dict = import_data(
+        data_in, header_dict = g_import.import_data(
             file_name, start_line=int(args["burn_in_time"] * tts)
         )
         time = data_in[:, 0]
@@ -363,12 +307,12 @@ def plot_shell_error_vs_time(args=None):
         perturb_time_pos_list_legend,
         header_dict,
         _,
-    ) = import_perturbation_velocities(args)
+    ) = g_import.import_perturbation_velocities(args)
 
     time_array = np.linspace(
         0,
-        header_dict["time"],
-        int(header_dict["time"] * tts),
+        header_dict["time_to_run"],
+        int(header_dict["time_to_run"] * tts),
         dtype=np.float64,
         endpoint=False,
     )
@@ -385,12 +329,14 @@ def plot_shell_error_vs_time(args=None):
         plt.title(
             f'Error vs time; f={header_dict["f"]}'
             + f', $n_f$={int(header_dict["n_f"])}, $\\nu$={header_dict["ny"]:.2e}'
-            + f', time={header_dict["time"]} | Folder: {args["exp_folder"]}'
+            + f', time={header_dict["time_to_run"]} | Folder: {args["exp_folder"]}'
         )
 
 
 def plot_2D_eigen_mode_analysis(args=None):
-    u_init_profiles, perturb_positions, header_dict = import_start_u_profiles(args=args)
+    u_init_profiles, perturb_positions, header_dict = g_import.import_start_u_profiles(
+        args=args
+    )
 
     _, e_vector_collection, e_value_collection = sh_nm_estimator.find_normal_modes(
         u_init_profiles,
@@ -432,12 +378,14 @@ def plot_2D_eigen_mode_analysis(args=None):
     plt.title(
         f'Cummulative eigenvalues; f={header_dict["f"]}'
         + f', $n_f$={int(header_dict["n_f"])}, $\\nu$={header_dict["ny"]:.2e}'
-        + f', time={header_dict["time"]}s'
+        + f', time={header_dict["time_to_run"]}s'
     )
 
 
 def plot_3D_eigen_mode_analysis(args=None, right_handed=True):
-    u_init_profiles, perturb_positions, header_dict = import_start_u_profiles(args=args)
+    u_init_profiles, perturb_positions, header_dict = g_import.import_start_u_profiles(
+        args=args
+    )
 
     _, e_vector_collection, e_value_collection = sh_nm_estimator.find_normal_modes(
         u_init_profiles,
@@ -472,7 +420,7 @@ def plot_3D_eigen_mode_analysis(args=None, right_handed=True):
     ax.set_title(
         f'Eigenvectors vs shell numbers; f={header_dict["f"]}'
         + f', $n_f$={int(header_dict["n_f"])}, $\\nu$={header_dict["ny"]:.2e}'
-        + f', time={header_dict["time"]}s, N_tot={args["n_profiles"]*args["n_runs_per_profile"]}'
+        + f', time={header_dict["time_to_run"]}s, N_tot={args["n_profiles"]*args["n_runs_per_profile"]}'
     )
 
     if right_handed:
@@ -486,7 +434,7 @@ def plot_3D_eigen_mode_analysis(args=None, right_handed=True):
     plt.title(
         f'Eigenvectors vs shell numbers; f={header_dict["f"]}'
         + f', $n_f$={int(header_dict["n_f"])}, $\\nu$={header_dict["ny"]:.2e}'
-        + f', time={header_dict["time"]}s, N_tot={args["n_profiles"]*args["n_runs_per_profile"]}'
+        + f', time={header_dict["time_to_run"]}s, N_tot={args["n_profiles"]*args["n_runs_per_profile"]}'
     )
 
     if right_handed:
@@ -500,7 +448,9 @@ def plot_3D_eigen_mode_analysis(args=None, right_handed=True):
 
 
 def plot_eigen_vector_comparison(args=None):
-    u_init_profiles, perturb_positions, header_dict = import_start_u_profiles(args=args)
+    u_init_profiles, perturb_positions, header_dict = g_import.import_start_u_profiles(
+        args=args
+    )
 
     _, e_vector_collection, e_value_collection = sh_nm_estimator.find_normal_modes(
         u_init_profiles,
@@ -581,7 +531,7 @@ def plot_eigen_vector_comparison(args=None):
                 plt.suptitle(
                     f'Eigenvector comparison; f={header_dict["f"]}'
                     + f', $n_f$={int(header_dict["n_f"])}, $\\nu$={header_dict["ny"]:.2e}'
-                    + f', time={header_dict["time"]}s'
+                    + f', time={header_dict["time_to_run"]}s'
                 )
 
     if dev_plot:
@@ -593,7 +543,7 @@ def plot_eigen_vector_comparison(args=None):
         plt.title(
             f'Eigenvectors vs shell numbers; f={header_dict["f"]}'
             + f', $n_f$={int(header_dict["n_f"])}, $\\nu$={header_dict["ny"]:.2e}'
-            + f', time={header_dict["time"]}s, N_tot={args["n_profiles"]*args["n_runs_per_profile"]}'
+            + f', time={header_dict["time_to_run"]}s, N_tot={args["n_profiles"]*args["n_runs_per_profile"]}'
         )
         plt.xlim(n_k_vec, 0)
         axes.yaxis.tick_right()
@@ -621,7 +571,7 @@ def plot_eigen_vector_comparison(args=None):
     plt.title(
         f'Orthogonality of pairs of eigenvectors; f={header_dict["f"]}'
         + f', $n_f$={int(header_dict["n_f"])}, $\\nu$={header_dict["ny"]:.2e}'
-        + f', time={header_dict["time"]}s, N_tot={args["n_profiles"]*args["n_runs_per_profile"]}'
+        + f', time={header_dict["time_to_run"]}s, N_tot={args["n_profiles"]*args["n_runs_per_profile"]}'
     )
 
 
@@ -633,7 +583,7 @@ def plot_error_energy_spectrum_vs_time_2D(args=None):
         perturb_time_pos_list_legend,
         header_dict,
         _,
-    ) = import_perturbation_velocities(args)
+    ) = g_import.import_perturbation_velocities(args)
 
     if args["n_files"] == np.inf:
         n_files = len(perturb_time_pos_list)
@@ -686,7 +636,7 @@ def plot_error_energy_spectrum_vs_time_2D(args=None):
     plt.title(
         f'Error energy spectrum vs time; f={header_dict["f"]}'
         + f', $n_f$={int(header_dict["n_f"])}, $\\nu$={header_dict["ny"]:.2e}'
-        + f', time={header_dict["time"]}, N_tot={n_files} | Folder: {args["exp_folder"]}'
+        + f', time={header_dict["time_to_run"]}, N_tot={n_files} | Folder: {args["exp_folder"]}'
     )
     plt.savefig(
         f'../figures/week6/error_spectra_vs_time/single_shell5_perturb/error_spectra_vs_time_ref_ny_n_19_folder_single_shell5_perturb_ny_n{int(header_dict["n_ny"]):d}_files_{n_files}',
@@ -705,7 +655,7 @@ def plot_error_vector_spectrogram(args=None):
         perturb_time_pos_list_legend,
         perturb_header_dict,
         _,
-    ) = import_perturbation_velocities(args)
+    ) = g_import.import_perturbation_velocities(args)
 
     args["start_times"] = np.array(
         [perturb_time_pos_list[args["file_offset"]] * stt],
@@ -714,7 +664,9 @@ def plot_error_vector_spectrogram(args=None):
     args["n_profiles"] = len(args["start_times"])
 
     # Import start u profiles at the perturbation
-    u_init_profiles, perturb_positions, header_dict = import_start_u_profiles(args=args)
+    u_init_profiles, perturb_positions, header_dict = g_import.import_start_u_profiles(
+        args=args
+    )
 
     _, e_vector_collection, e_value_collection = sh_nm_estimator.find_normal_modes(
         u_init_profiles,
@@ -739,7 +691,7 @@ def plot_error_vector_spectrogram(args=None):
     plt.title(
         f'Error spectrum vs time; f={perturb_header_dict["f"]}'
         + f', $n_f$={int(perturb_header_dict["n_f"])}, $\\nu$={perturb_header_dict["ny"]:.2e}'
-        + f', time={perturb_header_dict["time"]}s'
+        + f', time={perturb_header_dict["time_to_run"]}s'
     )  # , N_tot={args["n_profiles"]*args["n_runs_per_profile"]}')
     plt.colorbar(label="$|c_j|/||c||$)")
     plt.savefig(
@@ -762,7 +714,7 @@ def plot_error_vector_spectrum(args=None):
         perturb_time_pos_list_legend,
         perturb_header_dict,
         _,
-    ) = import_perturbation_velocities(args)
+    ) = g_import.import_perturbation_velocities(args)
 
     args["start_times"] = np.array(
         [
@@ -776,7 +728,9 @@ def plot_error_vector_spectrum(args=None):
     print("start_times", args["start_times"])
 
     # Import start u profiles at the perturbation
-    u_init_profiles, perturb_positions, header_dict = import_start_u_profiles(args=args)
+    u_init_profiles, perturb_positions, header_dict = g_import.import_start_u_profiles(
+        args=args
+    )
 
     _, e_vector_collection, e_value_collection = sh_nm_estimator.find_normal_modes(
         u_init_profiles,
@@ -821,7 +775,7 @@ def plot_error_vector_spectrum(args=None):
     plt.title(
         f'Eigenvectors vs shell numbers; f={header_dict["f"]}'
         + f', $n_f$={int(header_dict["n_f"])}, $\\nu$={header_dict["ny"]:.2e}'
-        + f', time={header_dict["time"]}s, N_tot={args["n_profiles"]*args["n_runs_per_profile"]}'
+        + f', time={header_dict["time_to_run"]}s, N_tot={args["n_profiles"]*args["n_runs_per_profile"]}'
     )
     plt.xlim(n_k_vec, 0)
     axes.yaxis.tick_right()

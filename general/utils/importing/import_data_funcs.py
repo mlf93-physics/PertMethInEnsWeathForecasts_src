@@ -408,9 +408,7 @@ def import_start_u_profiles(args=None):
 
     # Match the positions to the relevant ref files
     ref_file_match = g_utils.match_start_positions_to_ref_file(
-        args=args,
-        header_dict=ref_header_dict,
-        positions=positions),
+        args=args, header_dict=ref_header_dict, positions=positions
     )
 
     # Get sorted file paths

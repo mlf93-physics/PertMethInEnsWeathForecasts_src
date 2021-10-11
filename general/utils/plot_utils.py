@@ -8,6 +8,8 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 import numpy as np
 from general.plotting.plot_params import *
+from general.params.model_licences import Models
+from config import MODEL
 
 
 def get_non_repeating_colors(n_colors=1):
@@ -71,6 +73,41 @@ def save_figure(subpath: pl.Path = None, file_name="figure1"):
     )
 
     print(f"\nFigures (png, pgf) saved as {file_name} at figures/{str(subpath)}\n")
+
+
+def generate_title(header_dict, args, title_header="PUT TITLE TEXT HERE"):
+
+    if args["exp_folder"] is not None:
+        exp_suffix = f'Experiment: {args["exp_folder"]}; '
+    else:
+        exp_suffix = ""
+
+    if args["n_files"] < np.inf:
+        file_suffix = (
+            f'Files: {args["file_offset"]}-{args["file_offset"] + args["n_files"]} '
+        )
+    else:
+        file_suffix = ""
+
+    if MODEL == Models.SHELL_MODEL:
+        title = (
+            f'; f={header_dict["forcing"]}'
+            + f', $n_{{\\nu}}$={int(header_dict["n_f"])}, $\\nu$={header_dict["ny"]:.2e}'
+            + f', time={header_dict["time_to_run"]}\n'
+        )
+    elif MODEL == Models.LORENTZ63:
+        title = (
+            f'; sigma={header_dict["sigma"]}'
+            + f', $b$={header_dict["b_const"]:.2e}, r={header_dict["r_const"]}'
+            + f', time={header_dict["time_to_run"]}\n'
+        )
+
+    # Add prefixes
+    title = title_header + title
+    # Add suffixes
+    title += exp_suffix + file_suffix
+
+    return title
 
 
 if __name__ == "__main__":
