@@ -9,6 +9,7 @@ import shell_model_experiments.perturbations.normal_modes as sh_nm_estimator
 import general.plotting.plot_data as g_plt_data
 import general.utils.importing.import_data_funcs as g_import
 import general.utils.argument_parsers as a_parsers
+import general.utils.plot_utils as g_plt_utils
 
 
 def plot_shells_vs_time(k_vectors_to_plot=None):
@@ -59,32 +60,36 @@ def plot_energy_spectrum(u_store, header_dict, axes=None, omit=None):
         fig = plt.figure()
         axes = plt.axes()
 
+    # Calculate mean energy
+    mean_energy = np.mean(
+        (
+            u_store[-u_store.shape[0] // 4 :]
+            * np.conj(u_store[-u_store.shape[0] // 4 :])
+        ).real,
+        axis=0,
+    )
+
     # Plot energy spectrum
     axes.plot(
         np.log2(k_vec_temp),
-        np.mean(
-            (
-                u_store[-u_store.shape[0] // 4 :]
-                * np.conj(u_store[-u_store.shape[0] // 4 :])
-            ).real,
-            axis=0,
-        ),
+        mean_energy,
     )
     # Plot Kolmogorov scaling
     axes.plot(np.log2(k_vec_temp), k_vec_temp ** (-2 / 3), "k--")
+
+    # Axes setup
     axes.set_yscale("log")
     axes.set_xlabel("k")
     axes.set_ylabel("Energy")
-    if omit == "ny":
-        axes.set_title(
-            f'Energy spectrum vs. $\\nu$; f={header_dict["forcing"]}, '
-            + f'$n_f$={header_dict["n_f"]}, time={header_dict["time_to_run"]}'
-        )
-    if omit == "n_f":
-        axes.set_title(
-            f'Energy spectrum vs. $n_f$; f={header_dict["forcing"]}, '
-            + f'$\\nu$={header_dict["ny"]:.2e}, time={header_dict["time_to_run"]}'
-        )
+    # Limit y axis if necessary
+    if np.log(np.min(mean_energy)) < -15:
+        axes.set_ylim(10e-15, 1)
+
+    # Title setup
+    title = g_plt_utils.generate_title(
+        header_dict, args, title_header="Energy spectrum"
+    )
+    axes.set_title(title)
 
 
 def plot_energy_per_shell(

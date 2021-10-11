@@ -15,25 +15,22 @@ elif MODEL == Models.LORENTZ63:
     params = l63_params
 
 
-def match_start_positions_to_ref_file(args=None, header_dict=None, positions=None):
+def match_start_positions_to_ref_file(args=None, ref_header_dict=None, positions=None):
     """Match the positions to their respective record of the reference
     dataseries."""
 
     ref_file_match = OrderedDict()
 
-    if MODEL == Models.SHELL_MODEL:
-        model_dt = sh_params.dt
-    elif MODEL == Models.LORENTZ63:
-        model_dt = l63_params.dt
+    model_dt = ref_header_dict["dt"]
 
     # The file ids which shall be imported
     matched_file_ids = positions // int(
-        header_dict["record_max_time"] * header_dict["sample_rate"] / model_dt
+        ref_header_dict["record_max_time"] * ref_header_dict["sample_rate"] / model_dt
     )
 
     # The positions in the files that shall be imported
     positions_relative_to_record = positions % int(
-        header_dict["record_max_time"] * header_dict["sample_rate"] / model_dt
+        ref_header_dict["record_max_time"] * ref_header_dict["sample_rate"] / model_dt
     )
 
     # Save the positions per record id to a dictionary

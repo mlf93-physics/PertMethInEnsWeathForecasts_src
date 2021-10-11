@@ -408,7 +408,7 @@ def import_start_u_profiles(args=None):
 
     # Match the positions to the relevant ref files
     ref_file_match = g_utils.match_start_positions_to_ref_file(
-        args=args, header_dict=ref_header_dict, positions=positions
+        args=args, ref_header_dict=ref_header_dict, positions=positions
     )
 
     # Get sorted file paths
@@ -422,6 +422,7 @@ def import_start_u_profiles(args=None):
 
     # Import velocity profiles
     counter = 0
+
     for file_id in ref_file_match.keys():
         for position in ref_file_match[int(file_id)]:
             temp_u_init_profile = np.genfromtxt(
