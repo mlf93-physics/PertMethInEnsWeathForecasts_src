@@ -80,10 +80,7 @@ def main(args=None):
     u_old = np.pad(u_old, pad_width=bd_size, mode="constant")
 
     # Get number of records
-    args["n_records"] = ceil(
-        (args["Nt"] - args["burn_in_time"] / dt)
-        / int(GLOBAL_PARAMS.record_max_time / dt)
-    )
+    args["n_records"] = ceil((args["Nt"]) / int(GLOBAL_PARAMS.record_max_time / dt))
 
     profiler.start()
     print(
@@ -110,17 +107,9 @@ def main(args=None):
     for ir in range(args["n_records"]):
         # Calculate data out size
         if ir == (args["n_records"] - 1):
-            if (args["Nt"] - args["burn_in_time"] / dt) % int(
-                GLOBAL_PARAMS.record_max_time / dt
-            ) > 0:
+            if args["Nt"] % int(GLOBAL_PARAMS.record_max_time / dt) > 0:
                 out_array_size = int(
-                    (
-                        args["Nt"]
-                        - args["burn_in_time"]
-                        / dt
-                        % int(GLOBAL_PARAMS.record_max_time / dt)
-                    )
-                    * sample_rate
+                    (args["Nt"] % int(GLOBAL_PARAMS.record_max_time / dt)) * sample_rate
                 )
         else:
             out_array_size = int(GLOBAL_PARAMS.record_max_time * tts)

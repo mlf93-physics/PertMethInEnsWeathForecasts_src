@@ -90,7 +90,7 @@ def plot_energy_spectrum(u_store, header_dict, ax=None, omit=None):
         )
 
 
-def plot_inviscid_quantities(
+def plot_energy_spectrum(
     time, u_store, header_dict, axes=None, omit=None, args=None, zero_time_ref=None
 ):
 
@@ -140,7 +140,7 @@ def plot_inviscid_quantities(
                 )
 
 
-def plot_inviscid_quantities_per_shell(
+def plot_energy_spectrum_per_shell(
     time, u_store, header_dict, ax=None, omit=None, path=None, args=None
 ):
     # Plot total energy vs time
@@ -248,29 +248,6 @@ def plot_inviscid_quantities_per_shell(
                 break
 
 
-def plot_eddies():
-    n_eddies = 20
-    plt.figure()
-    axes = []
-    legend = []
-    dplot = 0.06
-
-    for i in range(n_eddies):
-        axes.append(plt.subplot(ceil(sqrt(n_eddies)), floor(sqrt(n_eddies)), i + 1))
-        axes[-1].plot(u_store[:, i].real - u_store[0, i].real, u_store[:, i].imag)
-        axes[-1].plot(
-            u_store[0, i].real - u_store[0, i].real,
-            u_store[0, i].imag,
-            "ko",
-            label="_nolegend_",
-        )
-        # legend.append(f'k = {k_vec_temp[-i]}')
-    plt.xlabel("Re[u]")
-    plt.ylabel("Im[u]")
-    # plt.legend(legend, loc='center right', bbox_to_anchor=(1.05, 0.5))
-    plt.suptitle(f"u eddies; f={forcing}, ny={ny}, runs={Nt}")
-
-
 def analyse_eddie_turnovertime(u_store, header_dict, args=None):
     fig, axes = plt.subplots(nrows=2, ncols=1)
     # Calculate mean eddy turnover time
@@ -344,28 +321,6 @@ def analyse_eddie_turnovertime(u_store, header_dict, args=None):
     # plt.subplots_adjust(hspace=0.44, left=0.062, right=0.95)
 
 
-def plot_eddy_vel_histograms():
-    n_eddies = 2
-    plt.figure()
-    axes = []
-    legend = []
-    dplot = 0.06
-
-    for i in range(n_eddies):
-        axes.append(plt.subplot(ceil(sqrt(n_eddies)), floor(sqrt(n_eddies)), i + 1))
-        axes[-1].hist2d(
-            u_store[:, -(i + 1)].real,
-            u_store[:, -(i + 1)].imag,
-            density=True,
-            cmap="Greys",
-        )
-        # legend.append(f'k = {k_vec_temp[-i]}')
-    plt.xlabel("Re[u]")
-    plt.ylabel("Probability")
-    # plt.legend(legend, loc='center right', bbox_to_anchor=(1.05, 0.5))
-    plt.suptitle(f"u eddy prop dist; f={forcing}, ny={ny}, runs={Nt}")
-
-
 def plots_related_to_energy(args=None, axes=None):
 
     # Import reference data
@@ -373,54 +328,13 @@ def plots_related_to_energy(args=None, axes=None):
 
     # Conserning ny
     # plot_energy_spectrum(u_data, header_dict, ax = axes[0], omit='ny')
-    plot_inviscid_quantities(time, u_data, header_dict, axes=axes, omit="ny", args=args)
-    # plot_inviscid_quantities_per_shell(
+    plot_energy_spectrum(time, u_data, header_dict, axes=axes, omit="ny", args=args)
+    # plot_energy_spectrum_per_shell(
     #     time, u_data, header_dict, ax=axes[0], path=args["datapath"], args=args
     # )
 
     # Plot Kolmogorov scaling
     # axes[0].plot(np.log2(k_vec_temp), k_vec_temp**(-2/3), 'k--')
-
-
-def plots_related_to_forcing():
-    figs = []
-    axes = []
-
-    num_plots = 2
-
-    for i in range(num_plots):
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-        figs.append(fig)
-        axes.append(ax)
-
-    file_names = [
-        "../data/udata_ny0_t1.000000e+00_n_f0_f0_j0.csv",
-        "../data/udata_ny0_t1.000000e+00_n_f0_f10_j10.csv",
-        "../data/udata_ny0_t1.000000e+00_n_f2_f10_j10.csv",
-        "../data/udata_ny0_t1.000000e+00_n_f4_f10_j10.csv",
-    ]
-
-    legend_forcing = []
-
-    for ifile, file_name in enumerate(file_names):
-        data_in, header_dict = import_data(file_name)
-        time = data_in[:, 0]
-        u_store = data_in[:, 1:]
-
-        # Conserning forcing
-        plot_energy_spectrum(u_store, header_dict, ax=axes[0], omit="n_f")
-        plot_inviscid_quantities(time, u_store, header_dict, axes=axes[1], omit="n_f")
-        if ifile == 0:
-            legend_forcing.append("No forcing")
-        else:
-            legend_forcing.append(f'$n_f$ = {int(header_dict["n_f"])}')
-
-    axes[0].plot(
-        k_vec_temp, k_vec_temp ** (-2 / 3), "k--", label="Kolmogorov; $k^{-2/3}$"
-    )
-    axes[0].legend(legend_forcing)
-    axes[1].legend(legend_forcing)
 
 
 def plot_eddie_freqs(args=None):
@@ -930,12 +844,6 @@ if __name__ == "__main__":
     # Perform plotting
     if "shells_vs_time" in args["plot_type"]:
         plot_shells_vs_time([0, 1, 2])
-
-    if "2D_eddies" in args["plot_type"]:
-        plot_eddies()
-
-    if "eddie_vel_hist" in args["plot_type"]:
-        plot_eddy_vel_histograms()
 
     if "eddie_freqs" in args["plot_type"]:
         plot_eddie_freqs(args=args)

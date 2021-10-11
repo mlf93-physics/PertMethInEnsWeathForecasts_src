@@ -378,14 +378,11 @@ def import_start_u_profiles(args=None):
         else:
             raise KeyError("No valid key with time to run information")
 
-        n_data = int((time_to_run - ref_header_dict["burn_in_time"]) * params.tts)
+        n_data = int((time_to_run) * params.tts)
 
         # Generate random start positions
         # division = total #datapoints - burn_in #datapoints - #datapoints per perturbation
-        division_size = int(
-            (n_data - args["burn_in_time"] * params.tts) // n_profiles
-            - args["Nt"] * params.sample_rate
-        )
+        division_size = int(n_data // n_profiles - args["Nt"] * params.sample_rate)
         rand_division_start = np.random.randint(
             low=0, high=division_size, size=n_profiles
         )
@@ -396,8 +393,6 @@ def import_start_u_profiles(args=None):
                 for i in range(n_profiles)
             ]
         )
-
-        burn_in = True
     else:
         print(
             f"\nImporting {n_profiles} velocity profiles positioned as "
@@ -405,11 +400,9 @@ def import_start_u_profiles(args=None):
         )
         positions = np.array(args["start_times"]) * params.tts
 
-        burn_in = False
-
     print(
         "\nPositions of perturbation start: ",
-        positions * params.stt + burn_in * args["burn_in_time"],
+        positions * params.stt,
         "(in seconds)",
     )
 
@@ -417,7 +410,7 @@ def import_start_u_profiles(args=None):
     ref_file_match = g_utils.match_start_positions_to_ref_file(
         args=args,
         header_dict=ref_header_dict,
-        positions=positions + burn_in * int(args["burn_in_time"] * params.tts),
+        positions=positions),
     )
 
     # Get sorted file paths
@@ -459,7 +452,7 @@ def import_start_u_profiles(args=None):
 
     return (
         u_init_profiles,
-        positions + burn_in * int(args["burn_in_time"] * params.tts),
+        positions,
         ref_header_dict,
     )
 
