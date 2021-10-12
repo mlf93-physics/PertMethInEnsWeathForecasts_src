@@ -1,0 +1,15 @@
+{
+    "TestRun1": {
+        "folder_name": "temp_test_hyper4_diffusivity",
+        "start_times": [
+            10,
+            11,
+            12,
+            13
+        ],
+        "time_to_run": 0.01,
+        "n_runs_per_profile": 1,
+        "diff_exponent": 4,
+        "ny_n": 16
+    }
+}

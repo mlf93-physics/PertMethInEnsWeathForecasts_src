@@ -10,6 +10,7 @@ import shell_model_experiments.params as sh_params
 import lorentz63_experiments.params.params as l63_params
 from general.params.model_licences import Models
 import general.utils.util_funcs as g_utils
+import general.utils.exceptions as g_exceptions
 from config import MODEL
 
 # Get parameters for model
@@ -80,7 +81,9 @@ def import_info_file(path):
     return info_dict
 
 
-def imported_sorted_perturbation_info(folder_name, args, search_pattern="*.csv"):
+def imported_sorted_perturbation_info(
+    folder_name, args, ref_header_dict: dict = {}, search_pattern="*.csv"
+):
     """Import sorted lists of perturbation info
 
     Both time positions, legend strings, header dicts and file names are imported
@@ -114,11 +117,18 @@ def imported_sorted_perturbation_info(folder_name, args, search_pattern="*.csv")
         # Import perturbation header info
         perturb_header_dict = import_header(file_name=perturb_file)
 
-        perturb_time_pos_list.append(int(perturb_header_dict["perturb_pos"]))
+        # Save time positions, by taking into account different sample rates
+        perturb_time_pos_list.append(
+            int(
+                perturb_header_dict["perturb_pos"]
+                # * perturb_header_dict["sample_rate"]
+                # / ref_header_dict["sample_rate"]
+            )
+        )
 
         perturb_time_pos_list_legend.append(
             f"Start time: "
-            + f'{perturb_header_dict["perturb_pos"]/params.sample_rate*params.dt:.3f}s'
+            + f'{perturb_header_dict["perturb_pos"]/perturb_header_dict["sample_rate"]*perturb_header_dict["dt"]:.3f}s'
         )
 
         perturb_header_dicts.append(perturb_header_dict)
@@ -242,7 +252,13 @@ def import_ref_data(args=None):
     return time, u_data, ref_header_dict
 
 
-def import_perturbation_velocities(args=None, search_pattern="*.csv"):
+def import_perturbation_velocities(
+    args=None, search_pattern="*.csv", shell_cutoff: int = None
+):
+    if MODEL != Models.SHELL_MODEL:
+        if shell_cutoff is not None:
+            raise g_exceptions.InvalidFuncArgument(argument="shell_cutoff")
+
     u_stores = []
 
     if args["datapath"] is None:
@@ -257,12 +273,15 @@ def import_perturbation_velocities(args=None, search_pattern="*.csv"):
         perturb_header_dicts,
         perturb_file_names,
     ) = imported_sorted_perturbation_info(
-        args["exp_folder"], args, search_pattern=search_pattern
+        args["exp_folder"],
+        args,
+        ref_header_dict=ref_header_dict,
+        search_pattern=search_pattern,
     )
 
     # Match the positions to the relevant ref files
     ref_file_match = g_utils.match_start_positions_to_ref_file(
-        args=args, header_dict=ref_header_dict, positions=perturb_time_pos_list
+        args=args, ref_header_dict=ref_header_dict, positions=perturb_time_pos_list
     )
 
     # Get sorted file paths
@@ -330,8 +349,17 @@ def import_perturbation_velocities(args=None, search_pattern="*.csv"):
             )
             counter += 1
 
-        # Calculate error array
-        u_stores.append(perturb_data_in[:, 1:] - ref_data_in[:, 1:])
+        if shell_cutoff is not None:
+            # Calculate error array
+            # Add +2 to shell_cutoff since first entry is time, and shell_cutoff
+            # starts from 0
+            u_stores.append(
+                perturb_data_in[:, 1 : (shell_cutoff + 2)]
+                - ref_data_in[:, 1 : (shell_cutoff + 2)]
+            )
+        else:
+            # Calculate error array
+            u_stores.append(perturb_data_in[:, 1:] - ref_data_in[:, 1:])
         # If perturb positions are the same for all perturbations, return
         # ref_data_in too
         if np.unique(perturb_time_pos_list).size == 1:

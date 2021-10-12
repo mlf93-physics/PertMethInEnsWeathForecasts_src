@@ -36,6 +36,9 @@ def analyse_error_norm_vs_time(u_stores, args=None):
         error_norm_vs_time = np.zeros((u_stores[0].shape[0], len(u_stores)))
 
         for i in range(len(u_stores)):
+            if len(u_stores[i]) == 1:
+                u_stores[i] = np.reshape(u_stores[i], (u_stores[i].size, 1))
+
             error_norm_vs_time[:, i] = np.linalg.norm(u_stores[i], axis=1).real
 
     error_norm_mean_vs_time = np.mean(error_norm_vs_time, axis=1)
@@ -81,7 +84,11 @@ def analyse_error_spread_vs_time_mean_of_norm(u_stores, args=None):
 
 
 def plot_error_norm_vs_time(
-    args=None, normalize_start_time=True, axes=None, exp_setup=None
+    args=None,
+    normalize_start_time=True,
+    axes=None,
+    exp_setup=None,
+    shell_cutoff: int = None,
 ):
 
     if exp_setup is None:
@@ -99,7 +106,9 @@ def plot_error_norm_vs_time(
         perturb_time_pos_list_legend,
         header_dict,
         u_ref_stores,
-    ) = g_import.import_perturbation_velocities(args, search_pattern="*perturb*.csv")
+    ) = g_import.import_perturbation_velocities(
+        args, search_pattern="*perturb*.csv", shell_cutoff=shell_cutoff
+    )
 
     num_perturbations = len(perturb_time_pos_list)
 

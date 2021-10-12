@@ -4,10 +4,8 @@ import numpy as np
 #### Initialise sabra model constants ####
 epsilon = 0.5
 lambda_const = 2
-dt = 1e-8
-sample_rate = round(
-    1 / 1000 * dt / 1e-7, 4
-)  # keep an appropriate sample rate depending on dt
+dt = 1e-7
+sample_rate = 1 / 1000
 n_k_vec = 20
 sdim = n_k_vec
 bd_size = 2

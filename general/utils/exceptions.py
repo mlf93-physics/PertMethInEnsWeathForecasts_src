@@ -1,4 +1,4 @@
-class InvalidArgument(Exception):
+class InvalidRuntimeArgument(Exception):
     """Exception raised for an invalid runtime argument
 
     Attributes:
@@ -75,3 +75,22 @@ class ExperimentSetupError(Exception):
             self.message = message
 
         super().__init__(f"{self.message}. Experiment variable: {self.exp_variable}")
+
+
+class InvalidFuncArgument(Exception):
+    """Exception raised for an invalid function argument
+
+    Attributes:
+        argument -- the invalid argument
+        message -- explanation of the error
+    """
+
+    def __init__(self, message="", argument=None):
+        self.argument = argument
+
+        if len(message) == 0:
+            self.message = "Function argument is invalid for the current model"
+        else:
+            self.message = message
+
+        super().__init__(f"{self.message}. Argument: {self.argument}")

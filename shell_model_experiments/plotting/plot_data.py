@@ -810,13 +810,11 @@ if __name__ == "__main__":
     if "energy_plots" in args["plot_type"]:
         plots_related_to_energy(args=args)
 
-    # plots_related_to_forcing()
-
     if "error_norm" in args["plot_type"]:
         if args["datapath"] is None:
             print("No path specified to analyse error norms.")
         else:
-            g_plt_data.plot_error_norm_vs_time(args=args)
+            g_plt_data.plot_error_norm_vs_time(args=args, shell_cutoff=10)
 
     if "error_spectrum_vs_time" in args["plot_type"]:
         plot_error_energy_spectrum_vs_time_2D(args=args)

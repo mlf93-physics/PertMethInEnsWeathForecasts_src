@@ -43,7 +43,7 @@ print(f"\nRunning with model {MODEL}\n")
 
 # Set experiment license
 exp = Experiments()
-LICENCE = exp.NORMAL_PERTURBATION
+LICENCE = exp.HYPER_DIFFUSIVITY
 
 # Get global params
 GLOBAL_PARAMS = GlobalParams()
