@@ -381,3 +381,6 @@ class StandardPlottingArgParser:
         self._parser.add_argument("--specific_files", nargs="+", default=None, type=int)
         self._parser.add_argument("--combinations", action="store_true")
         self._parser.add_argument("--endpoint", action="store_true")
+
+        if MODEL == Models.SHELL_MODEL:
+            self._parser.add_argument("--shell_cutoff", default=None, type=int)

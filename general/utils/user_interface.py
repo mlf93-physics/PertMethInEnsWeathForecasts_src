@@ -1,4 +1,4 @@
-def ask_user(question):
+def ask_user(question: str):
     answer = input(question + " [y/n]").lower().strip()
     print(answer)
 

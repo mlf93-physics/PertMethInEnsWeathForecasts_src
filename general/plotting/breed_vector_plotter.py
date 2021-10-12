@@ -13,7 +13,7 @@ import lorentz63_experiments.plotting.plot_data as l63_plot
 import general.utils.importing.import_perturbation_data as pt_import
 import general.utils.importing.import_data_funcs as g_import
 import general.plotting.plot_data as g_plt_data
-import general.utils.plot_utils as plt_utils
+import general.utils.plot_utils as g_plt_utils
 import general.analyses.plot_analyses as g_plt_anal
 import general.utils.argument_parsers as a_parsers
 from general.params.model_licences import Models
@@ -179,6 +179,9 @@ def plot_breed_error_norm(args):
         args=args, normalize_start_time=False, axes=axes[0], exp_setup=exp_setup
     )
 
+    # Set limits
+    axes[0].set_ylim(args["ylim"][0], args["ylim"][1])
+
     # Prepare ref import
     if "start_times" in exp_setup:
         start_time = exp_setup["start_times"][0]
@@ -228,13 +231,4 @@ if __name__ == "__main__":
     else:
         raise ValueError("No valid plot type given as input argument")
 
-    if args["save_fig"]:
-        plt_utils.save_figure(
-            subpath=pl.Path(
-                "lorentz63_experiments/breed_vectors/n_cycles_investigation"
-            ),
-            file_name="breed_vectors_ncycles2_nunits10_it1.0",
-        )
-    elif not args["noplot"]:
-        plt.tight_layout()
-        plt.show()
+    g_plt_utils.save_or_show_plot(args)

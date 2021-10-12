@@ -1,3 +1,4 @@
+import os
 import sys
 
 sys.path.append("..")
@@ -7,6 +8,7 @@ import pickle
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 import numpy as np
+import general.utils.user_interface as g_ui
 from general.plotting.plot_params import *
 from general.params.model_licences import Models
 from config import MODEL
@@ -58,6 +60,9 @@ def save_figure(subpath: pl.Path = None, file_name="figure1"):
     else:
         full_path = FIG_ROOT / subpath
 
+    if not os.path.isdir(full_path):
+        os.makedirs(full_path)
+
     # Save png
     plt.savefig(
         full_path / (file_name + ".png"),
@@ -75,7 +80,9 @@ def save_figure(subpath: pl.Path = None, file_name="figure1"):
     print(f"\nFigures (png, pgf) saved as {file_name} at figures/{str(subpath)}\n")
 
 
-def generate_title(header_dict, args, title_header="PUT TITLE TEXT HERE"):
+def generate_title(
+    header_dict, args, title_header="PUT TITLE TEXT HERE", title_suffix=""
+):
 
     if args["exp_folder"] is not None:
         exp_suffix = f'Experiment: {args["exp_folder"]}; '
@@ -105,9 +112,31 @@ def generate_title(header_dict, args, title_header="PUT TITLE TEXT HERE"):
     # Add prefixes
     title = title_header + title
     # Add suffixes
-    title += exp_suffix + file_suffix
+    title += exp_suffix + file_suffix + title_suffix
 
     return title
+
+
+def save_or_show_plot(args):
+    if args["save_fig"]:
+        subpath = pl.Path("shell_model_experiments/hyper_diffusivity/cutoff_invest")
+        file_name = "hyper_diff_ny_n16_diff_exp4_cutoff1"
+
+        question = (
+            "\nConfirm that the figure is being saved to\n"
+            + f"path: {subpath}\n"
+            + f"name: {file_name}\n"
+        )
+
+        answer = g_ui.ask_user(question)
+        if answer:
+            save_figure(subpath=subpath, file_name=file_name)
+        else:
+            print("\nSaving the figure was aborted\n")
+
+    elif not args["noplot"]:
+        plt.tight_layout()
+        plt.show()
 
 
 if __name__ == "__main__":

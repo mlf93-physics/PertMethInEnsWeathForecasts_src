@@ -54,7 +54,7 @@ def plot_shells_vs_time(k_vectors_to_plot=None):
     # plt.figlegend(handles, labels, loc='center right', bbox_to_anchor=(1.0, 0.5))
 
 
-def plot_energy_spectrum(u_store, header_dict, axes=None, omit=None):
+def plot_energy_spectrum(u_data, header_dict, axes=None):
 
     if axes is None:
         fig = plt.figure()
@@ -63,8 +63,8 @@ def plot_energy_spectrum(u_store, header_dict, axes=None, omit=None):
     # Calculate mean energy
     mean_energy = np.mean(
         (
-            u_store[-u_store.shape[0] // 4 :]
-            * np.conj(u_store[-u_store.shape[0] // 4 :])
+            u_data[-u_data.shape[0] // 4 :, :]
+            * np.conj(u_data[-u_data.shape[0] // 4 :, :])
         ).real,
         axis=0,
     )
@@ -83,7 +83,7 @@ def plot_energy_spectrum(u_store, header_dict, axes=None, omit=None):
     axes.set_ylabel("Energy")
     # Limit y axis if necessary
     if np.log(np.min(mean_energy)) < -15:
-        axes.set_ylim(10e-15, 1)
+        axes.set_ylim(1e-15, 10)
 
     # Title setup
     title = g_plt_utils.generate_title(
@@ -580,6 +580,22 @@ def plot_eigen_vector_comparison(args=None):
     )
 
 
+def plot_pert_traject_energy_spectrum(args):
+
+    (
+        u_stores,
+        perturb_time_pos_list,
+        perturb_time_pos_list_legend,
+        header_dict,
+        _,
+    ) = g_import.import_perturbation_velocities(args, raw_perturbations=True)
+
+    axes = plt.axes()
+
+    for u_data in u_stores:
+        plot_energy_spectrum(u_data, header_dict, axes=axes)
+
+
 def plot_error_energy_spectrum_vs_time_2D(args=None):
 
     (
@@ -810,11 +826,14 @@ if __name__ == "__main__":
     if "energy_plots" in args["plot_type"]:
         plots_related_to_energy(args=args)
 
+    if "pert_traj_energy_spectrum" in args["plot_type"]:
+        plot_pert_traject_energy_spectrum(args)
+
     if "error_norm" in args["plot_type"]:
         if args["datapath"] is None:
             print("No path specified to analyse error norms.")
         else:
-            g_plt_data.plot_error_norm_vs_time(args=args, shell_cutoff=10)
+            g_plt_data.plot_error_norm_vs_time(args=args)
 
     if "error_spectrum_vs_time" in args["plot_type"]:
         plot_error_energy_spectrum_vs_time_2D(args=args)
@@ -840,6 +859,4 @@ if __name__ == "__main__":
     if "error_vector_spectrum" in args["plot_type"]:
         plot_error_vector_spectrum(args=args)
 
-    if not args["noplot"]:
-        plt.tight_layout()
-        plt.show()
+    g_plt_utils.save_or_show_plot(args)

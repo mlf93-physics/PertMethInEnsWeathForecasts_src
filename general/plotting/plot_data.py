@@ -88,7 +88,6 @@ def plot_error_norm_vs_time(
     normalize_start_time=True,
     axes=None,
     exp_setup=None,
-    shell_cutoff: int = None,
 ):
 
     if exp_setup is None:
@@ -96,8 +95,8 @@ def plot_error_norm_vs_time(
             exp_setup = g_import.import_exp_info_file(args)
         except ImportError:
             print(
-                "The .json config file was not found, so this plot doesnt work "
-                + "if the file is needed"
+                "\nThe .json config file was not found, so this plot doesnt work "
+                + "if the file is needed\n"
             )
 
     (
@@ -106,9 +105,7 @@ def plot_error_norm_vs_time(
         perturb_time_pos_list_legend,
         header_dict,
         u_ref_stores,
-    ) = g_import.import_perturbation_velocities(
-        args, search_pattern="*perturb*.csv", shell_cutoff=shell_cutoff
-    )
+    ) = g_import.import_perturbation_velocities(args, search_pattern="*perturb*.csv")
 
     num_perturbations = len(perturb_time_pos_list)
 
@@ -182,7 +179,13 @@ def plot_error_norm_vs_time(
     if args["ylim"] is not None:
         axes.set_ylim(args["ylim"][0], args["ylim"][1])
 
-    title = g_plt_utils.generate_title(header_dict, args, title_header="Error vs time")
+    title_suffix = ""
+    if args["shell_cutoff"] is not None:
+        title_suffix = f" cutoff={args['shell_cutoff']}"
+
+    title = g_plt_utils.generate_title(
+        header_dict, args, title_header="Error vs time", title_suffix=title_suffix
+    )
     axes.set_title(title)
 
     return axes

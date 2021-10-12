@@ -152,7 +152,7 @@ def plot_normal_mode_dist(args):
     # Set colorbar
     fig2.colorbar(qplot)
 
-    if args["save_plot"]:
+    if args["save_fig"]:
         out_path = pl.Path(
             "../../thesis/figures/lorentz63_experiments/normal_mode_perturbations/"
         )

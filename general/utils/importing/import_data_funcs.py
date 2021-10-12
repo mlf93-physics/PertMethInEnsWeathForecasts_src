@@ -253,11 +253,11 @@ def import_ref_data(args=None):
 
 
 def import_perturbation_velocities(
-    args=None, search_pattern="*.csv", shell_cutoff: int = None
+    args=None, search_pattern="*.csv", raw_perturbations=False
 ):
     if MODEL != Models.SHELL_MODEL:
-        if shell_cutoff is not None:
-            raise g_exceptions.InvalidFuncArgument(argument="shell_cutoff")
+        if args["shell_cutoff"] is not None:
+            raise g_exceptions.InvalidRuntimeArgument(argument="shell_cutoff")
 
     u_stores = []
 
@@ -349,17 +349,21 @@ def import_perturbation_velocities(
             )
             counter += 1
 
-        if shell_cutoff is not None:
+        # If raw_perturbations is True, the reference data is not subtracted from perturbation
+        if args["shell_cutoff"] is not None:
             # Calculate error array
-            # Add +2 to shell_cutoff since first entry is time, and shell_cutoff
+            # Add +2 to args["shell_cutoff"] since first entry is time, and args["shell_cutoff"]
             # starts from 0
             u_stores.append(
-                perturb_data_in[:, 1 : (shell_cutoff + 2)]
-                - ref_data_in[:, 1 : (shell_cutoff + 2)]
+                perturb_data_in[:, 1 : (args["shell_cutoff"] + 2)]
+                - (not raw_perturbations)
+                * ref_data_in[:, 1 : (args["shell_cutoff"] + 2)]
             )
         else:
             # Calculate error array
-            u_stores.append(perturb_data_in[:, 1:] - ref_data_in[:, 1:])
+            u_stores.append(
+                perturb_data_in[:, 1:] - (not raw_perturbations) * ref_data_in[:, 1:]
+            )
         # If perturb positions are the same for all perturbations, return
         # ref_data_in too
         if np.unique(perturb_time_pos_list).size == 1:
