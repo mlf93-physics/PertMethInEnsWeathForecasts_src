@@ -43,13 +43,6 @@ def main(args):
         args["forcing"], args["ny_n"], args["diff_exponent"]
     )
 
-    # Adjust samplerate and dt
-    params.dt = 1e-8
-    # keep an appropriate sample rate depending on dt
-    params.sample_rate = round(params.sample_rate * params.dt / 1e-7, 4)
-    params.tts = params.sample_rate / params.dt
-    params.stt = params.dt / params.sample_rate
-
     copy_args = copy.deepcopy(args)
     temp_processes, _, _ = pt_runner.main_setup(copy_args)
     processes.extend(temp_processes)

@@ -119,8 +119,8 @@ def generate_title(
 
 def save_or_show_plot(args):
     if args["save_fig"]:
-        subpath = pl.Path("shell_model_experiments/hyper_diffusivity/cutoff_invest")
-        file_name = "hyper_diff_ny_n16_diff_exp4_cutoff1"
+        subpath = pl.Path("shell_model_experiments/hyper_diffusivity/")
+        file_name = "hyper_diff_ny_n16_diff_exp_compare"
 
         question = (
             "\nConfirm that the figure is being saved to\n"
