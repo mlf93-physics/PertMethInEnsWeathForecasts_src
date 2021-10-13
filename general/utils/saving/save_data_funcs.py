@@ -95,6 +95,8 @@ def save_data(data_out, subsubfolder="", prefix="", perturb_position=None, args=
         header=header,
     )
 
+    return expected_path
+
 
 def save_perturb_info(args=None, exp_setup=None):
     """Save info textfile about the perturbation runs

@@ -2,12 +2,14 @@ import sys
 
 sys.path.append("..")
 from math import ceil
+import pathlib as pl
 import numpy as np
 from numba import njit, types
 from pyinstrument import Profiler
 from shell_model_experiments.sabra_model.runge_kutta4 import runge_kutta4
 from shell_model_experiments.params.params import *
 import general.utils.saving.save_data_funcs as g_save
+import general.utils.saving.save_utils as g_save_utils
 import general.utils.argument_parsers as a_parsers
 from config import NUMBA_CACHE, GLOBAL_PARAMS
 
@@ -137,7 +139,12 @@ def main(args=None):
         args["record_id"] = ir
         if not args["skip_save_data"]:
             print(f"saving record\n")
-            g_save.save_data(data_out, args=args)
+            save_path = g_save.save_data(data_out, args=args)
+
+    if args["erda_run"]:
+        stand_data_name = g_save_utils.generate_standard_data_name(args)
+        compress_out_name = f"ref_data_{stand_data_name}"
+        g_save_utils.compress_dir(save_path, compress_out_name)
 
     profiler.stop()
     print(profiler.output_text())
