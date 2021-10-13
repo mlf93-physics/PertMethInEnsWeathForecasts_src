@@ -21,7 +21,6 @@ sys.path.append("..")
 import copy
 import pathlib as pl
 import numpy as np
-import numba_progress as nb_prog
 import multiprocessing
 from pyinstrument import Profiler
 from shell_model_experiments.sabra_model.sabra_model import run_model as sh_model
@@ -79,20 +78,15 @@ def perturbation_runner(
     )
     if MODEL == Models.SHELL_MODEL:
         if MODEL.submodel is None:
-            Nt_local = args["Nt"] + args["endpoint"] * 1
-            with nb_prog.ProgressBar(
-                total=int(Nt_local * params.sample_rate)
-            ) as progress:
-                sh_model(
-                    u_old,
-                    du_array,
-                    data_out,
-                    Nt_local,
-                    args["ny"],
-                    args["forcing"],
-                    args["diff_exponent"],
-                    progress,
-                )
+            sh_model(
+                u_old,
+                du_array,
+                data_out,
+                args["Nt"] + args["endpoint"] * 1,
+                args["ny"],
+                args["forcing"],
+                args["diff_exponent"],
+            )
         else:
             g_exceptions.ModelError(
                 "Submodel invalid or not implemented yet",

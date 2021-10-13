@@ -4,7 +4,6 @@ sys.path.append("..")
 from math import ceil
 import numpy as np
 from numba import njit, types
-import numba_progress as nb_prog
 from pyinstrument import Profiler
 from shell_model_experiments.sabra_model.runge_kutta4 import runge_kutta4
 from shell_model_experiments.params.params import *
@@ -19,16 +18,15 @@ GLOBAL_PARAMS.record_max_time = 30
 
 
 @njit(
-    # (
-    #     types.Array(types.complex128, 1, "C", readonly=False),
-    #     types.Array(types.complex128, 1, "C", readonly=False),
-    #     types.Array(types.complex128, 2, "C", readonly=False),
-    #     types.int64,
-    #     types.float64,
-    #     types.float64,
-    #     types.float64,
-    # ),
-    nogil=True,
+    (
+        types.Array(types.complex128, 1, "C", readonly=False),
+        types.Array(types.complex128, 1, "C", readonly=False),
+        types.Array(types.complex128, 2, "C", readonly=False),
+        types.int64,
+        types.float64,
+        types.float64,
+        types.float64,
+    ),
     cache=NUMBA_CACHE,
 )
 def run_model(
@@ -39,7 +37,6 @@ def run_model(
     ny: float,
     forcing: float,
     diff_exponent: int,
-    progress: nb_prog.progress.ProgressBar,
 ):
     """Execute the integration of the sabra shell model.
 
@@ -62,9 +59,6 @@ def run_model(
             data_out[sample_number, 0] = dt * i + 0j
             data_out[sample_number, 1:] = u_old[bd_size:-bd_size]
             sample_number += 1
-
-            # Update progress bar
-            progress.update(1)
 
         # Update u_old
         u_old = runge_kutta4(
@@ -99,20 +93,17 @@ def main(args=None):
     data_out = np.zeros(
         (int(args["burn_in_time"] * tts), n_k_vec + 1), dtype=np.complex128
     )
-    Nt_local = int(args["burn_in_time"] / dt)
 
     print(f'running burn-in phase of {args["burn_in_time"]}s\n')
-    with nb_prog.ProgressBar(total=int(Nt_local * sample_rate)) as progress:
-        u_old = run_model(
-            u_old,
-            du_array,
-            data_out,
-            Nt_local,
-            args["ny"],
-            args["forcing"],
-            args["diff_exponent"],
-            progress,
-        )
+    u_old = run_model(
+        u_old,
+        du_array,
+        data_out,
+        int(args["burn_in_time"] / dt),
+        args["ny"],
+        args["forcing"],
+        args["diff_exponent"],
+    )
 
     for ir in range(args["n_records"]):
         # Calculate data out size
@@ -125,21 +116,18 @@ def main(args=None):
             out_array_size = int(GLOBAL_PARAMS.record_max_time * tts)
 
         data_out = np.zeros((out_array_size, n_k_vec + 1), dtype=np.complex128)
-        Nt_local = int(out_array_size / sample_rate)
 
         # Run model
         print(f'running record {ir + 1}/{args["n_records"]}')
-        with nb_prog.ProgressBar(total=int(Nt_local * sample_rate)) as progress:
-            u_old = run_model(
-                u_old,
-                du_array,
-                data_out,
-                Nt_local,
-                args["ny"],
-                args["forcing"],
-                args["diff_exponent"],
-                progress,
-            )
+        u_old = run_model(
+            u_old,
+            du_array,
+            data_out,
+            int(out_array_size / sample_rate),
+            args["ny"],
+            args["forcing"],
+            args["diff_exponent"],
+        )
 
         # Add record_id to datafile header
         args["record_id"] = ir
