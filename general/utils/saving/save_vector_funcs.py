@@ -40,7 +40,10 @@ def save_vector_unit(data, perturb_position=None, unit=0, args=None, exp_setup=N
             + f", val_pos={val_pos}"
         )
         header = g_save_utils.generate_header(
-            args, n_data=n_data, append_extra=perturb_header_extra
+            args,
+            n_data=n_data,
+            append_extra=perturb_header_extra,
+            append_options=["licence"],
         )
 
     # Generate out file name

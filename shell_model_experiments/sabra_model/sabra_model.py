@@ -87,6 +87,9 @@ def main(args=None):
     # Get number of records
     args["n_records"] = ceil((args["Nt"]) / int(GLOBAL_PARAMS.record_max_time / dt))
 
+    # Write ref info file
+    g_save.save_reference_info(args)
+
     profiler.start()
     print(
         f'\nRunning sabra model for {args["Nt"]*dt:.2f}s with a burn-in time'

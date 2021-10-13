@@ -128,7 +128,9 @@ def compress_dir(path_to_dir, zip_name):
     )
 
 
-def generate_header(args, n_data=0, append_extra=""):
+def generate_header(
+    args: dict, n_data: int = 0, append_extra: str = "", append_options: list = []
+):
     """Generate a header string
 
     Parameters
@@ -149,15 +151,17 @@ def generate_header(args, n_data=0, append_extra=""):
             f", n_f={sh_params.n_forcing}, dt={sh_params.dt}, epsilon={sh_params.epsilon}, "
             + f"lambda={sh_params.lambda_const}, N_data={n_data}, "
             + f"sample_rate={sh_params.sample_rate}, "
-            + f"experiment={LICENCE}"
-            + append_extra
         )
     elif MODEL == Models.LORENTZ63:
         header += (
             f", dt={l63_params.dt}, N_data={n_data}, "
             + f"sample_rate={l63_params.sample_rate}, "
-            + f"experiment={LICENCE}"
-            + append_extra
         )
+
+    optional_append = ""
+    if "licence" in append_options:
+        optional_append += f"experiment={LICENCE}, "
+
+    header += optional_append + append_extra
 
     return header

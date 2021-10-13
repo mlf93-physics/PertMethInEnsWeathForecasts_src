@@ -39,7 +39,10 @@ def save_lorentz_block_data(
     if perturb_position is not None:
         lorentz_header_extra = f", perturb_pos={int(perturb_position)}"
         header = g_save_utils.generate_header(
-            args, n_data=num_forecasts, append_extra=lorentz_header_extra
+            args,
+            n_data=num_forecasts,
+            append_extra=lorentz_header_extra,
+            append_options=["licence"],
         )
 
     stand_data_name = g_save_utils.generate_standard_data_name(args)

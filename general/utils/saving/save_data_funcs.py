@@ -13,6 +13,12 @@ import general.utils.saving.save_utils as g_save_utils
 from general.params.model_licences import Models
 from config import MODEL, GLOBAL_PARAMS
 
+# Get parameters for model
+if MODEL == Models.SHELL_MODEL:
+    params = sh_params
+elif MODEL == Models.LORENTZ63:
+    params = l63_params
+
 
 def save_data(data_out, subsubfolder="", prefix="", perturb_position=None, args=None):
     """Save the data to disc.
@@ -41,31 +47,13 @@ def save_data(data_out, subsubfolder="", prefix="", perturb_position=None, args=
     stand_data_name = g_save_utils.generate_standard_data_name(args)
 
     if GLOBAL_PARAMS.ref_run:
-        subsubfolder = "ref_data"
         # Generate path if not existing
         expected_path = g_save_utils.generate_dir(
-            pl.Path("data", stand_data_name, subsubfolder), args=args
+            pl.Path("data", stand_data_name, "ref_data"), args=args
         )
 
         prefix = "ref_"
-
         ref_filename_extra = f"_rec{args['record_id']}"
-        ref_data_info_name = f"{expected_path}/ref_data_info_{stand_data_name}.txt"
-
-        info_line = g_save_utils.args_to_string(args)
-
-        if MODEL == Models.SHELL_MODEL:
-            info_line += (
-                f", n_f={sh_params.n_forcing}, dt={sh_params.dt}, "
-                + f"epsilon={sh_params.epsilon}, lambda={sh_params.lambda_const}, "
-                + f"sample_rate={sh_params.sample_rate}"
-            )
-        elif MODEL == Models.LORENTZ63:
-            info_line += f", dt={l63_params.dt}, sample_rate={l63_params.sample_rate}"
-
-        with open(ref_data_info_name, "w") as file:
-            file.write(info_line)
-
         ref_header_extra = f", rec_id={args['record_id']}"
         header = g_save_utils.generate_header(
             args, n_data=n_data, append_extra=ref_header_extra
@@ -78,11 +66,17 @@ def save_data(data_out, subsubfolder="", prefix="", perturb_position=None, args=
             pl.Path(args["datapath"], args["exp_folder"], subsubfolder), args=args
         )
 
+        # Prepare extra header items
+        perturb_header_extra = ""
         if perturb_position is not None:
             perturb_header_extra = f", perturb_pos={int(perturb_position)}"
-            header = g_save_utils.generate_header(
-                args, n_data=n_data, append_extra=perturb_header_extra
-            )
+
+        header = g_save_utils.generate_header(
+            args,
+            n_data=n_data,
+            append_extra=perturb_header_extra,
+            append_options=["licence"],
+        )
 
     # Generate out file name
     out_name = f"udata_{stand_data_name}"
@@ -96,6 +90,29 @@ def save_data(data_out, subsubfolder="", prefix="", perturb_position=None, args=
     )
 
     return expected_path
+
+
+def save_reference_info(args):
+
+    print("Prepare ref data info textfile\n")
+
+    stand_data_name = g_save_utils.generate_standard_data_name(args)
+
+    # Generate path if not existing
+    expected_path = g_save_utils.generate_dir(
+        pl.Path("data", stand_data_name, "ref_data"), args=args
+    )
+
+    ref_data_info_path = f"{expected_path}/ref_data_info_{stand_data_name}.txt"
+
+    info_line = g_save_utils.args_to_string(args)
+    append_extra = f"record_max_time={GLOBAL_PARAMS.record_max_time}"
+    info_line += g_save_utils.generate_header(
+        args, args["Nt"] * params.sample_rate, append_extra=append_extra
+    )
+
+    # Write to file
+    save_run_info(ref_data_info_path, info_line)
 
 
 def save_perturb_info(args=None, exp_setup=None):
@@ -112,37 +129,37 @@ def save_perturb_info(args=None, exp_setup=None):
         pl.Path(args["datapath"], args["exp_folder"]), args=args
     )
     # Prepare filename
-    perturb_data_info_name = pl.Path(expected_path)
+    perturb_data_info_path = pl.Path(expected_path)
     stand_data_name = g_save_utils.generate_standard_data_name(args)
-    perturb_data_info_name /= f"perturb_data_info_{stand_data_name}.txt"
+    perturb_data_info_path /= f"perturb_data_info_{stand_data_name}.txt"
 
-    # Check if path already exists
-    dir_exists = os.path.isfile(perturb_data_info_name)
-    if dir_exists:
-        print("Perturb info not saved, since file already exists")
-        return
-
-    print("Saving perturb data info textfile\n")
+    print("Prepare perturb data info textfile\n")
 
     # Prepare line to write
     info_line_args = g_save_utils.args_to_string(args)
     exp_setup_line = g_save_utils.args_to_string(exp_setup)
 
-    if MODEL == Models.SHELL_MODEL:
-        info_line = (
-            f"n_f={sh_params.n_forcing}, dt={sh_params.dt}, "
-            + f"epsilon={sh_params.epsilon}, lambda={sh_params.lambda_const}, "
-            + f"sample_rate={sh_params.sample_rate}, "
-        )
-    elif MODEL == Models.LORENTZ63:
-        info_line = f"sample_rate={sh_params.sample_rate}, dt={sh_params.dt}, "
-
-    append_extra = f", experiment={config.LICENCE}, "
-
-    info_line += info_line_args + append_extra + exp_setup_line
+    info_line = g_save_utils.generate_header(
+        args, args["Nt"] * params.sample_rate, append_options=["licence"]
+    )
+    info_line += info_line_args + exp_setup_line
 
     # Write to file
-    with open(str(perturb_data_info_name), "w") as file:
+    save_run_info(perturb_data_info_path, info_line)
+
+
+def save_run_info(info_path: pl.Path, info_line: str):
+
+    # Check if path already exists
+    dir_exists = os.path.isfile(info_path)
+    if dir_exists:
+        print(f"Info file not saved, since file already exists at path {info_path}")
+        return
+
+    print("Saving run info file\n")
+
+    # Write to file
+    with open(str(info_path), "w") as file:
         file.write(info_line)
 
 
