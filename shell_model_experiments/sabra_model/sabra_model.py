@@ -110,13 +110,14 @@ def main(args=None):
 
     for ir in range(args["n_records"]):
         # Calculate data out size
+        # Set standard size
+        out_array_size = int(GLOBAL_PARAMS.record_max_time * tts)
+        # If last record -> adjust if size should not equal default record length
         if ir == (args["n_records"] - 1):
             if args["Nt"] % int(GLOBAL_PARAMS.record_max_time / dt) > 0:
                 out_array_size = int(
                     (args["Nt"] % int(GLOBAL_PARAMS.record_max_time / dt)) * sample_rate
                 )
-        else:
-            out_array_size = int(GLOBAL_PARAMS.record_max_time * tts)
 
         data_out = np.zeros((out_array_size, n_k_vec + 1), dtype=np.complex128)
 

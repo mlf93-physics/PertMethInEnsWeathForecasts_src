@@ -81,9 +81,7 @@ def import_info_file(path):
     return info_dict
 
 
-def imported_sorted_perturbation_info(
-    folder_name, args, ref_header_dict: dict = {}, search_pattern="*.csv"
-):
+def imported_sorted_perturbation_info(folder_name, args, search_pattern="*.csv"):
     """Import sorted lists of perturbation info
 
     Both time positions, legend strings, header dicts and file names are imported
@@ -94,6 +92,8 @@ def imported_sorted_perturbation_info(
         The sub folder to args["datapath"] in which to search for perturbation info
     args : dict
         Run-time arguments
+    search_pattern : str
+        Pattern with which perturbation files are searched
 
     Returns
     -------
@@ -118,13 +118,7 @@ def imported_sorted_perturbation_info(
         perturb_header_dict = import_header(file_name=perturb_file)
 
         # Save time positions, by taking into account different sample rates
-        perturb_time_pos_list.append(
-            int(
-                perturb_header_dict["perturb_pos"]
-                # * perturb_header_dict["sample_rate"]
-                # / ref_header_dict["sample_rate"]
-            )
-        )
+        perturb_time_pos_list.append(int(perturb_header_dict["perturb_pos"]))
 
         perturb_time_pos_list_legend.append(
             f"Start time: "
@@ -256,16 +250,14 @@ def import_perturbation_velocities(
     args=None, search_pattern="*.csv", raw_perturbations=False
 ):
     if MODEL != Models.SHELL_MODEL:
-        if args["shell_cutoff"] is not None:
-            raise g_exceptions.InvalidRuntimeArgument(argument="shell_cutoff")
+        if "shell_cutoff" in args:
+            if args["shell_cutoff"] is not None:
+                raise g_exceptions.InvalidRuntimeArgument(argument="shell_cutoff")
 
     u_stores = []
 
     if args["datapath"] is None:
         raise ValueError("No path specified")
-
-    # Check if ref path exists
-    ref_header_dict = import_info_file(pl.Path(args["datapath"], "ref_data"))
 
     (
         perturb_time_pos_list,
@@ -275,14 +267,16 @@ def import_perturbation_velocities(
     ) = imported_sorted_perturbation_info(
         args["exp_folder"],
         args,
-        ref_header_dict=ref_header_dict,
         search_pattern=search_pattern,
     )
 
+    # Check if ref path exists
+    ref_header_dict = import_info_file(pl.Path(args["datapath"], "ref_data"))
     # Match the positions to the relevant ref files
     ref_file_match = g_utils.match_start_positions_to_ref_file(
         args=args, ref_header_dict=ref_header_dict, positions=perturb_time_pos_list
     )
+    ref_file_match_keys_array = np.array(list(ref_file_match.keys()))
 
     # Get sorted file paths
     ref_record_names_sorted = g_utils.get_sorted_ref_record_names(args=args)
@@ -292,7 +286,6 @@ def import_perturbation_velocities(
 
     for iperturb_file, perturb_file_name in enumerate(perturb_file_names):
 
-        ref_file_match_keys_array = np.array(list(ref_file_match.keys()))
         sum_pert_files = sum(
             [
                 len(ref_file_match[ref_file_index])
@@ -350,20 +343,28 @@ def import_perturbation_velocities(
             counter += 1
 
         # If raw_perturbations is True, the reference data is not subtracted from perturbation
-        if args["shell_cutoff"] is not None:
-            # Calculate error array
-            # Add +2 to args["shell_cutoff"] since first entry is time, and args["shell_cutoff"]
-            # starts from 0
-            u_stores.append(
-                perturb_data_in[:, 1 : (args["shell_cutoff"] + 2)]
-                - (not raw_perturbations)
-                * ref_data_in[:, 1 : (args["shell_cutoff"] + 2)]
-            )
+        if "shell_cutoff" in args:
+            if args["shell_cutoff"] is not None:
+                # Calculate error array
+                # Add +2 to args["shell_cutoff"] since first entry is time, and args["shell_cutoff"]
+                # starts from 0
+                u_stores.append(
+                    perturb_data_in[:, 1 : (args["shell_cutoff"] + 2)]
+                    - (not raw_perturbations)
+                    * ref_data_in[:, 1 : (args["shell_cutoff"] + 2)]
+                )
+            else:
+                # Calculate error array
+                u_stores.append(
+                    perturb_data_in[:, 1:]
+                    - (not raw_perturbations) * ref_data_in[:, 1:]
+                )
         else:
             # Calculate error array
             u_stores.append(
                 perturb_data_in[:, 1:] - (not raw_perturbations) * ref_data_in[:, 1:]
             )
+
         # If perturb positions are the same for all perturbations, return
         # ref_data_in too
         if np.unique(perturb_time_pos_list).size == 1:

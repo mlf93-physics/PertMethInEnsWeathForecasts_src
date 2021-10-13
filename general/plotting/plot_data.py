@@ -180,8 +180,9 @@ def plot_error_norm_vs_time(
         axes.set_ylim(args["ylim"][0], args["ylim"][1])
 
     title_suffix = ""
-    if args["shell_cutoff"] is not None:
-        title_suffix = f" cutoff={args['shell_cutoff']}"
+    if "shell_cutoff" in args:
+        if args["shell_cutoff"] is not None:
+            title_suffix = f" cutoff={args['shell_cutoff']}"
 
     title = g_plt_utils.generate_title(
         header_dict, args, title_header="Error vs time", title_suffix=title_suffix
