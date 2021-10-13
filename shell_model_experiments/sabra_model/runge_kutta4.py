@@ -12,21 +12,17 @@ from config import NUMBA_CACHE, NUMBA_ON
         types.Array(types.complex128, 1, "C", readonly=True),
         types.Array(types.complex128, 1, "C", readonly=False),
         types.float64,
-        types.float64,
-        types.int16,
     ),
     cache=NUMBA_CACHE,
 )
 def derivative_evaluator(
     u_old: np.ndarray = None,
     du: np.ndarray = None,
-    ny: float = None,
     forcing: float = None,
-    diff_exponent: int = 2,
 ):
     """Derivative evaluator used in the Runge-Kutta method.
 
-    Calculates the derivative of the shell velocities.
+    Calculates the non-linear part of the derivative of the shell velocities.
 
     Parameters
     ----------
@@ -43,16 +39,12 @@ def derivative_evaluator(
 
     """
     # Calculate change in u (du)
-    du[bd_size:-bd_size] = (
-        pre_factor
-        * (
-            u_old.conj()[bd_size + 1 : -bd_size + 1] * u_old[bd_size + 2 :]
-            + factor2
-            * u_old.conj()[bd_size - 1 : -bd_size - 1]
-            * u_old[bd_size + 1 : -bd_size + 1]
-            + factor3 * u_old[: -bd_size - 2] * u_old[bd_size - 1 : -bd_size - 1]
-        )
-        - ny * k_vec_temp ** diff_exponent * u_old[bd_size:-bd_size]
+    du[bd_size:-bd_size] = pre_factor * (
+        u_old.conj()[bd_size + 1 : -bd_size + 1] * u_old[bd_size + 2 :]
+        + factor2
+        * u_old.conj()[bd_size - 1 : -bd_size - 1]
+        * u_old[bd_size + 1 : -bd_size + 1]
+        + factor3 * u_old[: -bd_size - 2] * u_old[bd_size - 1 : -bd_size - 1]
     )
 
     # Apply forcing
@@ -66,8 +58,6 @@ def derivative_evaluator(
         types.float64,
         types.Array(types.complex128, 1, "C", readonly=False),
         types.float64,
-        types.float64,
-        types.float64,
     ),
     cache=NUMBA_CACHE,
 )
@@ -75,11 +65,9 @@ def runge_kutta4(
     y0: np.ndarray = 0,
     h: float = 1,
     du: np.ndarray = None,
-    ny: float = None,
     forcing: float = None,
-    diff_exponent: int = 2,
 ):
-    """Performs the Runge-Kutta-4 integration of the shell velocities.
+    """Performs the Runge-Kutta-4 integration of non-linear part of the shell velocities.
 
     Parameters
     ----------
@@ -100,26 +88,10 @@ def runge_kutta4(
 
     """
     # Calculate the k's
-    k1 = h * derivative_evaluator(
-        u_old=y0, du=du, ny=ny, forcing=forcing, diff_exponent=diff_exponent
-    )
-    k2 = h * derivative_evaluator(
-        u_old=y0 + 1 / 2 * k1,
-        du=du,
-        ny=ny,
-        forcing=forcing,
-        diff_exponent=diff_exponent,
-    )
-    k3 = h * derivative_evaluator(
-        u_old=y0 + 1 / 2 * k2,
-        du=du,
-        ny=ny,
-        forcing=forcing,
-        diff_exponent=diff_exponent,
-    )
-    k4 = h * derivative_evaluator(
-        u_old=y0 + k3, du=du, ny=ny, forcing=forcing, diff_exponent=diff_exponent
-    )
+    k1 = h * derivative_evaluator(u_old=y0, du=du, forcing=forcing)
+    k2 = h * derivative_evaluator(u_old=y0 + 1 / 2 * k1, du=du, forcing=forcing)
+    k3 = h * derivative_evaluator(u_old=y0 + 1 / 2 * k2, du=du, forcing=forcing)
+    k4 = h * derivative_evaluator(u_old=y0 + k3, du=du, forcing=forcing)
 
     # Update y
     y0 = y0 + 1 / 6 * k1 + 1 / 3 * k2 + 1 / 3 * k3 + 1 / 6 * k4

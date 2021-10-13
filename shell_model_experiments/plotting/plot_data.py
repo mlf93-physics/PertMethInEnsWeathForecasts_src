@@ -279,7 +279,7 @@ def plots_related_to_energy(args=None, axes=None):
     time, u_data, header_dict = g_import.import_ref_data(args=args)
 
     # Conserning ny
-    plot_energy_spectrum(u_data, header_dict, omit="ny")
+    plot_energy_spectrum(u_data, header_dict)
     g_plt_data.plot_energy(time, u_data, header_dict, axes=axes, args=args)
     # plot_energy_per_shell(
     #     time, u_data, header_dict, ax=axes[0], path=args["datapath"], args=args

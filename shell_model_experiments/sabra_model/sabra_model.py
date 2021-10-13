@@ -60,14 +60,17 @@ def run_model(
             data_out[sample_number, 1:] = u_old[bd_size:-bd_size]
             sample_number += 1
 
-        # Update u_old
+        # Solve nonlinear terms + forcing
         u_old = runge_kutta4(
             y0=u_old,
             h=dt,
             du=du_array,
-            ny=ny,
             forcing=forcing,
-            diff_exponent=diff_exponent,
+        )
+
+        # Solve linear diffusive term explicitly
+        u_old[bd_size:-bd_size] = u_old[bd_size:-bd_size] * np.exp(
+            -ny * k_vec_temp ** diff_exponent * dt
         )
 
     return u_old
