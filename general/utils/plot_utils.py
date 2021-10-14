@@ -81,7 +81,10 @@ def save_figure(subpath: pl.Path = None, file_name="figure1"):
 
 
 def generate_title(
-    header_dict, args, title_header="PUT TITLE TEXT HERE", title_suffix=""
+    header_dict: dict,
+    args: dict,
+    title_header: str = "PUT TITLE TEXT HERE",
+    title_suffix: str = "",
 ):
 
     if args["exp_folder"] is not None:

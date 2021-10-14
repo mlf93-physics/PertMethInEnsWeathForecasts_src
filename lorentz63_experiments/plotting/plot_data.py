@@ -119,11 +119,15 @@ def plot_normal_mode_dist(args):
         norm=norm,
         cmap=cmap,
     )
-    ax1.set_title(
-        "Eigen value dist | Lorentz63 model \n"
-        + f"$N_{{points}}$={args['n_profiles']}, $\\sigma={ref_header_dict['sigma']}$"
-        + f", r={ref_header_dict['r_const']}, b={ref_header_dict['b_const']:.2f}"
+
+    e_value_dist_title = g_plt_utils.generate_title(
+        ref_header_dict,
+        args,
+        title_header="Eigen value dist | Lorentz63 model \n",
+        title_suffix=f"$N_{{points}}$={args['n_profiles']}",
     )
+
+    ax1.set_title(e_value_dist_title)
     fig1.colorbar(scatter_plot)
 
     fig2 = plt.figure()
@@ -141,11 +145,15 @@ def plot_normal_mode_dist(args):
         normalize=True,
         length=2,
     )
-    ax2.set_title(
-        "Eigen vector dist colored by eigen values | Lorentz63 model \n"
-        + f"$N_{{points}}$={args['n_profiles']}, $\\sigma={ref_header_dict['sigma']}$"
-        + f", r={ref_header_dict['r_const']}, b={ref_header_dict['b_const']:.2f}"
+
+    e_vector_dist_title = g_plt_utils.generate_title(
+        ref_header_dict,
+        args,
+        title_header="Eigen vector dist colored by eigen values | Lorentz63 model \n",
+        title_suffix=f"$N_{{points}}$={args['n_profiles']}",
     )
+
+    ax2.set_title(e_vector_dist_title)
 
     # Set quiver colors
     qplot.set_array(np.concatenate((e_values.real, np.repeat(e_values.real, 2))))
@@ -178,20 +186,18 @@ def plot_energy_dist(args):
         (np.sum(u_data[1:, :] ** 2, axis=1) + np.sum(u_data[:-1, :] ** 2, axis=1)) / 2
     )
 
+    e_dist_title = g_plt_utils.generate_title(
+        ref_header_dict, args, title_header="E dist | Lorentz63 model \n"
+    )
+
     line_plot1 = ax1.add_collection(coll1)
     ax1.set_xlim(-20, 20)
     ax1.set_ylim(-20, 20)
     ax1.set_zlim(0, 40)
     ax1.grid(False)
     # ax1.set_facecolor((1, 1, 1))
-    ax1.set_title(
-        "E dist | Lorentz63 model \n"
-        + f"$\\sigma={ref_header_dict['sigma']}$"
-        + f", r={ref_header_dict['r_const']}, b={ref_header_dict['b_const']:.2f}"
-    )
+    ax1.set_title(e_dist_title)
     fig1.colorbar(line_plot1)
-    fig1.savefig("energy_attractor_ttr500.png")
-    # fig1.savefig("energy_attractor_ttr500.svg")
 
     # Plot "change in energy" distribution
 
@@ -224,20 +230,18 @@ def plot_energy_dist(args):
 
     coll2.set_array((dE_array[1:] + dE_array[:-1]) / 2)
 
-    line_plot2 = ax2.add_collection(coll2)
+    de_dist_title = g_plt_utils.generate_title(
+        ref_header_dict, args, title_header="dE dist | Lorentz63 model \n"
+    )
+
+    ax2.add_collection(coll2)
     ax2.set_xlim(-20, 20)
     ax2.set_ylim(-20, 20)
     ax2.set_zlim(0, 40)
     ax2.grid(False)
     # ax2.set_facecolor((1, 1, 1))
-    ax2.set_title(
-        "dE dist | Lorentz63 model \n"
-        + f"$\\sigma={ref_header_dict['sigma']}$"
-        + f", r={ref_header_dict['r_const']}, b={ref_header_dict['b_const']:.2f}"
-    )
+    ax2.set_title(de_dist_title)
     fig2.colorbar(cm.ScalarMappable(norm=norm, cmap=cmap), ax=ax2)
-    fig2.savefig("change_in_energy_attractor_ttr500.png")
-    # fig2.savefig("change_in_energy_attractor_ttr500.svg")
 
 
 if __name__ == "__main__":

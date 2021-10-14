@@ -49,27 +49,33 @@ def plot_breed_vectors(args):
         normed_mean_breed_vector_units
     )
 
+    ortho_bv_title = g_plt_utils.generate_title(
+        pert_info_dict,
+        args,
+        title_header="Orthogonality of BVs | Lorentz63 model \n",
+        title_suffix=f"$N_{{vectors}}$={args['n_profiles']}",
+    )
+
     # Plotting
     plt.figure()
     plt.imshow(orthonormality_matrix, cmap="Reds")
     plt.xlabel("BV index, i")
     plt.ylabel("BV index, j")
-    plt.title(
-        "Orthogonality of BVs | Lorentz63 model \n"
-        + f"$N_{{vectors}}$={args['n_profiles']}, $\\sigma={pert_info_dict['sigma']}$"
-        + f", r={pert_info_dict['r_const']}, b={pert_info_dict['b_const']:.2f}"
-    )
+    plt.title(ortho_bv_title)
     plt.colorbar()
+
+    bv_2d_title = g_plt_utils.generate_title(
+        pert_info_dict,
+        args,
+        title_header="Breed Vectors 2D | Lorentz63 model \n",
+        title_suffix=f"$N_{{vectors}}$={args['n_profiles']}",
+    )
 
     plt.figure()
     plt.plot(normed_mean_breed_vector_units, "k")
     plt.xlabel("BV component index")
     plt.ylabel("BV component")
-    plt.title(
-        "Breed Vectors 2D | Lorentz63 model \n"
-        + f"$N_{{vectors}}$={args['n_profiles']}, $\\sigma={pert_info_dict['sigma']}$"
-        + f", r={pert_info_dict['r_const']}, b={pert_info_dict['b_const']:.2f}"
-    )
+    plt.title(bv_2d_title)
 
     # Only make 3D plot if possible according to the dimension of the system
     if normed_mean_breed_vector_units.shape[1] == 3:
@@ -87,17 +93,21 @@ def plot_breed_vectors(args):
             # normalize=True,
             # length=0.5,
         )
+
+        bv_3d_title = g_plt_utils.generate_title(
+            pert_info_dict,
+            args,
+            title_header="Breed Vectors 3D | Lorentz63 model \n",
+            title_suffix=f"$N_{{vectors}}$={args['n_profiles']}",
+        )
+
         ax3.set_xlabel("x")
         ax3.set_ylabel("y")
         ax3.set_zlabel("z")
         ax3.set_xlim(-1, 1)
         ax3.set_ylim(-1, 1)
         ax3.set_zlim(-1, 1)
-        ax3.set_title(
-            "Breed Vectors 3D | Lorentz63 model \n"
-            + f"$N_{{vectors}}$={args['n_profiles']}, $\\sigma={pert_info_dict['sigma']}$"
-            + f", r={pert_info_dict['r_const']}, b={pert_info_dict['b_const']:.2f}"
-        )
+        ax3.set_title(bv_3d_title)
 
 
 def plot_breed_comparison_to_nm(args):
