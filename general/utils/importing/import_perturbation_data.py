@@ -7,6 +7,7 @@ import shell_model_experiments.params as sh_params
 import lorentz63_experiments.params.params as l63_params
 import general.utils.util_funcs as g_utils
 import general.utils.importing.import_data_funcs as g_import
+import general.utils.exceptions as g_exceptions
 from general.params.model_licences import Models
 from config import MODEL
 
@@ -17,18 +18,23 @@ elif MODEL == Models.LORENTZ63:
     params = l63_params
 
 
-def import_lorentz_block_perturbations(args=None, rel_ref=True):
+def import_lorentz_block_perturbations(args=None, raw_perturbations=True):
     """Imports perturbations from perturbation dir stored as lorentz perturbation
     and match them up with reference data. Returns a lorentz block list which
     contains perturbations rel. reference data.
 
     Parameters
     ----------
-    rel_ref : bool
+    raw_perturbations : bool
         If perturbations are returned relative to the reference or as absolute
         perturbations
 
     """
+
+    if MODEL != Models.SHELL_MODEL:
+        if "shell_cutoff" in args:
+            if args["shell_cutoff"] is not None:
+                raise g_exceptions.InvalidRuntimeArgument(argument="shell_cutoff")
 
     lorentz_block_stores = []
     lorentz_block_ref_stores = []
@@ -52,7 +58,7 @@ def import_lorentz_block_perturbations(args=None, rel_ref=True):
     ) = g_import.imported_sorted_perturbation_info(args["exp_folder"], args)
     # Match the positions to the relevant ref files
     ref_file_match = g_utils.match_start_positions_to_ref_file(
-        args=args, header_dict=ref_header_dict, positions=perturb_time_pos_list
+        args=args, ref_header_dict=ref_header_dict, positions=perturb_time_pos_list
     )
 
     # Get sorted file paths
@@ -99,12 +105,34 @@ def import_lorentz_block_perturbations(args=None, rel_ref=True):
             max_lines=perturb_offset * (num_blocks),
             step=perturb_offset,
         )
-        # Calculate error array
-        if rel_ref:
-            lorentz_block_stores.append(perturb_data_in[:, 1:] - ref_data_in[:, 1:])
+
+        # If raw_perturbations is False, the reference data is not subtracted
+        # from perturbation
+        if "shell_cutoff" in args:
+            if args["shell_cutoff"] is not None:
+                # Calculate error array Add +2 to args["shell_cutoff"] since
+                # first entry is time, and args["shell_cutoff"] starts from 0
+                lorentz_block_stores.append(
+                    perturb_data_in[:, 1 : (args["shell_cutoff"] + 2)]
+                    - (raw_perturbations)
+                    * ref_data_in[:, 1 : (args["shell_cutoff"] + 2)]
+                )
+                lorentz_block_ref_stores.append(
+                    ref_data_in[:, 1 : (args["shell_cutoff"] + 2)]
+                )
+
+            else:
+                # Calculate error array if shell_cutoff is None
+                lorentz_block_stores.append(
+                    perturb_data_in[:, 1:] - (raw_perturbations) * ref_data_in[:, 1:]
+                )
+                lorentz_block_ref_stores.append(ref_data_in[:, 1:])
+
         else:
-            # Calculate error array
-            lorentz_block_stores.append(perturb_data_in[:, 1:])
+            # Calculate error array if shell_cutoff is not in args
+            lorentz_block_stores.append(
+                perturb_data_in[:, 1:] - (raw_perturbations) * ref_data_in[:, 1:]
+            )
             lorentz_block_ref_stores.append(ref_data_in[:, 1:])
 
         if args["n_files"] is not None:

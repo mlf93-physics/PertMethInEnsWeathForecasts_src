@@ -54,7 +54,7 @@ def save_data(data_out, subsubfolder="", prefix="", perturb_position=None, args=
 
         prefix = "ref_"
         ref_filename_extra = f"_rec{args['record_id']}"
-        ref_header_extra = f", rec_id={args['record_id']}"
+        ref_header_extra = f"rec_id={args['record_id']}, "
         header = g_save_utils.generate_header(
             args, n_data=n_data, append_extra=ref_header_extra
         )
@@ -106,7 +106,7 @@ def save_reference_info(args):
     ref_data_info_path = f"{expected_path}/ref_data_info_{stand_data_name}.txt"
 
     info_line = g_save_utils.args_to_string(args)
-    append_extra = f"record_max_time={GLOBAL_PARAMS.record_max_time}"
+    append_extra = f"record_max_time={GLOBAL_PARAMS.record_max_time}, "
     info_line += g_save_utils.generate_header(
         args, args["Nt"] * params.sample_rate, append_extra=append_extra
     )
@@ -163,7 +163,16 @@ def save_run_info(info_path: pl.Path, info_line: str):
         file.write(info_line)
 
 
-def save_exp_info(exp_info, args):
+def save_exp_info(exp_info: dict, args: dict):
+    """Save the experiment info to a json file in the exp_folder
+
+    Parameters
+    ----------
+    exp_info : dict
+        The experiment info
+    args : dict
+        Run-time arguments
+    """
 
     # Generate standard name
     stand_data_name = g_save_utils.generate_standard_data_name(args)
@@ -181,6 +190,8 @@ def save_exp_info(exp_info, args):
 
     with open(out_path, "w") as file:
         json.dump(exp_info, file)
+
+    print("\nExperiment info saved to file\n")
 
 
 if __name__ == "__main__":

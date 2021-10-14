@@ -138,15 +138,13 @@ def plot_energy_per_shell(
             pert_u_stores,
             perturb_time_pos_list,
             perturb_time_pos_list_legend,
-            header_dict,
+            header_dicts,
             _,
         ) = g_import.import_perturbation_velocities(args)
 
         index = []
-        header_dicts = []
-        for ifile, file_name in enumerate(perturb_file_names):
-            header_dicts.append(g_import.import_header(file_name=file_name))
-            index.append(header_dicts[-1]["perturb_pos"])
+        for header_dict in header_dicts:
+            index.append(header_dict[-1]["perturb_pos"])
 
         header_dicts = [header_dicts[i] for _, i in enumerate(np.argsort(index))]
         index = [index[i] for _, i in enumerate(np.argsort(index))]
@@ -281,8 +279,8 @@ def plots_related_to_energy(args=None, axes=None):
     time, u_data, header_dict = g_import.import_ref_data(args=args)
 
     # Conserning ny
-    plot_energy_spectrum(u_data, header_dict)
-    # g_plt_data.plot_energy(time, u_data, header_dict, axes=axes, args=args)
+    # plot_energy_spectrum(u_data, header_dict)
+    g_plt_data.plot_energy(time, u_data, header_dict, axes=axes, args=args)
     # plot_energy_per_shell(
     #     time, u_data, header_dict, ax=axes[0], path=args["datapath"], args=args
     # )
@@ -312,14 +310,14 @@ def plot_shell_error_vs_time(args=None):
         u_stores,
         _,
         perturb_time_pos_list_legend,
-        header_dict,
+        header_dicts,
         _,
     ) = g_import.import_perturbation_velocities(args)
 
     time_array = np.linspace(
         0,
-        header_dict["time_to_run"],
-        int(header_dict["time_to_run"] * tts),
+        header_dicts[0]["time_to_run"],
+        int(header_dicts[0]["time_to_run"] * tts),
         dtype=np.float64,
         endpoint=False,
     )
@@ -334,9 +332,9 @@ def plot_shell_error_vs_time(args=None):
         # plt.xlim(0.035, 0.070)
         plt.legend(k_vec_temp)
         plt.title(
-            f'Error vs time; f={header_dict["f"]}'
-            + f', $n_f$={int(header_dict["n_f"])}, $\\nu$={header_dict["ny"]:.2e}'
-            + f', time={header_dict["time_to_run"]} | Folder: {args["exp_folder"]}'
+            f'Error vs time; f={header_dicts[0]["f"]}'
+            + f', $n_f$={int(header_dicts[0]["n_f"])}, $\\nu$={header_dicts[0]["ny"]:.2e}'
+            + f', time={header_dicts[0]["time_to_run"]} | Folder: {args["exp_folder"]}'
         )
 
 
@@ -588,14 +586,14 @@ def plot_pert_traject_energy_spectrum(args):
         u_stores,
         perturb_time_pos_list,
         perturb_time_pos_list_legend,
-        header_dict,
+        header_dicts,
         _,
-    ) = g_import.import_perturbation_velocities(args, raw_perturbations=True)
+    ) = g_import.import_perturbation_velocities(args, raw_perturbations=False)
 
     axes = plt.axes()
 
     for u_data in u_stores:
-        plot_energy_spectrum(u_data, header_dict, axes=axes)
+        plot_energy_spectrum(u_data, header_dicts[0], axes=axes)
 
 
 def plot_error_energy_spectrum_vs_time_2D(args=None):
@@ -604,7 +602,7 @@ def plot_error_energy_spectrum_vs_time_2D(args=None):
         u_stores,
         perturb_time_pos_list,
         perturb_time_pos_list_legend,
-        header_dict,
+        header_dicts,
         _,
     ) = g_import.import_perturbation_velocities(args)
 
@@ -619,7 +617,7 @@ def plot_error_energy_spectrum_vs_time_2D(args=None):
     # Prepare exponential time indices
     time_linear = np.linspace(0, 10, n_divisions)
     time_exp_indices = np.array(
-        header_dict["N_data"] / np.exp(10) * np.exp(time_linear), dtype=np.int32
+        header_dicts[0]["N_data"] / np.exp(10) * np.exp(time_linear), dtype=np.int32
     )
     time_exp_indices[-1] -= 1  # Include endpoint manually
 
@@ -657,9 +655,9 @@ def plot_error_energy_spectrum_vs_time_2D(args=None):
     plt.ylabel("$u_n - u^{'}_n$")
     plt.ylim(1e-22, 10)
     plt.title(
-        f'Error energy spectrum vs time; f={header_dict["f"]}'
-        + f', $n_f$={int(header_dict["n_f"])}, $\\nu$={header_dict["ny"]:.2e}'
-        + f', time={header_dict["time_to_run"]}, N_tot={n_files} | Folder: {args["exp_folder"]}'
+        f'Error energy spectrum vs time; f={header_dicts[0]["f"]}'
+        + f', $n_f$={int(header_dicts[0]["n_f"])}, $\\nu$={header_dicts[0]["ny"]:.2e}'
+        + f', time={header_dicts[0]["time_to_run"]}, N_tot={n_files} | Folder: {args["exp_folder"]}'
     )
     plt.savefig(
         f'../figures/week6/error_spectra_vs_time/single_shell5_perturb/error_spectra_vs_time_ref_ny_n_19_folder_single_shell5_perturb_ny_n{int(header_dict["n_ny"]):d}_files_{n_files}',
@@ -676,7 +674,7 @@ def plot_error_vector_spectrogram(args=None):
         u_stores,
         perturb_time_pos_list,
         perturb_time_pos_list_legend,
-        perturb_header_dict,
+        perturb_header_dicts,
         _,
     ) = g_import.import_perturbation_velocities(args)
 
@@ -705,16 +703,16 @@ def plot_error_vector_spectrogram(args=None):
 
     # Make spectrogram
     plt.figure()
-    # time = np.linspace(0, perturb_header_dict['N_data']*dt/sample_rate, 10)
+    # time = np.linspace(0, perturb_header_dicts[0]['N_data']*dt/sample_rate, 10)
     # x, y = np.meshgrid(time, np.log2(k_vec_temp))
     plt.pcolormesh(np.abs(error_spectrum[sort_id, :]), cmap="Reds")
     plt.xlabel("Time")
     # plt.xticks(time)
     plt.ylabel("Lyaponov index, j")
     plt.title(
-        f'Error spectrum vs time; f={perturb_header_dict["f"]}'
-        + f', $n_f$={int(perturb_header_dict["n_f"])}, $\\nu$={perturb_header_dict["ny"]:.2e}'
-        + f', time={perturb_header_dict["time_to_run"]}s'
+        f'Error spectrum vs time; f={perturb_header_dicts[0]["f"]}'
+        + f', $n_f$={int(perturb_header_dicts[0]["n_f"])}, $\\nu$={perturb_header_dicts[0]["ny"]:.2e}'
+        + f', time={perturb_header_dicts[0]["time_to_run"]}s'
     )  # , N_tot={args["n_profiles"]*args["n_runs_per_profile"]}')
     plt.colorbar(label="$|c_j|/||c||$)")
     plt.savefig(
@@ -735,7 +733,7 @@ def plot_error_vector_spectrum(args=None):
         u_stores,
         perturb_time_pos_list,
         perturb_time_pos_list_legend,
-        perturb_header_dict,
+        perturb_header_dicts,
         _,
     ) = g_import.import_perturbation_velocities(args)
 

@@ -6,7 +6,7 @@ class InvalidRuntimeArgument(Exception):
         message -- explanation of the error
     """
 
-    def __init__(self, message="", argument=None):
+    def __init__(self, message: str = "", argument: str = ""):
         self.argument = argument
 
         if len(message) == 0:
@@ -25,7 +25,7 @@ class LicenceImplementationError(Exception):
         message -- explanation of the error
     """
 
-    def __init__(self, message="", licence=None):
+    def __init__(self, message: str = "", licence: str = None):
         self.licence = licence
 
         if len(message) == 0:
@@ -47,7 +47,7 @@ class ModelError(Exception):
         model -- the invalid model
     """
 
-    def __init__(self, message="", model=None):
+    def __init__(self, message: str = "", model: str = None):
         self.model = model
 
         if len(message) == 0:
@@ -66,7 +66,7 @@ class ExperimentSetupError(Exception):
         exp_variable -- the invalid experiment variable
     """
 
-    def __init__(self, message="", exp_variable=None):
+    def __init__(self, message: str = "", exp_variable: str = None):
         self.exp_variable = exp_variable
 
         if len(message) == 0:
@@ -85,7 +85,7 @@ class InvalidFuncArgument(Exception):
         message -- explanation of the error
     """
 
-    def __init__(self, message="", argument=None):
+    def __init__(self, message: str = "", argument: str = ""):
         self.argument = argument
 
         if len(message) == 0:

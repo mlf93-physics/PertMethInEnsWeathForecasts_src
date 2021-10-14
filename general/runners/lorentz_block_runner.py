@@ -1,3 +1,12 @@
+"""Perform the calculation of one or more lorentz blocks.
+
+Example:
+python ../general/runners/lorentz_block_runner.py
+--exp_setup=TestRun3
+--n_units=1
+--pert_mode=rd
+
+"""
 import sys
 
 sys.path.append("..")
@@ -57,6 +66,11 @@ def main(args):
 
         parent_perturb_folder = f"{exp_setup['folder_name']}/lorentz_block{i}"
 
+        # Use hyper diffusion if arguments are present
+        if "diff_exponent" in exp_setup and "ny_n" in exp_setup:
+            args["diff_exponent"] = exp_setup["diff_exponent"]
+            args["ny_n"] = exp_setup["ny_n"]
+
         # Make analysis forecasts
         args["time_to_run"] = exp_setup["time_to_run"]
         args["start_times"] = [start_times[i] + exp_setup["day_offset"]]
@@ -92,15 +106,16 @@ def main(args):
             args=copy_args,
             n_units=min(args["n_units"], num_possible_units - n_existing_units),
         )
+        # Adjust exp_folder
+        copy_args["exp_folder"] = exp_setup["folder_name"]
+        # Save exp setup to exp folder
+        g_save.save_exp_info(exp_setup, copy_args)
+
+        if args["erda_run"]:
+            path = pl.Path(args["datapath"], exp_setup["folder_name"])
+            g_save_utils.compress_dir(path, "test_temp1")
     else:
         print("No processes to run - check if blocks already exists")
-
-    # Save exp setup to exp folder
-    g_save.save_exp_info(exp_setup, args)
-
-    if args["erda_run"]:
-        path = pl.Path(args["datapath"], exp_setup["folder_name"])
-        g_save_utils.compress_dir(path, "test_temp1")
 
 
 if __name__ == "__main__":

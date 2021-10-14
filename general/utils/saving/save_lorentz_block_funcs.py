@@ -34,10 +34,10 @@ def save_lorentz_block_data(
     data_out = perturb_data[slice, :]
 
     expected_path = g_save_utils.generate_dir(
-        args["datapath"], subfolder=f"{args['perturb_folder']}", args=args
+        args["datapath"], subfolder=f"{args['exp_folder']}", args=args
     )
     if perturb_position is not None:
-        lorentz_header_extra = f", perturb_pos={int(perturb_position)}"
+        lorentz_header_extra = f"perturb_pos={int(perturb_position)}, "
         header = g_save_utils.generate_header(
             args,
             n_data=num_forecasts,

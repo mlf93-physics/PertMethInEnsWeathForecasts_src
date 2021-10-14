@@ -179,7 +179,9 @@ def import_data(file_name, start_line=0, max_lines=None, step=1):
             stop_line,
             step,
         )
-        data_in = np.genfromtxt(line_iterator, dtype=params.dtype, delimiter=",")
+        data_in: np.ndarray(dtype=params.dtype) = np.genfromtxt(
+            line_iterator, dtype=params.dtype, delimiter=","
+        )
 
     if len(data_in.shape) == 1:
         data_in = np.reshape(data_in, (1, data_in.size))
@@ -247,14 +249,48 @@ def import_ref_data(args=None):
 
 
 def import_perturbation_velocities(
-    args=None, search_pattern="*.csv", raw_perturbations=False
+    args: dict = None, search_pattern: str = "*.csv", raw_perturbations: bool = True
 ):
+    """Import of perturbation velocities
+
+    Parameters
+    ----------
+    args : dict, optional
+        Run-time arguments, by default None
+    search_pattern : str, optional
+        Pattern to search for datafiles, by default "*.csv"
+    raw_perturbations : bool, optional
+        Toggles if the raw perturbation (ref data subtracted) or the
+        perturbation rel. reference should be returned, by default True
+
+    Returns
+    -------
+    tuple
+        Collection of variables given by:
+        (
+            list: u_stores,
+            list: perturb_time_pos_list,
+            list: perturb_time_pos_list_legend,
+            list: returned_perturb_header_dicts,
+            list: u_ref_stores,
+        )
+
+    Raises
+    ------
+    g_exceptions.InvalidRuntimeArgument
+        Raised if shell_cutoff is not None when running with a model other than
+        shell model
+    ValueError
+        Raised if no datapath is specified
+    """
+
     if MODEL != Models.SHELL_MODEL:
         if "shell_cutoff" in args:
             if args["shell_cutoff"] is not None:
                 raise g_exceptions.InvalidRuntimeArgument(argument="shell_cutoff")
 
     u_stores = []
+    returned_perturb_header_dicts = []
 
     if args["datapath"] is None:
         raise ValueError("No path specified")
@@ -304,6 +340,7 @@ def import_perturbation_velocities(
             continue
 
         perturb_data_in, perturb_header_dict = import_data(perturb_file_name)
+        returned_perturb_header_dicts.append(perturb_header_dict)
 
         # Initialise ref_data_in of null size
         ref_data_in = np.array([], dtype=params.dtype).reshape(0, params.sdim + 1)
@@ -342,7 +379,7 @@ def import_perturbation_velocities(
             )
             counter += 1
 
-        # If raw_perturbations is True, the reference data is not subtracted from perturbation
+        # If raw_perturbations is False, the reference data is not subtracted from perturbation
         if "shell_cutoff" in args:
             if args["shell_cutoff"] is not None:
                 # Calculate error array
@@ -350,19 +387,18 @@ def import_perturbation_velocities(
                 # starts from 0
                 u_stores.append(
                     perturb_data_in[:, 1 : (args["shell_cutoff"] + 2)]
-                    - (not raw_perturbations)
+                    - (raw_perturbations)
                     * ref_data_in[:, 1 : (args["shell_cutoff"] + 2)]
                 )
             else:
                 # Calculate error array
                 u_stores.append(
-                    perturb_data_in[:, 1:]
-                    - (not raw_perturbations) * ref_data_in[:, 1:]
+                    perturb_data_in[:, 1:] - (raw_perturbations) * ref_data_in[:, 1:]
                 )
         else:
             # Calculate error array
             u_stores.append(
-                perturb_data_in[:, 1:] - (not raw_perturbations) * ref_data_in[:, 1:]
+                perturb_data_in[:, 1:] - (raw_perturbations) * ref_data_in[:, 1:]
             )
 
         # If perturb positions are the same for all perturbations, return
@@ -382,7 +418,7 @@ def import_perturbation_velocities(
         u_stores,
         perturb_time_pos_list,
         perturb_time_pos_list_legend,
-        perturb_header_dict,
+        returned_perturb_header_dicts,
         u_ref_stores,
     )
 

@@ -103,7 +103,7 @@ def plot_error_norm_vs_time(
         u_stores,
         perturb_time_pos_list,
         perturb_time_pos_list_legend,
-        header_dict,
+        header_dicts,
         u_ref_stores,
     ) = g_import.import_perturbation_velocities(args, search_pattern="*perturb*.csv")
 
@@ -119,8 +119,8 @@ def plot_error_norm_vs_time(
 
     time_array = np.linspace(
         0,
-        header_dict["time_to_run"],
-        int(header_dict["time_to_run"] * params.tts) + args["endpoint"] * 1,
+        header_dicts[0]["time_to_run"],
+        int(header_dicts[0]["time_to_run"] * params.tts) + args["endpoint"] * 1,
         dtype=np.float64,
         endpoint=args["endpoint"],
     )
@@ -185,7 +185,7 @@ def plot_error_norm_vs_time(
             title_suffix = f" cutoff={args['shell_cutoff']}"
 
     title = g_plt_utils.generate_title(
-        header_dict, args, title_header="Error vs time", title_suffix=title_suffix
+        header_dicts[0], args, title_header="Error vs time", title_suffix=title_suffix
     )
     axes.set_title(title)
 

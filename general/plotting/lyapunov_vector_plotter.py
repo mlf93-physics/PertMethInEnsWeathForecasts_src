@@ -89,7 +89,7 @@ def plot_tlm_solution_orthogonality_vs_time(args, axes=None):
         u_stores,
         perturb_time_pos_list,
         perturb_time_pos_list_legend,
-        header_dict,
+        header_dicts,
         u_ref_stores,
     ) = g_import.import_perturbation_velocities(args, search_pattern="*perturb*.csv")
 
@@ -98,11 +98,11 @@ def plot_tlm_solution_orthogonality_vs_time(args, axes=None):
     # The number of time steps per unit
     n_time_steps_per_unit = int(round(exp_setup["integration_time"] * params.tts, 0))
     # The total number of time steps for all units
-    n_time_steps = int(header_dict["n_units"] * n_time_steps_per_unit)
+    n_time_steps = int(header_dicts[0]["n_units"] * n_time_steps_per_unit)
     # Prepare time array
     start_time = exp_setup["start_times"][0] if "start_times" in exp_setup else 0
     time_array = (
-        np.arange(0, header_dict["n_units"]) * exp_setup["integration_time"]
+        np.arange(0, header_dicts[0]["n_units"]) * exp_setup["integration_time"]
         + start_time
     )
 

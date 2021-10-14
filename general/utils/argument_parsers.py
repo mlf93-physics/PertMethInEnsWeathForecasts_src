@@ -368,6 +368,7 @@ class StandardPlottingArgParser:
         self._parser.add_argument("--xlim", nargs=2, default=None, type=float)
         self._parser.add_argument("--ylim", nargs=2, default=None, type=float)
         self._parser.add_argument("--sharey", action="store_true")
+        self._parser.add_argument("--average", action="store_true")
 
         # If running perturbations before plotting
         self._parser.add_argument("--start_times", nargs="+", type=float)

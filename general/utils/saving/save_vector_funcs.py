@@ -36,8 +36,8 @@ def save_vector_unit(data, perturb_position=None, unit=0, args=None, exp_setup=N
 
     if perturb_position is not None:
         perturb_header_extra = (
-            f", perturb_pos={int(perturb_position)}, unit={unit}"
-            + f", val_pos={val_pos}"
+            f"perturb_pos={int(perturb_position)}, unit={unit}"
+            + f", val_pos={val_pos}, "
         )
         header = g_save_utils.generate_header(
             args,
