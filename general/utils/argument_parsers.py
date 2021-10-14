@@ -384,4 +384,12 @@ class StandardPlottingArgParser:
         self._parser.add_argument("--endpoint", action="store_true")
 
         if MODEL == Models.SHELL_MODEL:
-            self._parser.add_argument("--shell_cutoff", default=None, type=int)
+            self._parser.add_argument(
+                "--shell_cutoff",
+                default=None,
+                type=int,
+                help="Defines which shells (all shells below shell_cutoff)"
+                + " shall be compared to reference shells. Used in hyper diffusion"
+                + " experiments, where only region of shells below diffusion region"
+                + " is relevant",
+            )

@@ -286,7 +286,7 @@ def import_perturbation_velocities(
 
     if MODEL != Models.SHELL_MODEL:
         if "shell_cutoff" in args:
-            if args["shell_cutoff"] is not None:
+            if args["shellcutoff"] is not None:
                 raise g_exceptions.InvalidRuntimeArgument(argument="shell_cutoff")
 
     u_stores = []

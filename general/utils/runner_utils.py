@@ -8,7 +8,31 @@ import general.utils.exceptions as g_exceptions
 from config import LICENCE
 
 
-def generate_start_times(exp_setup, args):
+def generate_start_times(exp_setup: dict, args: dict):
+    """Generate start times and calculate the number of possible units from
+    the relevant run-time variables and variables from the experiment setup
+
+    Parameters
+    ----------
+    exp_setup : dict
+        The current experiment setup
+    args : dict
+        Run-time arguments
+
+    Returns
+    -------
+    tuple
+        All generated start times and the number of possible units/start times
+        (
+            list: start_times
+            int: num_possible_units
+        )
+
+    Raises
+    ------
+    g_exceptions.LicenceImplementationError
+        Raised if the present function do not work on the current licence
+    """
     ref_header_dict = g_import.import_info_file(pl.Path(args["datapath"], "ref_data"))
 
     if LICENCE == EXP.LORENTZ_BLOCK:
