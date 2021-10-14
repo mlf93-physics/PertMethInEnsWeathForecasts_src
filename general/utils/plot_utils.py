@@ -102,7 +102,7 @@ def generate_title(
     if MODEL == Models.SHELL_MODEL:
         title = (
             f'; f={header_dict["forcing"]}'
-            + f', $n_{{\\nu}}$={int(header_dict["n_f"])}, $\\nu$={header_dict["ny"]:.2e}'
+            + f', $n_{{\\nu}}$={int(header_dict["ny_n"])}, $\\nu$={header_dict["ny"]:.2e}'
             + f', time={header_dict["time_to_run"]}\n'
         )
     elif MODEL == Models.LORENTZ63:
@@ -123,7 +123,7 @@ def generate_title(
 def save_or_show_plot(args):
     if args["save_fig"]:
         subpath = pl.Path("shell_model_experiments/hyper_diffusivity/")
-        file_name = "hyper_diff_ny_n16_diff_exp_compare"
+        file_name = "hyper_diff_ny_n16_diff_exp8_spectrum"
 
         question = (
             "\nConfirm that the figure is being saved to\n"

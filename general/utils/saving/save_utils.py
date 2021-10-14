@@ -39,7 +39,7 @@ def generate_standard_data_name(args):
 
     if MODEL == Models.SHELL_MODEL:
         file_name = (
-            f"ny{adj_args['ny']}_t{adj_args['time_to_run']}"
+            f"ny{adj_args['ny']}_ny_n{args['ny_n']}_t{adj_args['time_to_run']}"
             + f"_n_f{sh_params.n_forcing}_f{adj_args['forcing']}"
             f"_kexp{args['diff_exponent']}"
         )
@@ -163,5 +163,9 @@ def generate_header(
         optional_append += f"experiment={LICENCE}, "
 
     header += optional_append + append_extra
+
+    # Strip trailing commas
+    header = header.rstrip(",")
+    header = header.rstrip(", ")
 
     return header

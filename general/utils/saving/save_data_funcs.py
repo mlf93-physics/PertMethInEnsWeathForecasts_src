@@ -69,7 +69,7 @@ def save_data(data_out, subsubfolder="", prefix="", perturb_position=None, args=
         # Prepare extra header items
         perturb_header_extra = ""
         if perturb_position is not None:
-            perturb_header_extra = f", perturb_pos={int(perturb_position)}"
+            perturb_header_extra = f"perturb_pos={int(perturb_position)}, "
 
         header = g_save_utils.generate_header(
             args,

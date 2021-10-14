@@ -46,7 +46,7 @@ class StandardArgSetup:
     def setup_parser(self):
         # Prepare model specific default arguments
         if MODEL == Models.SHELL_MODEL:
-            datapath = "./data/ny2.37e-08_t4.00e+02_n_f0_f1.0/"
+            datapath = "./data/ny2.37e-08_ny_n19_t3.00e+02_n_f0_f1.0_kexp2"
 
         elif MODEL == Models.LORENTZ63:
             datapath = "./data/sig1.00e+01_t9.10e+03_b2.67e+00_r2.80e+01/"

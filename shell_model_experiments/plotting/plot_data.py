@@ -62,10 +62,7 @@ def plot_energy_spectrum(u_data, header_dict, axes=None):
 
     # Calculate mean energy
     mean_energy = np.mean(
-        (
-            u_data[-u_data.shape[0] // 4 :, :]
-            * np.conj(u_data[-u_data.shape[0] // 4 :, :])
-        ).real,
+        (u_data * np.conj(u_data)).real,
         axis=0,
     )
 
@@ -81,8 +78,13 @@ def plot_energy_spectrum(u_data, header_dict, axes=None):
     axes.set_yscale("log")
     axes.set_xlabel("k")
     axes.set_ylabel("Energy")
+
     # Limit y axis if necessary
-    if np.log(np.min(mean_energy)) < -15:
+    min_mean_energy = np.min(mean_energy)
+    if min_mean_energy > 0:
+        if np.log(min_mean_energy) < -15:
+            axes.set_ylim(1e-15, 10)
+    else:
         axes.set_ylim(1e-15, 10)
 
     # Title setup
@@ -280,7 +282,7 @@ def plots_related_to_energy(args=None, axes=None):
 
     # Conserning ny
     plot_energy_spectrum(u_data, header_dict)
-    g_plt_data.plot_energy(time, u_data, header_dict, axes=axes, args=args)
+    # g_plt_data.plot_energy(time, u_data, header_dict, axes=axes, args=args)
     # plot_energy_per_shell(
     #     time, u_data, header_dict, ax=axes[0], path=args["datapath"], args=args
     # )
