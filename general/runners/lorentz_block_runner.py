@@ -106,8 +106,6 @@ def main(args):
             args=copy_args,
             n_units=min(args["n_units"], num_possible_units - n_existing_units),
         )
-        # Adjust exp_folder
-        copy_args["exp_folder"] = exp_setup["folder_name"]
         # Save exp setup to exp folder
         g_save.save_exp_info(exp_setup, copy_args)
 

@@ -182,7 +182,7 @@ def save_exp_info(exp_info: dict, args: dict):
 
     # Generate path if not existing
     expected_path = g_save.g_save_utils.generate_dir(
-        pl.Path(args["datapath"], args["exp_folder"]), args=args
+        pl.Path(args["datapath"], exp_info["folder_name"]), args=args
     )
 
     out_path = pl.Path(expected_path, f"{prefix}{out_name}.json")
