@@ -4,57 +4,23 @@ sys.path.append("..")
 from pathlib import Path
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.ticker as mpl_ticker
 from shell_model_experiments.params.params import *
 import shell_model_experiments.perturbations.normal_modes as sh_nm_estimator
 import general.plotting.plot_data as g_plt_data
 import general.utils.importing.import_data_funcs as g_import
 import general.utils.argument_parsers as a_parsers
 import general.utils.plot_utils as g_plt_utils
+import general.utils.exceptions as g_exceptions
 
 
-def plot_shells_vs_time(k_vectors_to_plot=None):
-
-    for ifile, file_name in enumerate(file_names):
-        data_in, header_dict = g_import.import_data(file_name)
-        time = data_in[:, 0]
-        u_store = data_in[:, 1:]
-
-    fig = plt.figure(figsize=(8, 4))
-    axes = []
-    axes.append(plt.subplot(1, 2, 1))
-    axes.append(plt.subplot(1, 2, 2))
-    # n_k_vec = 10
-
-    legend = []
-    if k_vectors_to_plot is None:
-        k_vectors_to_plot = range(n_k_vec)
-
-    for k in k_vectors_to_plot:
-        axes[0].plot(time.real, u_store[:, k].real)
-        legend.append(f"k = {k_vec_temp[k]}")
-
-    axes[0].set_xlabel("Time", fontsize=12)
-    axes[0].set_ylabel("Velocity", fontsize=12)
-    axes[0].set_title("Real part")
-
-    for k in k_vectors_to_plot:
-        axes[1].plot(time.real, u_store[:, k].imag)
-        legend.append(f"k = {k_vec_temp[k]}")
-
-    axes[1].set_xlabel("Time", fontsize=12)
-    axes[1].set_ylabel("Velocity", fontsize=12)
-    axes[1].set_title("Imaginary part")
-    # axes[1].set_title(f'Shell velocity vs. time')
-    # plt.suptitle(f'Parameters: f={header_dict["f"]}, $\\nu$={header_dict["ny"]:.2e}, time={header_dict["time_to_run"]}')
-    plt.legend(legend, loc="center right", bbox_to_anchor=(1.6, 0.5))
-    plt.subplots_adjust(left=0.086, right=0.805, wspace=0.3)
-    # plt.suptitle(f'Shell velocity vs. time; f={header_dict["f"]}, $\\nu$={header_dict["ny"]:.2e}, time={header_dict["time_to_run"]}')
-
-    # handles, labels = axes[1].get_legend_handles_labels()
-    # plt.figlegend(handles, labels, loc='center right', bbox_to_anchor=(1.0, 0.5))
-
-
-def plot_energy_spectrum(u_data, header_dict, axes=None):
+def plot_energy_spectrum(
+    u_data: np.ndarray,
+    header_dict: dict,
+    axes: plt.Axes = None,
+    plot_arg_list: list = ["kolmogorov"],
+    plot_kwarg_list: dict = {},
+):
 
     if axes is None:
         fig = plt.figure()
@@ -65,19 +31,25 @@ def plot_energy_spectrum(u_data, header_dict, axes=None):
         (u_data * np.conj(u_data)).real,
         axis=0,
     )
+    # Plot Kolmogorov scaling
+    if "kolmogorov" in plot_arg_list:
+        axes.plot(
+            np.log2(k_vec_temp), k_vec_temp ** (-2 / 3), "k--", label="$k^{{-2/3}}$"
+        )
 
     # Plot energy spectrum
     axes.plot(
         np.log2(k_vec_temp),
         mean_energy,
+        label=f"$n_{{\\nu}}$={int(header_dict['ny_n'])}, "
+        + f"$\\alpha$={int(header_dict['diff_exponent'])}",
     )
-    # Plot Kolmogorov scaling
-    axes.plot(np.log2(k_vec_temp), k_vec_temp ** (-2 / 3), "k--")
 
     # Axes setup
     axes.set_yscale("log")
     axes.set_xlabel("k")
     axes.set_ylabel("Energy")
+    axes.xaxis.set_major_locator(mpl_ticker.MaxNLocator(integer=True))
 
     # Limit y axis if necessary
     min_mean_energy = np.min(mean_energy)
@@ -88,10 +60,38 @@ def plot_energy_spectrum(u_data, header_dict, axes=None):
         axes.set_ylim(1e-15, 10)
 
     # Title setup
-    title = g_plt_utils.generate_title(
-        header_dict, args, title_header="Energy spectrum"
-    )
+    if "title" in plot_kwarg_list:
+        title = plot_kwarg_list["title"]
+    else:
+        title = g_plt_utils.generate_title(
+            header_dict, args, title_header="Energy spectrum"
+        )
     axes.set_title(title)
+
+
+def plot_spectrum_comparison(args):
+    if args["datapaths"] is None:
+        raise g_exceptions.InvalidRuntimeArgument(
+            "Argument not set", argument="datapaths"
+        )
+
+    axes = plt.axes()
+
+    for i, path in enumerate(args["datapaths"]):
+        args["datapath"] = path
+        # Import reference data
+        time, u_data, header_dict = g_import.import_ref_data(args=args)
+
+        plot_arg_list = [] if i > 0 else ["kolmogorov"]
+
+        plot_energy_spectrum(
+            u_data,
+            header_dict,
+            axes=axes,
+            plot_arg_list=plot_arg_list,
+            plot_kwarg_list={"title": "Energy spectrum vs $n_{{\\nu}}$ and $\\alpha$"},
+        )
+        plt.legend()
 
 
 def plot_energy_per_shell(
@@ -200,103 +200,17 @@ def plot_energy_per_shell(
                 break
 
 
-def analyse_eddie_turnovertime(u_store, header_dict, args=None):
-    fig, axes = plt.subplots(nrows=2, ncols=1)
-    # Calculate mean eddy turnover time
-    mean_u_norm = np.mean(np.sqrt(u_store * np.conj(u_store)).real, axis=0)
-    mean_eddy_turnover = 1 / (k_vec_temp * mean_u_norm)
-    print("mean_eddy_turnover", mean_eddy_turnover)
-    eddy_freq = 1 / mean_eddy_turnover
-    print("eddy_freq", eddy_freq)
-
-    # plt.figure(10)
-    axes[0].plot(k_vec_temp, eddy_freq, "k.", label="Eddy freq. from $||u||$")
-    axes[0].plot(k_vec_temp, k_vec_temp ** (2 / 3), "k--", label="$k^{2/3}$")
-    # print('k_vectors_to_plot', k_vectors_to_plot)
-    # for i, k in enumerate(k_vectors_to_plot[::-1]):
-    #     axes[0].plot(k_vec_temp[k], eddy_freq[k], '.', label='_nolegend_')
-
-    axes[0].set_yscale("log")
-    axes[0].set_xscale("log")
-    axes[0].grid()
-    axes[0].legend()
-    axes[0].set_xlabel("k")
-    axes[0].set_ylabel("Eddy frequency")
-    axes[0].set_title(
-        'Eddy frequencies vs k; f={header_dict["f"]}'
-        + f', $n_f$={int(header_dict["n_f"])}, $\\nu$={header_dict["ny"]:.2e}'
-        + f', time={header_dict["time_to_run"]}s'
-    )
-
-    axes[1].plot(
-        k_vec_temp, mean_eddy_turnover, "k.", label="Eddy turnover time from $||u||$"
-    )
-    axes[1].plot(k_vec_temp, k_vec_temp ** (-2 / 3), "k--", label="$k^{-2/3}$")
-    axes[1].set_yscale("log")
-    axes[1].set_xscale("log")
-    axes[1].grid()
-    axes[1].legend()
-    axes[1].set_xlabel("k")
-    axes[1].set_ylabel("Eddy turnover time")
-    axes[1].set_title(
-        'Eddy turnover time vs k; f={header_dict["f"]}'
-        + f', $n_f$={int(header_dict["n_f"])}, $\\nu$={header_dict["ny"]:.2e}'
-        + f', time={header_dict["time_to_run"]}s'
-    )
-
-    # fig, axes = plt.subplots(5, 4, sharex=True)
-    # axes = axes.reshape((1, u_store.shape[1]))[0]
-
-    # for i in range(u_store.shape[1]):
-
-    #     spectrum = np.fft.fft(u_store[:, i])
-    #     power_spec = np.abs(spectrum)**2
-    #     freqs = np.fft.fftfreq(u_store.shape[0], d=1/sample_rate*dt)
-    #     idx = np.argsort(freqs)[(freqs.size//2 + 1):]
-    #     # plt.plot(freq[:spectrum.shape[-1]//2], power_spec.real)
-    #     # plt.plot(freq[:spectrum.shape[-1]//2], power_spec.imag)
-    #     axes[i].plot(freqs[idx], power_spec[idx]/1e6)
-    #     axes[i].set_xscale('log')
-    #     axes[i].grid()
-    #     axes[i].set_title(f'k = {k_vec_temp[i]}')
-
-    # # plt.yscale('log')
-    # # plt.plot(freq, power_spec)
-    # # plt.plot(freq, )
-    # fig.add_subplot(111, frameon=False)
-    # plt.tick_params(labelcolor='none', top=False, bottom=False, left=False, right=False)
-    # plt.xlabel('Frequency', fontsize=12, labelpad=10)
-    # plt.ylabel('Power [in $10^6$]', fontsize=12, labelpad=10)
-    # plt.title(f"Power spectrum vs. k; f={header_dict['f']}, " +\
-    #     f"$n_f$={header_dict['n_f']}, $\\nu$={header_dict['ny']}, " +\
-    #     f"time={header_dict['time']}", pad=25)
-    # plt.subplots_adjust(hspace=0.44, left=0.062, right=0.95)
-
-
 def plots_related_to_energy(args=None, axes=None):
 
     # Import reference data
     time, u_data, header_dict = g_import.import_ref_data(args=args)
 
     # Conserning ny
-    # plot_energy_spectrum(u_data, header_dict)
+    plot_energy_spectrum(u_data, header_dict)
     g_plt_data.plot_energy(time, u_data, header_dict, axes=axes, args=args)
     # plot_energy_per_shell(
     #     time, u_data, header_dict, ax=axes[0], path=args["datapath"], args=args
     # )
-
-
-def plot_eddie_freqs(args=None):
-    # file_names = ['../data/udata_ny0_t1.000000e+00_n_f0_f0_j0.csv']
-
-    for ifile, file_name in enumerate(file_names):
-        data_in, header_dict = g_import.import_data(
-            file_name, start_line=int(args["burn_in_time"] * tts)
-        )
-        time = data_in[:, 0]
-        u_store = data_in[:, 1:]
-
-        analyse_eddie_turnovertime(u_store, header_dict, args=args)
 
 
 def plot_shell_error_vs_time(args=None):
@@ -596,7 +510,10 @@ def plot_pert_traject_energy_spectrum(args):
         plot_energy_spectrum(u_data, header_dicts[0], axes=axes)
 
 
-def plot_error_energy_spectrum_vs_time_2D(args=None):
+def plot_error_energy_spectrum_vs_time_2D(args: dict = None, axes: plt.Axes = None):
+
+    if axes is None:
+        axes = plt.axes()
 
     (
         u_stores,
@@ -612,7 +529,6 @@ def plot_error_energy_spectrum_vs_time_2D(args=None):
         n_files = args["n_files"]
 
     n_divisions = 25
-    error_spectra = np.zeros((n_files, n_divisions, n_k_vec), dtype=np.float64)
 
     # Prepare exponential time indices
     time_linear = np.linspace(0, 10, n_divisions)
@@ -621,48 +537,47 @@ def plot_error_energy_spectrum_vs_time_2D(args=None):
     )
     time_exp_indices[-1] -= 1  # Include endpoint manually
 
+    # Store only unique indices
+    time_exp_indices = np.unique(time_exp_indices)
+    # Update numbe of divisions
+    n_divisions = time_exp_indices.size
+    error_spectra = np.zeros((n_files, n_divisions, n_k_vec), dtype=np.float64)
+
     for ifile in range(n_files):
         for i, data_index in enumerate(time_exp_indices):
             error_spectra[ifile, i, :] = np.abs(u_stores[ifile][data_index, :]).real
 
     # Calculate mean and std
     error_mean_spectra = np.zeros((n_divisions, n_k_vec), dtype=np.float64)
-    error_std_spectra = np.zeros((n_divisions, n_k_vec), dtype=np.float64)
     # Find zeros
-    # error_spectra[np.where(error_spectra == 0)] = np.nan
+    error_spectra[np.where(error_spectra == 0)] = np.nan
 
     for i, data_index in enumerate(time_exp_indices):
         error_mean_spectra[i, :] = np.nanmean(error_spectra[:, i, :], axis=0)
-        error_std_spectra[i, :] = np.nanstd(error_spectra[:, i, :], axis=0)
 
     # error_mean_spectra[np.where(error_mean_spectra == np.nan)] = 0.0
-    error_mean_spectra[0, :] = error_spectra[0, 0, :]
-    plt.figure(figsize=(16, 12))
-    temp_plot = plt.plot(np.log2(k_vec_temp), error_mean_spectra.T)
+    # error_mean_spectra[0, :] = error_spectra[0, 0, :]
 
-    # for i in range(n_divisions):
-    #     # print('error_std_spectra[i, :]/error_mean_spectra[i, :]', error_std_spectra[i, :]/error_mean_spectra[i, :])
-    #     # input()
-    #     plt.errorbar(np.log2(k_vec_temp), error_mean_spectra[i, :],
-    #         error_mean_spectra[i, :] + error_std_spectra[i, :]/
-    #         error_mean_spectra[i, :],
-    #         alpha=0.4, color=temp_plot[i].get_color())
-    plt.plot(np.log2(k_vec_temp), k_vec_temp ** (-1 / 3), "k--", label="$k^{2/3}$")
-    plt.yscale("log")
+    cmap_list = g_plt_utils.get_non_repeating_colors(n_colors=n_divisions)
+    axes.set_prop_cycle("color", cmap_list)
+    axes.xaxis.set_major_locator(mpl_ticker.MaxNLocator(integer=True))
+
+    axes.plot(np.log2(k_vec_temp), error_mean_spectra.T)
+    axes.plot(np.log2(k_vec_temp), k_vec_temp ** (-1 / 3), "k--", label="$k^{2/3}$")
+    axes.set_yscale("log")
     legend = [f"{item/sample_rate*dt:.3e}" for item in time_exp_indices]
-    plt.legend(legend, loc="center right", bbox_to_anchor=(1.1, 0.5))
-    plt.xlabel("Shell number")
-    plt.ylabel("$u_n - u^{'}_n$")
-    plt.ylim(1e-22, 10)
-    plt.title(
-        f'Error energy spectrum vs time; f={header_dicts[0]["f"]}'
-        + f', $n_f$={int(header_dicts[0]["n_f"])}, $\\nu$={header_dicts[0]["ny"]:.2e}'
-        + f', time={header_dicts[0]["time_to_run"]}, N_tot={n_files} | Folder: {args["exp_folder"]}'
+    # axes.legend(legend, loc="center right", bbox_to_anchor=(1.3, 0.5))
+    axes.set_xlabel("Shell number")
+    axes.set_ylabel("$u_n - u^{'}_n$")
+    axes.set_ylim(1e-22, 10)
+
+    title = g_plt_utils.generate_title(
+        header_dicts[0],
+        args,
+        title_header="Error energy spectrum vs time",
+        title_suffix=f"N_tot={n_files}, ",
     )
-    plt.savefig(
-        f'../figures/week6/error_spectra_vs_time/single_shell5_perturb/error_spectra_vs_time_ref_ny_n_19_folder_single_shell5_perturb_ny_n{int(header_dict["n_ny"]):d}_files_{n_files}',
-        format="png",
-    )
+    axes.set_title(title)
 
 
 def plot_error_vector_spectrogram(args=None):
@@ -817,12 +732,6 @@ if __name__ == "__main__":
         args["Nt"] = int(args["time_to_run"] / dt * sample_rate)
 
     # Perform plotting
-    if "shells_vs_time" in args["plot_type"]:
-        plot_shells_vs_time([0, 1, 2])
-
-    if "eddie_freqs" in args["plot_type"]:
-        plot_eddie_freqs(args=args)
-
     if "energy_plots" in args["plot_type"]:
         plots_related_to_energy(args=args)
 
@@ -858,5 +767,8 @@ if __name__ == "__main__":
 
     if "error_vector_spectrum" in args["plot_type"]:
         plot_error_vector_spectrum(args=args)
+
+    if "spec_compare" in args["plot_type"]:
+        plot_spectrum_comparison(args=args)
 
     g_plt_utils.save_or_show_plot(args)

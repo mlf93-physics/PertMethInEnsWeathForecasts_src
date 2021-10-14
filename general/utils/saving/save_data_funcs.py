@@ -136,13 +136,12 @@ def save_perturb_info(args=None, exp_setup=None):
     print("Prepare perturb data info textfile\n")
 
     # Prepare line to write
-    info_line_args = g_save_utils.args_to_string(args)
     exp_setup_line = g_save_utils.args_to_string(exp_setup)
 
     info_line = g_save_utils.generate_header(
         args, args["Nt"] * params.sample_rate, append_options=["licence"]
     )
-    info_line += info_line_args + exp_setup_line
+    info_line += exp_setup_line
 
     # Write to file
     save_run_info(perturb_data_info_path, info_line)

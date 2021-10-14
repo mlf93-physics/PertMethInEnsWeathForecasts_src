@@ -14,7 +14,7 @@ from general.params.model_licences import Models
 from config import MODEL
 
 
-def get_non_repeating_colors(n_colors=1):
+def get_non_repeating_colors(n_colors: int = 1):
     colormap = plt.cm.gist_rainbow
     cmap_list = [colormap(i) for i in np.linspace(0, 1, n_colors)]
 
@@ -122,8 +122,8 @@ def generate_title(
 
 def save_or_show_plot(args):
     if args["save_fig"]:
-        subpath = pl.Path("shell_model_experiments/hyper_diffusivity/")
-        file_name = "hyper_diff_ny_n16_diff_exp8_spectrum"
+        subpath = pl.Path("shell_model_experiments/error_spectrum_vs_time/")
+        file_name = "error_spectrum_vs_time_ny_n13_alpha4"
 
         question = (
             "\nConfirm that the figure is being saved to\n"

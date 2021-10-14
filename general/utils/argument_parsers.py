@@ -363,6 +363,13 @@ class StandardPlottingArgParser:
         )
         self._parser.add_argument("-np", "--noplot", action="store_true")
         self._parser.add_argument("-s", "--save_fig", action="store_true")
+        self._parser.add_argument(
+            "--datapaths",
+            nargs="+",
+            type=str,
+            default=None,
+            help="For plots using multiple different datapaths (e.g. different reference files)",
+        )
 
         # x, y limits
         self._parser.add_argument("--xlim", nargs=2, default=None, type=float)
