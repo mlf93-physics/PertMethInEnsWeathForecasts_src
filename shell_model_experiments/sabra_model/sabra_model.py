@@ -1,3 +1,9 @@
+"""Solve the sabra shell model
+
+Example
+-------
+python sabra_model/sabra_model.py --time_to_run=1
+"""
 import sys
 
 sys.path.append("..")

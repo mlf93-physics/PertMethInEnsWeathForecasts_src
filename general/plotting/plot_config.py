@@ -2,6 +2,8 @@ import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mpl_ticker
 
+plt.rcParams["savefig.dpi"] = 300
+
 
 def setup_plotting_defaults():
     print("Plotting with default settings")

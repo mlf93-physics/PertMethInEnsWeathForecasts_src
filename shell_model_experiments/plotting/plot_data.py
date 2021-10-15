@@ -7,6 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mpl_ticker
 from mpl_toolkits import mplot3d
+import matplotlib.colors as colors
 from shell_model_experiments.params.params import *
 import shell_model_experiments.perturbations.normal_modes as sh_nm_estimator
 import general.plotting.plot_data as g_plt_data
@@ -100,28 +101,24 @@ def plot_spectrum_comparison(args):
 def plot_energy_per_shell(
     time, u_store, header_dict, ax=None, omit=None, path=None, args=None
 ):
+    if ax is None:
+        ax = plt.axes()
+
     # Plot total energy vs time
     energy_vs_time = np.cumsum((u_store * np.conj(u_store)).real, axis=1)
     ax.plot(time.real, energy_vs_time, "k")
     ax.set_xlabel("Time")
     ax.set_ylabel("Energy")
 
-    if omit == "ny":
-        ax.set_title(
-            f'Energy over time vs $\\nu$; f={header_dict["f"]}, $n_f$={header_dict["n_f"]}, time={header_dict["time_to_run"]}'
-        )
-    elif omit == "n_f":
-        ax.set_title(
-            f'Energy over time vs $n_f$; f={header_dict["f"]}, $\\nu$={header_dict["ny"]:.2e}, time={header_dict["time_to_run"]}'
-        )
-    else:
-        ax.set_title(
-            f'Energy over time; f={header_dict["f"]}'
-            + f', $n_f$={int(header_dict["n_f"])}, $\\nu$={header_dict["ny"]:.2e}'
-            + f', time={header_dict["time_to_run"]}s'
-        )
+    title = g_plt_utils.generate_title(
+        header_dict,
+        args,
+        title_header="Cummulative shell energy vs time",
+    )
 
-    if "exp_folder" in args:
+    ax.set_title(title)
+
+    if args["exp_folder"] is not None:
         # file_names = list(Path(path).glob('*.csv'))
         # Find reference file
         # ref_file_index = None
@@ -147,7 +144,7 @@ def plot_energy_per_shell(
 
         index = []
         for header_dict in header_dicts:
-            index.append(header_dict[-1]["perturb_pos"])
+            index.append(header_dicts[-1]["perturb_pos"])
 
         header_dicts = [header_dicts[i] for _, i in enumerate(np.argsort(index))]
         index = [index[i] for _, i in enumerate(np.argsort(index))]
@@ -209,11 +206,9 @@ def plots_related_to_energy(args=None, axes=None):
     time, u_data, header_dict = g_import.import_ref_data(args=args)
 
     # Conserning ny
-    plot_energy_spectrum(u_data, header_dict)
-    g_plt_data.plot_energy(time, u_data, header_dict, axes=axes, args=args)
-    # plot_energy_per_shell(
-    #     time, u_data, header_dict, ax=axes[0], path=args["datapath"], args=args
-    # )
+    # plot_energy_spectrum(u_data, header_dict)
+    # g_plt_data.plot_energy(time, u_data, header_dict, axes=axes, args=args)
+    plot_energy_per_shell(time, u_data, header_dict, path=args["datapath"], args=args)
 
 
 def plot_shell_error_vs_time(args=None):
@@ -248,11 +243,13 @@ def plot_shell_error_vs_time(args=None):
         plt.ylim(1e-16, 10)
         # plt.xlim(0.035, 0.070)
         plt.legend(k_vec_temp)
-        plt.title(
-            f'Error vs time; f={header_dicts[0]["f"]}'
-            + f', $n_f$={int(header_dicts[0]["n_f"])}, $\\nu$={header_dicts[0]["ny"]:.2e}'
-            + f', time={header_dicts[0]["time_to_run"]} | Folder: {args["exp_folder"]}'
+
+        title = g_plt_utils.generate_title(
+            header_dicts[0],
+            args,
+            title_header="Shell error vs time",
         )
+        plt.title(title)
 
 
 def plot_2D_eigen_mode_analysis(args=None):
@@ -766,6 +763,52 @@ def plot_error_vector_spectrum(args=None):
     plt.colorbar(pad=0.1)
 
 
+def plot_howmoller_diagram_u_energy_rel_mean(args=None):
+
+    # Import reference data
+    time, u_data, header_dict = g_import.import_ref_data(args=args)
+
+    # Prepare mesh
+    time2D, shell2D = np.meshgrid(time.real, k_vec_temp)
+    energy_array = (u_data * np.conj(u_data)).real.T
+    # Prepare energy rel mean
+    mean_energy = np.reshape(np.mean(energy_array, axis=1), (n_k_vec, 1))
+    energy_rel_mean_array = energy_array - mean_energy
+
+    fig, axes = plt.subplots(nrows=1, ncols=1)
+
+    # Get cmap
+    cmap, norm = g_plt_utils.get_cmap_distributed_around_zero(
+        vmin=np.min(energy_rel_mean_array),
+        vmax=np.max(energy_rel_mean_array),
+        neg_thres=0.4,
+        pos_thres=0.6,
+        cmap_handle=plt.cm.bwr,
+    )
+
+    # Make contourplot
+    pcm = axes.contourf(
+        time2D,
+        np.log2(shell2D),
+        energy_rel_mean_array,
+        norm=norm,
+        cmap=cmap,
+        levels=20,
+    )
+    pcm.negative_linestyle = "solid"
+    axes.set_ylabel("Shell number, n")
+    axes.set_xlabel("Time")
+
+    title = g_plt_utils.generate_title(
+        header_dict,
+        args,
+        title_header="Howmöller diagram for $|u|²$ - $\\langle|u|²\\rangle_t$",
+    )
+
+    axes.set_title(title)
+    fig.colorbar(pcm, ax=axes, pad=0.1, label="$|u|² - \\langle|u|²\\rangle_t$")
+
+
 if __name__ == "__main__":
     # Get arguments
     stand_plot_arg_parser = a_parsers.StandardPlottingArgParser()
@@ -820,5 +863,8 @@ if __name__ == "__main__":
 
     if "spec_compare" in args["plot_type"]:
         plot_spectrum_comparison(args=args)
+
+    if "u_howmoller_rel_mean" in args["plot_type"]:
+        plot_howmoller_diagram_u_energy_rel_mean(args=args)
 
     g_plt_utils.save_or_show_plot(args)

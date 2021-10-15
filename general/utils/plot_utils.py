@@ -22,9 +22,37 @@ def get_non_repeating_colors(n_colors: int = 1):
     return cmap_list
 
 
-def get_cmap_distributed_around_zero(vmin=-1, vmax=1):
-    colors_neg = plt.cm.coolwarm(np.linspace(0, 0.5, 256))
-    colors_pos = plt.cm.coolwarm(np.linspace(0.5, 1, 256))
+def get_cmap_distributed_around_zero(
+    vmin: float = -1,
+    vmax: float = 1,
+    neg_thres: float = 0.5,
+    pos_thres: float = 0.5,
+    cmap_handle: plt.cm = plt.cm.coolwarm,
+):
+    """Generate a cmap and norm distributed around zero
+
+    Parameters
+    ----------
+    vmin : float, optional
+        The minimum value of the cmap, by default -1
+    vmax : float, optional
+        The maximum value of the cmap, by default 1
+    neg_thres : float, optional
+        The upper threshold of the negative colours, i.e. the negative colours
+        are mapped to the range [0, neg_thres], by default 0.5
+    pos_thres : float, optional
+        The lower threshold of the positive colours, i.e. the positive colours
+        are mapped to the range [0, pos_thres], by default 0.5
+    cmap_handle : plt.cm, optional
+        A handle to the desired cmap, by default plt.cm.coolwarm
+
+    Returns
+    -------
+    [type]
+        [description]
+    """
+    colors_neg = cmap_handle(np.linspace(0, neg_thres, 256))
+    colors_pos = cmap_handle(np.linspace(pos_thres, 1, 256))
     all_colors = np.vstack((colors_neg, colors_pos))
     cmap = colors.LinearSegmentedColormap.from_list("energy_map", all_colors)
 
