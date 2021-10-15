@@ -2,9 +2,11 @@ import sys
 
 sys.path.append("..")
 from pathlib import Path
+from typing import List
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mpl_ticker
+from mpl_toolkits import mplot3d
 from shell_model_experiments.params.params import *
 import shell_model_experiments.perturbations.normal_modes as sh_nm_estimator
 import general.plotting.plot_data as g_plt_data
@@ -12,6 +14,7 @@ import general.utils.importing.import_data_funcs as g_import
 import general.utils.argument_parsers as a_parsers
 import general.utils.plot_utils as g_plt_utils
 import general.utils.exceptions as g_exceptions
+import general.utils.importing.import_perturbation_data as pt_import
 
 
 def plot_energy_spectrum(
@@ -301,10 +304,46 @@ def plot_2D_eigen_mode_analysis(args=None):
     )
 
 
-def plot_3D_eigen_mode_analysis(args=None, right_handed=True):
-    u_init_profiles, perturb_positions, header_dict = g_import.import_start_u_profiles(
-        args=args
+def plot_3D_eigen_mode_anal_comparison(args: dict = None):
+
+    # Prepare axes
+    fig1, axes1 = plt.subplots(
+        ncols=len(args["datapaths"]),
+        subplot_kw={"projection": "3d"},
+        figsize=(16, 9),
     )
+    fig2, axes2 = plt.subplots(ncols=len(args["datapaths"]), figsize=(16, 9))
+
+    # Prepare plot settings
+    mpl_ticker.MaxNLocator.default_params["integer"] = True
+
+    for i, path in enumerate(args["datapaths"]):
+        # Prepare datapaths
+        args["datapath"] = path
+
+        plot_3D_eigen_mode_analysis(args, axes=[axes1[i], axes2[i]], figs=[fig1, fig2])
+
+
+def plot_3D_eigen_mode_analysis(
+    args: dict = None,
+    right_handed: bool = True,
+    axes: List[plt.Axes] = None,
+    figs: List[plt.Figure] = None,
+    compare_plot: bool = False,
+):
+    if axes is None:
+        fig1, ax1 = plt.subplots(subplot_kw={"projection": "3d"})
+        fig2, ax2 = plt.figure(), plt.axes()
+        axes = [ax1, ax2]
+        figs = [fig1, fig2]
+    else:
+        if len(axes) != 2:
+            raise ValueError("Not the appropriate number of axes")
+
+    u_init_profiles, header_dict = pt_import.import_profiles_for_nm_analysis(args)
+
+    # Set diff_exponent
+    args["diff_exponent"] = header_dict["diff_exponent"]
 
     _, e_vector_collection, e_value_collection = sh_nm_estimator.find_normal_modes(
         u_init_profiles,
@@ -324,46 +363,54 @@ def plot_3D_eigen_mode_analysis(args=None, right_handed=True):
     lyaponov_index = np.arange(0, n_k_vec, 1)
     lyaponov_index, shells = np.meshgrid(lyaponov_index, shells)
 
-    fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
-    ax.plot_surface(
+    surf_plot = axes[0].plot_surface(
         lyaponov_index,
         shells,
         np.mean(np.abs(e_vector_collection) ** 2, axis=0),
         cmap="Reds",
     )
-    ax.set_xlabel("Lyaponov index, $j$")
-    ax.set_ylabel("Shell number, $i$")
-    ax.set_zlabel("$<|v_i^j|^2>$")
-    ax.set_zlim(0, 1)
-    ax.view_init(elev=27.0, azim=-21)
-    ax.set_title(
-        f'Eigenvectors vs shell numbers; f={header_dict["f"]}'
-        + f', $n_f$={int(header_dict["n_f"])}, $\\nu$={header_dict["ny"]:.2e}'
-        + f', time={header_dict["time_to_run"]}s, N_tot={args["n_profiles"]*args["n_runs_per_profile"]}'
+    axes[0].set_xlabel("Lyaponov index, $j$")
+    axes[0].set_ylabel("Shell number, $i$")
+    axes[0].set_zlabel("$<|v_i^j|^2>$")
+    axes[0].set_zlim(0, 1)
+    axes[0].view_init(elev=27.0, azim=-21)
+
+    figs[0].colorbar(surf_plot, ax=axes[0])
+
+    title = g_plt_utils.generate_title(
+        header_dict,
+        args,
+        title_header="Eigenvectors vs shell numbers",
+        title_suffix=f'N_tot={args["n_profiles"]*args["n_runs_per_profile"]}, ',
     )
 
-    if right_handed:
-        ax.set_xlim(n_k_vec, 0)
+    axes[0].set_title(title)
 
-    fig = plt.figure()
-    axes = plt.axes()
-    plt.pcolormesh(np.mean(np.abs(e_vector_collection) ** 2, axis=0), cmap="Reds")
-    plt.xlabel("Lyaponov index")
-    plt.ylabel("Shell number")
-    plt.title(
-        f'Eigenvectors vs shell numbers; f={header_dict["f"]}'
-        + f', $n_f$={int(header_dict["n_f"])}, $\\nu$={header_dict["ny"]:.2e}'
-        + f', time={header_dict["time_to_run"]}s, N_tot={args["n_profiles"]*args["n_runs_per_profile"]}'
-    )
-
+    # Set axis limits
     if right_handed:
-        plt.xlim(n_k_vec, 0)
-        axes.yaxis.tick_right()
-        axes.yaxis.set_label_position("right")
-        plt.colorbar(pad=0.1)
+        axes[0].set_xlim(n_k_vec, 0)
     else:
-        plt.colorbar()
-    plt.clim(0, 1)
+        axes[0].set_xlim(0, n_k_vec)
+    axes[0].set_ylim(0, n_k_vec)
+
+    pcolorplot = axes[1].pcolormesh(
+        np.mean(np.abs(e_vector_collection) ** 2, axis=0), cmap="Reds"
+    )
+    axes[1].set_xlabel("Lyaponov index")
+    axes[1].set_ylabel("Shell number")
+    axes[1].set_title(title)
+
+    if right_handed:
+        axes[1].set_xlim(n_k_vec, 0)
+        axes[1].yaxis.tick_right()
+        axes[1].yaxis.set_label_position("right")
+        axes[1].xaxis.set_major_locator(mpl_ticker.MaxNLocator(integer=True))
+        axes[1].yaxis.set_major_locator(mpl_ticker.MaxNLocator(integer=True))
+        figs[1].colorbar(pcolorplot, pad=0.1, ax=axes[1])
+    else:
+        figs[1].colorbar(pcolorplot, ax=axes[1])
+
+    pcolorplot.set_clim(0, 1)
 
 
 def plot_eigen_vector_comparison(args=None):
@@ -755,6 +802,9 @@ if __name__ == "__main__":
 
     if "eigen_mode_plot_3D" in args["plot_type"]:
         plot_3D_eigen_mode_analysis(args=args)
+
+    if "eigen_mode_compare_3D" in args["plot_type"]:
+        plot_3D_eigen_mode_anal_comparison(args=args)
 
     if "eigen_mode_plot_2D" in args["plot_type"]:
         plot_2D_eigen_mode_analysis(args=args)

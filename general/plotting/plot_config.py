@@ -1,8 +1,10 @@
 import matplotlib
 import matplotlib.pyplot as plt
+import matplotlib.ticker as mpl_ticker
 
 
 def setup_plotting_defaults():
+    print("Plotting with default settings")
     plt.rcParams["figure.figsize"] = [16, 9]
 
 

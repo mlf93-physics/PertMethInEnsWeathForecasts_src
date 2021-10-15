@@ -2,6 +2,7 @@ import os
 import pathlib as pl
 import random
 import itertools as it
+from typing import Tuple
 import numpy as np
 import shell_model_experiments.params as sh_params
 import lorentz63_experiments.params.params as l63_params
@@ -150,7 +151,7 @@ def import_lorentz_block_perturbations(args=None, raw_perturbations=True):
     )
 
 
-def import_profiles_for_nm_analysis(args=None):
+def import_profiles_for_nm_analysis(args: dict = None) -> Tuple[np.ndarray, dict]:
     """Import random positioned u profiles for normal mode analysis
 
     Parameters
@@ -187,7 +188,7 @@ def import_profiles_for_nm_analysis(args=None):
         lines = map(lambda x: x.strip().split(","), lines)
         profiles.extend(list(lines))
 
-    profiles = np.array(profiles, dtype=l63_params.dtype)[:, 1:]
+    profiles = np.array(profiles, dtype=params.dtype)[:, 1:]
 
     # Pad profiles if necessary
     if params.bd_size > 0:

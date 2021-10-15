@@ -5,6 +5,7 @@ sys.path.append("..")
 import argparse
 import pathlib as pl
 import pickle
+import textwrap
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 import numpy as np
@@ -50,7 +51,7 @@ def load_interactive_fig(args):
         fig.show()
 
 
-def save_figure(subpath: pl.Path = None, file_name="figure1"):
+def save_figure(subpath: pl.Path = None, file_name="figure1", fig: plt.Figure = None):
     print("\nSaving figure...\n")
     # Prepare layout
     plt.tight_layout()
@@ -63,15 +64,16 @@ def save_figure(subpath: pl.Path = None, file_name="figure1"):
     if not os.path.isdir(full_path):
         os.makedirs(full_path)
 
+    if fig is None:
+        plot_handle = plt
+    else:
+        plot_handle = fig
+
     # Save png
-    plt.savefig(
-        full_path / (file_name + ".png"),
-        dpi=400,
-        format="png",
-    )
+    plot_handle.savefig(full_path / (file_name + ".png"), dpi=400, format="png")
 
     # Save pgf
-    plt.savefig(
+    plot_handle.savefig(
         full_path / (file_name + ".pgf"),
         dpi=400,
         format="pgf",
@@ -94,22 +96,22 @@ def generate_title(
 
     if args["n_files"] < np.inf:
         file_suffix = (
-            f'Files: {args["file_offset"]}-{args["file_offset"] + args["n_files"]} '
+            f'Files: {args["file_offset"]}-{args["file_offset"] + args["n_files"]}, '
         )
     else:
         file_suffix = ""
 
     if MODEL == Models.SHELL_MODEL:
         title = (
-            f'; f={header_dict["forcing"]}'
+            f'; $\\alpha$={int(header_dict["diff_exponent"])}'
             + f', $n_{{\\nu}}$={int(header_dict["ny_n"])}, $\\nu$={header_dict["ny"]:.2e}'
-            + f', time={header_dict["time_to_run"]}\n'
+            + f', time={header_dict["time_to_run"]}, '
         )
     elif MODEL == Models.LORENTZ63:
         title = (
             f'; sigma={header_dict["sigma"]}'
             + f', $b$={header_dict["b_const"]:.2e}, r={header_dict["r_const"]}'
-            + f', time={header_dict["time_to_run"]}\n'
+            + f', time={header_dict["time_to_run"]}, '
         )
 
     # Add prefixes
@@ -117,25 +119,41 @@ def generate_title(
     # Add suffixes
     title += exp_suffix + file_suffix + title_suffix
 
+    # Strip trailing commas
+    title = title.rstrip(",")
+    title = title.rstrip(", ")
+
+    # Wrap title
+    title = "\n".join(textwrap.wrap(title, 40))
+
     return title
 
 
-def save_or_show_plot(args):
+def save_or_show_plot(args: dict):
     if args["save_fig"]:
-        subpath = pl.Path("shell_model_experiments/error_spectrum_vs_time/")
-        file_name = "error_spectrum_vs_time_ny_n13_alpha4"
-
-        question = (
-            "\nConfirm that the figure is being saved to\n"
-            + f"path: {subpath}\n"
-            + f"name: {file_name}\n"
+        subpath = pl.Path(
+            "shell_model_experiments/hyper_diffusivity/lyapunov_fourier_correspondenceTest"
         )
 
-        answer = g_ui.ask_user(question)
-        if answer:
-            save_figure(subpath=subpath, file_name=file_name)
-        else:
-            print("\nSaving the figure was aborted\n")
+        for i in plt.get_fignums():
+            fig = plt.figure(i)
+            file_name = "lyapunov_fourier_correspondence_hyp_diff_comparison"
+
+            name = g_ui.get_name_input(
+                "Proposed name of figure: ", proposed_input=file_name
+            )
+
+            question = (
+                "\nConfirm that the figure is being saved to\n"
+                + f"path: {subpath}\n"
+                + f"name: {name}\n"
+            )
+
+            answer = g_ui.ask_user(question)
+            if answer:
+                save_figure(subpath=subpath, file_name=name, fig=fig)
+            else:
+                print("\nSaving the figure was aborted\n")
 
     elif not args["noplot"]:
         plt.tight_layout()
