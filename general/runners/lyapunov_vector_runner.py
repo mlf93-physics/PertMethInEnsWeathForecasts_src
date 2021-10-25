@@ -16,6 +16,7 @@ import general.utils.saving.save_utils as g_save_utils
 import general.utils.importing.import_data_funcs as g_import
 import general.utils.saving.save_vector_funcs as v_save
 import general.utils.argument_parsers as a_parsers
+import general.utils.user_interface as g_ui
 from general.params.model_licences import Models
 from config import MODEL, GLOBAL_PARAMS
 
@@ -124,6 +125,8 @@ if __name__ == "__main__":
     ref_arg_setup = a_parsers.ReferenceAnalysisArgParser()
     ref_arg_setup.setup_parser()
     args = ref_arg_setup.args
+
+    g_ui.confirm_run_setup(args)
 
     # Add submodel attribute
     MODEL.submodel = "TL"

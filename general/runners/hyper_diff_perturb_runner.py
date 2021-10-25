@@ -12,6 +12,7 @@ from general.params.model_licences import Models
 import general.utils.experiments.exp_utils as exp_utils
 import general.utils.exceptions as g_exceptions
 import general.utils.argument_parsers as a_parsers
+import general.utils.user_interface as g_ui
 from config import MODEL, GLOBAL_PARAMS
 
 # Get parameters for model
@@ -71,5 +72,7 @@ if __name__ == "__main__":
     pert_arg_setup = a_parsers.PerturbationArgSetup()
     pert_arg_setup.setup_parser()
     args = pert_arg_setup.args
+
+    g_ui.confirm_run_setup(args)
 
     main(args)
