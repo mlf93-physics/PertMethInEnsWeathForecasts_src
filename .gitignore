@@ -4,6 +4,8 @@
 # Folders
 data/
 figures/
+doc/build/
+doc/source/code_doc/
 
 # File types
 **/*.code-workspace

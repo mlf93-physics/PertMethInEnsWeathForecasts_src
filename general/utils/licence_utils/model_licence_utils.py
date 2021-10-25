@@ -12,6 +12,9 @@ def detect_model_in_use():
         model = models.LORENTZ63
     elif "shell_model" in cwd:
         model = models.SHELL_MODEL
+    elif "doc" in cwd:
+        # If building sphinx documentation
+        model = None
     else:
         raise NameError("Cannot detect which model is in use")
 

@@ -7,3 +7,6 @@ pip
 pyinstrument
 scipy
 seaborn
+pyperclip
+sphinx
+numpydoc
