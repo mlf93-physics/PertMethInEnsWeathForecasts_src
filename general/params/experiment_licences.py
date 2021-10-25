@@ -13,3 +13,4 @@ class Experiments:
     BREEDING_VECTORS = Experiment(id=3, name="BREEDING_VECTORS")
     SINGULAR_VECTORS = Experiment(id=4, name="SINGULAR_VECTORS")
     LYAPUNOV_VECTORS = Experiment(id=5, name="LYAPUNOV_VECTORS")
+    HYPER_DIFFUSIVITY = Experiment(id=6, name="HYPER_DIFFUSIVITY")

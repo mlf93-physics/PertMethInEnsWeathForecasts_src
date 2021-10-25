@@ -10,6 +10,7 @@ import shell_model_experiments.params as sh_params
 import lorentz63_experiments.params.params as l63_params
 from general.params.model_licences import Models
 import general.utils.util_funcs as g_utils
+import general.utils.exceptions as g_exceptions
 from config import MODEL
 
 # Get parameters for model
@@ -91,6 +92,8 @@ def imported_sorted_perturbation_info(folder_name, args, search_pattern="*.csv")
         The sub folder to args["datapath"] in which to search for perturbation info
     args : dict
         Run-time arguments
+    search_pattern : str
+        Pattern with which perturbation files are searched
 
     Returns
     -------
@@ -114,11 +117,12 @@ def imported_sorted_perturbation_info(folder_name, args, search_pattern="*.csv")
         # Import perturbation header info
         perturb_header_dict = import_header(file_name=perturb_file)
 
+        # Save time positions, by taking into account different sample rates
         perturb_time_pos_list.append(int(perturb_header_dict["perturb_pos"]))
 
         perturb_time_pos_list_legend.append(
             f"Start time: "
-            + f'{perturb_header_dict["perturb_pos"]/params.sample_rate*params.dt:.3f}s'
+            + f'{perturb_header_dict["perturb_pos"]/perturb_header_dict["sample_rate"]*perturb_header_dict["dt"]:.3f}s'
         )
 
         perturb_header_dicts.append(perturb_header_dict)
@@ -175,7 +179,9 @@ def import_data(file_name, start_line=0, max_lines=None, step=1):
             stop_line,
             step,
         )
-        data_in = np.genfromtxt(line_iterator, dtype=params.dtype, delimiter=",")
+        data_in: np.ndarray(dtype=params.dtype) = np.genfromtxt(
+            line_iterator, dtype=params.dtype, delimiter=","
+        )
 
     if len(data_in.shape) == 1:
         data_in = np.reshape(data_in, (1, data_in.size))
@@ -242,14 +248,52 @@ def import_ref_data(args=None):
     return time, u_data, ref_header_dict
 
 
-def import_perturbation_velocities(args=None, search_pattern="*.csv"):
+def import_perturbation_velocities(
+    args: dict = None, search_pattern: str = "*.csv", raw_perturbations: bool = True
+):
+    """Import of perturbation velocities
+
+    Parameters
+    ----------
+    args : dict, optional
+        Run-time arguments, by default None
+    search_pattern : str, optional
+        Pattern to search for datafiles, by default "*.csv"
+    raw_perturbations : bool, optional
+        Toggles if the raw perturbation (ref data subtracted) or the
+        perturbation rel. reference should be returned, by default True
+
+    Returns
+    -------
+    tuple
+        Collection of variables given by:
+        (
+            list: u_stores,
+            list: perturb_time_pos_list,
+            list: perturb_time_pos_list_legend,
+            list: returned_perturb_header_dicts,
+            list: u_ref_stores,
+        )
+
+    Raises
+    ------
+    g_exceptions.InvalidRuntimeArgument
+        Raised if shell_cutoff is not None when running with a model other than
+        shell model
+    ValueError
+        Raised if no datapath is specified
+    """
+
+    if MODEL != Models.SHELL_MODEL:
+        if "shell_cutoff" in args:
+            if args["shellcutoff"] is not None:
+                raise g_exceptions.InvalidRuntimeArgument(argument="shell_cutoff")
+
     u_stores = []
+    returned_perturb_header_dicts = []
 
     if args["datapath"] is None:
         raise ValueError("No path specified")
-
-    # Check if ref path exists
-    ref_header_dict = import_info_file(pl.Path(args["datapath"], "ref_data"))
 
     (
         perturb_time_pos_list,
@@ -257,13 +301,18 @@ def import_perturbation_velocities(args=None, search_pattern="*.csv"):
         perturb_header_dicts,
         perturb_file_names,
     ) = imported_sorted_perturbation_info(
-        args["exp_folder"], args, search_pattern=search_pattern
+        args["exp_folder"],
+        args,
+        search_pattern=search_pattern,
     )
 
+    # Check if ref path exists
+    ref_header_dict = import_info_file(pl.Path(args["datapath"], "ref_data"))
     # Match the positions to the relevant ref files
     ref_file_match = g_utils.match_start_positions_to_ref_file(
-        args=args, header_dict=ref_header_dict, positions=perturb_time_pos_list
+        args=args, ref_header_dict=ref_header_dict, positions=perturb_time_pos_list
     )
+    ref_file_match_keys_array = np.array(list(ref_file_match.keys()))
 
     # Get sorted file paths
     ref_record_names_sorted = g_utils.get_sorted_ref_record_names(args=args)
@@ -273,7 +322,6 @@ def import_perturbation_velocities(args=None, search_pattern="*.csv"):
 
     for iperturb_file, perturb_file_name in enumerate(perturb_file_names):
 
-        ref_file_match_keys_array = np.array(list(ref_file_match.keys()))
         sum_pert_files = sum(
             [
                 len(ref_file_match[ref_file_index])
@@ -292,6 +340,7 @@ def import_perturbation_velocities(args=None, search_pattern="*.csv"):
             continue
 
         perturb_data_in, perturb_header_dict = import_data(perturb_file_name)
+        returned_perturb_header_dicts.append(perturb_header_dict)
 
         # Initialise ref_data_in of null size
         ref_data_in = np.array([], dtype=params.dtype).reshape(0, params.sdim + 1)
@@ -330,8 +379,28 @@ def import_perturbation_velocities(args=None, search_pattern="*.csv"):
             )
             counter += 1
 
-        # Calculate error array
-        u_stores.append(perturb_data_in[:, 1:] - ref_data_in[:, 1:])
+        # If raw_perturbations is False, the reference data is not subtracted from perturbation
+        if "shell_cutoff" in args:
+            if args["shell_cutoff"] is not None:
+                # Calculate error array
+                # Add +2 to args["shell_cutoff"] since first entry is time, and args["shell_cutoff"]
+                # starts from 0
+                u_stores.append(
+                    perturb_data_in[:, 1 : (args["shell_cutoff"] + 2)]
+                    - (raw_perturbations)
+                    * ref_data_in[:, 1 : (args["shell_cutoff"] + 2)]
+                )
+            else:
+                # Calculate error array
+                u_stores.append(
+                    perturb_data_in[:, 1:] - (raw_perturbations) * ref_data_in[:, 1:]
+                )
+        else:
+            # Calculate error array
+            u_stores.append(
+                perturb_data_in[:, 1:] - (raw_perturbations) * ref_data_in[:, 1:]
+            )
+
         # If perturb positions are the same for all perturbations, return
         # ref_data_in too
         if np.unique(perturb_time_pos_list).size == 1:
@@ -349,7 +418,7 @@ def import_perturbation_velocities(args=None, search_pattern="*.csv"):
         u_stores,
         perturb_time_pos_list,
         perturb_time_pos_list_legend,
-        perturb_header_dict,
+        returned_perturb_header_dicts,
         u_ref_stores,
     )
 
@@ -378,14 +447,11 @@ def import_start_u_profiles(args=None):
         else:
             raise KeyError("No valid key with time to run information")
 
-        n_data = int((time_to_run - ref_header_dict["burn_in_time"]) * params.tts)
+        n_data = int((time_to_run) * params.tts)
 
         # Generate random start positions
         # division = total #datapoints - burn_in #datapoints - #datapoints per perturbation
-        division_size = int(
-            (n_data - args["burn_in_time"] * params.tts) // n_profiles
-            - args["Nt"] * params.sample_rate
-        )
+        division_size = int(n_data // n_profiles - args["Nt"] * params.sample_rate)
         rand_division_start = np.random.randint(
             low=0, high=division_size, size=n_profiles
         )
@@ -396,8 +462,6 @@ def import_start_u_profiles(args=None):
                 for i in range(n_profiles)
             ]
         )
-
-        burn_in = True
     else:
         print(
             f"\nImporting {n_profiles} velocity profiles positioned as "
@@ -405,19 +469,15 @@ def import_start_u_profiles(args=None):
         )
         positions = np.array(args["start_times"]) * params.tts
 
-        burn_in = False
-
     print(
         "\nPositions of perturbation start: ",
-        positions * params.stt + burn_in * args["burn_in_time"],
+        positions * params.stt,
         "(in seconds)",
     )
 
     # Match the positions to the relevant ref files
     ref_file_match = g_utils.match_start_positions_to_ref_file(
-        args=args,
-        header_dict=ref_header_dict,
-        positions=positions + burn_in * int(args["burn_in_time"] * params.tts),
+        args=args, ref_header_dict=ref_header_dict, positions=positions
     )
 
     # Get sorted file paths
@@ -431,6 +491,7 @@ def import_start_u_profiles(args=None):
 
     # Import velocity profiles
     counter = 0
+
     for file_id in ref_file_match.keys():
         for position in ref_file_match[int(file_id)]:
             temp_u_init_profile = np.genfromtxt(
@@ -459,7 +520,7 @@ def import_start_u_profiles(args=None):
 
     return (
         u_init_profiles,
-        positions + burn_in * int(args["burn_in_time"] * params.tts),
+        positions,
         ref_header_dict,
     )
 

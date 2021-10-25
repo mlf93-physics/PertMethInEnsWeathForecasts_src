@@ -12,6 +12,7 @@ import general.utils.experiments.validate_exp_setups as ut_exp_val
 import general.utils.runner_utils as r_utils
 import general.utils.util_funcs as g_utils
 import general.utils.saving.save_data_funcs as g_save
+import general.utils.saving.save_utils as g_save_utils
 import general.utils.saving.save_vector_funcs as v_save
 import general.utils.perturb_utils as pt_utils
 import general.utils.argument_parsers as a_parsers
@@ -127,7 +128,7 @@ def main(args):
 
     if args["erda_run"]:
         path = pl.Path(args["datapath"], exp_setup["folder_name"])
-        g_save.compress_dir(path, "test_temp1")
+        g_save_utils.compress_dir(path, "test_temp1")
 
 
 if __name__ == "__main__":
@@ -138,7 +139,9 @@ if __name__ == "__main__":
 
     # Add ny argument
     if MODEL == Models.SHELL_MODEL:
-        args["ny"] = params.ny_from_ny_n_and_forcing(args["forcing"], args["ny_n"])
+        args["ny"] = params.ny_from_ny_n_and_forcing(
+            args["forcing"], args["ny_n"], args["diff_exponent"]
+        )
 
     # Make profiler
     profiler = Profiler()

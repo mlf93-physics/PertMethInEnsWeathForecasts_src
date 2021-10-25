@@ -15,6 +15,8 @@ import general.analyses.lorentz_block_analysis as lr_analysis
 import general.utils.importing.import_data_funcs as g_import
 import general.utils.plot_utils as g_plt_utils
 import general.plotting.plot_params as plt_params
+import general.utils.argument_parsers as a_parsers
+import general.utils.exceptions as g_exceptions
 from general.params.model_licences import Models
 from config import MODEL
 
@@ -43,7 +45,7 @@ def plt_lorentz_block_from_full_perturbation_data(args):
             forecast_pert_u_stores,
             _,
             _,
-            forecast_header_dict,
+            forecast_header_dicts,
             _,
         ) = g_import.import_perturbation_velocities(args)
 
@@ -62,7 +64,7 @@ def plt_lorentz_block_from_full_perturbation_data(args):
         num_ana_forecasts = len(ana_forecast_pert_u_stores)
         num_forecasts = len(forecast_pert_u_stores)
         rmse_array = np.zeros((num_forecasts, num_ana_forecasts), dtype=np.float64)
-        day_offset = forecast_header_dict["start_time_offset"]
+        day_offset = forecast_header_dicts[0]["start_time_offset"]
 
         for fc in range(num_forecasts):
             for day in range(fc, num_ana_forecasts):
@@ -96,7 +98,11 @@ def plt_lorentz_block_from_full_perturbation_data(args):
 
 def plt_lorentz_block(args):
 
-    experiments = args["exp_folder"]
+    if args["exp_folders"] is None:
+        experiments = [args["exp_folder"]]
+    else:
+        experiments = args["exp_folders"]
+
     legend = []
 
     for j, experiment in enumerate(experiments):
@@ -361,32 +367,25 @@ def plt_block_and_energy(args):
 
 
 if __name__ == "__main__":
-    # Define arguments
-    arg_parser = argparse.ArgumentParser()
-    arg_parser.add_argument("--path", nargs="?", default=None, type=str)
-    arg_parser.add_argument("--perturb_folder", nargs="?", default=None, type=str)
-    arg_parser.add_argument("--n_files", default=-1, type=int)
-    arg_parser.add_argument("--plot_type", nargs="?", default=None, type=str)
-    arg_parser.add_argument("--experiment", nargs="+", default=None, type=str)
-    arg_parser.add_argument("--average", action="store_true")
-    arg_parser.add_argument("--sharey", action="store_true")
-    arg_parser.add_argument("--ref_start_time", default=0, type=float)
-    arg_parser.add_argument("--ref_end_time", default=-1, type=float)
-    num_unit_group = arg_parser.add_mutually_exclusive_group()
-    num_unit_group.add_argument("--n_units", default=np.inf, type=int)
-    num_unit_group.add_argument("--specific_units", nargs="+", default=None, type=int)
+    # Get arguments
+    stand_plot_arg_parser = a_parsers.StandardPlottingArgParser()
+    stand_plot_arg_parser.setup_parser()
+    compare_plt_arg_parser = a_parsers.ComparisonPlottingArgParser()
+    compare_plt_arg_parser.setup_parser()
+    args = compare_plt_arg_parser.args
 
-    args = vars(arg_parser.parse_args())
+    # Check arguments
+    if args["exp_folder"] is None:
+        raise g_exceptions.InvalidRuntimeArgument(
+            "Argument is None -" + " please select an experiment folder",
+            argument="exp_folder",
+        )
 
-    # Add missing arguments to make util funcs work
-    args["specific_ref_records"] = [0]
-    args["file_offset"] = 0
-
-    if args["plot_type"] == "blocks":
+    if "blocks" in args["plot_type"]:
         plt_lorentz_block(args)
-    elif args["plot_type"] == "blocks_energy_regions":
+    elif "blocks_energy_regions" in args["plot_type"]:
         plt_blocks_energy_regions(args)
-    elif args["plot_type"] == "blocks_and_energy":
+    elif "blocks_and_energy" in args["plot_type"]:
         plt_block_and_energy(args)
     else:
         raise ValueError("No valid plot type given as input argument")

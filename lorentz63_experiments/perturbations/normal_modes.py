@@ -42,9 +42,7 @@ def find_normal_modes(u_init_profiles, args, dev_plot_active=False, n_profiles=N
     # Perform calculation for all u_profiles
     for i in range(n_profiles):
         # Calculate the Jacobian matrix
-        j_matrix = calc_jacobian(
-            j_matrix, u_init_profiles[:, i], r_const=args["r_const"]
-        )
+        calc_jacobian(j_matrix, u_init_profiles[:, i], r_const=args["r_const"])
 
         e_values, e_vectors = np.linalg.eig(j_matrix)
 

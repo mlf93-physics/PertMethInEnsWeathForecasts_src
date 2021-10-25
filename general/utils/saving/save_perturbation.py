@@ -20,33 +20,28 @@ def save_perturbation_data(
     args : dict, optional
         Run-time arguments, by default None
     """
-    if LICENCE == EXP.NORMAL_PERTURBATION:
-        g_save.save_data(
-            data_out,
-            prefix=f"perturb{perturb_count}_",
-            perturb_position=perturb_position,
-            args=args,
-        )
-    elif LICENCE == EXP.LORENTZ_BLOCK:
+    if LICENCE == EXP.LORENTZ_BLOCK:
         lb_save.save_lorentz_block_data(
             data_out,
             prefix=f"lorentz{perturb_count}_",
             perturb_position=perturb_position,
             args=args,
         )
+        return
+    elif LICENCE == EXP.NORMAL_PERTURBATION:
+        prefix = f"perturb{perturb_count}_"
     elif LICENCE == EXP.BREEDING_VECTORS:
-        g_save.save_data(
-            data_out,
-            prefix=f"breed_perturb{perturb_count}_",
-            perturb_position=perturb_position,
-            args=args,
-        )
+        prefix = f"breed_perturb{perturb_count}_"
     elif LICENCE == EXP.LYAPUNOV_VECTORS:
-        g_save.save_data(
-            data_out,
-            prefix=f"lyapunov_perturb{perturb_count}_",
-            perturb_position=perturb_position,
-            args=args,
-        )
+        prefix = f"lyapunov_perturb{perturb_count}_"
+    elif LICENCE == EXP.HYPER_DIFFUSIVITY:
+        prefix = f"hyper_perturb{perturb_count}_"
     else:
         print(f"No saving method present for the current licence ({LICENCE})")
+
+    g_save.save_data(
+        data_out,
+        prefix=prefix,
+        perturb_position=perturb_position,
+        args=args,
+    )

@@ -46,7 +46,7 @@ class StandardArgSetup:
     def setup_parser(self):
         # Prepare model specific default arguments
         if MODEL == Models.SHELL_MODEL:
-            datapath = "./data/ny2.37e-08_t4.00e+02_n_f0_f1.0/"
+            datapath = "./data/ny2.37e-08_ny_n19_t3.00e+02_n_f0_f1.0_kexp2"
 
         elif MODEL == Models.LORENTZ63:
             datapath = "./data/sig1.00e+01_t9.10e+03_b2.67e+00_r2.80e+01/"
@@ -73,6 +73,7 @@ class StandardModelArgSetup:
         if MODEL == Models.SHELL_MODEL:
             self._parser.add_argument("--ny_n", default=19, type=int)
             self._parser.add_argument("--forcing", default=1, type=float)
+            self._parser.add_argument("--diff_exponent", default=2, type=int)
 
         elif MODEL == Models.LORENTZ63:
             self._parser.add_argument("--sigma", default=10, type=float)
@@ -362,11 +363,19 @@ class StandardPlottingArgParser:
         )
         self._parser.add_argument("-np", "--noplot", action="store_true")
         self._parser.add_argument("-s", "--save_fig", action="store_true")
+        self._parser.add_argument(
+            "--datapaths",
+            nargs="+",
+            type=str,
+            default=None,
+            help="For plots using multiple different datapaths (e.g. different reference files)",
+        )
 
         # x, y limits
         self._parser.add_argument("--xlim", nargs=2, default=None, type=float)
         self._parser.add_argument("--ylim", nargs=2, default=None, type=float)
         self._parser.add_argument("--sharey", action="store_true")
+        self._parser.add_argument("--average", action="store_true")
 
         # If running perturbations before plotting
         self._parser.add_argument("--start_times", nargs="+", type=float)
@@ -380,3 +389,14 @@ class StandardPlottingArgParser:
         self._parser.add_argument("--specific_files", nargs="+", default=None, type=int)
         self._parser.add_argument("--combinations", action="store_true")
         self._parser.add_argument("--endpoint", action="store_true")
+
+        if MODEL == Models.SHELL_MODEL:
+            self._parser.add_argument(
+                "--shell_cutoff",
+                default=None,
+                type=int,
+                help="Defines which shells (all shells below shell_cutoff)"
+                + " shall be compared to reference shells. Used in hyper diffusion"
+                + " experiments, where only region of shells below diffusion region"
+                + " is relevant",
+            )

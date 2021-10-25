@@ -43,16 +43,17 @@ print(f"\nRunning with model {MODEL}\n")
 
 # Set experiment license
 exp = Experiments()
-LICENCE = exp.BREEDING_VECTORS
+LICENCE = exp.NORMAL_PERTURBATION
 
 # Get global params
 GLOBAL_PARAMS = GlobalParams()
 
 # Set plotting config
-plt_config.latex_plot_settings()
+# plt_config.latex_plot_settings()
 
 # Other general configurations
 NUMBA_CACHE = True
+NUMBA_ON = True
 # Disable stdout
 # sys.stdout = open(os.devnull, "w")
 

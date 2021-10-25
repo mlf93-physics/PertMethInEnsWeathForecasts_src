@@ -1,3 +1,19 @@
+"""The perturbation runner.
+
+Run a desired number of perturbation, given a desired perturbation method,
+in parallel. The start times, number of runs, time to run etc. can be specified
+
+Example to run:
+
+python ../general/runners/perturbation_runner.py
+--exp_folder=test1_perturbations
+--time_to_run=0.1
+--n_profiles=2
+--start_times 4 8
+--pert_mode=rd
+
+"""
+
 import os
 import sys
 
@@ -69,6 +85,7 @@ def perturbation_runner(
                 args["Nt"] + args["endpoint"] * 1,
                 args["ny"],
                 args["forcing"],
+                args["diff_exponent"],
             )
         else:
             g_exceptions.ModelError(
@@ -124,12 +141,12 @@ def perturbation_runner(
 
 def prepare_run_times(args):
 
-    if LICENCE in [EXP.NORMAL_PERTURBATION, EXP.BREEDING_VECTORS, EXP.LYAPUNOV_VECTORS]:
+    if LICENCE != EXP.LORENTZ_BLOCK:
         num_perturbations = args["n_runs_per_profile"] * args["n_profiles"]
         times_to_run = np.ones(num_perturbations) * args["time_to_run"]
         Nt_array = (times_to_run / params.dt).astype(np.int64)
 
-    elif LICENCE == EXP.LORENTZ_BLOCK:
+    else:
         num_perturbations = args["n_runs_per_profile"] * args["n_profiles"]
 
         if len(args["start_times"]) > 1:
@@ -165,7 +182,7 @@ def prepare_perturbations(args, raw_perturbations=False):
     g_exceptions.ModelError
         Raised if the single_shell_perturb option is set while not using the shell
         model
-    g_exceptions.InvalidArgument
+    g_exceptions.InvalidRuntimeArgument
         Raised if the perturbation mode is not valid
     """
 
@@ -196,8 +213,8 @@ def prepare_perturbations(args, raw_perturbations=False):
                         0 : args["n_profiles"]
                         * args["n_runs_per_profile"] : args["n_runs_per_profile"],
                     ],
+                    args,
                     dev_plot_active=False,
-                    n_profiles=args["n_profiles"],
                     local_ny=header_dict["ny"],
                 )
             elif MODEL == Models.LORENTZ63:
@@ -238,7 +255,7 @@ def prepare_perturbations(args, raw_perturbations=False):
             if "pert_mode" in args
             else "single_shell_perturb: " + args["single_shell_perturb"]
         )
-        raise g_exceptions.InvalidArgument(
+        raise g_exceptions.InvalidRuntimeArgument(
             "Not a valid perturbation mode", argument=_pert_arg
         )
 

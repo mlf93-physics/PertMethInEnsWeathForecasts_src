@@ -6,6 +6,7 @@ import argparse
 import pathlib as pl
 import numpy as np
 import general.utils.importing.import_perturbation_data as pt_import
+import general.utils.importing.import_data_funcs as g_import
 
 
 def calculate_rmse_of_block(args):
@@ -21,7 +22,7 @@ def calculate_rmse_of_block(args):
         _,
         _,
         _,
-    ) = pt_import.import_lorentz_block_perturbations(args, rel_ref=False)
+    ) = pt_import.import_lorentz_block_perturbations(args, raw_perturbations=False)
 
     # Import analyses forecasts
     args["exp_folder"] = parent_pert_folder + "/analysis_forecasts"
@@ -33,7 +34,7 @@ def calculate_rmse_of_block(args):
         _,
         _,
         ana_forecast_pert_header_dicts,
-    ) = pt_import.import_lorentz_block_perturbations(args, rel_ref=False)
+    ) = pt_import.import_lorentz_block_perturbations(args, raw_perturbations=False)
 
     num_ana_forecasts = len(ana_forecast_pert_u_stores)
     num_forecasts = len(forecast_pert_u_stores)
@@ -74,7 +75,7 @@ def calculate_rmse_of_block(args):
     dummy_tril_matrix = np.tril(np.ones(rmse_array.shape, dtype=np.int8), k=-1)
     rmse_array[np.where(dummy_tril_matrix)] = float("nan")
 
-    return rmse_array, ana_forecast_pert_header_dicts[0]
+    return rmse_array, ana_forecast_pert_header_dicts
 
 
 def get_block_dirs(args):
@@ -122,11 +123,11 @@ def analysis_executer(args):
             if not block_number in args["specific_units"]:
                 continue
 
-        temp_rmse, ana_forecast_header_dict = calculate_rmse_of_block(args)
+        temp_rmse, ana_forecast_header_dicts = calculate_rmse_of_block(args)
 
         # Append data and header dict
         rmse.append(temp_rmse)
-        header_dicts.append(ana_forecast_header_dict)
+        header_dicts.append(ana_forecast_header_dicts[0])
 
     if args["specific_units"] is None:
         num_imported_blocks = len(block_dirs)

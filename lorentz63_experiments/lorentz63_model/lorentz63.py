@@ -66,10 +66,7 @@ def main(args=None):
     deriv_matrix = ut_funcs.setup_deriv_matrix(args)
 
     # Get number of records
-    args["n_records"] = math.ceil(
-        (args["Nt"] - args["burn_in_time"] / dt)
-        / int(GLOBAL_PARAMS.record_max_time / dt)
-    )
+    args["n_records"] = math.ceil(args["Nt"] / int(GLOBAL_PARAMS.record_max_time / dt))
 
     profiler.start()
     print(
@@ -88,16 +85,9 @@ def main(args=None):
     for ir in range(args["n_records"]):
         # Calculate data out size
         if ir == (args["n_records"] - 1):
-            if (args["Nt"] - args["burn_in_time"] / dt) % int(
-                GLOBAL_PARAMS.record_max_time / dt
-            ) > 0:
+            if args["Nt"] % int(GLOBAL_PARAMS.record_max_time / dt) > 0:
                 out_array_size = int(
-                    (
-                        args["Nt"]
-                        - args["burn_in_time"]
-                        / dt
-                        % int(GLOBAL_PARAMS.record_max_time / dt)
-                    )
+                    (args["Nt"] / dt % int(GLOBAL_PARAMS.record_max_time / dt))
                     * sample_rate
                 )
             else:

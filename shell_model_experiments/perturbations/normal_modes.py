@@ -9,9 +9,7 @@ from shell_model_experiments.params.params import *
 #        types.Array(types.complex128, 2, 'C', readonly=False),
 #        types.Array(types.complex128, 2, 'C', readonly=False),
 #        types.boolean, types.int64, types.float64), parallel=True, cache=True)
-def find_normal_modes(
-    u_init_profiles, dev_plot_active=False, n_profiles=None, local_ny=None
-):
+def find_normal_modes(u_init_profiles, args, dev_plot_active=False, local_ny=None):
     """Find the eigenvector corresponding to the minimal of the positive
     eigenvalues of the initial vel. profile.
 
@@ -40,14 +38,14 @@ def find_normal_modes(
     e_vector_collection = []
     e_value_collection = []
 
-    e_vector_matrix = np.zeros((n_k_vec, n_profiles), dtype=np.complex128)
+    e_vector_matrix = np.zeros((n_k_vec, args["n_profiles"]), dtype=np.complex128)
 
     # Perform the conjugation
     u_init_profiles_conj = u_init_profiles.conj()
     # Prepare prefactor vector to multiply on J_matrix
     prefactor_reshaped = np.reshape(pre_factor, (-1, 1))
     # Perform calculation for all u_profiles
-    for i in range(n_profiles):
+    for i in range(args["n_profiles"]):
         # Calculate the Jacobian matrix
         J_matrix = np.zeros((n_k_vec, n_k_vec), dtype=np.complex128)
         # Add k=2 diagonal
@@ -89,7 +87,7 @@ def find_normal_modes(
 
         # Add the k=0 diagonal
         # temp_ny = args['ny'] if header is None else header['ny']
-        J_matrix -= np.diag(local_ny * k_vec_temp ** 2, k=0)
+        J_matrix -= np.diag(local_ny * k_vec_temp ** args["diff_exponent"], k=0)
 
         e_values, e_vectors = np.linalg.eig(J_matrix)
 
