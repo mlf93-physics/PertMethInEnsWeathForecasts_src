@@ -16,6 +16,7 @@ import general.utils.saving.save_utils as g_save_utils
 import general.utils.saving.save_vector_funcs as v_save
 import general.utils.perturb_utils as pt_utils
 import general.utils.argument_parsers as a_parsers
+import general.utils.user_interface as g_ui
 from general.params.model_licences import Models
 from config import MODEL, GLOBAL_PARAMS
 
@@ -142,6 +143,8 @@ if __name__ == "__main__":
         args["ny"] = params.ny_from_ny_n_and_forcing(
             args["forcing"], args["ny_n"], args["diff_exponent"]
         )
+
+    g_ui.confirm_run_setup(args)
 
     # Make profiler
     profiler = Profiler()

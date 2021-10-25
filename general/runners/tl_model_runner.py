@@ -1,23 +1,15 @@
 import sys
 
 sys.path.append("..")
-import math
 from pyinstrument import Profiler
-import numpy as np
 from lorentz63_experiments.params.params import *
 import general.utils.argument_parsers as a_parsers
 import lorentz63_experiments.lorentz63_model.tl_lorentz63 as l63_tl_model
-
+import general.utils.user_interface as g_ui
 from general.params.model_licences import Models
-from config import MODEL, LICENCE, GLOBAL_PARAMS
+from config import MODEL, GLOBAL_PARAMS
 
 profiler = Profiler()
-
-# Get parameters for model
-# if MODEL == Models.SHELL_MODEL:
-#     params = sh_params
-# elif MODEL == Models.LORENTZ63:
-#     params = l63_params
 
 # Set global params
 GLOBAL_PARAMS.ref_run = False
@@ -41,6 +33,8 @@ if __name__ == "__main__":
     ref_arg_setup = a_parsers.ReferenceAnalysisArgParser()
     ref_arg_setup.setup_parser()
     args = ref_arg_setup.args
+
+    g_ui.confirm_run_setup(args)
 
     # Add/edit arguments
     args["Nt"] = int(args["time_to_run"] / dt)

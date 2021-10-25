@@ -1,8 +1,10 @@
+import pprint as pp
 import pyperclip
+from config import MODEL, LICENCE, GLOBAL_PARAMS, NUMBA_CACHE
 
 
 def ask_user(question: str):
-    answer = input(question + " [y/n]").lower().strip()
+    answer = input("\n" + question + " [y/n]").lower().strip()
     print(answer)
 
     try:
@@ -40,3 +42,20 @@ def get_name_input(formulation: str, proposed_input: str = ""):
         name = user_input
 
     return name
+
+
+def confirm_run_setup(args: dict):
+    print("CONFIRM SETUP TO RUN:\n")
+    print(f"Model: {MODEL}")
+    print(f"Licence: {LICENCE}")
+    print(f"Numba cache: {NUMBA_CACHE}")
+    print()
+
+    print("\nRun-time arguments:\n\n", pp.pformat(args))
+
+    print("\nGlobal parameters\n\n", pp.pformat(GLOBAL_PARAMS.__dict__))
+
+    confirm = ask_user("Please confirm the current setup to run")
+
+    if not confirm:
+        exit()

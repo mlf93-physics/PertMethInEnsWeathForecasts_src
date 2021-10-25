@@ -39,6 +39,7 @@ import general.utils.saving.save_perturbation as pt_save
 import general.utils.perturb_utils as pt_utils
 import general.utils.exceptions as g_exceptions
 import general.utils.argument_parsers as a_parsers
+import general.utils.user_interface as g_ui
 from general.params.model_licences import Models
 from config import MODEL, LICENCE, GLOBAL_PARAMS
 
@@ -465,7 +466,7 @@ if __name__ == "__main__":
 
     args = g_utils.adjust_start_times_with_offset(args)
 
-    print("args", args)
+    g_ui.confirm_run_setup(args)
 
     # Make profiler
     profiler = Profiler()
