@@ -75,7 +75,6 @@ def run_model(
             du=du_array,
             forcing=forcing,
         )
-
         # Solve linear diffusive term explicitly
         u_old[bd_size:-bd_size] = u_old[bd_size:-bd_size] * np.exp(
             -ny * k_vec_temp ** diff_exponent * dt

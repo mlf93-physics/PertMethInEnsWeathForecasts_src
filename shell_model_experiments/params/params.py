@@ -6,7 +6,7 @@ epsilon = 0.5
 lambda_const = 2
 dt = 1e-7
 sample_rate = 1 / 1000
-n_k_vec = 30
+n_k_vec = 20
 sdim = n_k_vec
 bd_size = 2
 n_forcing = 0
@@ -30,7 +30,7 @@ k_vec_temp = np.array(
 )
 pre_factor = 1j * k_vec_temp
 # Define du array to store derivative
-du_array = np.zeros(n_k_vec + 2 * bd_size, dtype=np.complex128)
+du_array = np.zeros(n_k_vec + 2 * bd_size, dtype=dtype)
 # Define u_slice
 u_slice = np.s_[bd_size:-bd_size:1]
 

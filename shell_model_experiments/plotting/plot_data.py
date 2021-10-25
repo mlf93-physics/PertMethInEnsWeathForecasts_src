@@ -103,6 +103,7 @@ def plot_energy_per_shell(
 ):
     if ax is None:
         ax = plt.axes()
+        fig = plt.figure()
 
     # Plot total energy vs time
     energy_vs_time = np.cumsum((u_store * np.conj(u_store)).real, axis=1)
