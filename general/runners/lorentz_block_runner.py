@@ -1,6 +1,7 @@
 """Perform the calculation of one or more lorentz blocks.
 
-Example:
+Example
+-------
 python ../general/runners/lorentz_block_runner.py
 --exp_setup=TestRun3
 --n_units=1
@@ -19,12 +20,12 @@ import general.utils.util_funcs as g_utils
 import general.utils.saving.save_data_funcs as g_save
 import general.utils.saving.save_utils as g_save_utils
 from general.params.env_params import *
-from general.params.model_licences import Models
 import general.utils.experiments.validate_exp_setups as ut_exp_val
 import general.utils.experiments.exp_utils as exp_utils
 import general.utils.runner_utils as r_utils
 import general.utils.user_interface as g_ui
 import general.utils.argument_parsers as a_parsers
+from general.params.model_licences import Models
 from config import MODEL, GLOBAL_PARAMS
 
 # Get parameters for model

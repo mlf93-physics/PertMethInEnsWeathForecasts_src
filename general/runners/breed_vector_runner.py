@@ -6,7 +6,7 @@ import copy
 from pyinstrument import Profiler
 import shell_model_experiments.params as sh_params
 import lorentz63_experiments.params.params as l63_params
-import perturbation_runner as pt_runner
+import general.runners.perturbation_runner as pt_runner
 import general.utils.experiments.exp_utils as exp_utils
 import general.utils.experiments.validate_exp_setups as ut_exp_val
 import general.utils.runner_utils as r_utils
@@ -18,25 +18,26 @@ import general.utils.perturb_utils as pt_utils
 import general.utils.argument_parsers as a_parsers
 import general.utils.user_interface as g_ui
 from general.params.model_licences import Models
-from config import MODEL, GLOBAL_PARAMS
+import config as cfg
 
 # Get parameters for model
-if MODEL == Models.SHELL_MODEL:
+if cfg.MODEL == Models.SHELL_MODEL:
     params = sh_params
-elif MODEL == Models.LORENTZ63:
+elif cfg.MODEL == Models.LORENTZ63:
     params = l63_params
 
 # Set global params
-GLOBAL_PARAMS.ref_run = False
+cfg.GLOBAL_PARAMS.ref_run = False
 
 
-def main(args):
-    # Set exp_setup path
-    exp_file_path = pl.Path(
-        "./params/experiment_setups/breed_vector_experiment_setups.json"
-    )
-    # Get the current experiment setup
-    exp_setup = exp_utils.get_exp_setup(exp_file_path, args)
+def main(args: dict, exp_setup: dict = None):
+    if exp_setup is None:
+        # Set exp_setup path
+        exp_file_path = pl.Path(
+            "./params/experiment_setups/breed_vector_experiment_setups.json"
+        )
+        # Get the current experiment setup
+        exp_setup = exp_utils.get_exp_setup(exp_file_path, args)
 
     # Get number of existing blocks
     n_existing_units = g_utils.count_existing_files_or_dirs(
@@ -139,7 +140,7 @@ if __name__ == "__main__":
     args = mult_pert_arg_setup.args
 
     # Add ny argument
-    if MODEL == Models.SHELL_MODEL:
+    if cfg.MODEL == Models.SHELL_MODEL:
         args["ny"] = params.ny_from_ny_n_and_forcing(
             args["forcing"], args["ny_n"], args["diff_exponent"]
         )

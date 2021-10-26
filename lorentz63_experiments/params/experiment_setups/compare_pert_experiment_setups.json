@@ -1,0 +1,16 @@
+{
+    "TestRun0": {
+        "general": {
+            "folder_name": "compare_pert_test1",
+            "eval_times": [
+                10
+            ]
+        },
+        "bv_setup": {
+            "integration_time": 1.0,
+            "n_vec_cycles": 4,
+            "n_vectors": 8,
+            "vector_offset": 1.0
+        }
+    }
+}

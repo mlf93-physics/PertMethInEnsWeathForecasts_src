@@ -2,9 +2,12 @@ __all__ = [
     "StandardArgSetup",
     "StandardModelArgSetup",
     "StandardRunnerArgSetup",
+    "RelReferenceArgSetup",
+    "PerturbationVectorArgSetup",
     "PerturbationArgSetup",
     "MultiPerturbationArgSetup",
     "ReferenceAnalysisArgParser",
+    "ComparisonPlottingArgParser",
     "StandardPlottingArgParser",
 ]
 
@@ -15,7 +18,7 @@ import argparse
 import numpy as np
 from general.params.experiment_licences import Experiments as EXP
 from general.params.model_licences import Models
-from config import MODEL, LICENCE
+import config as cfg
 
 # Instantiate ArgumentParser
 parser = argparse.ArgumentParser()
@@ -45,10 +48,10 @@ class StandardArgSetup:
 
     def setup_parser(self):
         # Prepare model specific default arguments
-        if MODEL == Models.SHELL_MODEL:
+        if cfg.MODEL == Models.SHELL_MODEL:
             datapath = "./data/ny2.37e-08_ny_n19_t3.00e+02_n_f0_f1.0_kexp2"
 
-        elif MODEL == Models.LORENTZ63:
+        elif cfg.MODEL == Models.LORENTZ63:
             datapath = "./data/sig1.00e+01_t9.10e+03_b2.67e+00_r2.80e+01/"
 
         # Add general arguments
@@ -70,12 +73,12 @@ class StandardModelArgSetup:
 
     def setup_parser(self):
         # Add model specific arguments
-        if MODEL == Models.SHELL_MODEL:
+        if cfg.MODEL == Models.SHELL_MODEL:
             self._parser.add_argument("--ny_n", default=19, type=int)
             self._parser.add_argument("--forcing", default=1, type=float)
             self._parser.add_argument("--diff_exponent", default=2, type=int)
 
-        elif MODEL == Models.LORENTZ63:
+        elif cfg.MODEL == Models.LORENTZ63:
             self._parser.add_argument("--sigma", default=10, type=float)
             self._parser.add_argument("--r_const", default=28, type=float)
             self._parser.add_argument("--b_const", default=8 / 3, type=float)
@@ -216,13 +219,15 @@ class PerturbationArgSetup:
     def setup_parser(self):
         # Add optional arguments
         self._parser.add_argument("--endpoint", action="store_true")
-        pert_mode_group = self._parser.add_mutually_exclusive_group(required=True)
+        pert_mode_group = self._parser.add_mutually_exclusive_group(
+            required=cfg.LICENCE != EXP.COMPARISON
+        )
         pert_mode_group.add_argument(
             "--pert_mode", choices=["rd", "nm", "bv", "bv_eof"], type=str
         )
 
         # Add model specific arguments
-        if MODEL == Models.SHELL_MODEL:
+        if cfg.MODEL == Models.SHELL_MODEL:
             pert_mode_group.add_argument("--single_shell_perturb", type=int)
 
     def validate_arguments(self):
@@ -429,7 +434,7 @@ class StandardPlottingArgParser:
         self._parser.add_argument("--combinations", action="store_true")
         self._parser.add_argument("--endpoint", action="store_true")
 
-        if MODEL == Models.SHELL_MODEL:
+        if cfg.MODEL == Models.SHELL_MODEL:
             self._parser.add_argument(
                 "--shell_cutoff",
                 default=None,

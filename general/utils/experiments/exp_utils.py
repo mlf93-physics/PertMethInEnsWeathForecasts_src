@@ -1,7 +1,8 @@
+import pathlib as pl
 import json
 
 
-def get_exp_setup(path_to_file, args):
+def get_exp_setup(path_to_file: pl.Path, args: dict) -> dict:
     """Get experiment setup from json file
 
     Parameters
