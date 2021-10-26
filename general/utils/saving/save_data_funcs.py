@@ -126,7 +126,7 @@ def save_perturb_info(args=None, exp_setup=None):
     """
 
     expected_path = g_save_utils.generate_dir(
-        pl.Path(args["datapath"], args["exp_folder"]), args=args
+        pl.Path(args["datapath"], args["out_exp_folder"]), args=args
     )
     # Prepare filename
     perturb_data_info_path = pl.Path(expected_path)

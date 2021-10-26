@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import shell_model_experiments.params as sh_params
 import lorentz63_experiments.params.params as l63_params
+from general.utils.module_import.type_import import *
 import general.utils.importing.import_data_funcs as g_import
 import general.utils.plot_utils as g_plt_utils
 import general.utils.util_funcs as g_utils
@@ -88,6 +89,11 @@ def plot_error_norm_vs_time(
     normalize_start_time=True,
     axes=None,
     exp_setup=None,
+    linestyle: str = "-",
+    linewidth: float = 2,
+    alpha: float = 1.0,
+    cmap_list: Union[None, list] = None,
+    legend_on: bool = True,
 ):
 
     if exp_setup is None:
@@ -155,10 +161,22 @@ def plot_error_norm_vs_time(
     else:
         n_colors = num_perturbations
 
-    cmap_list = g_plt_utils.get_non_repeating_colors(n_colors=n_colors)
+    # Set colors
+    if cmap_list is None:
+        cmap_list = g_plt_utils.get_non_repeating_colors(n_colors=n_colors)
     axes.set_prop_cycle("color", cmap_list)
 
-    axes.plot(time_array, error_norm_vs_time)  # , 'k', linewidth=1)
+    if header_dicts[0]["pert_mode"] in ["rd"]:
+        linewidth: float = 1.0
+        alpha: float = 0.5
+
+    axes.plot(
+        time_array,
+        error_norm_vs_time,
+        linestyle=linestyle,
+        alpha=alpha,
+        linewidth=linewidth,
+    )
 
     if args["plot_mode"] == "detailed":
         # Plot perturbation error norms
@@ -171,8 +189,9 @@ def plot_error_norm_vs_time(
     axes.set_ylabel("Error")
     axes.set_yscale("log")
 
-    if LICENCE not in [EXP.BREEDING_VECTORS, EXP.LYAPUNOV_VECTORS]:
-        axes.legend(perturb_time_pos_list_legend)
+    if legend_on:
+        if LICENCE not in [EXP.BREEDING_VECTORS, EXP.LYAPUNOV_VECTORS]:
+            axes.legend(perturb_time_pos_list_legend)
 
     if args["xlim"] is not None:
         axes.set_xlim(args["xlim"][0], args["xlim"][1])

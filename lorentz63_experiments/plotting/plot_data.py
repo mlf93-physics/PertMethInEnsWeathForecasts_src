@@ -1,3 +1,11 @@
+"""Plotting functions relevant for the Lorentz63 model experiments
+
+Example
+-------
+python plotting/plot_data.py --plot_type=error_norm --exp_folder=test_breed_vector_eof
+
+"""
+
 import sys
 
 sys.path.append("..")

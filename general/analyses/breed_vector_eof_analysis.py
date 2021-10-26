@@ -19,7 +19,7 @@ elif MODEL == Models.LORENTZ63:
     params = l63_params
 
 
-def calc_bv_eof_vectors(breed_vectors: np.ndarray) -> np.ndarray:
+def calc_bv_eof_vectors(breed_vectors: np.ndarray, n_eof_vectors: int) -> np.ndarray:
     """Computes an orthogonal complement to the breed vectors
 
     Parameters
@@ -30,11 +30,18 @@ def calc_bv_eof_vectors(breed_vectors: np.ndarray) -> np.ndarray:
     Returns
     -------
     np.ndarray
-        The resulting EOF vectors. Shape: (n_units, sdim, n_vectors)
+        The resulting EOF vectors. Shape: (n_units, sdim, n_eof_vectors)
     """
     # Get number of vectors
     n_vectors: int = breed_vectors.shape[1]
     n_units: int = breed_vectors.shape[0]
+
+    # Test dimensions against n_eof_vectors requested
+    if n_vectors < n_eof_vectors:
+        raise ValueError(
+            "The number of requested EOF vectors exceeds the number of breed vectors; "
+            + f"number of BVs: {n_vectors}, number of requested EOFs: {n_eof_vectors}"
+        )
     # Due to the way the breed vectors are stored, the transpose is directly given
     breed_vectors_transpose: np.ndarray = breed_vectors
     breed_vectors: np.ndarray = np.transpose(breed_vectors, axes=(0, 2, 1))
@@ -58,6 +65,8 @@ def calc_bv_eof_vectors(breed_vectors: np.ndarray) -> np.ndarray:
             )
         )
     ).real
+
+    eof_vectors = eof_vectors[:, :, :n_eof_vectors]
 
     return eof_vectors
 

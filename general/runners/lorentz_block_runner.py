@@ -79,7 +79,7 @@ def main(args):
         args["endpoint"] = True
         args["n_profiles"] = exp_setup["n_analyses"]
         args["n_runs_per_profile"] = 1
-        args["exp_folder"] = f"{parent_perturb_folder}/analysis_forecasts"
+        args["out_exp_folder"] = f"{parent_perturb_folder}/analysis_forecasts"
 
         args = g_utils.adjust_start_times_with_offset(args)
 
@@ -95,7 +95,7 @@ def main(args):
         args["endpoint"] = True
         args["n_profiles"] = 1
         args["n_runs_per_profile"] = exp_setup["n_analyses"]
-        args["exp_folder"] = f"{parent_perturb_folder}/forecasts"
+        args["out_exp_folder"] = f"{parent_perturb_folder}/forecasts"
 
         copy_args = copy.deepcopy(args)
         temp_processes, _, _ = pt_runner.main_setup(copy_args)

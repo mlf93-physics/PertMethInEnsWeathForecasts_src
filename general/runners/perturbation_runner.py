@@ -163,7 +163,7 @@ def prepare_run_times(args):
     return times_to_run, Nt_array
 
 
-def prepare_perturbations(args, raw_perturbations=False):
+def prepare_perturbations(args: dict, raw_perturbations: bool = False):
     """Prepare the perturbed initial conditions according to the desired perturbation
     type (given by args["pert_mode"])
 
@@ -240,6 +240,12 @@ def prepare_perturbations(args, raw_perturbations=False):
                 _,
             ) = pt_import.import_perturb_vectors(args)
 
+            # Reshape perturb_vectors
+            perturb_vectors = np.reshape(
+                np.transpose(perturb_vectors, axes=(2, 0, 1)),
+                (params.sdim, args["n_profiles"] * args["n_runs_per_profile"]),
+            )
+
         elif args["pert_mode"] == "bv_eof":
             print("\nRunning with BREED VECTOR EOF perturbations\n")
 
@@ -250,7 +256,14 @@ def prepare_perturbations(args, raw_perturbations=False):
                 _,
             ) = pt_import.import_perturb_vectors(args)
 
-            eof_vectors: np.ndarray = bv_eof_anal.calc_bv_eof_vectors(breed_vectors)
+            eof_vectors: np.ndarray = bv_eof_anal.calc_bv_eof_vectors(
+                breed_vectors, args["n_runs_per_profile"]
+            )
+            # Reshape and save as perturb_vectors
+            perturb_vectors = np.reshape(
+                np.transpose(eof_vectors, axes=(1, 0, 2)),
+                (params.sdim, args["n_profiles"] * args["n_runs_per_profile"]),
+            )
 
         elif args["pert_mode"] == "rd":
             print("\nRunning with RANDOM perturbations\n")
@@ -389,7 +402,7 @@ def main_setup(
     # Detect if other perturbations exist in the perturbation_folder and calculate
     # perturbation count to start at
     # Check if path exists
-    expected_path = pl.Path(args["datapath"], args["exp_folder"])
+    expected_path = pl.Path(args["datapath"], args["out_exp_folder"])
     dir_exists = os.path.isdir(expected_path)
     if dir_exists:
         n_perturbation_files = len(list(expected_path.glob("*.csv")))

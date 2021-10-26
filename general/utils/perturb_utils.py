@@ -20,21 +20,26 @@ elif MODEL == Models.LORENTZ63:
     params = l63_params
 
 
-def calculate_perturbations(perturb_vectors, dev_plot_active=False, args=None):
+def calculate_perturbations(
+    perturb_vectors: np.ndarray, dev_plot_active: bool = False, args: dict = None
+) -> np.ndarray:
     """Calculate a random perturbation with a specific norm for each profile.
 
     The norm of the error is defined in the parameter seeked_error_norm
 
     Parameters
     ----------
-    perturb_vectors : ndarray
+    perturb_vectors : ndarray((sdim, args["n_profiles"]*args["n_runs_per_profile"]))
         The vectors along which to perform the perturbations
+    dev_plot_active: bool
+        If plotting dev plots or not
+    args: dict
+        Run-time arguments
 
     Returns
     -------
     perturbations : ndarray
         The random perturbations
-
     """
     n_profiles = args["n_profiles"]
     n_runs_per_profile = args["n_runs_per_profile"]
@@ -77,9 +82,13 @@ def calculate_perturbations(perturb_vectors, dev_plot_active=False, args=None):
             # Apply breed vector perturbation
             elif args["pert_mode"] == "bv":
                 # Generate random weights of the complex-conjugate eigenvector pair
-                _weight = np.random.rand() * 2 - 1
+                # _weight = np.random.rand() * 2 - 1
                 # Make perturbation vector
-                perturb = _weight * perturb_vectors[:, i]
+                perturb = perturb_vectors[:, i]
+
+            # Apply breed vector EOF perturbations
+            elif args["pert_mode"] == "bv_eof":
+                perturb = perturb_vectors[:, i]
 
         # Apply single shell perturbation
         elif args["single_shell_perturb"] is not None:

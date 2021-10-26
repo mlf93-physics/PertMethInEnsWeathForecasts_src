@@ -116,13 +116,14 @@ class StandardRunnerArgSetup:
 
 
 class RelReferenceArgSetup:
-    def __init__(self):
+    def __init__(self, setup_parents=True):
         self._parser = parser
         self._args = None
 
         # Setup standard setup
-        __standard_runner_arg_setup = StandardRunnerArgSetup()
-        __standard_runner_arg_setup.setup_parser()
+        if setup_parents:
+            __standard_runner_arg_setup = StandardRunnerArgSetup()
+            __standard_runner_arg_setup.setup_parser()
 
     @property
     def args(self):
@@ -225,6 +226,7 @@ class PerturbationArgSetup:
             pert_mode_group.add_argument("--single_shell_perturb", type=int)
 
     def validate_arguments(self):
+        # Test if start_time is set when start_tim_offset is set
         if (
             self.args["start_time_offset"] is not None
             and self.args["start_times"] is None
@@ -233,15 +235,15 @@ class PerturbationArgSetup:
                 "--start_times argument is required when --start_time_offset is set"
             )
 
-        if (
-            self.args["pert_mode"] in ["bv", "bv_eof"]
-            and self.args["pert_vector_folder"] is None
-        ):
-            self._parser.error(
-                "--pert_vector_folder argument is required when"
-                + " --pert_mode is one of ['bv', 'bv_eof]"
-            )
+        if self.args["pert_mode"] in ["bv", "bv_eof"]:
+            # Test if pert_vector_folder is set if pert_mode is in ["bv", "bv_eof"]
+            if self.args["pert_vector_folder"] is None:
+                self._parser.error(
+                    "--pert_vector_folder argument is required when"
+                    + " --pert_mode is one of ['bv', 'bv_eof]"
+                )
 
+        # Test if start_times is set when pert_mode in ["rd", "nm"]
         if self.args["pert_mode"] in ["rd", "nm"] and self.args["start_times"] is None:
             self._parser.error(
                 "--start_times argument is required when pert_mode is 'rd' or 'nm'"
@@ -371,7 +373,7 @@ class StandardPlottingArgParser:
         __ref_arg_setup = ReferenceAnalysisArgParser()
         __ref_arg_setup.setup_parser()
 
-        __relref_arg_setup = RelReferenceArgSetup()
+        __relref_arg_setup = RelReferenceArgSetup(setup_parents=False)
         __relref_arg_setup.setup_parser()
 
     @property

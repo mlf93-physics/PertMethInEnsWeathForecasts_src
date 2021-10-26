@@ -23,7 +23,7 @@ def save_vector_unit(data, perturb_position=None, unit=0, args=None, exp_setup=N
 
     # Generate path if not existing
     expected_path = g_save_utils.generate_dir(
-        pl.Path(args["datapath"], args["exp_folder"]), args=args
+        pl.Path(args["datapath"], args["out_exp_folder"]), args=args
     )
     # Calculate position of when the vector is to be valid
     if LICENCE == EXP.BREEDING_VECTORS:

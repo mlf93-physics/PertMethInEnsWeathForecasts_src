@@ -30,7 +30,7 @@ def main(args):
     processes = []
 
     # Prepare arguments
-    args["exp_folder"] = exp_setup["folder_name"]
+    args["out_exp_folder"] = exp_setup["folder_name"]
     args["start_times"] = exp_setup["start_times"]
     args["time_to_run"] = exp_setup["time_to_run"]
     args["endpoint"] = True

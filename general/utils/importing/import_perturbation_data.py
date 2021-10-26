@@ -203,7 +203,7 @@ def import_profiles_for_nm_analysis(args: dict = None) -> Tuple[np.ndarray, dict
     return profiles, ref_header_dict
 
 
-def import_perturb_vectors(args: dict) -> Tuple[np.ndarray, list]:
+def import_perturb_vectors(args: dict) -> Tuple[np.ndarray, np.ndarray, list, list]:
     """Import units of perturbation vectors, e.g. BVs or SVs
 
     Parameters

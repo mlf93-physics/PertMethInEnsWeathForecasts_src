@@ -1,6 +1,6 @@
 __all__ = ["MODEL", "LICENCE", "NUMBA_CACHE"]
 
-import pathlib as pl
+import general.plotting.plot_config as plt_config
 from general.params.params import GlobalParams
 import general.utils.licence_utils.model_licence_utils as md_license_ut
 import general.utils.licence_utils.exp_licence_utils as exp_licence_ut

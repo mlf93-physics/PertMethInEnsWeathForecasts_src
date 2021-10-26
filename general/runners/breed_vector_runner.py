@@ -67,7 +67,7 @@ def main(args):
         args["endpoint"] = True
         args["n_profiles"] = 1
         args["n_runs_per_profile"] = exp_setup["n_vectors"]
-        args["exp_folder"] = pl.Path(
+        args["out_exp_folder"] = pl.Path(
             exp_setup["folder_name"], exp_setup["sub_exp_folder"]
         )
         args = g_utils.adjust_start_times_with_offset(args)
@@ -114,7 +114,7 @@ def main(args):
             print("No processes to run - check if units already exists")
 
         # Set out folder
-        args["exp_folder"] = pl.Path(exp_setup["folder_name"])
+        args["out_exp_folder"] = pl.Path(exp_setup["folder_name"])
         # Save breed vector data
         v_save.save_vector_unit(
             rescaled_data,

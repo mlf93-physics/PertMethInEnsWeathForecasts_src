@@ -14,7 +14,7 @@ def detect_exp_licence():
     if "perturbation_runner" == root_file_name:
         licence = exp.NORMAL_PERTURBATION
 
-    elif "breed_vector_runner" == root_file_name:
+    elif "breed_vector" in root_file_name:
         licence = exp.BREEDING_VECTORS
 
     elif "hyper_diff_perturb_runner" == root_file_name:

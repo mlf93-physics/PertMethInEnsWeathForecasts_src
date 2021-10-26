@@ -1,21 +1,16 @@
 import sys
 
 sys.path.append("..")
-import pathlib as pl
 import math
-import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sb
 import general.plotting.plot_config as g_plt_config
 import shell_model_experiments.params as sh_params
-import shell_model_experiments.plotting.plot_data as sh_plot
 import lorentz63_experiments.params.params as l63_params
-import lorentz63_experiments.plotting.plot_data as l63_plot
-import general.utils.importing.import_data_funcs as g_import
 import general.utils.util_funcs as g_utils
 import general.utils.plot_utils as g_plt_utils
 import general.plotting.plot_data as g_plt_data
-import general.analyses.plot_analyses as g_plt_anal
+import general.utils.user_interface as g_ui
 import general.utils.importing.import_perturbation_data as pt_import
 import general.utils.argument_parsers as a_parsers
 from general.params.model_licences import Models
@@ -26,9 +21,6 @@ if MODEL == Models.SHELL_MODEL:
     params = sh_params
 elif MODEL == Models.LORENTZ63:
     params = l63_params
-
-# Setup plotting defaults
-g_plt_config.setup_plotting_defaults()
 
 
 def plt_vector_comparison(args):
@@ -104,20 +96,55 @@ def plt_vector_comparison(args):
         axes2[i].set_title(f"Orthogonality between\nBreed/Lyapunov vectors | unit {i}")
 
 
+def plot_error_norm_comparison(args: dict):
+    """Plots a comparison of the error norm based in several different
+    perturbation techniques
+
+    Parameters
+    ----------
+    args : dict
+        Run-time arguments
+    """
+    axes = plt.axes()
+    len_folders = len(args["exp_folders"])
+    cmap_list = g_plt_utils.get_non_repeating_colors(
+        n_colors=len_folders, cmap=plt.cm.rainbow
+    )
+
+    line_counter = 0
+    for i, folder in enumerate(args["exp_folders"]):
+        # Set exp_folder
+        args["exp_folder"] = folder
+
+        g_plt_data.plot_error_norm_vs_time(
+            args,
+            axes=axes,
+            cmap_list=[cmap_list[i]],
+            legend_on=False,
+        )
+        lines = list(axes.get_lines())
+        lines[line_counter].set_label(folder)
+
+        line_counter += len(lines) - line_counter
+
+    plt.legend()
+
+
 if __name__ == "__main__":
     # Get arguments
     stand_plot_arg_parser = a_parsers.StandardPlottingArgParser()
     stand_plot_arg_parser.setup_parser()
     compare_plot_arg_parser = a_parsers.ComparisonPlottingArgParser()
     compare_plot_arg_parser.setup_parser()
-    args = compare_plot_arg_parser.args
-    print("args", args)
+    args: dict = compare_plot_arg_parser.args
+
+    g_ui.confirm_run_setup(args)
 
     if "vec_compare" in args["plot_type"]:
         plt_vector_comparison(args)
+    elif "error_norm_compare" in args["plot_type"]:
+        plot_error_norm_comparison(args)
     else:
         raise ValueError("No valid plot type given as input argument")
 
-    if not args["noplot"]:
-        plt.tight_layout()
-        plt.show()
+    g_plt_utils.save_or_show_plot(args)

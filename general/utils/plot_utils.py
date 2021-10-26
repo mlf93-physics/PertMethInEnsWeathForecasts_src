@@ -15,9 +15,10 @@ from general.params.model_licences import Models
 from config import MODEL
 
 
-def get_non_repeating_colors(n_colors: int = 1):
-    colormap = plt.cm.gist_rainbow
-    cmap_list = [colormap(i) for i in np.linspace(0, 1, n_colors)]
+def get_non_repeating_colors(
+    n_colors: int = 1, cmap: colors.LinearSegmentedColormap = plt.cm.gist_rainbow
+):
+    cmap_list = [cmap(i) for i in np.linspace(0, 1, n_colors)]
 
     return cmap_list
 
@@ -117,7 +118,9 @@ def generate_title(
     title_suffix: str = "",
 ):
 
-    if args["exp_folder"] is not None:
+    if args["exp_folders"] is not None:
+        exp_suffix = f'Experiments: {", ".join(args["exp_folders"])}; '
+    elif args["exp_folder"] is not None:
         exp_suffix = f'Experiment: {args["exp_folder"]}; '
     else:
         exp_suffix = ""
@@ -160,12 +163,12 @@ def generate_title(
 def save_or_show_plot(args: dict):
     if args["save_fig"]:
         subpath = pl.Path(
-            "shell_model_experiments/hyper_diffusivity/lyapunov_fourier_correspondenceTest"
+            "lorentz63_experiments/compare_perturbations/error_norm_comparison/"
         )
 
         for i in plt.get_fignums():
             fig = plt.figure(i)
-            file_name = "lyapunov_fourier_correspondence_hyp_diff_comparison"
+            file_name = "error_norm_rd_bv_and_bv_eof_test_compare"
 
             name = g_ui.get_name_input(
                 "Proposed name of figure: ", proposed_input=file_name
