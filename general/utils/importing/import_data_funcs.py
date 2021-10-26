@@ -490,7 +490,7 @@ def import_start_u_profiles(args=None):
     )
 
     # Import velocity profiles
-    counter = 0
+    _counter = 0
 
     for file_id in ref_file_match.keys():
         for position in ref_file_match[int(file_id)]:
@@ -504,10 +504,14 @@ def import_start_u_profiles(args=None):
 
             # Skip time datapoint and pad array with zeros
             if n_runs_per_profile == 1:
-                indices = counter
+                indices = _counter
                 u_init_profiles[params.u_slice, indices] = temp_u_init_profile[1:]
+
+                # Update counter
+                _counter += 1
             elif n_runs_per_profile > 1:
-                indices = np.s_[counter : counter + n_runs_per_profile : 1]
+                indices = np.s_[_counter : _counter + n_runs_per_profile : 1]
+
                 u_init_profiles[params.u_slice, indices] = np.repeat(
                     np.reshape(
                         temp_u_init_profile[1:], (temp_u_init_profile[1:].size, 1)
@@ -516,7 +520,8 @@ def import_start_u_profiles(args=None):
                     axis=1,
                 )
 
-            counter += 1
+                # Update counter
+                _counter += n_runs_per_profile
 
     return (
         u_init_profiles,
@@ -525,10 +530,38 @@ def import_start_u_profiles(args=None):
     )
 
 
-def import_exp_info_file(args):
+def import_exp_info_file(args: dict):
+    """Import the experiment info file
 
+    Parameters
+    ----------
+    args : dict
+        Run-time arguments
+
+    Returns
+    -------
+    dict
+        The experiment info file parsed as a dict
+
+    Raises
+    ------
+    ImportError
+        Raised if no subfolder is given to search for the experiment info file
+    ValueError
+        Raised if more than one experiment info file are found
+    ImportError
+        Raised if no experiment info file is found.
+    """
+
+    subfolder = pl.Path("")
+    # Add pert_vector_folder if present
+    if "pert_vector_folder" in args:
+        if args["pert_vector_folder"] is not None:
+            subfolder /= args["pert_vector_folder"]
+
+    # Add the specified exp_folder
     if args["exp_folder"] is not None:
-        subfolder = args["exp_folder"]
+        subfolder /= args["exp_folder"]
     else:
         raise ImportError("No valid subfolder to search for exp_setup")
 

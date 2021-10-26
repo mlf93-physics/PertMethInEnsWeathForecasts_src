@@ -15,7 +15,9 @@ import general.utils.importing.import_data_funcs as g_import
 import general.plotting.plot_data as g_plt_data
 import general.utils.plot_utils as g_plt_utils
 import general.analyses.plot_analyses as g_plt_anal
+import general.analyses.breed_vector_eof_analysis as bv_analysis
 import general.utils.argument_parsers as a_parsers
+import general.utils.user_interface as g_ui
 from general.params.model_licences import Models
 from config import MODEL
 
@@ -225,12 +227,48 @@ def plot_breed_error_norm(args):
         l63_plot.plot_energy(args, axes=axes[1])
 
 
+def plot_breed_eof_vectors_3D(args: dict):
+    """Plot the EOF breed vectors in 3D
+
+    Parameters
+    ----------
+    args : dict
+        Run-time arguments
+    """
+
+    perturb_vectors, perturb_header_dicts = pt_import.import_perturb_vectors(args)
+
+    eof_vectors = bv_analysis.calc_bv_eof_vectors(perturb_vectors)
+    n_vectors: int = eof_vectors.shape[2]
+
+    origin: np.ndarray = np.zeros(n_vectors)
+
+    plt.figure()
+    ax3 = plt.axes(projection="3d")
+    ax3.quiver(
+        origin,
+        origin,
+        origin,
+        eof_vectors[0, 0, :],
+        eof_vectors[0, 1, :],
+        eof_vectors[0, 2, :],
+    )
+
+    ax3.set_xlabel("x")
+    ax3.set_ylabel("y")
+    ax3.set_zlabel("z")
+    ax3.set_xlim(-1, 1)
+    ax3.set_ylim(-1, 1)
+    ax3.set_zlim(-1, 1)
+
+
 if __name__ == "__main__":
     # Get arguments
     stand_plot_arg_parser = a_parsers.StandardPlottingArgParser()
     stand_plot_arg_parser.setup_parser()
     args = stand_plot_arg_parser.args
-    print("args", args)
+
+    g_ui.confirm_run_setup(args)
 
     if "pert_vector_folder" in args["plot_type"]:
         plot_breed_vectors(args)
@@ -238,6 +276,8 @@ if __name__ == "__main__":
         plot_breed_comparison_to_nm(args)
     elif "bv_error_norm" in args["plot_type"]:
         plot_breed_error_norm(args)
+    elif "bv_eof_3D" in args["plot_type"]:
+        plot_breed_eof_vectors_3D(args)
     else:
         raise ValueError("No valid plot type given as input argument")
 

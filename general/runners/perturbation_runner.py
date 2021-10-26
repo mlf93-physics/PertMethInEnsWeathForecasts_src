@@ -33,9 +33,11 @@ import lorentz63_experiments.params.params as l63_params
 import lorentz63_experiments.utils.util_funcs as ut_funcs
 import general.utils.util_funcs as g_utils
 import general.utils.importing.import_data_funcs as g_import
+import general.utils.importing.import_perturbation_data as pt_import
 from general.params.experiment_licences import Experiments as EXP
 import general.utils.saving.save_data_funcs as g_save
 import general.utils.saving.save_perturbation as pt_save
+import general.analyses.breed_vector_eof_analysis as bv_eof_anal
 import general.utils.perturb_utils as pt_utils
 import general.utils.exceptions as g_exceptions
 import general.utils.argument_parsers as a_parsers
@@ -196,7 +198,7 @@ def prepare_perturbations(args, raw_perturbations=False):
 
     # Only import start profiles beforehand if not using breed_vector perturbations,
     # i.e. also when running in singel_shell_perturb mode
-    if args["pert_mode"] != "breed_vectors":
+    if args["pert_mode"] not in ["bv", "bv_eof"]:
         (
             u_init_profiles,
             perturb_positions,
@@ -232,10 +234,23 @@ def prepare_perturbations(args, raw_perturbations=False):
         elif args["pert_mode"] == "bv":
             print("\nRunning with BREED VECTOR perturbations\n")
             (
+                perturb_vectors,
                 u_init_profiles,
                 perturb_positions,
-                perturb_vectors,
-            ) = pt_utils.prepare_breed_vectors(args)
+                _,
+            ) = pt_import.import_perturb_vectors(args)
+
+        elif args["pert_mode"] == "bv_eof":
+            print("\nRunning with BREED VECTOR EOF perturbations\n")
+
+            (
+                breed_vectors,
+                u_init_profiles,
+                perturb_positions,
+                _,
+            ) = pt_import.import_perturb_vectors(args)
+
+            eof_vectors: np.ndarray = bv_eof_anal.calc_bv_eof_vectors(breed_vectors)
 
         elif args["pert_mode"] == "rd":
             print("\nRunning with RANDOM perturbations\n")

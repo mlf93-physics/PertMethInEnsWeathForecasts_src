@@ -144,17 +144,42 @@ class RelReferenceArgSetup:
     def setup_parser(self):
         # Add required arguments
         self._parser.add_argument("--exp_folder", required=False, type=str)
+        self._parser.add_argument(
+            "--out_exp_folder", required=False, default="temp_exp_folder", type=str
+        )
         # Add optional arguments
         self._parser.add_argument("--n_runs_per_profile", default=1, type=int)
         self._parser.add_argument("--n_profiles", default=1, type=int)
-        self._parser.add_argument(
-            "--start_times",
-            nargs="+",
-            type=float,
-            required=LICENCE == EXP.NORMAL_PERTURBATION,
-        )
+        self._parser.add_argument("--start_times", nargs="+", type=float, default=None)
         self._parser.add_argument("--start_time_offset", default=None, type=float)
         self._parser.add_argument("--exp_setup", default=None, type=str)
+
+
+class PerturbationVectorArgSetup:
+    def __init__(self):
+        self._parser = parser
+        self._args = None
+
+    @property
+    def args(self):
+        """The vars(parsed arguments.)
+
+        The parsed args are saved to a local attribute if not already present
+        to avoid multiple calls to parse_args()
+
+        Returns
+        -------
+        argparse.Namespace
+            The parsed arguments
+        """
+        if not isinstance(self._args, argparse.Namespace):
+            self._args = vars(self._parser.parse_known_args()[0])
+
+        return self._args
+
+    def setup_parser(self):
+        # Add arguments
+        self._parser.add_argument("--pert_vector_folder", default=None, type=str)
 
 
 class PerturbationArgSetup:
@@ -165,6 +190,10 @@ class PerturbationArgSetup:
         # Setup standard setup
         __relref_arg_setup = RelReferenceArgSetup()
         __relref_arg_setup.setup_parser()
+
+        # Setup perturbation vector args
+        __pert_vector_arg_setup = PerturbationVectorArgSetup()
+        __pert_vector_arg_setup.setup_parser()
 
     @property
     def args(self):
@@ -186,10 +215,9 @@ class PerturbationArgSetup:
     def setup_parser(self):
         # Add optional arguments
         self._parser.add_argument("--endpoint", action="store_true")
-        self._parser.add_argument("--pert_vector_folder", default=None, type=str)
         pert_mode_group = self._parser.add_mutually_exclusive_group(required=True)
         pert_mode_group.add_argument(
-            "--pert_mode", choices=["rd", "nm", "bv"], type=str
+            "--pert_mode", choices=["rd", "nm", "bv", "bv_eof"], type=str
         )
 
         # Add model specific arguments
@@ -205,10 +233,18 @@ class PerturbationArgSetup:
                 "--start_times argument is required when --start_time_offset is set"
             )
 
-        if self.args["pert_mode"] == "bv" and self.args["pert_vectors"] is None:
+        if (
+            self.args["pert_mode"] in ["bv", "bv_eof"]
+            and self.args["pert_vector_folder"] is None
+        ):
             self._parser.error(
-                "--pert_vectors argument is required when"
-                + " --pert_mode is one of ['bv']"
+                "--pert_vector_folder argument is required when"
+                + " --pert_mode is one of ['bv', 'bv_eof]"
+            )
+
+        if self.args["pert_mode"] in ["rd", "nm"] and self.args["start_times"] is None:
+            self._parser.error(
+                "--start_times argument is required when pert_mode is 'rd' or 'nm'"
             )
 
 
@@ -327,9 +363,16 @@ class StandardPlottingArgParser:
         __multi_pert_arg_setup = MultiPerturbationArgSetup(setup_parents=False)
         __multi_pert_arg_setup.setup_parser()
 
+        # Setup perturbation vector args
+        __pert_vector_arg_setup = PerturbationVectorArgSetup()
+        __pert_vector_arg_setup.setup_parser()
+
         # Add arguments for reference analysis
         __ref_arg_setup = ReferenceAnalysisArgParser()
         __ref_arg_setup.setup_parser()
+
+        __relref_arg_setup = RelReferenceArgSetup()
+        __relref_arg_setup.setup_parser()
 
     @property
     def args(self):
@@ -377,13 +420,7 @@ class StandardPlottingArgParser:
         self._parser.add_argument("--sharey", action="store_true")
         self._parser.add_argument("--average", action="store_true")
 
-        # If running perturbations before plotting
-        self._parser.add_argument("--start_times", nargs="+", type=float)
-        self._parser.add_argument("--n_profiles", default=1, type=int)
-        self._parser.add_argument("--n_runs_per_profile", default=1, type=int)
-
         # experiment plot speicific
-        self._parser.add_argument("--exp_folder", default=None, type=str)
         self._parser.add_argument("--n_files", default=np.inf, type=int)
         self._parser.add_argument("--file_offset", default=0, type=int)
         self._parser.add_argument("--specific_files", nargs="+", default=None, type=int)

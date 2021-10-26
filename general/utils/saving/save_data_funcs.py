@@ -63,7 +63,7 @@ def save_data(data_out, subsubfolder="", prefix="", perturb_position=None, args=
         ref_filename_extra = ""
         # Generate path if not existing
         expected_path = g_save_utils.generate_dir(
-            pl.Path(args["datapath"], args["exp_folder"], subsubfolder), args=args
+            pl.Path(args["datapath"], args["out_exp_folder"], subsubfolder), args=args
         )
 
         # Prepare extra header items

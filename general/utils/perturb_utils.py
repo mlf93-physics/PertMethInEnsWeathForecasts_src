@@ -5,6 +5,7 @@ from math import floor, log10
 import numpy as np
 import shell_model_experiments.params as sh_params
 import lorentz63_experiments.params.params as l63_params
+from general.utils.module_import.type_import import *
 import general.utils.dev_plots as g_dev_plots
 import general.utils.importing.import_data_funcs as g_import
 import general.utils.importing.import_perturbation_data as pt_import
@@ -27,7 +28,7 @@ def calculate_perturbations(perturb_vectors, dev_plot_active=False, args=None):
     Parameters
     ----------
     perturb_vectors : ndarray
-        The eigenvectors along which to perform the perturbations
+        The vectors along which to perform the perturbations
 
     Returns
     -------
@@ -145,30 +146,52 @@ def rescale_perturbations(perturb_data, args):
     return u_init_profiles
 
 
-def prepare_breed_vectors(args):
-    # Get BVs
-    perturb_vectors, perturb_header_dicts = pt_import.import_perturb_vectors(args)
+# NOTE Remove the following code - unused.
+# def prepare_breed_vectors(args: dict) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+#     """Import and prepare the breed vectors
 
-    if perturb_vectors.size == 0:
-        raise ValueError("No perturbation vectors imported")
+#     Parameters
+#     ----------
+#     args : dict
+#         Run-time arguments
 
-    # Reshape and transpose
-    perturb_vectors = np.reshape(
-        perturb_vectors,
-        (args["n_profiles"] * args["n_runs_per_profile"], params.sdim),
-    ).T
+#     Returns
+#     -------
+#     Tuple[np.ndarray, np.ndarray, np.ndarray]
+#         (
+#             u_init_profiles : The vel. profiles at the validation time
+#             eval_positions : The index position of the evaluation time
+#             breed_vectors : The breed vectors
+#         )
 
-    # Prepare start times for import
-    args["start_times"] = [
-        perturb_header_dicts[i]["val_pos"] * params.stt
-        for i in range(len(perturb_header_dicts))
-    ]
+#     Raises
+#     ------
+#     ValueError
+#         Raised if no breed vectors was imported
+#     """
+#     # Get BVs
+#     breed_vectors, breed_vector_header_dicts = pt_import.import_perturb_vectors(args)
 
-    # Import start u profiles
-    (
-        u_init_profiles,
-        perturb_positions,
-        header_dict,
-    ) = g_import.import_start_u_profiles(args=args)
+#     if breed_vectors.size == 0:
+#         raise ValueError("No perturbation vectors imported")
 
-    return u_init_profiles, perturb_positions, perturb_vectors
+#     # Reshape and transpose
+#     breed_vectors = np.reshape(
+#         breed_vectors,
+#         (args["n_profiles"] * args["n_runs_per_profile"], params.sdim),
+#     ).T
+
+#     # Prepare start times for import
+#     args["start_times"] = [
+#         breed_vector_header_dicts[i]["val_pos"] * params.stt
+#         for i in range(len(breed_vector_header_dicts))
+#     ]
+
+#     # Import start u profiles
+#     (
+#         u_init_profiles,
+#         eval_positions,
+#         header_dict,
+#     ) = g_import.import_start_u_profiles(args=args)
+
+#     return u_init_profiles, eval_positions, breed_vectors
