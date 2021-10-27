@@ -103,6 +103,31 @@ def count_existing_files_or_dirs(search_path="", search_pattern="*.csv"):
     return n_files
 
 
+def get_dirs_in_path(path: pl.Path) -> list:
+    """Get sorted dirs in path
+
+    Parameters
+    ----------
+    path : pl.Path
+        The path to search for dirs
+
+    Returns
+    -------
+    list
+        The dirs contained in path
+    """
+
+    dirs = list(path.glob("*"))
+
+    # Filter out anything else than directories
+    dirs = [dirs[i] for i in range(len(dirs)) if dirs[i].is_dir()]
+
+    # Sort dirs
+    dirs = [dirs[i] for i in np.argsort(dirs)]
+
+    return dirs
+
+
 def handle_different_headers(header_dict):
     """Handle new and old style of the header_dict
 

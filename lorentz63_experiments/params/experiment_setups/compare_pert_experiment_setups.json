@@ -5,7 +5,7 @@
             "eval_times": [
                 10
             ],
-            "n_units": 1
+            "n_units": 2
         },
         "bv_gen_setup": {
             "sub_exp_folder": "perturb_data",

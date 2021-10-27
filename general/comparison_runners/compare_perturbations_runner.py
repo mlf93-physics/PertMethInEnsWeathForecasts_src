@@ -72,6 +72,62 @@ def generate_vectors(args: dict, exp_setup: dict):
     generate_bvs(copy.deepcopy(args), exp_setup)
 
 
+def rd_pert_experiment(args: dict, local_exp_setup: dict):
+    """Run perturbations with rd as pert_mode
+
+    Parameters
+    ----------
+    args : dict
+        Local run-time arguments
+    local_exp_setup : dict
+        Local experiment setup
+    """
+
+    processes = []
+
+    # Prepare arguments for perturbation run
+    args["n_runs_per_profile"] = 20
+    args["pert_mode"] = "rd"
+    args["start_times"] = local_exp_setup["eval_times"]
+    args["out_exp_folder"] = local_exp_setup["folder_name"] + "/rd_perturbations"
+
+    # Copy args in order not override in forecast processes
+    copy_args = copy.deepcopy(args)
+
+    temp_processes, _, _ = pt_runner.main_setup(copy_args)
+    processes.extend(temp_processes)
+
+    r_utils.run_pert_processes(copy_args, local_exp_setup, processes)
+
+
+def nm_pert_experiment(args: dict, local_exp_setup: dict):
+    """Run perturbations with nm as pert_mode
+
+    Parameters
+    ----------
+    args : dict
+        Local run-time arguments
+    local_exp_setup : dict
+        Local experiment setup
+    """
+
+    processes = []
+
+    # Prepare arguments for perturbation run
+    args["n_runs_per_profile"] = 20
+    args["pert_mode"] = "nm"
+    args["start_times"] = local_exp_setup["eval_times"]
+    args["out_exp_folder"] = local_exp_setup["folder_name"] + "/nm_perturbations"
+
+    # Copy args in order not override in forecast processes
+    copy_args = copy.deepcopy(args)
+
+    temp_processes, _, _ = pt_runner.main_setup(copy_args)
+    processes.extend(temp_processes)
+
+    r_utils.run_pert_processes(copy_args, local_exp_setup, processes)
+
+
 def bv_pert_experiment(args: dict, local_exp_setup: dict):
     """Run perturbations with BVs as pert_mode
 
@@ -155,6 +211,8 @@ def execute_pert_experiments(args: dict, exp_setup: dict):
     # Execute experiments
     bv_pert_experiment(copy.deepcopy(args), local_exp_setup)
     bv_eof_pert_experiment(copy.deepcopy(args), local_exp_setup)
+    # rd_pert_experiment(copy.deepcopy(args), local_exp_setup)
+    # nm_pert_experiment(copy.deepcopy(args), local_exp_setup)
 
 
 def main(args: dict):

@@ -80,7 +80,7 @@ class StandardModelArgSetup:
 
         elif cfg.MODEL == Models.LORENTZ63:
             self._parser.add_argument("--sigma", default=10, type=float)
-            self._parser.add_argument("--r_const", default=28, type=float)
+            self._parser.add_argument("--r_const", default=28.0, type=float)
             self._parser.add_argument("--b_const", default=8 / 3, type=float)
 
 

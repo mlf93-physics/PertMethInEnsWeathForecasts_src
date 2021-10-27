@@ -2,19 +2,20 @@ import sys
 
 sys.path.append("..")
 import math
+import pathlib as pl
+
+import config as cfg
+import general.plotting.plot_data as g_plt_data
+import general.utils.argument_parsers as a_parsers
+import general.utils.importing.import_perturbation_data as pt_import
+import general.utils.plot_utils as g_plt_utils
+import general.utils.user_interface as g_ui
+import general.utils.util_funcs as g_utils
+import lorentz63_experiments.params.params as l63_params
 import matplotlib.pyplot as plt
 import seaborn as sb
-import general.plotting.plot_config as g_plt_config
 import shell_model_experiments.params as sh_params
-import lorentz63_experiments.params.params as l63_params
-import general.utils.util_funcs as g_utils
-import general.utils.plot_utils as g_plt_utils
-import general.plotting.plot_data as g_plt_data
-import general.utils.user_interface as g_ui
-import general.utils.importing.import_perturbation_data as pt_import
-import general.utils.argument_parsers as a_parsers
 from general.params.model_licences import Models
-import config as cfg
 
 # Get parameters for model
 if cfg.MODEL == Models.SHELL_MODEL:
@@ -106,7 +107,30 @@ def plot_error_norm_comparison(args: dict):
         Run-time arguments
     """
     axes = plt.axes()
-    len_folders = len(args["exp_folders"])
+
+    args["endpoint"] = True
+
+    if args["exp_folders"] is not None:
+        len_folders = len(args["exp_folders"])
+    elif args["exp_folder"] is not None:
+        # Get dirs in path
+        _path = pl.Path(args["datapath"], args["exp_folder"])
+        _dirs = g_utils.get_dirs_in_path(_path)
+        len_folders = len(_dirs)
+
+        if len_folders == 0:
+            args["exp_folders"] = args["exp_folder"]
+        else:
+            # Sort out dirs not named *_perturbations
+            args["exp_folders"] = [
+                str(pl.Path(_dirs[i].parent.name, _dirs[i].name))
+                for i in range(len_folders)
+                if "perturbations" in _dirs[i].name
+            ]
+
+        # Update number of folders after filtering
+        len_folders = len(args["exp_folders"])
+
     cmap_list = g_plt_utils.get_non_repeating_colors(
         n_colors=len_folders, cmap=plt.cm.rainbow
     )
@@ -121,6 +145,7 @@ def plot_error_norm_comparison(args: dict):
             axes=axes,
             cmap_list=[cmap_list[i]],
             legend_on=False,
+            normalize_start_time=False,
         )
         lines = list(axes.get_lines())
         lines[line_counter].set_label(folder)
@@ -131,6 +156,8 @@ def plot_error_norm_comparison(args: dict):
 
 
 if __name__ == "__main__":
+    cfg.init_licence()
+
     # Get arguments
     stand_plot_arg_parser = a_parsers.StandardPlottingArgParser()
     stand_plot_arg_parser.setup_parser()
