@@ -102,7 +102,7 @@ def generate_dir(expected_path, subfolder="", args=None):
     return expected_path
 
 
-def compress_dir(path_to_dir, zip_name):
+def compress_dir(path_to_dir: pl.Path, zip_name: str = "test_temp1"):
     """Compress a directory using tar. The resulting .tar.gz file will be
     located at path_to_dir
 

@@ -263,6 +263,8 @@ def plot_breed_eof_vectors_3D(args: dict):
 
 
 if __name__ == "__main__":
+    cfg.init_licence()
+
     # Get arguments
     stand_plot_arg_parser = a_parsers.StandardPlottingArgParser()
     stand_plot_arg_parser.setup_parser()

@@ -118,12 +118,12 @@ def generate_title(
     title_suffix: str = "",
 ):
 
-    if args["exp_folders"] is not None:
-        exp_suffix = f'Experiments: {", ".join(args["exp_folders"])}; '
+    exp_suffix = ""
+    if "exp_folders" in args:
+        if args["exp_folders"] is not None:
+            exp_suffix = f'Experiments: {", ".join(args["exp_folders"])}; '
     elif args["exp_folder"] is not None:
         exp_suffix = f'Experiment: {args["exp_folder"]}; '
-    else:
-        exp_suffix = ""
 
     if args["n_files"] < np.inf:
         file_suffix = (

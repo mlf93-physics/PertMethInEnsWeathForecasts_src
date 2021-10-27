@@ -113,12 +113,14 @@ def main(args):
 
         if args["erda_run"]:
             path = pl.Path(args["datapath"], exp_setup["folder_name"])
-            g_save_utils.compress_dir(path, "test_temp1")
+            g_save_utils.compress_dir(path)
     else:
         print("No processes to run - check if blocks already exists")
 
 
 if __name__ == "__main__":
+    cfg.init_licence()
+
     # Get arguments
     mult_pert_arg_setup = a_parsers.MultiPerturbationArgSetup()
     mult_pert_arg_setup.setup_parser()

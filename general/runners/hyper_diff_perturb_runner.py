@@ -65,6 +65,8 @@ def main(args):
 
 
 if __name__ == "__main__":
+    cfg.init_licence()
+
     # Check if correct model is running
     if cfg.MODEL != Models.SHELL_MODEL:
         g_exceptions.ModelError("Model is not valid for hyper diffusion experiments")

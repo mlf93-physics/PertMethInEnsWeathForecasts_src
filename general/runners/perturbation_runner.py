@@ -486,6 +486,8 @@ def main_run(processes, args=None, n_units=None):
 
 
 if __name__ == "__main__":
+    cfg.init_licence()
+
     # Get arguments
     pert_arg_setup = a_parsers.PerturbationArgSetup()
     pert_arg_setup.setup_parser()

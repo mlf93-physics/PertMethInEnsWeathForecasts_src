@@ -22,6 +22,8 @@ import general.utils.importing.import_data_funcs as g_import
 import general.plotting.plot_data as g_plt_data
 import general.utils.plot_utils as g_plt_utils
 import general.utils.argument_parsers as a_parsers
+import general.utils.user_interface as g_ui
+import config as cfg
 
 
 def plot_attractor(args, ax=None):
@@ -92,7 +94,7 @@ def plot_energy(args, axes=None):
 
 def plot_error_norm_vs_time(args):
 
-    g_plt_data.plot_error_norm_vs_time(args)
+    g_plt_data.plot_error_norm_vs_time(args, normalize_start_time=False)
 
 
 def plot_normal_mode_dist(args):
@@ -253,12 +255,14 @@ def plot_energy_dist(args):
 
 
 if __name__ == "__main__":
+    cfg.init_licence()
+
     # Get arguments
     stand_plot_arg_parser = a_parsers.StandardPlottingArgParser()
     stand_plot_arg_parser.setup_parser()
 
     args = stand_plot_arg_parser.args
-    print("args", args)
+    g_ui.confirm_run_setup(args)
 
     if "time_to_run" in args:
         args["Nt"] = int(args["time_to_run"] / dt * sample_rate)

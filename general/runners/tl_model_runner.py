@@ -27,6 +27,8 @@ def main(args):
 
 
 if __name__ == "__main__":
+    cfg.init_licence()
+
     # Get arguments
     rel_ref_arg_setup = a_parsers.RelReferenceArgSetup()
     rel_ref_arg_setup.setup_parser()

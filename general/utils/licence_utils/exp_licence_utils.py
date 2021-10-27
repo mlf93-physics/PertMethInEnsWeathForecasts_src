@@ -38,6 +38,9 @@ def detect_exp_licence() -> Experiment:
     elif "compare" in root_file_name:
         licence = exp.COMPARISON
 
+    elif "plot_data" in root_file_name:
+        licence = exp.NORMAL_PERTURBATION
+
     else:
         licence = None
         print("\nNo experiment licence matches the current root file. LICENCE=None\n")
