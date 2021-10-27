@@ -17,12 +17,12 @@ from shell_model_experiments.params.params import *
 import general.utils.saving.save_data_funcs as g_save
 import general.utils.saving.save_utils as g_save_utils
 import general.utils.argument_parsers as a_parsers
-from config import NUMBA_CACHE, GLOBAL_PARAMS
+import config as cfg
 
 profiler = Profiler()
 
 # Set global params
-GLOBAL_PARAMS.record_max_time = 30
+cfg.GLOBAL_PARAMS.record_max_time = 30
 
 
 @njit(
@@ -35,7 +35,7 @@ GLOBAL_PARAMS.record_max_time = 30
         types.float64,
         types.float64,
     ),
-    cache=NUMBA_CACHE,
+    cache=cfg.NUMBA_CACHE,
 )
 def run_model(
     u_old: np.ndarray,
@@ -90,7 +90,7 @@ def main(args=None):
     u_old = np.pad(u_old, pad_width=bd_size, mode="constant")
 
     # Get number of records
-    args["n_records"] = ceil((args["Nt"]) / int(GLOBAL_PARAMS.record_max_time / dt))
+    args["n_records"] = ceil((args["Nt"]) / int(cfg.GLOBAL_PARAMS.record_max_time / dt))
 
     # Write ref info file
     g_save.save_reference_info(args)
@@ -99,7 +99,7 @@ def main(args=None):
     print(
         f'\nRunning sabra model for {args["Nt"]*dt:.2f}s with a burn-in time'
         + f' of {args["burn_in_time"]:.2f}s, i.e. {args["n_records"]:d} records '
-        + f"are saved to disk each with {GLOBAL_PARAMS.record_max_time:.1f}s data\n"
+        + f"are saved to disk each with {cfg.GLOBAL_PARAMS.record_max_time:.1f}s data\n"
     )
 
     # Burn in the model for the desired burn in time
@@ -121,12 +121,13 @@ def main(args=None):
     for ir in range(args["n_records"]):
         # Calculate data out size
         # Set standard size
-        out_array_size = int(GLOBAL_PARAMS.record_max_time * tts)
+        out_array_size = int(cfg.GLOBAL_PARAMS.record_max_time * tts)
         # If last record -> adjust if size should not equal default record length
         if ir == (args["n_records"] - 1):
-            if args["Nt"] % int(GLOBAL_PARAMS.record_max_time / dt) > 0:
+            if args["Nt"] % int(cfg.GLOBAL_PARAMS.record_max_time / dt) > 0:
                 out_array_size = int(
-                    (args["Nt"] % int(GLOBAL_PARAMS.record_max_time / dt)) * sample_rate
+                    (args["Nt"] % int(cfg.GLOBAL_PARAMS.record_max_time / dt))
+                    * sample_rate
                 )
 
         data_out = np.zeros((out_array_size, n_k_vec + 1), dtype=np.complex128)

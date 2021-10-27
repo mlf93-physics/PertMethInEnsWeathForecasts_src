@@ -4,7 +4,7 @@ import subprocess as sp
 import shell_model_experiments.params as sh_params
 import lorentz63_experiments.params.params as l63_params
 from general.params.model_licences import Models
-from config import MODEL, LICENCE
+import config as cfg
 
 
 def convert_arguments_to_string(args):
@@ -22,10 +22,10 @@ def convert_arguments_to_string(args):
     # Some universal argument conversion
     arguments["time_to_run"] = "{:.2e}".format(args["time_to_run"])
 
-    if MODEL == Models.SHELL_MODEL:
+    if cfg.MODEL == Models.SHELL_MODEL:
         arguments["forcing"] = "{:.1f}".format(args["forcing"])
         arguments["ny"] = "{:.2e}".format(args["ny"])
-    elif MODEL == Models.LORENTZ63:
+    elif cfg.MODEL == Models.LORENTZ63:
         arguments["sigma"] = "{:.2e}".format(args["sigma"])
         arguments["r_const"] = "{:.2e}".format(args["r_const"])
         arguments["b_const"] = "{:.2e}".format(args["b_const"])
@@ -37,13 +37,13 @@ def generate_standard_data_name(args):
 
     adj_args = convert_arguments_to_string(args)
 
-    if MODEL == Models.SHELL_MODEL:
+    if cfg.MODEL == Models.SHELL_MODEL:
         file_name = (
             f"ny{adj_args['ny']}_ny_n{args['ny_n']}_t{adj_args['time_to_run']}"
             + f"_n_f{sh_params.n_forcing}_f{adj_args['forcing']}"
             f"_kexp{args['diff_exponent']}"
         )
-    elif MODEL == Models.LORENTZ63:
+    elif cfg.MODEL == Models.LORENTZ63:
         file_name = (
             f"sig{adj_args['sigma']}_t{adj_args['time_to_run']}"
             + f"_b{adj_args['b_const']}_r{adj_args['r_const']}_dt{l63_params.dt}"
@@ -146,13 +146,13 @@ def generate_header(
 
     header = args_to_string(args)
 
-    if MODEL == Models.SHELL_MODEL:
+    if cfg.MODEL == Models.SHELL_MODEL:
         header += (
             f", n_f={sh_params.n_forcing}, dt={sh_params.dt}, epsilon={sh_params.epsilon}, "
             + f"lambda={sh_params.lambda_const}, N_data={n_data}, "
             + f"sample_rate={sh_params.sample_rate}, "
         )
-    elif MODEL == Models.LORENTZ63:
+    elif cfg.MODEL == Models.LORENTZ63:
         header += (
             f", dt={l63_params.dt}, N_data={n_data}, "
             + f"sample_rate={l63_params.sample_rate}, "
@@ -160,7 +160,7 @@ def generate_header(
 
     optional_append = ""
     if "licence" in append_options:
-        optional_append += f"experiment={LICENCE}, "
+        optional_append += f"experiment={cfg.LICENCE}, "
 
     header += optional_append + append_extra
 

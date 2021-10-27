@@ -12,7 +12,7 @@ import numpy as np
 import general.utils.user_interface as g_ui
 from general.plotting.plot_params import *
 from general.params.model_licences import Models
-from config import MODEL
+import config as cfg
 
 
 def get_non_repeating_colors(
@@ -132,13 +132,13 @@ def generate_title(
     else:
         file_suffix = ""
 
-    if MODEL == Models.SHELL_MODEL:
+    if cfg.MODEL == Models.SHELL_MODEL:
         title = (
             f'; $\\alpha$={int(header_dict["diff_exponent"])}'
             + f', $n_{{\\nu}}$={int(header_dict["ny_n"])}, $\\nu$={header_dict["ny"]:.2e}'
             + f', time={header_dict["time_to_run"]}, '
         )
-    elif MODEL == Models.LORENTZ63:
+    elif cfg.MODEL == Models.LORENTZ63:
         title = (
             f'; sigma={header_dict["sigma"]}'
             + f', $b$={header_dict["b_const"]:.2e}, r={header_dict["r_const"]}'

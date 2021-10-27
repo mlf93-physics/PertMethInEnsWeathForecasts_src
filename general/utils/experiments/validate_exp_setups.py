@@ -1,6 +1,6 @@
 from general.params.experiment_licences import Experiments as EXP
 import general.utils.exceptions as g_exceptions
-from config import LICENCE
+import config as cfg
 
 
 def validate_lorentz_block_setup(exp_setup={}):
@@ -17,12 +17,12 @@ def validate_start_time_method(exp_setup: dict = {}):
     """Check that the setup is consistent in terms of the method to determine
     the start times"""
 
-    if LICENCE == EXP.LORENTZ_BLOCK:
+    if cfg.LICENCE == EXP.LORENTZ_BLOCK:
         offset_var = "block_offset"
-    elif LICENCE == EXP.BREEDING_VECTORS or LICENCE == EXP.LYAPUNOV_VECTORS:
+    elif cfg.LICENCE == EXP.BREEDING_VECTORS or cfg.LICENCE == EXP.LYAPUNOV_VECTORS:
         offset_var = "vector_offset"
     else:
-        raise g_exceptions.LicenceImplementationError(licence=LICENCE)
+        raise g_exceptions.LicenceImplementationError(licence=cfg.LICENCE)
 
     if "start_times" in exp_setup and "eval_times" in exp_setup:
         raise g_exceptions.ExperimentSetupError(
@@ -42,7 +42,7 @@ def validate_start_time_method(exp_setup: dict = {}):
                 + " set in the experiment setup. This is not valid; choose one of them to govern start times."
             )
         else:
-            if LICENCE == EXP.BREEDING_VECTORS:
+            if cfg.LICENCE == EXP.BREEDING_VECTORS:
                 if (
                     exp_setup["eval_times"][0]
                     - exp_setup["integration_time"] * exp_setup["n_cycles"]
@@ -54,7 +54,7 @@ def validate_start_time_method(exp_setup: dict = {}):
                         exp_variable=f"eval_time = {exp_setup['eval_times'][0]};"
                         + f" integration_time = {exp_setup['integration_time']}",
                     )
-            elif LICENCE == EXP.LYAPUNOV_VECTORS:
+            elif cfg.LICENCE == EXP.LYAPUNOV_VECTORS:
                 if exp_setup["eval_times"][0] - exp_setup["integration_time"] < 0:
                     raise g_exceptions.ExperimentSetupError(
                         "Too long integration time compared to the chosen evaluation time",

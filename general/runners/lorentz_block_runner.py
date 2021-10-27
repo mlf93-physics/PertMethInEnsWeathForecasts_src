@@ -26,16 +26,16 @@ import general.utils.runner_utils as r_utils
 import general.utils.user_interface as g_ui
 import general.utils.argument_parsers as a_parsers
 from general.params.model_licences import Models
-from config import MODEL, GLOBAL_PARAMS
+import config as cfg
 
 # Get parameters for model
-if MODEL == Models.SHELL_MODEL:
+if cfg.MODEL == Models.SHELL_MODEL:
     params = sh_params
-elif MODEL == Models.LORENTZ63:
+elif cfg.MODEL == Models.LORENTZ63:
     params = l63_params
 
 # Set global params
-GLOBAL_PARAMS.ref_run = False
+cfg.GLOBAL_PARAMS.ref_run = False
 
 
 def main(args):

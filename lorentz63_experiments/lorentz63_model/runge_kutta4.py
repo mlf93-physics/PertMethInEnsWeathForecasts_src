@@ -3,7 +3,7 @@ import sys
 sys.path.append("..")
 from numba import njit, types
 import lorentz63_experiments.perturbations.normal_modes as l63_nm_estimator
-from config import NUMBA_CACHE
+import config as cfg
 
 
 @njit(
@@ -12,7 +12,7 @@ from config import NUMBA_CACHE
         types.Array(types.float64, 1, "C", readonly=False),
         types.Array(types.float64, 2, "C", readonly=False),
     ),
-    cache=NUMBA_CACHE,
+    cache=cfg.NUMBA_CACHE,
 )
 def derivative_evaluator(u_old=None, du=None, deriv_matrix=None):
     """Derivative evaluator used in the Runge-Kutta method.
@@ -50,7 +50,7 @@ def derivative_evaluator(u_old=None, du=None, deriv_matrix=None):
         types.Array(types.float64, 1, "C", readonly=False),
         types.Array(types.float64, 2, "C", readonly=False),
     ),
-    cache=NUMBA_CACHE,
+    cache=cfg.NUMBA_CACHE,
 )
 def runge_kutta4(y0=0, h=1, du=None, deriv_matrix=None):
     """Performs the Runge-Kutta-4 integration of the lorentz model.
@@ -97,7 +97,7 @@ def runge_kutta4(y0=0, h=1, du=None, deriv_matrix=None):
         types.Array(types.float64, 2, "C", readonly=False),
         types.float64,
     ),
-    cache=NUMBA_CACHE,
+    cache=cfg.NUMBA_CACHE,
 )
 def tl_derivative_evaluator(
     u_old=None, du=None, u_ref=None, deriv_matrix=None, r_const=None
@@ -138,7 +138,7 @@ def tl_derivative_evaluator(
         types.Array(types.float64, 2, "C", readonly=False),
         types.float64,
     ),
-    cache=NUMBA_CACHE,
+    cache=cfg.NUMBA_CACHE,
 )
 def tl_runge_kutta4(y0=0, h=1, du=None, u_ref=None, deriv_matrix=None, r_const=28):
     """Performs the Runge-Kutta-4 integration of the lorentz model.

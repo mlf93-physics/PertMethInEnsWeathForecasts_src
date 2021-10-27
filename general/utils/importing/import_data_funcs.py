@@ -11,12 +11,12 @@ import lorentz63_experiments.params.params as l63_params
 from general.params.model_licences import Models
 import general.utils.util_funcs as g_utils
 import general.utils.exceptions as g_exceptions
-from config import MODEL
+import config as cfg
 
 # Get parameters for model
-if MODEL == Models.SHELL_MODEL:
+if cfg.MODEL == Models.SHELL_MODEL:
     params = sh_params
-elif MODEL == Models.LORENTZ63:
+elif cfg.MODEL == Models.LORENTZ63:
     params = l63_params
 
 
@@ -284,7 +284,7 @@ def import_perturbation_velocities(
         Raised if no datapath is specified
     """
 
-    if MODEL != Models.SHELL_MODEL:
+    if cfg.MODEL != Models.SHELL_MODEL:
         if "shell_cutoff" in args:
             if args["shellcutoff"] is not None:
                 raise g_exceptions.InvalidRuntimeArgument(argument="shell_cutoff")

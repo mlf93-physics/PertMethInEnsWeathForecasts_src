@@ -6,12 +6,12 @@ from pathlib import Path
 import shell_model_experiments.params as sh_params
 import lorentz63_experiments.params.params as l63_params
 from general.params.model_licences import Models
-from config import MODEL
+import config as cfg
 
 # Get parameters for model
-if MODEL == Models.SHELL_MODEL:
+if cfg.MODEL == Models.SHELL_MODEL:
     params = sh_params
-elif MODEL == Models.LORENTZ63:
+elif cfg.MODEL == Models.LORENTZ63:
     params = l63_params
 
 
@@ -124,7 +124,7 @@ def handle_different_headers(header_dict):
 
 
 def determine_params_from_header_dict(header_dict, args):
-    if MODEL == Models.SHELL_MODEL:
+    if cfg.MODEL == Models.SHELL_MODEL:
 
         # Save parameters to args dict:
         args["forcing"] = header_dict["forcing"].real
@@ -144,7 +144,7 @@ def determine_params_from_header_dict(header_dict, args):
                 args["forcing"], args["ny_n"], args["diff_exponent"]
             )
 
-    elif MODEL == Models.LORENTZ63:
+    elif cfg.MODEL == Models.LORENTZ63:
         print("Nothing specific to do with args in lorentz63 model yet")
 
 

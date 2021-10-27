@@ -18,16 +18,16 @@ import general.utils.saving.save_vector_funcs as v_save
 import general.utils.argument_parsers as a_parsers
 import general.utils.user_interface as g_ui
 from general.params.model_licences import Models
-from config import MODEL, GLOBAL_PARAMS
+import config as cfg
 
 # Get parameters for model
-if MODEL == Models.SHELL_MODEL:
+if cfg.MODEL == Models.SHELL_MODEL:
     params = sh_params
-elif MODEL == Models.LORENTZ63:
+elif cfg.MODEL == Models.LORENTZ63:
     params = l63_params
 
 # Set global params
-GLOBAL_PARAMS.ref_run = False
+cfg.GLOBAL_PARAMS.ref_run = False
 
 
 def main(args):
@@ -129,10 +129,10 @@ if __name__ == "__main__":
     g_ui.confirm_run_setup(args)
 
     # Add submodel attribute
-    MODEL.submodel = "TL"
+    cfg.MODEL.submodel = "TL"
 
     # Add ny argument
-    if MODEL == Models.SHELL_MODEL:
+    if cfg.MODEL == Models.SHELL_MODEL:
         args["ny"] = params.ny_from_ny_n_and_forcing(
             args["forcing"], args["ny_n"], args["diff_exponent"]
         )

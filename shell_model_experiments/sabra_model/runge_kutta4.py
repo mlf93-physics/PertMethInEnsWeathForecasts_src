@@ -4,7 +4,7 @@ sys.path.append("..")
 from numba import njit, types
 from shell_model_experiments.params.params import *
 import general.utils.custom_decorators as c_dec
-from config import NUMBA_CACHE, NUMBA_ON
+import config as cfg
 
 
 @njit(
@@ -13,7 +13,7 @@ from config import NUMBA_CACHE, NUMBA_ON
         types.Array(types.complex128, 1, "C", readonly=False),
         types.float64,
     ),
-    cache=NUMBA_CACHE,
+    cache=cfg.NUMBA_CACHE,
 )
 def derivative_evaluator(
     u_old: np.ndarray = None,
@@ -59,7 +59,7 @@ def derivative_evaluator(
         types.Array(types.complex128, 1, "C", readonly=False),
         types.float64,
     ),
-    cache=NUMBA_CACHE,
+    cache=cfg.NUMBA_CACHE,
 )
 def runge_kutta4(
     y0: np.ndarray = 0,

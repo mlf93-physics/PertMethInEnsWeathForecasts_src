@@ -10,12 +10,12 @@ import general.utils.util_funcs as g_utils
 import general.utils.importing.import_data_funcs as g_import
 import general.utils.exceptions as g_exceptions
 from general.params.model_licences import Models
-from config import MODEL
+import config as cfg
 
 # Get parameters for model
-if MODEL == Models.SHELL_MODEL:
+if cfg.MODEL == Models.SHELL_MODEL:
     params = sh_params
-elif MODEL == Models.LORENTZ63:
+elif cfg.MODEL == Models.LORENTZ63:
     params = l63_params
 
 
@@ -32,7 +32,7 @@ def import_lorentz_block_perturbations(args=None, raw_perturbations=True):
 
     """
 
-    if MODEL != Models.SHELL_MODEL:
+    if cfg.MODEL != Models.SHELL_MODEL:
         if "shell_cutoff" in args:
             if args["shell_cutoff"] is not None:
                 raise g_exceptions.InvalidRuntimeArgument(argument="shell_cutoff")

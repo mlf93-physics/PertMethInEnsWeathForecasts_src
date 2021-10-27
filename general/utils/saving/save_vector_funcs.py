@@ -5,12 +5,12 @@ import lorentz63_experiments.params.params as l63_params
 import general.utils.saving.save_utils as g_save_utils
 from general.params.experiment_licences import Experiments as EXP
 from general.params.model_licences import Models
-from config import MODEL, LICENCE
+import config as cfg
 
 # Get parameters for model
-if MODEL == Models.SHELL_MODEL:
+if cfg.MODEL == Models.SHELL_MODEL:
     params = sh_params
-elif MODEL == Models.LORENTZ63:
+elif cfg.MODEL == Models.LORENTZ63:
     params = l63_params
 
 
@@ -26,12 +26,12 @@ def save_vector_unit(data, perturb_position=None, unit=0, args=None, exp_setup=N
         pl.Path(args["datapath"], args["out_exp_folder"]), args=args
     )
     # Calculate position of when the vector is to be valid
-    if LICENCE == EXP.BREEDING_VECTORS:
+    if cfg.LICENCE == EXP.BREEDING_VECTORS:
         val_pos = int(
             perturb_position
             + exp_setup["n_cycles"] * exp_setup["integration_time"] * params.tts
         )
-    elif LICENCE == EXP.LYAPUNOV_VECTORS:
+    elif cfg.LICENCE == EXP.LYAPUNOV_VECTORS:
         val_pos = int(perturb_position + exp_setup["integration_time"] * params.tts)
 
     if perturb_position is not None:
@@ -50,9 +50,9 @@ def save_vector_unit(data, perturb_position=None, unit=0, args=None, exp_setup=N
     stand_data_name = g_save_utils.generate_standard_data_name(args)
     out_name = f"_{stand_data_name}"
 
-    if LICENCE == EXP.BREEDING_VECTORS:
+    if cfg.LICENCE == EXP.BREEDING_VECTORS:
         prefix = "breed_vectors"
-    elif LICENCE == EXP.LYAPUNOV_VECTORS:
+    elif cfg.LICENCE == EXP.LYAPUNOV_VECTORS:
         prefix = "lyapunov_vectors"
 
     suffix = f"_unit{unit}"

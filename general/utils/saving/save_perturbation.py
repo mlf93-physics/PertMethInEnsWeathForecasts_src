@@ -1,7 +1,7 @@
 import general.utils.saving.save_lorentz_block_funcs as lb_save
 from general.params.experiment_licences import Experiments as EXP
 import general.utils.saving.save_data_funcs as g_save
-from config import LICENCE
+import config as cfg
 
 
 def save_perturbation_data(
@@ -20,7 +20,7 @@ def save_perturbation_data(
     args : dict, optional
         Run-time arguments, by default None
     """
-    if LICENCE == EXP.LORENTZ_BLOCK:
+    if cfg.LICENCE == EXP.LORENTZ_BLOCK:
         lb_save.save_lorentz_block_data(
             data_out,
             prefix=f"lorentz{perturb_count}_",
@@ -28,16 +28,16 @@ def save_perturbation_data(
             args=args,
         )
         return
-    elif LICENCE == EXP.NORMAL_PERTURBATION:
+    elif cfg.LICENCE == EXP.NORMAL_PERTURBATION:
         prefix = f"perturb{perturb_count}_"
-    elif LICENCE == EXP.BREEDING_VECTORS:
+    elif cfg.LICENCE == EXP.BREEDING_VECTORS:
         prefix = f"breed_perturb{perturb_count}_"
-    elif LICENCE == EXP.LYAPUNOV_VECTORS:
+    elif cfg.LICENCE == EXP.LYAPUNOV_VECTORS:
         prefix = f"lyapunov_perturb{perturb_count}_"
-    elif LICENCE == EXP.HYPER_DIFFUSIVITY:
+    elif cfg.LICENCE == EXP.HYPER_DIFFUSIVITY:
         prefix = f"hyper_perturb{perturb_count}_"
     else:
-        print(f"No saving method present for the current licence ({LICENCE})")
+        print(f"No saving method present for the current licence ({cfg.LICENCE})")
 
     g_save.save_data(
         data_out,

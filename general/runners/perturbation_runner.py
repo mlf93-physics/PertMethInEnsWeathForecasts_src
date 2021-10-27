@@ -43,17 +43,17 @@ import general.utils.exceptions as g_exceptions
 import general.utils.argument_parsers as a_parsers
 import general.utils.user_interface as g_ui
 from general.params.model_licences import Models
-from config import MODEL, LICENCE, GLOBAL_PARAMS
+import config as cfg
 
 
 # Get parameters for model
-if MODEL == Models.SHELL_MODEL:
+if cfg.MODEL == Models.SHELL_MODEL:
     params = sh_params
-elif MODEL == Models.LORENTZ63:
+elif cfg.MODEL == Models.LORENTZ63:
     params = l63_params
 
 # Set global params
-GLOBAL_PARAMS.ref_run = False
+cfg.GLOBAL_PARAMS.ref_run = False
 
 
 def perturbation_runner(
@@ -79,8 +79,8 @@ def perturbation_runner(
         + f" {run_count // args['n_runs_per_profile']}, profile run"
         + f" {run_count % args['n_runs_per_profile']}"
     )
-    if MODEL == Models.SHELL_MODEL:
-        if MODEL.submodel is None:
+    if cfg.MODEL == Models.SHELL_MODEL:
+        if cfg.MODEL.submodel is None:
             sh_model(
                 u_old,
                 du_array,
@@ -93,10 +93,10 @@ def perturbation_runner(
         else:
             g_exceptions.ModelError(
                 "Submodel invalid or not implemented yet",
-                model=f"{MODEL.submodel} {MODEL}",
+                model=f"{cfg.MODEL.submodel} {cfg.MODEL}",
             )
-    elif MODEL == Models.LORENTZ63:
-        if MODEL.submodel is None:
+    elif cfg.MODEL == Models.LORENTZ63:
+        if cfg.MODEL.submodel is None:
             # Model specific setup
             deriv_matrix = ut_funcs.setup_deriv_matrix(args)
             l63_model(
@@ -106,7 +106,7 @@ def perturbation_runner(
                 data_out,
                 args["Nt"] + args["endpoint"] * 1,
             )
-        elif MODEL.submodel == "TL":
+        elif cfg.MODEL.submodel == "TL":
             deriv_matrix = l63_nm_estimator.init_jacobian(args)
 
             l63_tl_model(
@@ -126,7 +126,7 @@ def perturbation_runner(
         else:
             g_exceptions.ModelError(
                 "Submodel invalid or not implemented yet",
-                model=f"{MODEL.submodel} {MODEL}",
+                model=f"{cfg.MODEL.submodel} {cfg.MODEL}",
             )
 
     if not args["skip_save_data"]:
@@ -137,14 +137,14 @@ def perturbation_runner(
             args=args,
         )
 
-    if LICENCE == EXP.BREEDING_VECTORS or LICENCE == EXP.LYAPUNOV_VECTORS:
+    if cfg.LICENCE == EXP.BREEDING_VECTORS or cfg.LICENCE == EXP.LYAPUNOV_VECTORS:
         # Save latest state vector to output dir
         data_out_list.append(data_out[-1, 1:])
 
 
 def prepare_run_times(args):
 
-    if LICENCE != EXP.LORENTZ_BLOCK:
+    if cfg.LICENCE != EXP.LORENTZ_BLOCK:
         num_perturbations = args["n_runs_per_profile"] * args["n_profiles"]
         times_to_run = np.ones(num_perturbations) * args["time_to_run"]
         Nt_array = (times_to_run / params.dt).astype(np.int64)
@@ -209,7 +209,7 @@ def prepare_perturbations(args: dict, raw_perturbations: bool = False):
 
         if args["pert_mode"] == "nm":
             print("\nRunning with NORMAL MODE perturbations\n")
-            if MODEL == Models.SHELL_MODEL:
+            if cfg.MODEL == Models.SHELL_MODEL:
                 (perturb_vectors, _, _,) = sh_nm_estimator.find_normal_modes(
                     u_init_profiles[
                         :,
@@ -220,7 +220,7 @@ def prepare_perturbations(args: dict, raw_perturbations: bool = False):
                     dev_plot_active=False,
                     local_ny=header_dict["ny"],
                 )
-            elif MODEL == Models.LORENTZ63:
+            elif cfg.MODEL == Models.LORENTZ63:
                 perturb_vectors, _, _, _ = l63_nm_estimator.find_normal_modes(
                     u_init_profiles[
                         :,
@@ -273,11 +273,11 @@ def prepare_perturbations(args: dict, raw_perturbations: bool = False):
     # Check if single shell perturb should be activated
     elif args["single_shell_perturb"] is not None:
         # Specific to shell model setup
-        if MODEL == Models.SHELL_MODEL:
+        if cfg.MODEL == Models.SHELL_MODEL:
             print("\nRunning in single shell perturb mode\n")
             perturb_vectors = None
         else:
-            raise g_exceptions.ModelError(model=MODEL)
+            raise g_exceptions.ModelError(model=cfg.MODEL)
     else:
         _pert_arg = (
             "pert_mode: " + args["pert_mode"]
@@ -392,7 +392,7 @@ def main_setup(
 
         raw_perturbations = False
         # Get only raw_perturbations if licence is LYAPUNOV_VECTORS
-        if LICENCE == EXP.LYAPUNOV_VECTORS:
+        if cfg.LICENCE == EXP.LYAPUNOV_VECTORS:
             raw_perturbations = True
 
         u_profiles_perturbed, perturb_positions = prepare_perturbations(
@@ -444,9 +444,9 @@ def main_run(processes, args=None, n_units=None):
     num_processes = len(processes)
 
     # if n_units is not None:
-    #     if LICENCE == EXP.NORMAL_PERTURBATION or LICENCE == EXP.BREEDING_VECTORS:
+    #     if cfg.LICENCE == EXP.NORMAL_PERTURBATION or cfg.LICENCE == EXP.BREEDING_VECTORS:
     #         num_processes_per_unit = args["n_profiles"] * args["n_runs_per_profile"]
-    #     elif LICENCE == EXP.LORENTZ_BLOCK:
+    #     elif cfg.LICENCE == EXP.LORENTZ_BLOCK:
     #         num_processes_per_unit = 2 * args["n_profiles"] * args["n_runs_per_profile"]
 
     for j in range(num_processes // cpu_count):

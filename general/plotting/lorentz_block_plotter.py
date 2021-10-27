@@ -18,12 +18,12 @@ import general.plotting.plot_params as plt_params
 import general.utils.argument_parsers as a_parsers
 import general.utils.exceptions as g_exceptions
 from general.params.model_licences import Models
-from config import MODEL
+import config as cfg
 
 # Get parameters for model
-if MODEL == Models.SHELL_MODEL:
+if cfg.MODEL == Models.SHELL_MODEL:
     params = sh_params
-elif MODEL == Models.LORENTZ63:
+elif cfg.MODEL == Models.LORENTZ63:
     params = l63_params
 
 # Setup plotting defaults

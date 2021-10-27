@@ -14,12 +14,12 @@ import general.utils.user_interface as g_ui
 import general.utils.importing.import_perturbation_data as pt_import
 import general.utils.argument_parsers as a_parsers
 from general.params.model_licences import Models
-from config import MODEL
+import config as cfg
 
 # Get parameters for model
-if MODEL == Models.SHELL_MODEL:
+if cfg.MODEL == Models.SHELL_MODEL:
     params = sh_params
-elif MODEL == Models.LORENTZ63:
+elif cfg.MODEL == Models.LORENTZ63:
     params = l63_params
 
 

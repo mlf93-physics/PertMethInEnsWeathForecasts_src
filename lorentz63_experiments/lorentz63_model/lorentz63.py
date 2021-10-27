@@ -10,12 +10,12 @@ from lorentz63_experiments.params.params import *
 import lorentz63_experiments.utils.util_funcs as ut_funcs
 import general.utils.saving.save_data_funcs as g_save
 import general.utils.argument_parsers as a_parsers
-from config import NUMBA_CACHE, GLOBAL_PARAMS
+import config as cfg
 
 profiler = Profiler()
 
 # Set global params
-GLOBAL_PARAMS.record_max_time = 3000
+cfg.GLOBAL_PARAMS.record_max_time = 3000
 
 
 @njit(
@@ -26,7 +26,7 @@ GLOBAL_PARAMS.record_max_time = 3000
         types.Array(types.float64, 2, "C", readonly=False),
         types.int64,
     ),
-    cache=NUMBA_CACHE,
+    cache=cfg.NUMBA_CACHE,
 )
 def run_model(u_old, du_array, deriv_matrix, data_out, Nt_local):
     """Execute the integration of the Lorentz-63 model.
@@ -66,13 +66,15 @@ def main(args=None):
     deriv_matrix = ut_funcs.setup_deriv_matrix(args)
 
     # Get number of records
-    args["n_records"] = math.ceil(args["Nt"] / int(GLOBAL_PARAMS.record_max_time / dt))
+    args["n_records"] = math.ceil(
+        args["Nt"] / int(cfg.GLOBAL_PARAMS.record_max_time / dt)
+    )
 
     profiler.start()
     print(
         f'\nRunning Lorentz63 model for {args["Nt"]*dt:.2f}s with a burn-in time'
         + f' of {args["burn_in_time"]:.2f}s, i.e. {args["n_records"]:d} records '
-        + f"are saved to disk each with {GLOBAL_PARAMS.record_max_time:.1f}s data\n"
+        + f"are saved to disk each with {cfg.GLOBAL_PARAMS.record_max_time:.1f}s data\n"
     )
 
     # Burn in the model for the desired burn in time
@@ -85,15 +87,15 @@ def main(args=None):
     for ir in range(args["n_records"]):
         # Calculate data out size
         if ir == (args["n_records"] - 1):
-            if args["Nt"] % int(GLOBAL_PARAMS.record_max_time / dt) > 0:
+            if args["Nt"] % int(cfg.GLOBAL_PARAMS.record_max_time / dt) > 0:
                 out_array_size = int(
-                    (args["Nt"] / dt % int(GLOBAL_PARAMS.record_max_time / dt))
+                    (args["Nt"] / dt % int(cfg.GLOBAL_PARAMS.record_max_time / dt))
                     * sample_rate
                 )
             else:
-                out_array_size = int(GLOBAL_PARAMS.record_max_time * tts)
+                out_array_size = int(cfg.GLOBAL_PARAMS.record_max_time * tts)
         else:
-            out_array_size = int(GLOBAL_PARAMS.record_max_time * tts)
+            out_array_size = int(cfg.GLOBAL_PARAMS.record_max_time * tts)
 
         data_out = np.zeros((out_array_size, sdim + 1), dtype=np.float64)
 

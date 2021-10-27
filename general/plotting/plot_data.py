@@ -9,12 +9,12 @@ import general.utils.plot_utils as g_plt_utils
 import general.utils.util_funcs as g_utils
 from general.params.experiment_licences import Experiments as EXP
 from general.params.model_licences import Models
-from config import MODEL, LICENCE
+import config as cfg
 
 # Get parameters for model
-if MODEL == Models.SHELL_MODEL:
+if cfg.MODEL == Models.SHELL_MODEL:
     params = sh_params
-elif MODEL == Models.LORENTZ63:
+elif cfg.MODEL == Models.LORENTZ63:
     params = l63_params
 
 
@@ -156,7 +156,7 @@ def plot_error_norm_vs_time(
         axes = plt.gca()
 
     # Get non-repeating colorcycle
-    if LICENCE == EXP.BREEDING_VECTORS or LICENCE == EXP.LYAPUNOV_VECTORS:
+    if cfg.LICENCE == EXP.BREEDING_VECTORS or cfg.LICENCE == EXP.LYAPUNOV_VECTORS:
         n_colors = exp_setup["n_vectors"]
     else:
         n_colors = num_perturbations
@@ -190,7 +190,7 @@ def plot_error_norm_vs_time(
     axes.set_yscale("log")
 
     if legend_on:
-        if LICENCE not in [EXP.BREEDING_VECTORS, EXP.LYAPUNOV_VECTORS]:
+        if cfg.LICENCE not in [EXP.BREEDING_VECTORS, EXP.LYAPUNOV_VECTORS]:
             axes.legend(perturb_time_pos_list_legend)
 
     if args["xlim"] is not None:

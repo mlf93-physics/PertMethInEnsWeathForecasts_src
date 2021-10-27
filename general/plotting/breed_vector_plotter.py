@@ -19,12 +19,12 @@ import general.analyses.breed_vector_eof_analysis as bv_analysis
 import general.utils.argument_parsers as a_parsers
 import general.utils.user_interface as g_ui
 from general.params.model_licences import Models
-from config import MODEL
+import config as cfg
 
 # Get parameters for model
-if MODEL == Models.SHELL_MODEL:
+if cfg.MODEL == Models.SHELL_MODEL:
     params = sh_params
-elif MODEL == Models.LORENTZ63:
+elif cfg.MODEL == Models.LORENTZ63:
     params = l63_params
 
 
@@ -221,9 +221,9 @@ def plot_breed_error_norm(args):
     args["ref_start_time"] = start_time
     args["ref_end_time"] = end_time
 
-    if MODEL == Models.SHELL_MODEL:
+    if cfg.MODEL == Models.SHELL_MODEL:
         sh_plot.plots_related_to_energy(args, axes=axes[1])
-    elif MODEL == Models.LORENTZ63:
+    elif cfg.MODEL == Models.LORENTZ63:
         l63_plot.plot_energy(args, axes=axes[1])
 
 

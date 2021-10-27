@@ -16,12 +16,12 @@ import general.plotting.plot_data as g_plt_data
 import general.analyses.plot_analyses as g_plt_anal
 import general.utils.argument_parsers as a_parsers
 from general.params.model_licences import Models
-from config import MODEL
+import config as cfg
 
 # Get parameters for model
-if MODEL == Models.SHELL_MODEL:
+if cfg.MODEL == Models.SHELL_MODEL:
     params = sh_params
-elif MODEL == Models.LORENTZ63:
+elif cfg.MODEL == Models.LORENTZ63:
     params = l63_params
 
 # Setup plotting defaults
@@ -55,9 +55,9 @@ def plot_tlm_solution(args, axes=None):
     args["ref_start_time"] = start_time
     args["ref_end_time"] = start_time + 6 * exp_setup["vector_offset"]
 
-    if MODEL == Models.SHELL_MODEL:
+    if cfg.MODEL == Models.SHELL_MODEL:
         sh_plot.plots_related_to_energy(args, axes=axes[1])
-    elif MODEL == Models.LORENTZ63:
+    elif cfg.MODEL == Models.LORENTZ63:
         l63_plot.plot_energy(args, axes=axes[1])
 
     axes[0].set_xlim(args["ref_start_time"], args["ref_end_time"])

@@ -11,12 +11,12 @@ import general.utils.importing.import_data_funcs as g_import
 import general.utils.importing.import_perturbation_data as pt_import
 import general.utils.util_funcs as g_utils
 from general.params.model_licences import Models
-from config import MODEL
+import config as cfg
 
 # Get parameters for model
-if MODEL == Models.SHELL_MODEL:
+if cfg.MODEL == Models.SHELL_MODEL:
     params = sh_params
-elif MODEL == Models.LORENTZ63:
+elif cfg.MODEL == Models.LORENTZ63:
     params = l63_params
 
 
@@ -63,10 +63,10 @@ def calculate_perturbations(
                 # Generate random error
                 error = np.random.rand(2 * params.sdim).astype(np.float64) * 2 - 1
 
-                if MODEL == Models.SHELL_MODEL:
+                if cfg.MODEL == Models.SHELL_MODEL:
                     perturb.real = error[: params.sdim]
                     perturb.imag = error[params.sdim :]
-                elif MODEL == Models.LORENTZ63:
+                elif cfg.MODEL == Models.LORENTZ63:
                     perturb = error[: params.sdim]
 
             # Apply normal mode perturbation
