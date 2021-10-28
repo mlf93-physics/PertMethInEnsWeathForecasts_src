@@ -102,7 +102,7 @@ def main(args):
         # Save lyapunov vectors
         v_save.save_vector_unit(
             data_out,
-            perturb_position=int(start_times[i] * params.tts),
+            perturb_position=int(round(start_times[i] * params.tts)),
             unit=i,
             args=args,
             exp_setup=exp_setup,

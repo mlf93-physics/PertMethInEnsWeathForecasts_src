@@ -2,13 +2,13 @@ import os
 import pathlib as pl
 import random
 import itertools as it
-from typing import Tuple
 import numpy as np
 import shell_model_experiments.params as sh_params
 import lorentz63_experiments.params.params as l63_params
 import general.utils.util_funcs as g_utils
 import general.utils.importing.import_data_funcs as g_import
 import general.utils.exceptions as g_exceptions
+from general.utils.module_import.type_import import *
 from general.params.model_licences import Models
 import config as cfg
 
@@ -59,7 +59,7 @@ def import_lorentz_block_perturbations(args=None, raw_perturbations=True):
     ) = g_import.imported_sorted_perturbation_info(args["exp_folder"], args)
     # Match the positions to the relevant ref files
     ref_file_match = g_utils.match_start_positions_to_ref_file(
-        args=args, ref_header_dict=ref_header_dict, positions=perturb_time_pos_list
+        ref_header_dict=ref_header_dict, positions=perturb_time_pos_list
     )
 
     # Get sorted file paths
@@ -203,7 +203,9 @@ def import_profiles_for_nm_analysis(args: dict = None) -> Tuple[np.ndarray, dict
     return profiles, ref_header_dict
 
 
-def import_perturb_vectors(args: dict) -> Tuple[np.ndarray, np.ndarray, list, list]:
+def import_perturb_vectors(
+    args: dict,
+) -> Tuple[np.ndarray, np.ndarray, List[int], List[dict]]:
     """Import units of perturbation vectors, e.g. BVs or SVs
 
     Parameters
@@ -261,9 +263,9 @@ def import_perturb_vectors(args: dict) -> Tuple[np.ndarray, np.ndarray, list, li
     )
 
     # Prepare start_time to import correct u_profiles
-    eval_pos: list = []
+    eval_pos: List[int] = []
     for i in range(len(perturb_file_names)):
-        eval_pos.append(perturb_header_dicts[i]["val_pos"])
+        eval_pos.append(int(round(perturb_header_dicts[i]["val_pos"])))
 
     args["start_times"] = np.array(eval_pos) * params.stt
 

@@ -168,7 +168,7 @@ def save_or_show_plot(args: dict):
 
         for i in plt.get_fignums():
             fig = plt.figure(i)
-            file_name = "error_norm_rd_bv_and_bv_eof_test_compare"
+            file_name = "error_norm_comparison_ttr0.1"
 
             name = g_ui.get_name_input(
                 "Proposed name of figure: ", proposed_input=file_name

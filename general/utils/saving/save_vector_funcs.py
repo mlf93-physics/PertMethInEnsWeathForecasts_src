@@ -14,7 +14,28 @@ elif cfg.MODEL == Models.LORENTZ63:
     params = l63_params
 
 
-def save_vector_unit(data, perturb_position=None, unit=0, args=None, exp_setup=None):
+def save_vector_unit(
+    data: np.ndarray,
+    perturb_position: int = None,
+    unit: int = 0,
+    args: dict = None,
+    exp_setup: dict = None,
+) -> None:
+    """Save a vector unit to disk (e.g. BV unit)
+
+    Parameters
+    ----------
+    data : np.ndarray
+        The vector data to be saved
+    perturb_position : int, optional
+        The index position of the vector, by default None
+    unit : int, optional
+        The unit number, by default 0
+    args : dict, optional
+        Run-time arguments, by default None
+    exp_setup : dict, optional
+        Experiment setup, by default None
+    """
     if data.shape[0] == params.sdim:
         data = data.T
 

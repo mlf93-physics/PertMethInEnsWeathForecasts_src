@@ -20,7 +20,13 @@ elif cfg.MODEL == Models.LORENTZ63:
     params = l63_params
 
 
-def save_data(data_out, subsubfolder="", prefix="", perturb_position=None, args=None):
+def save_data(
+    data_out: np.ndarray,
+    subsubfolder: str = "",
+    prefix: str = "",
+    perturb_position: int = None,
+    args: dict = None,
+):
     """Save the data to disc.
 
     Parameters
@@ -69,7 +75,7 @@ def save_data(data_out, subsubfolder="", prefix="", perturb_position=None, args=
         # Prepare extra header items
         perturb_header_extra = ""
         if perturb_position is not None:
-            perturb_header_extra = f"perturb_pos={int(perturb_position)}, "
+            perturb_header_extra = f"perturb_pos={perturb_position}, "
 
         header = g_save_utils.generate_header(
             args,

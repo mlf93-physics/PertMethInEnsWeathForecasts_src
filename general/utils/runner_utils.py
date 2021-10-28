@@ -2,6 +2,7 @@ import sys
 
 sys.path.append("..")
 import pathlib as pl
+import decimal
 import general.utils.importing.import_data_funcs as g_import
 from general.params.experiment_licences import Experiments as EXP
 import general.utils.saving.save_data_funcs as g_save
@@ -61,11 +62,18 @@ def generate_start_times(exp_setup: dict, args: dict):
         else:
             _time_offset = 0
 
+        # Determine precision of time
+        _precision = (
+            decimal.Decimal(str(exp_setup["integration_time"])).as_tuple().exponent
+        )
+
         num_possible_units = int(
             (ref_header_dict["time_to_run"] - _time_offset) // exp_setup[offset_var]
         )
+        # Calculate start_times and round off correctly
         start_times = [
-            exp_setup[offset_var] * i + _time_offset for i in range(num_possible_units)
+            round(exp_setup[offset_var] * i + _time_offset, abs(_precision))
+            for i in range(num_possible_units)
         ]
     elif "start_times" in exp_setup:
         num_possible_units = len(exp_setup["start_times"])

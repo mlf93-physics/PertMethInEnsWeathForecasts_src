@@ -11,6 +11,7 @@ import lorentz63_experiments.params.params as l63_params
 from general.params.model_licences import Models
 import general.utils.util_funcs as g_utils
 import general.utils.exceptions as g_exceptions
+from general.utils.module_import.type_import import *
 import config as cfg
 
 # Get parameters for model
@@ -310,7 +311,7 @@ def import_perturbation_velocities(
     ref_header_dict = import_info_file(pl.Path(args["datapath"], "ref_data"))
     # Match the positions to the relevant ref files
     ref_file_match = g_utils.match_start_positions_to_ref_file(
-        args=args, ref_header_dict=ref_header_dict, positions=perturb_time_pos_list
+        ref_header_dict=ref_header_dict, positions=perturb_time_pos_list
     )
     ref_file_match_keys_array = np.array(list(ref_file_match.keys()))
 
@@ -423,9 +424,29 @@ def import_perturbation_velocities(
     )
 
 
-def import_start_u_profiles(args=None):
-    """Import all u profiles to start perturbations from"""
+def import_start_u_profiles(args: dict = None) -> Tuple[np.ndarray, List[int], dict]:
+    """Import all u profiles to start perturbations from
 
+    Parameters
+    ----------
+    args : dict, optional
+        Run-time arguments, by default None
+
+    Returns
+    -------
+    tuple
+        (
+            u_init_profiles : The initial velocity profiles
+            positions : The index position of the profiles
+            ref_header_dict : The header dictionary of the reference data file
+        )
+
+    Raises
+    ------
+    KeyError
+        Raised if an unknown key is used to store the time_to_run information
+        in the reference header
+    """
     n_profiles = args["n_profiles"]
     n_runs_per_profile = args["n_runs_per_profile"]
 
@@ -460,14 +481,18 @@ def import_start_u_profiles(args=None):
                 (division_size + args["Nt"] * params.sample_rate) * i
                 + rand_division_start[i]
                 for i in range(n_profiles)
-            ]
+            ],
+            dtype=np.int64,
         )
     else:
         print(
             f"\nImporting {n_profiles} velocity profiles positioned as "
             + "requested in reference datafile\n"
         )
-        positions = np.array(args["start_times"]) * params.tts
+        # Make sure to round and convert to int in a proper way
+        positions = np.round(np.array(args["start_times"]) * params.tts).astype(
+            np.int64
+        )
 
     print(
         "\nPositions of perturbation start: ",
@@ -477,7 +502,7 @@ def import_start_u_profiles(args=None):
 
     # Match the positions to the relevant ref files
     ref_file_match = g_utils.match_start_positions_to_ref_file(
-        args=args, ref_header_dict=ref_header_dict, positions=positions
+        ref_header_dict=ref_header_dict, positions=positions
     )
 
     # Get sorted file paths

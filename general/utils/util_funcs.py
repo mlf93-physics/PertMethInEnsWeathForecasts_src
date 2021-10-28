@@ -5,6 +5,7 @@ import numpy as np
 from pathlib import Path
 import shell_model_experiments.params as sh_params
 import lorentz63_experiments.params.params as l63_params
+from general.utils.module_import.type_import import *
 from general.params.model_licences import Models
 import config as cfg
 
@@ -15,7 +16,9 @@ elif cfg.MODEL == Models.LORENTZ63:
     params = l63_params
 
 
-def match_start_positions_to_ref_file(args=None, ref_header_dict=None, positions=None):
+def match_start_positions_to_ref_file(
+    ref_header_dict: dict = None, positions: List[int] = None
+) -> OrderedDict:
     """Match the positions to their respective record of the reference
     dataseries."""
 

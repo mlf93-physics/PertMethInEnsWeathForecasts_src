@@ -42,6 +42,7 @@ import general.utils.perturb_utils as pt_utils
 import general.utils.exceptions as g_exceptions
 import general.utils.argument_parsers as a_parsers
 import general.utils.user_interface as g_ui
+from general.utils.module_import.type_import import *
 from general.params.model_licences import Models
 import config as cfg
 
@@ -57,16 +58,37 @@ cfg.GLOBAL_PARAMS.ref_run = False
 
 
 def perturbation_runner(
-    u_old,
-    perturb_positions,
-    du_array,
-    data_out_list,
-    args,
-    run_count,
-    perturb_count,
-    u_ref=None,
+    u_old: np.ndarray,
+    perturb_positions: List[int],
+    du_array: np.ndarray,
+    data_out_list: List[np.ndarray],
+    args: dict,
+    run_count: int,
+    perturb_count: int,
+    u_ref: Union[np.ndarray, None] = None,
 ):
-    """Execute a given model on one given perturbed u_old profile"""
+    """Execute a given model on one given perturbed u_old profile
+
+    Parameters
+    ----------
+    u_old : np.ndarray
+        The previous velocity vector (i.e. the initial vel. vector)
+    perturb_positions : List[int]
+        List of perturbation index positions
+    du_array : np.ndarray
+        Array to store the du vector
+    data_out_list : List[np.ndarray]
+        List to store output data from processes (i.e. when LICENCE = BREEDING_VECTORS)
+    args : dict
+        Run-time arguments
+    run_count : int
+        Counter that holds the run number of the current process
+    perturb_count : int
+        Counter that holds the perturbation number of the current process
+        (i.e. including the number of existing perturbations)
+    u_ref : Union[np.ndarray, None], optional
+        The reference data (needed for TL models), by default None
+    """
     # Prepare array for saving
     data_out = np.zeros(
         (int(args["Nt"] * params.sample_rate) + args["endpoint"] * 1, params.sdim + 1),
@@ -142,16 +164,17 @@ def perturbation_runner(
         data_out_list.append(data_out[-1, 1:])
 
 
-def prepare_run_times(args):
+def prepare_run_times(
+    args: dict,
+) -> Tuple[np.ndarray, np.ndarray]:
+
+    num_perturbations = args["n_runs_per_profile"] * args["n_profiles"]
 
     if cfg.LICENCE != EXP.LORENTZ_BLOCK:
-        num_perturbations = args["n_runs_per_profile"] * args["n_profiles"]
         times_to_run = np.ones(num_perturbations) * args["time_to_run"]
         Nt_array = (times_to_run / params.dt).astype(np.int64)
 
     else:
-        num_perturbations = args["n_runs_per_profile"] * args["n_profiles"]
-
         if len(args["start_times"]) > 1:
             start_times = np.array(args["start_times"])
         else:
@@ -163,7 +186,9 @@ def prepare_run_times(args):
     return times_to_run, Nt_array
 
 
-def prepare_perturbations(args: dict, raw_perturbations: bool = False):
+def prepare_perturbations(
+    args: dict, raw_perturbations: bool = False
+) -> Tuple[np.ndarray, List[int]]:
     """Prepare the perturbed initial conditions according to the desired perturbation
     type (given by args["pert_mode"])
 
@@ -178,7 +203,11 @@ def prepare_perturbations(args: dict, raw_perturbations: bool = False):
     Returns
     -------
     tuple
-        (perturbed u profiles, position of the perturbation (in samples))
+        (
+            u_return : perturbed u profiles
+            perturb_positions : position of the perturbation (in samples)
+        )
+
 
     Raises
     ------
@@ -313,14 +342,14 @@ def prepare_perturbations(args: dict, raw_perturbations: bool = False):
 
 
 def prepare_processes(
-    u_profiles_perturbed,
-    perturb_positions,
-    times_to_run,
-    Nt_array,
-    n_perturbation_files,
-    u_ref=None,
-    args=None,
-):
+    u_profiles_perturbed: np.ndarray,
+    perturb_positions: List[int],
+    times_to_run: np.ndarray,
+    Nt_array: np.ndarray,
+    n_perturbation_files: int,
+    u_ref: np.ndarray = None,
+    args: dict = None,
+) -> Tuple[List[multiprocessing.Process], List[np.ndarray]]:
     # Prepare and start the perturbation_runner in multiple processes
     processes = []
     # Prepare return data list

@@ -1,3 +1,4 @@
+import numpy as np
 import general.utils.saving.save_lorentz_block_funcs as lb_save
 from general.params.experiment_licences import Experiments as EXP
 import general.utils.saving.save_data_funcs as g_save
@@ -5,7 +6,10 @@ import config as cfg
 
 
 def save_perturbation_data(
-    data_out, perturb_position=None, perturb_count=None, args=None
+    data_out: np.ndarray,
+    perturb_position: int = None,
+    perturb_count: int = None,
+    args: dict = None,
 ):
     """Save the perturbation data depending on the LICENCE
 
