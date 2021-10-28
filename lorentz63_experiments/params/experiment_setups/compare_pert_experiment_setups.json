@@ -1,11 +1,11 @@
 {
     "TestRun0": {
         "general": {
-            "folder_name": "compare_pert_test1",
+            "folder_name": "compare_pert_test3",
             "eval_times": [
                 10
             ],
-            "n_units": 20,
+            "n_units": 6,
             "unit_offset": 1.0
         },
         "bv_gen_setup": {

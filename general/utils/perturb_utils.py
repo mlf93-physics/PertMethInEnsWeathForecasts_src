@@ -71,12 +71,15 @@ def calculate_perturbations(
 
             # Apply normal mode perturbation
             elif args["pert_mode"] == "nm":
-                # Generate random weights of the complex-conjugate eigenvector pair
-                _weights = np.random.rand(2) * 2 - 1
-                # Make perturbation vector
+                # NOTE - for explanation see https://math.stackexchange.com/questions/3847121/the-importance-of-complex-eigenvectors-in-phase-plane-plotting
+                # Generate random weight
+                _rand_numbers = np.random.rand(2) * 2 - 1
+                _weight = complex(_rand_numbers[0], _rand_numbers[1])
+
+                # Make real perturbation vector from the complex-conjugate pair
                 perturb = (
-                    _weights[0] * perturb_vectors_conj[:, i // n_runs_per_profile]
-                    + _weights[1] * perturb_vectors[:, i // n_runs_per_profile]
+                    _weight * perturb_vectors_conj[:, i // n_runs_per_profile]
+                    + _weight.conjugate() * perturb_vectors[:, i // n_runs_per_profile]
                 ).real
 
             # Apply breed vector perturbation

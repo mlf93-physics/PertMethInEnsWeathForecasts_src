@@ -205,6 +205,11 @@ def prepare_perturbations(args: dict, raw_perturbations: bool = False):
             header_dict,
         ) = g_import.import_start_u_profiles(args=args)
 
+    # NM pert generation mode; if True, the perturbations are generated in the
+    # plane of the complex-conjugate pair of the leading NM. Otherwise only one
+    # perturbation is made
+    # nm_complex_conj = False
+
     if args["pert_mode"] is not None:
 
         if args["pert_mode"] == "nm":
@@ -221,14 +226,18 @@ def prepare_perturbations(args: dict, raw_perturbations: bool = False):
                     local_ny=header_dict["ny"],
                 )
             elif cfg.MODEL == Models.LORENTZ63:
-                perturb_vectors, _, _, _ = l63_nm_estimator.find_normal_modes(
+                (
+                    perturb_vectors,
+                    e_values_max,
+                    _,
+                    _,
+                ) = l63_nm_estimator.find_normal_modes(
                     u_init_profiles[
                         :,
                         0 : args["n_profiles"]
                         * args["n_runs_per_profile"] : args["n_runs_per_profile"],
                     ],
                     args,
-                    dev_plot_active=False,
                     n_profiles=args["n_profiles"],
                 )
         elif args["pert_mode"] == "bv":

@@ -151,10 +151,10 @@ def plot_error_norm_comparison(args: dict):
         len_lines = len(lines)
         line_counter += len_lines - line_counter
 
-        for j in range(0, len_lines, 3):
-            lines[j].set_linestyle("-")
-            lines[(j + 1) % len_lines].set_linestyle("--")
-            lines[(j + 2) % len_lines].set_linestyle("-.")
+        # for j in range(0, len_lines, 3):
+        #     lines[j].set_linestyle("-")
+        #     lines[(j + 1) % len_lines].set_linestyle("--")
+        #     lines[(j + 2) % len_lines].set_linestyle("-.")
 
     plt.legend()
 
