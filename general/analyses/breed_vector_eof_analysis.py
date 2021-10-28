@@ -51,6 +51,10 @@ def calc_bv_eof_vectors(breed_vectors: np.ndarray, n_eof_vectors: int) -> np.nda
 
     # Calculate eigenvalues and -vectors
     e_values, e_vectors = np.linalg.eig(cov_matrix)
+    # Take absolute in order to avoid negative variances
+    e_values = np.abs(e_values)
+
+    sort_indices = np.argsort(e_values, axis=1)[:, ::-1]
 
     # Project e vectors onto the breed vectors to get the EOF vectors
     eof_vectors: np.ndarray((n_units, params.sdim, n_vectors)) = (
@@ -66,17 +70,28 @@ def calc_bv_eof_vectors(breed_vectors: np.ndarray, n_eof_vectors: int) -> np.nda
         )
     ).real
 
+    # Get sorted vectors
+    eof_vectors = eof_vectors[np.arange(n_units)[:, np.newaxis], :, sort_indices]
+    eof_vectors = np.transpose(eof_vectors, axes=(0, 2, 1))
+
+    # Filter out unused eof's
     eof_vectors = eof_vectors[:, :, :n_eof_vectors]
 
     return eof_vectors
 
 
 if __name__ == "__main__":
+    cfg.init_licence()
     # Get arguments
     mult_pert_arg_setup = a_parsers.MultiPerturbationArgSetup()
     mult_pert_arg_setup.setup_parser()
     args = mult_pert_arg_setup.args
     # Get BVs
-    perturb_vectors, perturb_header_dicts = pt_import.import_perturb_vectors(args)
+    (
+        vector_units,
+        u_init_profiles,
+        eval_pos,
+        perturb_header_dicts,
+    ) = pt_import.import_perturb_vectors(args)
 
-    calc_bv_eof_vectors(perturb_vectors)
+    calc_bv_eof_vectors(vector_units, 2)

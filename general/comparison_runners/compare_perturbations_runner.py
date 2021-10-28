@@ -21,6 +21,7 @@ import general.utils.runner_utils as r_utils
 from general.runners.breed_vector_runner import main as bv_runner
 import general.runners.perturbation_runner as pt_runner
 from general.params.experiment_licences import Experiments as exp
+import general.utils.util_funcs as g_utils
 from general.params.model_licences import Models
 import config as cfg
 
@@ -89,7 +90,11 @@ def rd_pert_experiment(args: dict, local_exp_setup: dict):
     args["n_runs_per_profile"] = 20
     args["pert_mode"] = "rd"
     args["start_times"] = local_exp_setup["eval_times"]
+    args["start_time_offset"] = local_exp_setup["unit_offset"]
     args["out_exp_folder"] = local_exp_setup["folder_name"] + "/rd_perturbations"
+
+    # Adjust start times
+    args = g_utils.adjust_start_times_with_offset(args)
 
     # Copy args in order not override in forecast processes
     copy_args = copy.deepcopy(args)
@@ -115,9 +120,14 @@ def nm_pert_experiment(args: dict, local_exp_setup: dict):
 
     # Prepare arguments for perturbation run
     args["n_runs_per_profile"] = 20
+    args["n_profiles"] = local_exp_setup["n_units"]
     args["pert_mode"] = "nm"
     args["start_times"] = local_exp_setup["eval_times"]
+    args["start_time_offset"] = local_exp_setup["unit_offset"]
     args["out_exp_folder"] = local_exp_setup["folder_name"] + "/nm_perturbations"
+
+    # Adjust start times
+    args = g_utils.adjust_start_times_with_offset(args)
 
     # Copy args in order not override in forecast processes
     copy_args = copy.deepcopy(args)
@@ -142,7 +152,7 @@ def bv_pert_experiment(args: dict, local_exp_setup: dict):
     processes = []
 
     # Prepare arguments for perturbation run
-    args["n_runs_per_profile"] = 1
+    args["n_runs_per_profile"] = 4
     args["pert_mode"] = "bv"
     args["pert_vector_folder"] = local_exp_setup["folder_name"]
     args["exp_folder"] = "breed_vectors"
@@ -171,7 +181,7 @@ def bv_eof_pert_experiment(args: dict, local_exp_setup: dict):
     processes = []
 
     # Prepare arguments for perturbation run
-    args["n_runs_per_profile"] = 2
+    args["n_runs_per_profile"] = 3
     args["pert_mode"] = "bv_eof"
     args["pert_vector_folder"] = local_exp_setup["folder_name"]
     args["exp_folder"] = "breed_vectors"
@@ -228,6 +238,8 @@ def main(args: dict):
         "./params/experiment_setups/compare_pert_experiment_setups.json"
     )
     exp_setup: dict = exp_utils.get_exp_setup(exp_file_path, args)
+
+    exp_utils.preprocess_exp_setup_for_comparison(exp_setup)
 
     # Update run-time arguments
     args["n_units"] = exp_setup["general"]["n_units"]

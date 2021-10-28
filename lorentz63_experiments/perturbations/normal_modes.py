@@ -39,13 +39,11 @@ def find_normal_modes(u_init_profiles, args, dev_plot_active=False, n_profiles=N
     # Initialise the jacobian
     j_matrix = init_jacobian(args)
 
-    # Need to be done for Numba to work
-    u_init_profiles = np.copy(u_init_profiles)
-
     # Perform calculation for all u_profiles
     for i in range(n_profiles):
         # Calculate the Jacobian matrix
-        calc_jacobian(j_matrix, u_init_profiles[:, i], r_const=args["r_const"])
+        # np.copy is needed for Numba to work
+        calc_jacobian(j_matrix, np.copy(u_init_profiles[:, i]), r_const=args["r_const"])
 
         e_values, e_vectors = np.linalg.eig(j_matrix)
 

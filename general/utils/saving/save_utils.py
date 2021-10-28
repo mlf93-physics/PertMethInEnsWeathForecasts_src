@@ -167,5 +167,7 @@ def generate_header(
     # Strip trailing commas
     header = header.rstrip(",")
     header = header.rstrip(", ")
+    # Remove \n symbols
+    header = header.replace("\n", "")
 
     return header

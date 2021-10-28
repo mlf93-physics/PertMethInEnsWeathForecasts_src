@@ -32,3 +32,16 @@ def get_exp_setup(path_to_file: pl.Path, args: dict) -> dict:
         exp_setup = exp_setup_file[args["exp_setup"]]
 
     return exp_setup
+
+
+def preprocess_exp_setup_for_comparison(exp_setup: dict) -> None:
+    """Preprocess the experiment setup to be used in comparison runners
+
+    Parameters
+    ----------
+    exp_setup : dict
+        The experiment setup
+    """
+
+    # Add unit_offset to vector gen exp setups
+    exp_setup["bv_gen_setup"]["vector_offset"] = exp_setup["general"]["unit_offset"]

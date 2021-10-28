@@ -119,7 +119,7 @@ def plot_error_norm_comparison(args: dict):
         len_folders = len(_dirs)
 
         if len_folders == 0:
-            args["exp_folders"] = args["exp_folder"]
+            args["exp_folders"] = [args["exp_folder"]]
         else:
             # Sort out dirs not named *_perturbations
             args["exp_folders"] = [
@@ -131,9 +131,7 @@ def plot_error_norm_comparison(args: dict):
         # Update number of folders after filtering
         len_folders = len(args["exp_folders"])
 
-    cmap_list = g_plt_utils.get_non_repeating_colors(
-        n_colors=len_folders, cmap=plt.cm.rainbow
-    )
+    cmap_list = plt.rcParams["axes.prop_cycle"].by_key()["color"]
 
     line_counter = 0
     for i, folder in enumerate(args["exp_folders"]):
@@ -147,10 +145,16 @@ def plot_error_norm_comparison(args: dict):
             legend_on=False,
             normalize_start_time=False,
         )
-        lines = list(axes.get_lines())
+        lines: list = list(axes.get_lines())
         lines[line_counter].set_label(folder)
 
-        line_counter += len(lines) - line_counter
+        len_lines = len(lines)
+        line_counter += len_lines - line_counter
+
+        for j in range(0, len_lines, 3):
+            lines[j].set_linestyle("-")
+            lines[(j + 1) % len_lines].set_linestyle("--")
+            lines[(j + 2) % len_lines].set_linestyle("-.")
 
     plt.legend()
 
