@@ -145,12 +145,19 @@ def rescale_perturbations(perturb_data, args):
 
     # Diff data
     diff_data = perturb_data.T - u_init_profiles
+    print("diff_data", diff_data.shape)
+    # rescaled_data = g_utils.normalize_array(
+    #     diff_data, norm_value=params.seeked_error_norm, axis=1
+    # )
     # Rescale data
     rescaled_data = (
         diff_data
         / np.reshape(np.linalg.norm(diff_data, axis=0), (1, num_perturbations))
         * params.seeked_error_norm
     )
+
+    print("rescaled_data", rescaled_data.shape, rescaled_data)
+    input()
 
     # Add rescaled data to u_init_profiles
     u_init_profiles += rescaled_data

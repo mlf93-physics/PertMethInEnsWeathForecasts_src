@@ -210,8 +210,8 @@ def plots_related_to_energy(args=None, axes=None):
 
     # Conserning ny
     # plot_energy_spectrum(u_data, header_dict)
-    # g_plt_data.plot_energy(time, u_data, header_dict, axes=axes, args=args)
-    plot_energy_per_shell(time, u_data, header_dict, path=args["datapath"], args=args)
+    g_plt_data.plot_energy(time, u_data, header_dict, axes=axes, args=args)
+    # plot_energy_per_shell(time, u_data, header_dict, path=args["datapath"], args=args)
 
 
 def plot_shell_error_vs_time(args=None):

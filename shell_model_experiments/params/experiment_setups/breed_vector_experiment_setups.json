@@ -20,11 +20,14 @@
         ]
     },
     "TestRun2": {
-        "folder_name": "shell_model_breed_vectors_test",
+        "folder_name": "pt_vectors/shell_model_breed_vectors_test4",
         "sub_exp_folder": "perturb_data",
-        "integration_time": 0.2,
+        "integration_time": 0.05,
         "n_cycles": 4,
         "n_vectors": 8,
-        "vector_offset": 2
+        "vector_offset": 2,
+        "start_times": [
+            11.2
+        ]
     }
 }
