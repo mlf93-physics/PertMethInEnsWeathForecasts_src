@@ -170,6 +170,15 @@ def import_data(file_name, start_line=0, max_lines=None, step=1):
     # Import header
     header_dict = import_header(file_name=file_name)
 
+    # Test length of file
+    with open(file_name) as file:
+        for i, _ in enumerate(file):
+            pass
+        len_file = i  # Not +1 to skip header from length
+
+    if len_file == 0:
+        raise ImportError(f"File is empty; file_name = {file_name}")
+
     stop_line = None if max_lines is None else start_line + max_lines
     # Import data
     with open(file_name) as file:
@@ -182,6 +191,12 @@ def import_data(file_name, start_line=0, max_lines=None, step=1):
         )
         data_in: np.ndarray(dtype=params.dtype) = np.genfromtxt(
             line_iterator, dtype=params.dtype, delimiter=","
+        )
+
+    if data_in.size == 0:
+        raise ImportError(
+            "No data was imported; file contained empty lines. "
+            + f"File_name = {file_name}"
         )
 
     if len(data_in.shape) == 1:

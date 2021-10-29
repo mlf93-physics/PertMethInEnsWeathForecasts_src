@@ -1,3 +1,8 @@
+"""
+Example
+-------
+python ../general/runners/breed_vector_runner.py --exp_setup=TestRun2 --n_units=1 --pert_mode=rd --start_times=11.2
+"""
 import sys
 
 sys.path.append("..")

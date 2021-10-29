@@ -234,7 +234,14 @@ def import_perturb_vectors(
     """
     # Infer the number of files
     if "n_units" in args:
-        args["n_files"] = args["n_units"]
+        if args["n_units"] < np.inf:
+            args["n_files"] = args["n_units"]
+        elif "n_profiles" in args:
+            args["n_files"] = args["n_profiles"]
+        else:
+            raise g_exceptions.InvalidRuntimeArgument(
+                "Unable to infer the number of files from args"
+            )
     elif "n_profiles" in args:
         args["n_files"] = args["n_profiles"]
     else:
@@ -245,6 +252,7 @@ def import_perturb_vectors(
     # Get experiment info
     exp_info = g_import.import_exp_info_file(args)
 
+    # Infer number of runs per profile from exp info file
     if args["n_runs_per_profile"] < 0:
         args["n_runs_per_profile"] = exp_info["n_vectors"]
 
@@ -292,7 +300,8 @@ def import_perturb_vectors(
     # u_init_profiles is reshaped to fit shape (n_units, n_runs_per_profile, sdim)
     # of vector_units array
     vector_units = vector_units - np.reshape(
-        u_init_profiles.T, (args["n_files"], args["n_runs_per_profile"], params.sdim)
+        u_init_profiles[params.u_slice, :].T,
+        (args["n_files"], args["n_runs_per_profile"], params.sdim),
     )
 
     return vector_units, u_init_profiles, eval_pos, perturb_header_dicts

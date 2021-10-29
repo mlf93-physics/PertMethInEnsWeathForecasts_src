@@ -16,6 +16,8 @@ import general.utils.argument_parsers as a_parsers
 import general.utils.plot_utils as g_plt_utils
 import general.utils.exceptions as g_exceptions
 import general.utils.importing.import_perturbation_data as pt_import
+import general.utils.user_interface as g_ui
+import config as cfg
 
 
 def plot_energy_spectrum(
@@ -811,13 +813,15 @@ def plot_howmoller_diagram_u_energy_rel_mean(args=None):
 
 
 if __name__ == "__main__":
+    cfg.init_licence()
+
     # Get arguments
     stand_plot_arg_parser = a_parsers.StandardPlottingArgParser()
     stand_plot_arg_parser.setup_parser()
 
     args = stand_plot_arg_parser.args
 
-    print("args", args)
+    g_ui.confirm_run_setup(args)
 
     if "time_to_run" in args:
         args["Nt"] = int(args["time_to_run"] / dt * sample_rate)

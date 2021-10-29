@@ -38,7 +38,7 @@ def calculate_perturbations(
 
     Returns
     -------
-    perturbations : ndarray
+    perturbations : ndarray((params.sdim + 2 * params.bd_size, n_profiles * n_runs_per_profile))
         The random perturbations
     """
     n_profiles = args["n_profiles"]

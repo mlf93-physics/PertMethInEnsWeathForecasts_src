@@ -36,7 +36,7 @@ def save_vector_unit(
     exp_setup : dict, optional
         Experiment setup, by default None
     """
-    if data.shape[0] == params.sdim:
+    if data.shape[0] == params.sdim + 2 * params.bd_size:
         data = data.T
 
     # Prepare variables to be used when saving

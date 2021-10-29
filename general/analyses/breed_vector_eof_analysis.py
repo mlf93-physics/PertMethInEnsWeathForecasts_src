@@ -1,13 +1,12 @@
 import sys
 
 sys.path.append("..")
-from typing import Tuple
 import numpy as np
 import shell_model_experiments.params as sh_params
 import lorentz63_experiments.params.params as l63_params
 import general.utils.importing.import_perturbation_data as pt_import
 import general.utils.argument_parsers as a_parsers
-import general.analyses.plot_analyses as g_plt_analyses
+import general.utils.user_interface as g_ui
 from general.params.model_licences import Models
 import config as cfg
 
@@ -68,7 +67,10 @@ def calc_bv_eof_vectors(breed_vectors: np.ndarray, n_eof_vectors: int) -> np.nda
                 )
             )
         )
-    ).real
+    )
+    # Take real part if in l63 model
+    if cfg.MODEL == Models.LORENTZ63:
+        eof_vectors = eof_vectors.real
 
     # Get sorted vectors
     eof_vectors = eof_vectors[np.arange(n_units)[:, np.newaxis], :, sort_indices]
@@ -86,6 +88,9 @@ if __name__ == "__main__":
     mult_pert_arg_setup = a_parsers.MultiPerturbationArgSetup()
     mult_pert_arg_setup.setup_parser()
     args = mult_pert_arg_setup.args
+
+    g_ui.confirm_run_setup(args)
+
     # Get BVs
     (
         vector_units,
@@ -94,4 +99,4 @@ if __name__ == "__main__":
         perturb_header_dicts,
     ) = pt_import.import_perturb_vectors(args)
 
-    calc_bv_eof_vectors(vector_units, 2)
+    eof_vectors = calc_bv_eof_vectors(vector_units, 2)

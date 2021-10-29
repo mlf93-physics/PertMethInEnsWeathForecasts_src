@@ -192,7 +192,8 @@ def plot_breed_error_norm(args):
     )
 
     # Set limits
-    axes[0].set_ylim(args["ylim"][0], args["ylim"][1])
+    if args["ylim"] is not None:
+        axes[0].set_ylim(args["ylim"][0], args["ylim"][1])
 
     # Prepare ref import
     if "start_times" in exp_setup:
@@ -221,10 +222,10 @@ def plot_breed_error_norm(args):
     args["ref_start_time"] = start_time
     args["ref_end_time"] = end_time
 
-    if cfg.MODEL == Models.SHELL_MODEL:
-        sh_plot.plots_related_to_energy(args, axes=axes[1])
-    elif cfg.MODEL == Models.LORENTZ63:
-        l63_plot.plot_energy(args, axes=axes[1])
+    # if cfg.MODEL == Models.SHELL_MODEL:
+    #     sh_plot.plots_related_to_energy(args, axes=axes[1])
+    # elif cfg.MODEL == Models.LORENTZ63:
+    #     l63_plot.plot_energy(args, axes=axes[1])
 
 
 def plot_breed_eof_vectors_3D(args: dict):
