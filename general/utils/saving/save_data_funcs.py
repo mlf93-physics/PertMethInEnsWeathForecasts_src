@@ -26,7 +26,7 @@ def save_data(
     prefix: str = "",
     perturb_position: int = None,
     args: dict = None,
-):
+) -> pl.Path:
     """Save the data to disc.
 
     Parameters

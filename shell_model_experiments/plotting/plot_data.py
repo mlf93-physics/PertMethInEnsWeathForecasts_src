@@ -37,6 +37,7 @@ def plot_energy_spectrum(
         (u_data * np.conj(u_data)).real,
         axis=0,
     )
+
     # Plot Kolmogorov scaling
     if "kolmogorov" in plot_arg_list:
         axes.plot(
@@ -73,6 +74,20 @@ def plot_energy_spectrum(
             header_dict, args, title_header="Energy spectrum"
         )
     axes.set_title(title)
+
+
+def plot_helicity_spectrum(args):
+
+    time, u_data, header_dict = g_import.import_ref_data(args=args)
+
+    mean_energy = np.mean(
+        (u_data * np.conj(u_data)).real,
+        axis=0,
+    )
+
+    mean_helicity = hel_pre_factor * mean_energy
+
+    plt.plot(np.log2(k_vec_temp), mean_helicity)
 
 
 def plot_spectrum_comparison(args):
@@ -830,6 +845,11 @@ if __name__ == "__main__":
     if "energy_plots" in args["plot_type"]:
         plots_related_to_energy(args=args)
 
+    if "energy_spectrum" in args["plot_type"]:
+        # Import reference data
+        _, _temp_u_data, _temp_header_dict = g_import.import_ref_data(args=args)
+        plot_energy_spectrum(_temp_u_data, _temp_header_dict)
+
     if "pert_traj_energy_spectrum" in args["plot_type"]:
         plot_pert_traject_energy_spectrum(args)
 
@@ -871,5 +891,8 @@ if __name__ == "__main__":
 
     if "u_howmoller_rel_mean" in args["plot_type"]:
         plot_howmoller_diagram_u_energy_rel_mean(args=args)
+
+    if "helicity_spectrum" in args["plot_type"]:
+        plot_helicity_spectrum(args)
 
     g_plt_utils.save_or_show_plot(args)
