@@ -131,8 +131,8 @@ def plot_normal_mode_dist(args):
     )
 
     e_value_dist_title = g_plt_utils.generate_title(
-        ref_header_dict,
         args,
+        header_dict=ref_header_dict,
         title_header="Eigen value dist | Lorentz63 model \n",
         title_suffix=f"$N_{{points}}$={args['n_profiles']}",
     )
@@ -157,8 +157,8 @@ def plot_normal_mode_dist(args):
     )
 
     e_vector_dist_title = g_plt_utils.generate_title(
-        ref_header_dict,
         args,
+        header_dict=ref_header_dict,
         title_header="Eigen vector dist colored by eigen values | Lorentz63 model \n",
         title_suffix=f"$N_{{points}}$={args['n_profiles']}",
     )
@@ -197,7 +197,7 @@ def plot_energy_dist(args):
     )
 
     e_dist_title = g_plt_utils.generate_title(
-        ref_header_dict, args, title_header="E dist | Lorentz63 model \n"
+        args, header_dict=ref_header_dict, title_header="E dist | Lorentz63 model \n"
     )
 
     line_plot1 = ax1.add_collection(coll1)
@@ -241,7 +241,7 @@ def plot_energy_dist(args):
     coll2.set_array((dE_array[1:] + dE_array[:-1]) / 2)
 
     de_dist_title = g_plt_utils.generate_title(
-        ref_header_dict, args, title_header="dE dist | Lorentz63 model \n"
+        args, header_dict=ref_header_dict, title_header="dE dist | Lorentz63 model \n"
     )
 
     ax2.add_collection(coll2)

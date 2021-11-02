@@ -6,6 +6,7 @@ import re
 import json
 import pathlib as pl
 import numpy as np
+from general.utils.module_import.type_import import *
 import shell_model_experiments.params as sh_params
 import lorentz63_experiments.params.params as l63_params
 from general.params.model_licences import Models
@@ -21,7 +22,7 @@ elif cfg.MODEL == Models.LORENTZ63:
     params = l63_params
 
 
-def import_header(folder="", file_name=None):
+def import_header(folder: Union[str, pl.Path] = "", file_name: str = "") -> dict:
     path = pl.Path(folder, file_name)
 
     # Import header

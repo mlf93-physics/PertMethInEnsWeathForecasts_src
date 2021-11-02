@@ -204,7 +204,10 @@ def plot_error_norm_vs_time(
             title_suffix = f" cutoff={args['shell_cutoff']}"
 
     title = g_plt_utils.generate_title(
-        header_dicts[0], args, title_header="Error vs time", title_suffix=title_suffix
+        args,
+        header_dict=header_dicts[0],
+        title_header="Error vs time",
+        title_suffix=title_suffix,
     )
     axes.set_title(title)
 
@@ -232,7 +235,7 @@ def plot_energy(
     header_dict = g_utils.handle_different_headers(header_dict)
 
     title = g_plt_utils.generate_title(
-        header_dict, args, title_header="Energy vs. time"
+        args, header_dict=header_dict, title_header="Energy vs. time"
     )
     axes.set_title(title)
 

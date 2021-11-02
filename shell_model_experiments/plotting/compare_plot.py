@@ -2,24 +2,18 @@ import sys
 
 sys.path.append("..")
 from pathlib import Path
-from typing import List
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.ticker as mpl_ticker
-from mpl_toolkits import mplot3d
-import matplotlib.colors as colors
-from shell_model_experiments.params.params import *
-import shell_model_experiments.perturbations.normal_modes as sh_nm_estimator
-import general.plotting.plot_data as g_plt_data
-import plot_data as sh_plt_data
-import general.utils.importing.import_data_funcs as g_import
-import general.utils.argument_parsers as a_parsers
-import general.utils.plot_utils as g_plt_utils
-import general.utils.util_funcs as g_utils
-import general.utils.exceptions as g_exceptions
-import general.utils.importing.import_perturbation_data as pt_import
-import general.utils.user_interface as g_ui
+
 import config as cfg
+import general.utils.argument_parsers as a_parsers
+import general.utils.importing.import_data_funcs as g_import
+import general.utils.plot_utils as g_plt_utils
+import general.utils.user_interface as g_ui
+import general.utils.util_funcs as g_utils
+import matplotlib.pyplot as plt
+import numpy as np
+from shell_model_experiments.params.params import *
+
+import plot_data as sh_plt_data
 
 
 def plot_spectrum_comparison(args: dict):
@@ -33,13 +27,25 @@ def plot_spectrum_comparison(args: dict):
     # Find csv files
     file_paths = g_utils.get_files_in_path(Path(args["datapath"]))
 
+    # Get headers
+    header_dicts = []
+    for file_path in file_paths:
+        header_dicts.append(g_import.import_header(file_path.parent, file_path.name))
+
+    file_paths = g_utils.sort_paths_according_to_header_dicts(
+        file_paths, header_dicts, ["ny_n", "diff_exponent"], reverse=[True, False]
+    )
+
     for i, file_path in enumerate(file_paths):
         # Import data
         u_data, header_dict = g_import.import_data(file_path, start_line=1)
 
         # time, u_data, header_dict = g_import.import_ref_data(args=args)
 
-        plot_arg_list = [] if i > 0 else ["kolmogorov"]
+        # Setup plot args
+        plot_arg_list = ["fit_slope"]
+        if i == 0:
+            plot_arg_list.append("kolmogorov")
 
         sh_plt_data.plot_energy_spectrum(
             u_data,

@@ -216,3 +216,46 @@ def normalize_array(array, norm_value=1e-2, axis=0):
     array = lambda_factor * array
 
     return array
+
+
+def get_values_from_dicts(dicts: list, key: str) -> list:
+    """Get the values from a list of dicts according to a specific key
+
+    Parameters
+    ----------
+    dicts : list
+        The list of dictionaries
+    key : str
+        The key from which the values are taken
+
+    Returns
+    -------
+    list
+        The list of values matching the key
+    """
+
+    value_list: list = []
+
+    for i, dict in enumerate(dicts):
+        if key not in dict:
+            raise ValueError(f"No key '{key}' in dict")
+
+        value_list.append(dict[key])
+
+    return value_list
+
+
+def sort_paths_according_to_header_dicts(
+    paths: List[pl.Path], header_dicts: List[dict], keys: List[str], reverse: List[bool]
+) -> List[pl.Path]:
+
+    value_lists: list = []
+    for key in keys:
+        value_lists.append(get_values_from_dicts(header_dicts, key))
+
+    # Sort paths
+    paths = [
+        path for _, _, path in sorted(zip(*value_lists, paths))  # , reverse=reverse[i])
+    ]
+
+    return paths

@@ -122,14 +122,14 @@ def generate_title(
     if "exp_folders" in args:
         if args["exp_folders"] is not None:
             exp_suffix = f'Experiments: {", ".join(args["exp_folders"])}; '
-    elif args["exp_folder"] is not None:
-        exp_suffix = f'Experiment: {args["exp_folder"]}; '
+    elif "exp_folder" in args:
+        if args["exp_folder"] is not None:
+            exp_suffix = f'Experiment: {args["exp_folder"]}; '
 
     file_suffix = ""
-    if args["n_files"] < np.inf:
-        file_suffix = (
-            f'Files: {args["file_offset"]}-{args["file_offset"] + args["n_files"]}, '
-        )
+    if "n_files" in args:
+        if args["n_files"] < np.inf:
+            file_suffix = f'Files: {args["file_offset"]}-{args["file_offset"] + args["n_files"]}, '
 
     title = ""
     if len(header_dict.keys()) > 0:

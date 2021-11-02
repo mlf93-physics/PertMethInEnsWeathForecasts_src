@@ -3,21 +3,22 @@ import sys
 sys.path.append("..")
 from pathlib import Path
 from typing import List
-import numpy as np
+
+import config as cfg
+import general.plotting.plot_data as g_plt_data
+from general.utils.module_import.type_import import *
+import general.utils.argument_parsers as a_parsers
+import general.utils.importing.import_data_funcs as g_import
+import general.utils.importing.import_perturbation_data as pt_import
+import general.utils.plot_utils as g_plt_utils
+import general.utils.user_interface as g_ui
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mpl_ticker
-from mpl_toolkits import mplot3d
-import matplotlib.colors as colors
-from shell_model_experiments.params.params import *
+import numpy as np
+import shell_model_experiments.analyses.analyse_data as sh_analysis
 import shell_model_experiments.perturbations.normal_modes as sh_nm_estimator
-import general.plotting.plot_data as g_plt_data
-import general.utils.importing.import_data_funcs as g_import
-import general.utils.argument_parsers as a_parsers
-import general.utils.plot_utils as g_plt_utils
-import general.utils.exceptions as g_exceptions
-import general.utils.importing.import_perturbation_data as pt_import
-import general.utils.user_interface as g_ui
-import config as cfg
+from mpl_toolkits import mplot3d
+from shell_model_experiments.params.params import *
 
 
 def plot_energy_spectrum(
@@ -27,11 +28,12 @@ def plot_energy_spectrum(
     plot_arg_list: list = ["kolmogorov", "calculate"],
     plot_kwarg_list: dict = {},
 ):
-
+    # Make axes if not present
     if axes is None:
         fig = plt.figure()
         axes = plt.axes()
 
+    # React on plot_arg options
     if "calculate" in plot_arg_list:
         # Calculate mean energy
         mean_energy = np.mean(
@@ -39,7 +41,7 @@ def plot_energy_spectrum(
             axis=0,
         )
     else:
-        mean_energy = u_data.real
+        mean_energy = u_data.real.ravel()
 
     # Plot Kolmogorov scaling
     if "kolmogorov" in plot_arg_list:
@@ -47,18 +49,30 @@ def plot_energy_spectrum(
             np.log2(k_vec_temp), k_vec_temp ** (-2 / 3), "k--", label="$k^{{-2/3}}$"
         )
 
-    if mean_energy.size == n_k_vec:
-        k_vectors = np.reshape(np.log2(k_vec_temp), (n_k_vec, 1))
-        mean_energy = mean_energy.T
-    else:
-        k_vectors = np.log2(k_vec_temp)
+    label_append: str = ""
+    color = None
+
+    # Fit the slope of the spectrum
+    k_vectors = np.log2(k_vec_temp)
+    if "fit_slope" in plot_arg_list:
+        slope, intercept = sh_analysis.fit_spectrum_slope(u_data, header_dict)
+        label_append += f", slope={slope:.2e}, b={intercept:.2e}"
+        slope_plot = axes.plot(k_vectors, np.exp(slope * k_vectors + intercept), "--")
+        color = slope_plot[0].get_color()
+
+        # if mean_energy.size == n_k_vec:
+        #     k_vectors = np.reshape(np.log2(k_vec_temp), (n_k_vec, 1))
+        #     mean_energy = mean_energy.T
+        # else:
 
     # Plot energy spectrum
     axes.plot(
         k_vectors,
         mean_energy,
         label=f"$n_{{\\nu}}$={int(header_dict['ny_n'])}, "
-        + f"$\\alpha$={int(header_dict['diff_exponent'])}",
+        + f"$\\alpha$={int(header_dict['diff_exponent'])}"
+        + label_append,
+        color=color,
     )
 
     # Axes setup
@@ -80,7 +94,7 @@ def plot_energy_spectrum(
         title = plot_kwarg_list["title"]
     else:
         title = g_plt_utils.generate_title(
-            header_dict, args, title_header="Energy spectrum"
+            args, header_dict=header_dict, title_header="Energy spectrum"
         )
     axes.set_title(title)
 
@@ -113,8 +127,8 @@ def plot_energy_per_shell(
     ax.set_ylabel("Energy")
 
     title = g_plt_utils.generate_title(
-        header_dict,
         args,
+        header_dict=header_dict,
         title_header="Cummulative shell energy vs time",
     )
 
@@ -247,8 +261,8 @@ def plot_shell_error_vs_time(args=None):
         plt.legend(k_vec_temp)
 
         title = g_plt_utils.generate_title(
-            header_dicts[0],
             args,
+            header_dict=header_dicts[0],
             title_header="Shell error vs time",
         )
         plt.title(title)
@@ -377,8 +391,8 @@ def plot_3D_eigen_mode_analysis(
     figs[0].colorbar(surf_plot, ax=axes[0])
 
     title = g_plt_utils.generate_title(
-        header_dict,
         args,
+        header_dict=header_dict,
         title_header="Eigenvectors vs shell numbers",
         title_suffix=f'N_tot={args["n_profiles"]*args["n_runs_per_profile"]}, ',
     )
@@ -618,8 +632,8 @@ def plot_error_energy_spectrum_vs_time_2D(args: dict = None, axes: plt.Axes = No
     axes.set_ylim(1e-22, 10)
 
     title = g_plt_utils.generate_title(
-        header_dicts[0],
         args,
+        header_dict=header_dicts[0],
         title_header="Error energy spectrum vs time",
         title_suffix=f"N_tot={n_files}, ",
     )
@@ -802,8 +816,8 @@ def plot_howmoller_diagram_u_energy_rel_mean(args=None):
     axes.set_xlabel("Time")
 
     title = g_plt_utils.generate_title(
-        header_dict,
         args,
+        header_dict=header_dict,
         title_header="Howmöller diagram for $|u|²$ - $\\langle|u|²\\rangle_t$",
     )
 
