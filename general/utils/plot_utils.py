@@ -112,8 +112,8 @@ def save_figure(subpath: pl.Path = None, file_name="figure1", fig: plt.Figure = 
 
 
 def generate_title(
-    header_dict: dict,
     args: dict,
+    header_dict: dict = {},
     title_header: str = "PUT TITLE TEXT HERE",
     title_suffix: str = "",
 ):
@@ -125,25 +125,26 @@ def generate_title(
     elif args["exp_folder"] is not None:
         exp_suffix = f'Experiment: {args["exp_folder"]}; '
 
+    file_suffix = ""
     if args["n_files"] < np.inf:
         file_suffix = (
             f'Files: {args["file_offset"]}-{args["file_offset"] + args["n_files"]}, '
         )
-    else:
-        file_suffix = ""
 
-    if cfg.MODEL == Models.SHELL_MODEL:
-        title = (
-            f'; $\\alpha$={int(header_dict["diff_exponent"])}'
-            + f', $n_{{\\nu}}$={int(header_dict["ny_n"])}, $\\nu$={header_dict["ny"]:.2e}'
-            + f', time={header_dict["time_to_run"]}, '
-        )
-    elif cfg.MODEL == Models.LORENTZ63:
-        title = (
-            f'; sigma={header_dict["sigma"]}'
-            + f', $b$={header_dict["b_const"]:.2e}, r={header_dict["r_const"]}'
-            + f', time={header_dict["time_to_run"]}, '
-        )
+    title = ""
+    if len(header_dict.keys()) > 0:
+        if cfg.MODEL == Models.SHELL_MODEL:
+            title = (
+                f'; $\\alpha$={int(header_dict["diff_exponent"])}'
+                + f', $n_{{\\nu}}$={int(header_dict["ny_n"])}, $\\nu$={header_dict["ny"]:.2e}'
+                + f', time={header_dict["time_to_run"]}, '
+            )
+        elif cfg.MODEL == Models.LORENTZ63:
+            title = (
+                f'; sigma={header_dict["sigma"]}'
+                + f', $b$={header_dict["b_const"]:.2e}, r={header_dict["r_const"]}'
+                + f', time={header_dict["time_to_run"]}, '
+            )
 
     # Add prefixes
     title = title_header + title

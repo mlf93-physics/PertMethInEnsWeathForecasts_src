@@ -131,6 +131,28 @@ def get_dirs_in_path(path: pl.Path) -> list:
     return dirs
 
 
+def get_files_in_path(path: pl.Path, search_pattern: str = "*.csv") -> list:
+    """Get sorted files in path
+
+    Parameters
+    ----------
+    path : pl.Path
+        The path to search for files
+
+    Returns
+    -------
+    list
+        The files contained in path
+    """
+
+    files = list(path.glob(search_pattern))
+
+    # Sort files
+    files = [files[i] for i in np.argsort(files)]
+
+    return files
+
+
 def handle_different_headers(header_dict):
     """Handle new and old style of the header_dict
 
@@ -151,26 +173,28 @@ def handle_different_headers(header_dict):
     return header_dict
 
 
-def determine_params_from_header_dict(header_dict, args):
+def determine_params_from_header_dict(header_dict: dict, args: dict):
     if cfg.MODEL == Models.SHELL_MODEL:
 
         # Save parameters to args dict:
         args["forcing"] = header_dict["forcing"].real
+        args["ny_n"] = header_dict["ny_n"]
+        args["ny"] = header_dict["ny"]
+        args["diff_exponent"] = header_dict["diff_exponent"]
 
-        if args["ny_n"] is None:
-            args["ny"] = header_dict["ny"]
+        # if args["ny_n"] is None:
 
-            if args["forcing"] == 0:
-                args["ny_n"] = 0
-            else:
-                args["ny_n"] = params.ny_n_from_ny_and_forcing(
-                    args["forcing"], header_dict["ny"], header_dict["diff_exponent"]
-                )
-            # Take ny from reference file
-        else:
-            args["ny"] = params.ny_from_ny_n_and_forcing(
-                args["forcing"], args["ny_n"], args["diff_exponent"]
-            )
+        #     if args["forcing"] == 0:
+        #         args["ny_n"] = 0
+        #     else:
+        #         args["ny_n"] = params.ny_n_from_ny_and_forcing(
+        #             args["forcing"], header_dict["ny"], header_dict["diff_exponent"]
+        #         )
+        #     # Take ny from reference file
+        # else:
+        #     args["ny"] = params.ny_from_ny_n_and_forcing(
+        #         args["forcing"], args["ny_n"], args["diff_exponent"]
+        #     )
 
     elif cfg.MODEL == Models.LORENTZ63:
         print("Nothing specific to do with args in lorentz63 model yet")

@@ -24,7 +24,7 @@ def plot_energy_spectrum(
     u_data: np.ndarray,
     header_dict: dict,
     axes: plt.Axes = None,
-    plot_arg_list: list = ["kolmogorov"],
+    plot_arg_list: list = ["kolmogorov", "calculate"],
     plot_kwarg_list: dict = {},
 ):
 
@@ -32,11 +32,14 @@ def plot_energy_spectrum(
         fig = plt.figure()
         axes = plt.axes()
 
-    # Calculate mean energy
-    mean_energy = np.mean(
-        (u_data * np.conj(u_data)).real,
-        axis=0,
-    )
+    if "calculate" in plot_arg_list:
+        # Calculate mean energy
+        mean_energy = np.mean(
+            (u_data * np.conj(u_data)).real,
+            axis=0,
+        )
+    else:
+        mean_energy = u_data.real
 
     # Plot Kolmogorov scaling
     if "kolmogorov" in plot_arg_list:
@@ -44,9 +47,15 @@ def plot_energy_spectrum(
             np.log2(k_vec_temp), k_vec_temp ** (-2 / 3), "k--", label="$k^{{-2/3}}$"
         )
 
+    if mean_energy.size == n_k_vec:
+        k_vectors = np.reshape(np.log2(k_vec_temp), (n_k_vec, 1))
+        mean_energy = mean_energy.T
+    else:
+        k_vectors = np.log2(k_vec_temp)
+
     # Plot energy spectrum
     axes.plot(
-        np.log2(k_vec_temp),
+        k_vectors,
         mean_energy,
         label=f"$n_{{\\nu}}$={int(header_dict['ny_n'])}, "
         + f"$\\alpha$={int(header_dict['diff_exponent'])}",
@@ -88,31 +97,6 @@ def plot_helicity_spectrum(args):
     mean_helicity = hel_pre_factor * mean_energy
 
     plt.plot(np.log2(k_vec_temp), mean_helicity)
-
-
-def plot_spectrum_comparison(args):
-    if args["datapaths"] is None:
-        raise g_exceptions.InvalidRuntimeArgument(
-            "Argument not set", argument="datapaths"
-        )
-
-    axes = plt.axes()
-
-    for i, path in enumerate(args["datapaths"]):
-        args["datapath"] = path
-        # Import reference data
-        time, u_data, header_dict = g_import.import_ref_data(args=args)
-
-        plot_arg_list = [] if i > 0 else ["kolmogorov"]
-
-        plot_energy_spectrum(
-            u_data,
-            header_dict,
-            axes=axes,
-            plot_arg_list=plot_arg_list,
-            plot_kwarg_list={"title": "Energy spectrum vs $n_{{\\nu}}$ and $\\alpha$"},
-        )
-        plt.legend()
 
 
 def plot_energy_per_shell(
@@ -850,6 +834,9 @@ if __name__ == "__main__":
         _, _temp_u_data, _temp_header_dict = g_import.import_ref_data(args=args)
         plot_energy_spectrum(_temp_u_data, _temp_header_dict)
 
+    if "spec_compare" in args["plot_type"]:
+        plot_spectrum_comparison(args=args)
+
     if "pert_traj_energy_spectrum" in args["plot_type"]:
         plot_pert_traject_energy_spectrum(args)
 
@@ -885,9 +872,6 @@ if __name__ == "__main__":
 
     if "error_vector_spectrum" in args["plot_type"]:
         plot_error_vector_spectrum(args=args)
-
-    if "spec_compare" in args["plot_type"]:
-        plot_spectrum_comparison(args=args)
 
     if "u_howmoller_rel_mean" in args["plot_type"]:
         plot_howmoller_diagram_u_energy_rel_mean(args=args)

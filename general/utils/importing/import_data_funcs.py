@@ -165,7 +165,9 @@ def imported_sorted_perturbation_info(folder_name, args, search_pattern="*.csv")
     )
 
 
-def import_data(file_name, start_line=0, max_lines=None, step=1):
+def import_data(
+    file_name: pl.Path, start_line: int = 0, max_lines: int = None, step: int = 1
+) -> Tuple[np.ndarray, dict]:
 
     # Import header
     header_dict = import_header(file_name=file_name)

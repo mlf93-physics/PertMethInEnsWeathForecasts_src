@@ -38,7 +38,7 @@ def analyse_mean_energy_spectra(args: dict):
     for i, path in enumerate(args["datapaths"]):
         args["datapath"] = path
 
-        mean_energy, header_dict = analyse_mean_energy_spectrum(args)
+        mean_energy, _ = analyse_mean_energy_spectrum(args)
 
         mean_energy = np.reshape(mean_energy, (1, mean_energy.size))
 
