@@ -1,13 +1,15 @@
 import os
 import pathlib as pl
 from collections import OrderedDict
-import numpy as np
 from pathlib import Path
-import shell_model_experiments.params as sh_params
-import lorentz63_experiments.params.params as l63_params
-from general.utils.module_import.type_import import *
-from general.params.model_licences import Models
+
 import config as cfg
+import general.utils.importing.import_data_funcs as g_import
+import lorentz63_experiments.params.params as l63_params
+import numpy as np
+import shell_model_experiments.params as sh_params
+from general.params.model_licences import Models
+from general.utils.module_import.type_import import *
 
 # Get parameters for model
 if cfg.MODEL == Models.SHELL_MODEL:
@@ -246,16 +248,19 @@ def get_values_from_dicts(dicts: list, key: str) -> list:
 
 
 def sort_paths_according_to_header_dicts(
-    paths: List[pl.Path], header_dicts: List[dict], keys: List[str], reverse: List[bool]
+    paths: List[pl.Path], keys: List[str]
 ) -> List[pl.Path]:
+
+    # Get headers
+    header_dicts: list = []
+    for path in paths:
+        header_dicts.append(g_import.import_header(path.parent, path.name))
 
     value_lists: list = []
     for key in keys:
         value_lists.append(get_values_from_dicts(header_dicts, key))
 
     # Sort paths
-    paths = [
-        path for _, _, path in sorted(zip(*value_lists, paths))  # , reverse=reverse[i])
-    ]
+    paths = [path for _, _, path in sorted(zip(*value_lists, paths))]
 
     return paths

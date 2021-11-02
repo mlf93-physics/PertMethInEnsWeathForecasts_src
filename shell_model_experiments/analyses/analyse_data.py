@@ -16,16 +16,53 @@ from shell_model_experiments.params.params import *
 cfg.GLOBAL_PARAMS.ref_run = False
 
 
+def get_mean_energy(u_data: np.ndarray) -> np.ndarray:
+    """Get mean energy from velocity data
+
+    Parameters
+    ----------
+    u_data : np.ndarray
+        The velocity data
+
+    Returns
+    -------
+    np.ndarray
+        The mean energy
+    """
+    mean_energy = np.mean(
+        (u_data * np.conj(u_data)).real,
+        axis=0,
+    )
+
+    return mean_energy
+
+
+def get_mean_helicity(u_data: np.ndarray) -> np.ndarray:
+    """Get mean helicity from velocity data
+
+    Parameters
+    ----------
+    u_data : np.ndarray
+        The velocity data
+
+    Returns
+    -------
+    np.ndarray
+        The mean helicity
+    """
+    mean_energy = get_mean_energy(u_data)
+    mean_helicity = hel_pre_factor * mean_energy
+
+    return mean_helicity
+
+
 def analyse_mean_energy_spectrum(args: dict) -> Tuple[np.ndarray, dict]:
 
     _, u_data, header_dict = g_import.import_ref_data(args=args)
 
     g_utils.determine_params_from_header_dict(header_dict, args)
 
-    mean_energy = np.mean(
-        (u_data * np.conj(u_data)).real,
-        axis=0,
-    )
+    mean_energy = get_mean_energy(u_data)
 
     return mean_energy, header_dict
 
@@ -44,7 +81,35 @@ def analyse_mean_energy_spectra(args: dict):
 
         mean_energy = np.reshape(mean_energy, (1, mean_energy.size))
 
-        g_save.save_data(mean_energy, prefix="mean_energy", args=args)
+        g_save.save_data(mean_energy, prefix="mean_energy_", args=args)
+
+
+def analyse_mean_helicity_spectrum(args: dict) -> Tuple[np.ndarray, dict]:
+
+    _, u_data, header_dict = g_import.import_ref_data(args=args)
+
+    g_utils.determine_params_from_header_dict(header_dict, args)
+
+    mean_helicity = get_mean_helicity(u_data)
+
+    return mean_helicity, header_dict
+
+
+def analyse_mean_helicity_spectra(args: dict):
+
+    if args["datapaths"] is None:
+        raise g_exceptions.InvalidRuntimeArgument(
+            "Argument not set", argument="datapaths"
+        )
+
+    for _, path in enumerate(args["datapaths"]):
+        args["datapath"] = path
+
+        mean_helicity, _ = analyse_mean_helicity_spectrum(args)
+
+        mean_helicity = np.reshape(mean_helicity, (1, mean_helicity.size))
+
+        g_save.save_data(mean_helicity, prefix="mean_helicity_", args=args)
 
 
 def fit_spectrum_slope(
@@ -96,3 +161,4 @@ if __name__ == "__main__":
     g_ui.confirm_run_setup(args)
 
     analyse_mean_energy_spectra(args)
+    # analyse_mean_helicity_spectra(args)

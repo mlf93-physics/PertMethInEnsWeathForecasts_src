@@ -16,7 +16,7 @@ from shell_model_experiments.params.params import *
 import plot_data as sh_plt_data
 
 
-def plot_spectrum_comparison(args: dict):
+def plot_energy_spectrum_comparison(args: dict):
     # if args["datapaths"] is None:
     #     raise g_exceptions.InvalidRuntimeArgument(
     #         "Argument not set", argument="datapaths"
@@ -26,14 +26,11 @@ def plot_spectrum_comparison(args: dict):
 
     # Find csv files
     file_paths = g_utils.get_files_in_path(Path(args["datapath"]))
-
-    # Get headers
-    header_dicts = []
-    for file_path in file_paths:
-        header_dicts.append(g_import.import_header(file_path.parent, file_path.name))
+    if len(file_paths) == 0:
+        raise ImportError("No files to import")
 
     file_paths = g_utils.sort_paths_according_to_header_dicts(
-        file_paths, header_dicts, ["ny_n", "diff_exponent"], reverse=[True, False]
+        file_paths, ["ny_n", "diff_exponent"]
     )
 
     for i, file_path in enumerate(file_paths):
@@ -54,6 +51,37 @@ def plot_spectrum_comparison(args: dict):
             plot_arg_list=plot_arg_list,
             plot_kwarg_list={"title": "Energy spectrum vs $n_{{\\nu}}$ and $\\alpha$"},
         )
+        plt.legend()
+
+
+def plot_helicity_spectrum_comparison(args: dict):
+
+    axes = plt.axes()
+
+    # Find csv files
+    file_paths = g_utils.get_files_in_path(Path(args["datapath"]))
+
+    file_paths = g_utils.sort_paths_according_to_header_dicts(
+        file_paths, ["ny_n", "diff_exponent"]
+    )
+
+    for i, file_path in enumerate(file_paths):
+        # Import data
+        u_data, header_dict = g_import.import_data(file_path, start_line=1)
+
+        # time, u_data, header_dict = g_import.import_ref_data(args=args)
+
+        sh_plt_data.plot_helicity_spectrum(
+            u_data,
+            header_dict,
+            args,
+            axes=axes,
+            plot_arg_list=["hel_sign"],
+            plot_kwarg_list={
+                "title": "Helicity spectrum vs $n_{{\\nu}}$ and $\\alpha$"
+            },
+        )
+        axes.set_ylim(1e-6, 1e5)
         plt.legend()
 
 
@@ -165,8 +193,11 @@ if __name__ == "__main__":
 
     g_ui.confirm_run_setup(args)
 
-    if "spec_compare" in args["plot_type"]:
-        plot_spectrum_comparison(args=args)
+    if "energy_spec_compare" in args["plot_type"]:
+        plot_energy_spectrum_comparison(args=args)
+
+    if "helicity_spec_compare" in args["plot_type"]:
+        plot_helicity_spectrum_comparison(args)
 
     if "period4_ratio" in args["plot_type"]:
         plot_period4_spectrum_ratio(args=args)

@@ -101,12 +101,12 @@ def save_figure(subpath: pl.Path = None, file_name="figure1", fig: plt.Figure = 
     # Save png
     plot_handle.savefig(full_path / (file_name + ".png"), dpi=400, format="png")
 
-    # Save pgf
-    plot_handle.savefig(
-        full_path / (file_name + ".pgf"),
-        dpi=400,
-        format="pgf",
-    )
+    # # Save pgf
+    # plot_handle.savefig(
+    #     full_path / (file_name + ".pgf"),
+    #     dpi=400,
+    #     format="pgf",
+    # )
 
     print(f"\nFigures (png, pgf) saved as {file_name} at figures/{str(subpath)}\n")
 
@@ -164,12 +164,12 @@ def generate_title(
 def save_or_show_plot(args: dict):
     if args["save_fig"]:
         subpath = pl.Path(
-            "lorentz63_experiments/compare_perturbations/error_norm_comparison/"
+            "shell_model_experiments/hyper_diffusivity/helicity_investigations/"
         )
 
         for i in plt.get_fignums():
             fig = plt.figure(i)
-            file_name = "error_norm_comparison_ttr0.1"
+            file_name = "howmoller_for_helicity_alpha2_ny_n19"
 
             name = g_ui.get_name_input(
                 "Proposed name of figure: ", proposed_input=file_name

@@ -31,7 +31,7 @@ k_vec_temp = np.array(
 pre_factor = 1j * k_vec_temp
 
 # Helicity pre factor
-hel_pre_factor = (-1) ** (np.arange(n_k_vec)) * k_vec_temp
+hel_pre_factor = (-1) ** (np.arange(1, n_k_vec + 1)) * k_vec_temp
 # Define du array to store derivative
 du_array = np.zeros(n_k_vec + 2 * bd_size, dtype=dtype)
 # Define u_slice

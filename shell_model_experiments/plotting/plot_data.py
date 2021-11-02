@@ -36,10 +36,7 @@ def plot_energy_spectrum(
     # React on plot_arg options
     if "calculate" in plot_arg_list:
         # Calculate mean energy
-        mean_energy = np.mean(
-            (u_data * np.conj(u_data)).real,
-            axis=0,
-        )
+        mean_energy = sh_analysis.get_mean_energy(u_data)
     else:
         mean_energy = u_data.real.ravel()
 
@@ -99,18 +96,66 @@ def plot_energy_spectrum(
     axes.set_title(title)
 
 
-def plot_helicity_spectrum(args):
+def plot_helicity_spectrum(
+    u_data: np.ndarray,
+    header_dict: dict,
+    args: dict,
+    axes: plt.Axes = None,
+    plot_arg_list: list = ["calculate", "hel_sign"],
+    plot_kwarg_list: dict = {},
+):
+    # Make axes if not present
+    if axes is None:
+        fig = plt.figure()
+        axes = plt.axes()
 
-    time, u_data, header_dict = g_import.import_ref_data(args=args)
+    if "calculate" in plot_arg_list:
+        mean_helicity = sh_analysis.get_mean_helicity(u_data)
+    else:
+        mean_helicity = u_data.real.ravel()
 
-    mean_energy = np.mean(
-        (u_data * np.conj(u_data)).real,
-        axis=0,
+    helicity_sign = np.array([i % 2 for i in range(n_k_vec)], dtype=np.int)
+    mean_helicity = np.abs(mean_helicity)
+
+    # Plot curves
+    hel_plot = axes.plot(
+        np.log2(k_vec_temp),
+        mean_helicity,
+        label=f"$n_{{\\nu}}$={int(header_dict['ny_n'])}, "
+        + f"$\\alpha$={int(header_dict['diff_exponent'])}",
     )
+    if "hel_sign" in plot_arg_list:
+        # Plot annotation according to sign of helicity
+        _offset = 1e4
+        axes.scatter(
+            np.log2(k_vec_temp)[helicity_sign == 1],
+            _offset * np.ones(np.sum(helicity_sign == 1)),
+            label="_nolegend_",
+            marker="+",
+            color="k",
+        )
+        axes.scatter(
+            np.log2(k_vec_temp)[helicity_sign == 0],
+            _offset * np.ones(np.sum(helicity_sign == 0)),
+            label="_nolegend_",
+            marker="_",
+            color="k",
+        )
 
-    mean_helicity = hel_pre_factor * mean_energy
+    # Axes setup
+    axes.set_yscale("log")
+    axes.set_xlabel("k")
+    axes.set_ylabel("Helicity")
+    axes.xaxis.set_major_locator(mpl_ticker.MaxNLocator(integer=True))
 
-    plt.plot(np.log2(k_vec_temp), mean_helicity)
+    # Title setup
+    if "title" in plot_kwarg_list:
+        title = plot_kwarg_list["title"]
+    else:
+        title = g_plt_utils.generate_title(
+            args, header_dict=header_dict, title_header="Helicity spectrum"
+        )
+    axes.set_title(title)
 
 
 def plot_energy_per_shell(
@@ -825,6 +870,61 @@ def plot_howmoller_diagram_u_energy_rel_mean(args=None):
     fig.colorbar(pcm, ax=axes, pad=0.1, label="$|u|² - \\langle|u|²\\rangle_t$")
 
 
+def plot_howmoller_diagram_helicity_rel_mean(args=None):
+
+    # Import reference data
+    time, u_data, header_dict = g_import.import_ref_data(args=args)
+
+    # Prepare mesh
+    time2D, shell2D = np.meshgrid(time.real, k_vec_temp)
+    helicity_array = (hel_pre_factor * (u_data * np.conj(u_data)).real).T
+    # Prepare helicity rel mean
+    mean_helicity = np.reshape(np.mean(helicity_array, axis=1), (n_k_vec, 1))
+
+    # Take absolute value
+    helicity_array = np.abs(helicity_array)
+    mean_helicity = np.abs(mean_helicity)
+    helicity_rel_mean_array = np.log(helicity_array) - np.log(mean_helicity)
+    # print("np.min(helicity_rel_mean_array)", np.min(helicity_rel_mean_array))
+
+    fig, axes = plt.subplots(nrows=1, ncols=1)
+
+    vmax = np.nanmax(helicity_rel_mean_array)
+    vmin = -6
+
+    # Get cmap
+    cmap, norm = g_plt_utils.get_cmap_distributed_around_zero(
+        vmin=vmin,
+        vmax=vmax,
+        neg_thres=0.4,
+        pos_thres=0.6,
+        cmap_handle=plt.cm.bwr,
+    )
+
+    # Make contourplot
+    pcm = axes.contourf(
+        time2D,
+        np.log2(shell2D),
+        np.clip(helicity_rel_mean_array, vmin, vmax),
+        norm=norm,
+        cmap=cmap,
+        levels=100,
+        extend="neither",
+    )
+    pcm.negative_linestyle = "solid"
+    axes.set_ylabel("Shell number, n")
+    axes.set_xlabel("Time")
+
+    title = g_plt_utils.generate_title(
+        args,
+        header_dict=header_dict,
+        title_header="Howmöller diagram for helicity rel. mean helicity",
+    )
+
+    axes.set_title(title)
+    fig.colorbar(pcm, ax=axes, pad=0.1, label="Helicity rel. mean helicity")
+
+
 if __name__ == "__main__":
     cfg.init_licence()
 
@@ -846,10 +946,9 @@ if __name__ == "__main__":
     if "energy_spectrum" in args["plot_type"]:
         # Import reference data
         _, _temp_u_data, _temp_header_dict = g_import.import_ref_data(args=args)
-        plot_energy_spectrum(_temp_u_data, _temp_header_dict)
-
-    if "spec_compare" in args["plot_type"]:
-        plot_spectrum_comparison(args=args)
+        plot_energy_spectrum(
+            _temp_u_data, _temp_header_dict, plot_arg_list=["kolmogorov", "calculate"]
+        )
 
     if "pert_traj_energy_spectrum" in args["plot_type"]:
         plot_pert_traject_energy_spectrum(args)
@@ -887,10 +986,14 @@ if __name__ == "__main__":
     if "error_vector_spectrum" in args["plot_type"]:
         plot_error_vector_spectrum(args=args)
 
-    if "u_howmoller_rel_mean" in args["plot_type"]:
+    if "energy_howmoller_rel_mean" in args["plot_type"]:
         plot_howmoller_diagram_u_energy_rel_mean(args=args)
 
+    if "hel_howmoller_rel_mean" in args["plot_type"]:
+        plot_howmoller_diagram_helicity_rel_mean(args=args)
+
     if "helicity_spectrum" in args["plot_type"]:
-        plot_helicity_spectrum(args)
+        _, u_data, header_dict = g_import.import_ref_data(args=args)
+        plot_helicity_spectrum(u_data, header_dict, args)
 
     g_plt_utils.save_or_show_plot(args)
