@@ -101,19 +101,19 @@ def save_figure(subpath: pl.Path = None, file_name="figure1", fig: plt.Figure = 
     # Save png
     plot_handle.savefig(full_path / (file_name + ".png"), dpi=400, format="png")
 
-    # Save pgf
-    plot_handle.savefig(
-        full_path / (file_name + ".pgf"),
-        dpi=400,
-        format="pgf",
-    )
+    # # Save pgf
+    # plot_handle.savefig(
+    #     full_path / (file_name + ".pgf"),
+    #     dpi=400,
+    #     format="pgf",
+    # )
 
     print(f"\nFigures (png, pgf) saved as {file_name} at figures/{str(subpath)}\n")
 
 
 def generate_title(
-    header_dict: dict,
     args: dict,
+    header_dict: dict = {},
     title_header: str = "PUT TITLE TEXT HERE",
     title_suffix: str = "",
 ):
@@ -122,28 +122,29 @@ def generate_title(
     if "exp_folders" in args:
         if args["exp_folders"] is not None:
             exp_suffix = f'Experiments: {", ".join(args["exp_folders"])}; '
-    elif args["exp_folder"] is not None:
-        exp_suffix = f'Experiment: {args["exp_folder"]}; '
+    elif "exp_folder" in args:
+        if args["exp_folder"] is not None:
+            exp_suffix = f'Experiment: {args["exp_folder"]}; '
 
-    if args["n_files"] < np.inf:
-        file_suffix = (
-            f'Files: {args["file_offset"]}-{args["file_offset"] + args["n_files"]}, '
-        )
-    else:
-        file_suffix = ""
+    file_suffix = ""
+    if "n_files" in args:
+        if args["n_files"] < np.inf:
+            file_suffix = f'Files: {args["file_offset"]}-{args["file_offset"] + args["n_files"]}, '
 
-    if cfg.MODEL == Models.SHELL_MODEL:
-        title = (
-            f'; $\\alpha$={int(header_dict["diff_exponent"])}'
-            + f', $n_{{\\nu}}$={int(header_dict["ny_n"])}, $\\nu$={header_dict["ny"]:.2e}'
-            + f', time={header_dict["time_to_run"]}, '
-        )
-    elif cfg.MODEL == Models.LORENTZ63:
-        title = (
-            f'; sigma={header_dict["sigma"]}'
-            + f', $b$={header_dict["b_const"]:.2e}, r={header_dict["r_const"]}'
-            + f', time={header_dict["time_to_run"]}, '
-        )
+    title = ""
+    if len(header_dict.keys()) > 0:
+        if cfg.MODEL == Models.SHELL_MODEL:
+            title = (
+                f'; $\\alpha$={int(header_dict["diff_exponent"])}'
+                + f', $n_{{\\nu}}$={int(header_dict["ny_n"])}, $\\nu$={header_dict["ny"]:.2e}'
+                + f', time={header_dict["time_to_run"]}, '
+            )
+        elif cfg.MODEL == Models.LORENTZ63:
+            title = (
+                f'; sigma={header_dict["sigma"]}'
+                + f', $b$={header_dict["b_const"]:.2e}, r={header_dict["r_const"]}'
+                + f', time={header_dict["time_to_run"]}, '
+            )
 
     # Add prefixes
     title = title_header + title
@@ -163,12 +164,12 @@ def generate_title(
 def save_or_show_plot(args: dict):
     if args["save_fig"]:
         subpath = pl.Path(
-            "lorentz63_experiments/compare_perturbations/error_norm_comparison/"
+            "shell_model_experiments/hyper_diffusivity/helicity_investigations/"
         )
 
         for i in plt.get_fignums():
             fig = plt.figure(i)
-            file_name = "error_norm_comparison_ttr0.1"
+            file_name = "howmoller_for_helicity_alpha2_ny_n19"
 
             name = g_ui.get_name_input(
                 "Proposed name of figure: ", proposed_input=file_name

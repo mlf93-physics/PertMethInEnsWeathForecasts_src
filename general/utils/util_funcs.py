@@ -1,13 +1,15 @@
 import os
 import pathlib as pl
 from collections import OrderedDict
-import numpy as np
 from pathlib import Path
-import shell_model_experiments.params as sh_params
-import lorentz63_experiments.params.params as l63_params
-from general.utils.module_import.type_import import *
-from general.params.model_licences import Models
+
 import config as cfg
+import general.utils.importing.import_data_funcs as g_import
+import lorentz63_experiments.params.params as l63_params
+import numpy as np
+import shell_model_experiments.params as sh_params
+from general.params.model_licences import Models
+from general.utils.module_import.type_import import *
 
 # Get parameters for model
 if cfg.MODEL == Models.SHELL_MODEL:
@@ -131,6 +133,49 @@ def get_dirs_in_path(path: pl.Path) -> list:
     return dirs
 
 
+def get_files_in_path(path: pl.Path, search_pattern: str = "*.csv") -> list:
+    """Get sorted files in path
+
+    Parameters
+    ----------
+    path : pl.Path
+        The path to search for files
+
+    Returns
+    -------
+    list
+        The files contained in path
+    """
+
+    files = list(path.glob(search_pattern))
+
+    # Sort files
+    files = [files[i] for i in np.argsort(files)]
+
+    return files
+
+
+def get_header_dicts_from_paths(file_paths: List[pl.Path]) -> List[dict]:
+    """Get list of header dicts from path
+
+    Parameters
+    ----------
+    file_paths : List[pl.Path]
+        The list of file paths
+
+    Returns
+    -------
+    List[dict]
+        The list of header dicts
+    """
+    # Get headers
+    header_dicts: list = []
+    for path in file_paths:
+        header_dicts.append(g_import.import_header(path.parent, path.name))
+
+    return header_dicts
+
+
 def handle_different_headers(header_dict):
     """Handle new and old style of the header_dict
 
@@ -151,26 +196,28 @@ def handle_different_headers(header_dict):
     return header_dict
 
 
-def determine_params_from_header_dict(header_dict, args):
+def determine_params_from_header_dict(header_dict: dict, args: dict):
     if cfg.MODEL == Models.SHELL_MODEL:
 
         # Save parameters to args dict:
         args["forcing"] = header_dict["forcing"].real
+        args["ny_n"] = header_dict["ny_n"]
+        args["ny"] = header_dict["ny"]
+        args["diff_exponent"] = header_dict["diff_exponent"]
 
-        if args["ny_n"] is None:
-            args["ny"] = header_dict["ny"]
+        # if args["ny_n"] is None:
 
-            if args["forcing"] == 0:
-                args["ny_n"] = 0
-            else:
-                args["ny_n"] = params.ny_n_from_ny_and_forcing(
-                    args["forcing"], header_dict["ny"], header_dict["diff_exponent"]
-                )
-            # Take ny from reference file
-        else:
-            args["ny"] = params.ny_from_ny_n_and_forcing(
-                args["forcing"], args["ny_n"], args["diff_exponent"]
-            )
+        #     if args["forcing"] == 0:
+        #         args["ny_n"] = 0
+        #     else:
+        #         args["ny_n"] = params.ny_n_from_ny_and_forcing(
+        #             args["forcing"], header_dict["ny"], header_dict["diff_exponent"]
+        #         )
+        #     # Take ny from reference file
+        # else:
+        #     args["ny"] = params.ny_from_ny_n_and_forcing(
+        #         args["forcing"], args["ny_n"], args["diff_exponent"]
+        #     )
 
     elif cfg.MODEL == Models.LORENTZ63:
         print("Nothing specific to do with args in lorentz63 model yet")
@@ -192,3 +239,51 @@ def normalize_array(array, norm_value=1e-2, axis=0):
     array = lambda_factor * array
 
     return array
+
+
+def get_values_from_dicts(dicts: list, key: str) -> list:
+    """Get the values from a list of dicts according to a specific key
+
+    Parameters
+    ----------
+    dicts : list
+        The list of dictionaries
+    key : str
+        The key from which the values are taken
+
+    Returns
+    -------
+    list
+        The list of values matching the key
+    """
+
+    value_list: list = []
+
+    for i, dict in enumerate(dicts):
+        if key not in dict:
+            raise ValueError(f"No key '{key}' in dict")
+
+        value_list.append(dict[key])
+
+    value_list = value_list
+
+    return value_list
+
+
+def sort_paths_according_to_header_dicts(
+    paths: List[pl.Path], keys: List[str]
+) -> List[pl.Path]:
+
+    # Get headers
+    header_dicts: list = []
+    for path in paths:
+        header_dicts.append(g_import.import_header(path.parent, path.name))
+
+    value_lists: list = []
+    for key in keys:
+        value_lists.append(get_values_from_dicts(header_dicts, key))
+
+    # Sort paths
+    paths = [path for _, _, path in sorted(zip(*value_lists, paths))]
+
+    return paths

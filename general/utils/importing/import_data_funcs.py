@@ -6,6 +6,7 @@ import re
 import json
 import pathlib as pl
 import numpy as np
+from general.utils.module_import.type_import import *
 import shell_model_experiments.params as sh_params
 import lorentz63_experiments.params.params as l63_params
 from general.params.model_licences import Models
@@ -21,7 +22,7 @@ elif cfg.MODEL == Models.LORENTZ63:
     params = l63_params
 
 
-def import_header(folder="", file_name=None):
+def import_header(folder: Union[str, pl.Path] = "", file_name: str = "") -> dict:
     path = pl.Path(folder, file_name)
 
     # Import header
@@ -165,7 +166,9 @@ def imported_sorted_perturbation_info(folder_name, args, search_pattern="*.csv")
     )
 
 
-def import_data(file_name, start_line=0, max_lines=None, step=1):
+def import_data(
+    file_name: pl.Path, start_line: int = 0, max_lines: int = None, step: int = 1
+) -> Tuple[np.ndarray, dict]:
 
     # Import header
     header_dict = import_header(file_name=file_name)
@@ -209,6 +212,9 @@ def import_ref_data(args=None):
     """Import reference file consisting of multiple records"""
 
     ref_record_names = list(pl.Path(args["datapath"], "ref_data").glob("*.csv"))
+    if len(ref_record_names) == 0:
+        raise ImportError("No reference csv files found")
+
     ref_files_sort_index = np.argsort(
         [str(ref_record_name) for ref_record_name in ref_record_names]
     )

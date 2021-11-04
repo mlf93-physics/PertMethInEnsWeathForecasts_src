@@ -52,8 +52,8 @@ def plot_breed_vectors(args):
     )
 
     ortho_bv_title = g_plt_utils.generate_title(
-        pert_info_dict,
         args,
+        header_dict=pert_info_dict,
         title_header="Orthogonality of BVs | Lorentz63 model \n",
         title_suffix=f"$N_{{vectors}}$={args['n_profiles']}",
     )
@@ -67,8 +67,8 @@ def plot_breed_vectors(args):
     plt.colorbar()
 
     bv_2d_title = g_plt_utils.generate_title(
-        pert_info_dict,
         args,
+        header_dict=pert_info_dict,
         title_header="Breed Vectors 2D | Lorentz63 model \n",
         title_suffix=f"$N_{{vectors}}$={args['n_profiles']}",
     )
@@ -97,8 +97,8 @@ def plot_breed_vectors(args):
         )
 
         bv_3d_title = g_plt_utils.generate_title(
-            pert_info_dict,
             args,
+            header_dict=pert_info_dict,
             title_header="Breed Vectors 3D | Lorentz63 model \n",
             title_suffix=f"$N_{{vectors}}$={args['n_profiles']}",
         )
