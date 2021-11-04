@@ -2,6 +2,7 @@ import sys
 
 sys.path.append("..")
 import config as cfg
+import pathlib as pl
 import general.utils.argument_parsers as a_parsers
 import general.utils.exceptions as g_exceptions
 import general.utils.importing.import_data_funcs as g_import
@@ -54,6 +55,34 @@ def get_mean_helicity(u_data: np.ndarray) -> np.ndarray:
     mean_helicity = hel_pre_factor * mean_energy
 
     return mean_helicity
+
+
+def analyse_mean_velocity_spectrum(args: dict) -> Tuple[np.ndarray, dict]:
+
+    _, u_data, header_dict = g_import.import_ref_data(args=args)
+
+    g_utils.determine_params_from_header_dict(header_dict, args)
+
+    mean_velocities = np.mean(u_data, axis=0)
+
+    return mean_velocities, header_dict
+
+
+def analyse_mean_velocity_spectra(args: dict):
+
+    if args["datapaths"] is None:
+        raise g_exceptions.InvalidRuntimeArgument(
+            "Argument not set", argument="datapaths"
+        )
+
+    for i, path in enumerate(args["datapaths"]):
+        args["datapath"] = path
+
+        mean_velocity, _ = analyse_mean_velocity_spectrum(args)
+
+        mean_velocity = np.reshape(mean_velocity, (1, mean_velocity.size))
+
+        g_save.save_data(mean_velocity, prefix="mean_", args=args)
 
 
 def analyse_mean_energy_spectrum(args: dict) -> Tuple[np.ndarray, dict]:
@@ -149,6 +178,39 @@ def fit_spectrum_slope(
     return slope, intercept
 
 
+def temp_energy_relation(args):
+
+    # Find csv files
+    file_paths = g_utils.get_files_in_path(pl.Path(args["datapath"]))
+
+    file_paths = g_utils.sort_paths_according_to_header_dicts(
+        file_paths, ["ny_n", "diff_exponent"]
+    )
+
+    for i, file_path in enumerate(file_paths):
+        # Import data
+        u_data, header_dict = g_import.import_data(file_path, start_line=1)
+        print("u_data", u_data.shape)
+
+        mean_energy = get_mean_energy(u_data)
+
+        shellN = int(header_dict["ny_n"]) - 1
+
+        theta_n_2 = np.angle(u_data[0, shellN - 2])
+
+        En_3_factor = lambda_const ** 2 * (
+            1 + (epsilon / (epsilon - 1)) ** 2
+        ) + 2 * lambda_const * epsilon / (epsilon - 1) * np.cos(2 * theta_n_2)
+
+        print("file_path", file_path.name)
+        print("$E_{{N-3}}$ factor", En_3_factor)
+        print(
+            f"$E_{{N}}$ = {mean_energy[shellN]}",
+            f"$E_{{N-3}}$ = {mean_energy[shellN-3]} (data)",
+            f"$E_{{N-3}}$ = {En_3_factor*mean_energy[shellN]} (calculated)",
+        )
+
+
 if __name__ == "__main__":
     cfg.init_licence()
 
@@ -160,5 +222,6 @@ if __name__ == "__main__":
 
     g_ui.confirm_run_setup(args)
 
-    analyse_mean_energy_spectra(args)
-    # analyse_mean_helicity_spectra(args)
+    # analyse_mean_energy_spectra(args)
+    analyse_mean_helicity_spectra(args)
+    # temp_energy_relation(args)

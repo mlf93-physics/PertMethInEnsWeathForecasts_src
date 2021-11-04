@@ -114,11 +114,17 @@ def plot_helicity_spectrum(
     else:
         mean_helicity = u_data.real.ravel()
 
+    # Plot Kolmogorov scaling
+    if "kolmogorov" in plot_arg_list:
+        axes.plot(
+            np.log2(k_vec_temp), k_vec_temp ** (1 / 3), "k--", label="$k^{{1/3}}$"
+        )
+
     helicity_sign = np.array([i % 2 for i in range(n_k_vec)], dtype=np.int)
     mean_helicity = np.abs(mean_helicity)
 
     # Plot curves
-    hel_plot = axes.plot(
+    axes.plot(
         np.log2(k_vec_temp),
         mean_helicity,
         label=f"$n_{{\\nu}}$={int(header_dict['ny_n'])}, "

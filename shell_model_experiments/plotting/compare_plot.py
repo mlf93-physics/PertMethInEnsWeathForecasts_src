@@ -40,7 +40,7 @@ def plot_energy_spectrum_comparison(args: dict):
         # time, u_data, header_dict = g_import.import_ref_data(args=args)
 
         # Setup plot args
-        plot_arg_list = ["fit_slope"]
+        plot_arg_list = []  # ["fit_slope"]
         if i == 0:
             plot_arg_list.append("kolmogorov")
 
@@ -69,14 +69,16 @@ def plot_helicity_spectrum_comparison(args: dict):
         # Import data
         u_data, header_dict = g_import.import_data(file_path, start_line=1)
 
-        # time, u_data, header_dict = g_import.import_ref_data(args=args)
+        plot_arg_list = ["hel_sign"]
+        if i == 0:
+            plot_arg_list.append("kolmogorov")
 
         sh_plt_data.plot_helicity_spectrum(
             u_data,
             header_dict,
             args,
             axes=axes,
-            plot_arg_list=["hel_sign"],
+            plot_arg_list=plot_arg_list,
             plot_kwarg_list={
                 "title": "Helicity spectrum vs $n_{{\\nu}}$ and $\\alpha$"
             },

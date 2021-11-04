@@ -212,6 +212,9 @@ def import_ref_data(args=None):
     """Import reference file consisting of multiple records"""
 
     ref_record_names = list(pl.Path(args["datapath"], "ref_data").glob("*.csv"))
+    if len(ref_record_names) == 0:
+        raise ImportError("No reference csv files found")
+
     ref_files_sort_index = np.argsort(
         [str(ref_record_name) for ref_record_name in ref_record_names]
     )
