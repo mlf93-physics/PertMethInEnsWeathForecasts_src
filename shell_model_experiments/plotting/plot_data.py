@@ -27,6 +27,7 @@ def plot_energy_spectrum(
     axes: plt.Axes = None,
     plot_arg_list: list = ["kolmogorov", "calculate"],
     plot_kwarg_list: dict = {},
+    args: dict = {},
 ):
     # Make axes if not present
     if axes is None:
@@ -46,29 +47,37 @@ def plot_energy_spectrum(
             np.log2(k_vec_temp), k_vec_temp ** (-2 / 3), "k--", label="$k^{{-2/3}}$"
         )
 
-    label_append: str = ""
-    color = None
+    label: str = (
+        plot_kwarg_list["label"]
+        if "label" in plot_kwarg_list
+        else (
+            f"$n_{{\\nu}}$={int(header_dict['ny_n'])}, "
+            + f"$\\alpha$={int(header_dict['diff_exponent'])}"
+        )
+    )
+    title_suffix: str = ""
+    color = plot_kwarg_list["color"] if "color" in plot_kwarg_list else None
 
     # Fit the slope of the spectrum
     k_vectors = np.log2(k_vec_temp)
+    if "fit_slope" in plot_arg_list or "rel_fit" in plot_arg_list:
+        slope, intercept = sh_analysis.fit_spectrum_slope(mean_energy, header_dict)
     if "fit_slope" in plot_arg_list:
-        slope, intercept = sh_analysis.fit_spectrum_slope(u_data, header_dict)
-        label_append += f", slope={slope:.2e}, b={intercept:.2e}"
+        label += f", slope={slope:.2e}, b={intercept:.2e}"
         slope_plot = axes.plot(k_vectors, np.exp(slope * k_vectors + intercept), "--")
-        color = slope_plot[0].get_color()
+        if color is None:
+            color = slope_plot[0].get_color()
 
-        # if mean_energy.size == n_k_vec:
-        #     k_vectors = np.reshape(np.log2(k_vec_temp), (n_k_vec, 1))
-        #     mean_energy = mean_energy.T
-        # else:
+    # Normlize energy spectrum to fit
+    if "rel_fit" in plot_arg_list:
+        mean_energy /= np.exp(slope * np.log2(k_vec_temp) + intercept)
+        title_suffix += "rel. fit, "
 
     # Plot energy spectrum
     axes.plot(
         k_vectors,
         mean_energy,
-        label=f"$n_{{\\nu}}$={int(header_dict['ny_n'])}, "
-        + f"$\\alpha$={int(header_dict['diff_exponent'])}"
-        + label_append,
+        label=label,
         color=color,
     )
 
@@ -80,7 +89,9 @@ def plot_energy_spectrum(
 
     # Limit y axis if necessary
     min_mean_energy = np.min(mean_energy)
-    if min_mean_energy > 0:
+    if args["ylim"] is not None:
+        axes.set_ylim(args["ylim"][0], args["ylim"][1])
+    elif min_mean_energy > 0:
         if np.log(min_mean_energy) < -15:
             axes.set_ylim(1e-15, 10)
     else:
@@ -91,7 +102,10 @@ def plot_energy_spectrum(
         title = plot_kwarg_list["title"]
     else:
         title = g_plt_utils.generate_title(
-            args, header_dict=header_dict, title_header="Energy spectrum"
+            args,
+            header_dict=header_dict,
+            title_header="Energy spectrum",
+            title_suffix=title_suffix,
         )
     axes.set_title(title)
 
@@ -120,15 +134,41 @@ def plot_helicity_spectrum(
             np.log2(k_vec_temp), k_vec_temp ** (1 / 3), "k--", label="$k^{{1/3}}$"
         )
 
+    label: str = (
+        plot_kwarg_list["label"]
+        if "label" in plot_kwarg_list
+        else (
+            f"$n_{{\\nu}}$={int(header_dict['ny_n'])}, "
+            + f"$\\alpha$={int(header_dict['diff_exponent'])}"
+        )
+    )
+    title_suffix: str = ""
+    color = plot_kwarg_list["color"] if "color" in plot_kwarg_list else None
+
     helicity_sign = np.array([i % 2 for i in range(n_k_vec)], dtype=np.int)
     mean_helicity = np.abs(mean_helicity)
+
+    # Fit the slope of the spectrum
+    k_vectors = np.log2(k_vec_temp)
+    if "fit_slope" in plot_arg_list or "rel_fit" in plot_arg_list:
+        slope, intercept = sh_analysis.fit_spectrum_slope(mean_helicity, header_dict)
+    if "fit_slope" in plot_arg_list:
+        label += f", slope={slope:.2e}, b={intercept:.2e}"
+        slope_plot = axes.plot(k_vectors, np.exp(slope * k_vectors + intercept), "--")
+        if color is None:
+            color = slope_plot[0].get_color()
+
+    # Normlize energy spectrum to fit
+    if "rel_fit" in plot_arg_list:
+        mean_helicity /= np.exp(slope * np.log2(k_vec_temp) + intercept)
+        title_suffix += "rel. fit, "
 
     # Plot curves
     axes.plot(
         np.log2(k_vec_temp),
         mean_helicity,
-        label=f"$n_{{\\nu}}$={int(header_dict['ny_n'])}, "
-        + f"$\\alpha$={int(header_dict['diff_exponent'])}",
+        label=label,
+        color=color,
     )
     if "hel_sign" in plot_arg_list:
         # Plot annotation according to sign of helicity
@@ -159,7 +199,10 @@ def plot_helicity_spectrum(
         title = plot_kwarg_list["title"]
     else:
         title = g_plt_utils.generate_title(
-            args, header_dict=header_dict, title_header="Helicity spectrum"
+            args,
+            header_dict=header_dict,
+            title_header="Helicity spectrum",
+            title_suffix=title_suffix,
         )
     axes.set_title(title)
 
@@ -273,7 +316,7 @@ def plots_related_to_energy(args=None, axes=None):
     time, u_data, header_dict = g_import.import_ref_data(args=args)
 
     # Conserning ny
-    # plot_energy_spectrum(u_data, header_dict)
+    # plot_energy_spectrum(u_data, header_dict, args=args)
     g_plt_data.plot_energy(time, u_data, header_dict, axes=axes, args=args)
     # plot_energy_per_shell(time, u_data, header_dict, path=args["datapath"], args=args)
 
@@ -618,7 +661,7 @@ def plot_pert_traject_energy_spectrum(args):
     axes = plt.axes()
 
     for u_data in u_stores:
-        plot_energy_spectrum(u_data, header_dicts[0], axes=axes)
+        plot_energy_spectrum(u_data, header_dicts[0], axes=axes, args=args)
 
 
 def plot_error_energy_spectrum_vs_time_2D(args: dict = None, axes: plt.Axes = None):
@@ -953,7 +996,10 @@ if __name__ == "__main__":
         # Import reference data
         _, _temp_u_data, _temp_header_dict = g_import.import_ref_data(args=args)
         plot_energy_spectrum(
-            _temp_u_data, _temp_header_dict, plot_arg_list=["kolmogorov", "calculate"]
+            _temp_u_data,
+            _temp_header_dict,
+            plot_arg_list=["kolmogorov", "calculate"],
+            args=args,
         )
 
     if "pert_traj_energy_spectrum" in args["plot_type"]:

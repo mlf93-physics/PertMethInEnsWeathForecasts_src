@@ -165,7 +165,7 @@ def fit_spectrum_slope(
     """
     # Take only up to ny_n
     shell_limit = int(header_dict["ny_n"])
-    mean_u_data = mean_u_data[0, :(shell_limit)]
+    mean_u_data = mean_u_data[:(shell_limit)]
     k_vectors = np.log2(k_vec_temp[:(shell_limit)])
 
     # Prepare data

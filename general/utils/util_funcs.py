@@ -155,6 +155,27 @@ def get_files_in_path(path: pl.Path, search_pattern: str = "*.csv") -> list:
     return files
 
 
+def get_header_dicts_from_paths(file_paths: List[pl.Path]) -> List[dict]:
+    """Get list of header dicts from path
+
+    Parameters
+    ----------
+    file_paths : List[pl.Path]
+        The list of file paths
+
+    Returns
+    -------
+    List[dict]
+        The list of header dicts
+    """
+    # Get headers
+    header_dicts: list = []
+    for path in file_paths:
+        header_dicts.append(g_import.import_header(path.parent, path.name))
+
+    return header_dicts
+
+
 def handle_different_headers(header_dict):
     """Handle new and old style of the header_dict
 
@@ -243,6 +264,8 @@ def get_values_from_dicts(dicts: list, key: str) -> list:
             raise ValueError(f"No key '{key}' in dict")
 
         value_list.append(dict[key])
+
+    value_list = value_list
 
     return value_list
 
