@@ -29,6 +29,9 @@ k_vec_temp = np.array(
     [lambda_const ** (n + 1) for n in range(n_k_vec)], dtype=np.float64
 )
 pre_factor = 1j * k_vec_temp
+
+# Helicity pre factor
+hel_pre_factor = (-1) ** (np.arange(1, n_k_vec + 1)) * k_vec_temp
 # Define du array to store derivative
 du_array = np.zeros(n_k_vec + 2 * bd_size, dtype=dtype)
 # Define u_slice
@@ -38,7 +41,7 @@ u_slice = np.s_[bd_size:-bd_size:1]
 initial_k_vec = k_vec_temp ** (-1 / 3)
 
 #### Initialise Lyaponov exponent estimator constants ####
-seeked_error_norm = 1e-14
+seeked_error_norm = 1e-8
 
 
 def ny_from_ny_n_and_forcing(forcing, ny_n, diff_exponent):

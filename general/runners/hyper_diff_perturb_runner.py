@@ -13,13 +13,13 @@ import general.utils.experiments.exp_utils as exp_utils
 import general.utils.exceptions as g_exceptions
 import general.utils.argument_parsers as a_parsers
 import general.utils.user_interface as g_ui
-from config import MODEL, GLOBAL_PARAMS
+import config as cfg
 
 # Get parameters for model
 params = sh_params
 
 # Set global params
-GLOBAL_PARAMS.ref_run = False
+cfg.GLOBAL_PARAMS.ref_run = False
 
 
 def main(args):
@@ -30,7 +30,7 @@ def main(args):
     processes = []
 
     # Prepare arguments
-    args["exp_folder"] = exp_setup["folder_name"]
+    args["out_exp_folder"] = exp_setup["folder_name"]
     args["start_times"] = exp_setup["start_times"]
     args["time_to_run"] = exp_setup["time_to_run"]
     args["endpoint"] = True
@@ -65,8 +65,10 @@ def main(args):
 
 
 if __name__ == "__main__":
+    cfg.init_licence()
+
     # Check if correct model is running
-    if MODEL != Models.SHELL_MODEL:
+    if cfg.MODEL != Models.SHELL_MODEL:
         g_exceptions.ModelError("Model is not valid for hyper diffusion experiments")
     # Get arguments
     pert_arg_setup = a_parsers.PerturbationArgSetup()

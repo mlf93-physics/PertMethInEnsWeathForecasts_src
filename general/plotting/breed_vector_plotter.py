@@ -2,27 +2,33 @@ import sys
 
 sys.path.append("..")
 import pathlib as pl
-import matplotlib.pyplot as plt
-from mpl_toolkits import mplot3d
-import numpy as np
-import shell_model_experiments.params as sh_params
-import shell_model_experiments.plotting.plot_data as sh_plot
+
+import config as cfg
+import general.analyses.breed_vector_eof_analysis as bv_analysis
+import general.analyses.plot_analyses as g_plt_anal
+import general.plotting.plot_data as g_plt_data
+import general.utils.argument_parsers as a_parsers
+import general.utils.importing.import_data_funcs as g_import
+import general.utils.importing.import_perturbation_data as pt_import
+import general.utils.importing.import_utils as g_imp_utils
+import general.utils.plot_utils as g_plt_utils
+import general.utils.user_interface as g_ui
 import lorentz63_experiments.params.params as l63_params
 import lorentz63_experiments.perturbations.normal_modes as l63_nm_estimator
 import lorentz63_experiments.plotting.plot_data as l63_plot
-import general.utils.importing.import_perturbation_data as pt_import
-import general.utils.importing.import_data_funcs as g_import
-import general.plotting.plot_data as g_plt_data
-import general.utils.plot_utils as g_plt_utils
-import general.analyses.plot_analyses as g_plt_anal
-import general.utils.argument_parsers as a_parsers
+import matplotlib.pyplot as plt
+import numpy as np
+import shell_model_experiments.params as sh_params
+import shell_model_experiments.plotting.plot_data as sh_plot
 from general.params.model_licences import Models
-from config import MODEL
+from general.utils.module_import.type_import import *
+from mpl_toolkits import mplot3d
+from pyinstrument import Profiler
 
 # Get parameters for model
-if MODEL == Models.SHELL_MODEL:
+if cfg.MODEL == Models.SHELL_MODEL:
     params = sh_params
-elif MODEL == Models.LORENTZ63:
+elif cfg.MODEL == Models.LORENTZ63:
     params = l63_params
 
 
@@ -50,8 +56,8 @@ def plot_breed_vectors(args):
     )
 
     ortho_bv_title = g_plt_utils.generate_title(
-        pert_info_dict,
         args,
+        header_dict=pert_info_dict,
         title_header="Orthogonality of BVs | Lorentz63 model \n",
         title_suffix=f"$N_{{vectors}}$={args['n_profiles']}",
     )
@@ -65,8 +71,8 @@ def plot_breed_vectors(args):
     plt.colorbar()
 
     bv_2d_title = g_plt_utils.generate_title(
-        pert_info_dict,
         args,
+        header_dict=pert_info_dict,
         title_header="Breed Vectors 2D | Lorentz63 model \n",
         title_suffix=f"$N_{{vectors}}$={args['n_profiles']}",
     )
@@ -95,8 +101,8 @@ def plot_breed_vectors(args):
         )
 
         bv_3d_title = g_plt_utils.generate_title(
-            pert_info_dict,
             args,
+            header_dict=pert_info_dict,
             title_header="Breed Vectors 3D | Lorentz63 model \n",
             title_suffix=f"$N_{{vectors}}$={args['n_profiles']}",
         )
@@ -190,47 +196,70 @@ def plot_breed_error_norm(args):
     )
 
     # Set limits
-    axes[0].set_ylim(args["ylim"][0], args["ylim"][1])
+    if args["ylim"] is not None:
+        axes[0].set_ylim(args["ylim"][0], args["ylim"][1])
 
-    # Prepare ref import
-    if "start_times" in exp_setup:
-        start_time = exp_setup["start_times"][0]
-        end_time = (
-            exp_setup["start_times"][0]
-            + exp_setup["n_cycles"] * exp_setup["integration_time"]
-        )
-    elif "eval_times" in exp_setup:
-        # Adjust start- and endtime differently depending on if only last
-        # perturbation data is saved, or all perturbation data is saved.
-        if pert_info_dict["save_last_pert"]:
-            start_time = exp_setup["eval_times"][0] - exp_setup["integration_time"]
-            end_time = (
-                start_time + pert_info_dict["n_units"] * exp_setup["integration_time"]
-            )
-        else:
-            start_time = (
-                exp_setup["eval_times"][0]
-                - exp_setup["n_cycles"] * exp_setup["integration_time"]
-            )
-            end_time = exp_setup["eval_times"][0]
-    else:
-        raise ValueError("start_time could not be determined from exp setup")
+    start_time, end_time = g_imp_utils.get_start_end_times_from_exp_setup(
+        exp_setup, pert_info_dict
+    )
 
     args["ref_start_time"] = start_time
     args["ref_end_time"] = end_time
 
-    if MODEL == Models.SHELL_MODEL:
+    if cfg.MODEL == Models.SHELL_MODEL:
         sh_plot.plots_related_to_energy(args, axes=axes[1])
-    elif MODEL == Models.LORENTZ63:
+    elif cfg.MODEL == Models.LORENTZ63:
         l63_plot.plot_energy(args, axes=axes[1])
 
 
+def plot_breed_eof_vectors_3D(args: dict):
+    """Plot the EOF breed vectors in 3D
+
+    Parameters
+    ----------
+    args : dict
+        Run-time arguments
+    """
+
+    perturb_vectors, perturb_header_dicts = pt_import.import_perturb_vectors(args)
+
+    eof_vectors = bv_analysis.calc_bv_eof_vectors(perturb_vectors)
+    n_vectors: int = eof_vectors.shape[2]
+
+    origin: np.ndarray = np.zeros(n_vectors)
+
+    plt.figure()
+    ax3 = plt.axes(projection="3d")
+    ax3.quiver(
+        origin,
+        origin,
+        origin,
+        eof_vectors[0, 0, :],
+        eof_vectors[0, 1, :],
+        eof_vectors[0, 2, :],
+    )
+
+    ax3.set_xlabel("x")
+    ax3.set_ylabel("y")
+    ax3.set_zlabel("z")
+    ax3.set_xlim(-1, 1)
+    ax3.set_ylim(-1, 1)
+    ax3.set_zlim(-1, 1)
+
+
 if __name__ == "__main__":
+    cfg.init_licence()
+
     # Get arguments
     stand_plot_arg_parser = a_parsers.StandardPlottingArgParser()
     stand_plot_arg_parser.setup_parser()
     args = stand_plot_arg_parser.args
-    print("args", args)
+
+    g_ui.confirm_run_setup(args)
+
+    # Make profiler
+    profiler = Profiler()
+    profiler.start()
 
     if "pert_vector_folder" in args["plot_type"]:
         plot_breed_vectors(args)
@@ -238,7 +267,11 @@ if __name__ == "__main__":
         plot_breed_comparison_to_nm(args)
     elif "bv_error_norm" in args["plot_type"]:
         plot_breed_error_norm(args)
+    elif "bv_eof_3D" in args["plot_type"]:
+        plot_breed_eof_vectors_3D(args)
     else:
         raise ValueError("No valid plot type given as input argument")
 
+    profiler.stop()
+    print(profiler.output_text())
     g_plt_utils.save_or_show_plot(args)

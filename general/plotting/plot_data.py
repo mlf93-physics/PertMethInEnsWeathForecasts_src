@@ -3,17 +3,18 @@ import numpy as np
 import matplotlib.pyplot as plt
 import shell_model_experiments.params as sh_params
 import lorentz63_experiments.params.params as l63_params
+from general.utils.module_import.type_import import *
 import general.utils.importing.import_data_funcs as g_import
 import general.utils.plot_utils as g_plt_utils
 import general.utils.util_funcs as g_utils
 from general.params.experiment_licences import Experiments as EXP
 from general.params.model_licences import Models
-from config import MODEL, LICENCE
+import config as cfg
 
 # Get parameters for model
-if MODEL == Models.SHELL_MODEL:
+if cfg.MODEL == Models.SHELL_MODEL:
     params = sh_params
-elif MODEL == Models.LORENTZ63:
+elif cfg.MODEL == Models.LORENTZ63:
     params = l63_params
 
 
@@ -88,6 +89,13 @@ def plot_error_norm_vs_time(
     normalize_start_time=True,
     axes=None,
     exp_setup=None,
+    linestyle: str = "-",
+    linewidth: float = 2,
+    alpha: float = 1.0,
+    zorder: float = 0.0,
+    cmap_list: Union[None, list] = None,
+    legend_on: bool = True,
+    plot_args: list = ["detailed_title"],
 ):
 
     if exp_setup is None:
@@ -150,15 +158,31 @@ def plot_error_norm_vs_time(
         axes = plt.gca()
 
     # Get non-repeating colorcycle
-    if LICENCE == EXP.BREEDING_VECTORS or LICENCE == EXP.LYAPUNOV_VECTORS:
+    if cfg.LICENCE == EXP.BREEDING_VECTORS or cfg.LICENCE == EXP.LYAPUNOV_VECTORS:
         n_colors = exp_setup["n_vectors"]
     else:
         n_colors = num_perturbations
 
-    cmap_list = g_plt_utils.get_non_repeating_colors(n_colors=n_colors)
+    # Set colors
+    if cmap_list is None:
+        cmap_list = g_plt_utils.get_non_repeating_colors(n_colors=n_colors)
     axes.set_prop_cycle("color", cmap_list)
 
-    axes.plot(time_array, error_norm_vs_time)  # , 'k', linewidth=1)
+    if header_dicts[0]["pert_mode"] in ["rd", "nm"]:
+        linewidth: float = 1.0
+        alpha: float = 0.5
+        zorder: float = 0
+    else:
+        zorder: float = 10
+
+    axes.plot(
+        time_array,
+        error_norm_vs_time,
+        linestyle=linestyle,
+        alpha=alpha,
+        linewidth=linewidth,
+        zorder=zorder,
+    )
 
     if args["plot_mode"] == "detailed":
         # Plot perturbation error norms
@@ -171,8 +195,9 @@ def plot_error_norm_vs_time(
     axes.set_ylabel("Error")
     axes.set_yscale("log")
 
-    if LICENCE not in [EXP.BREEDING_VECTORS, EXP.LYAPUNOV_VECTORS]:
-        axes.legend(perturb_time_pos_list_legend)
+    if legend_on:
+        if cfg.LICENCE not in [EXP.BREEDING_VECTORS, EXP.LYAPUNOV_VECTORS]:
+            axes.legend(perturb_time_pos_list_legend)
 
     if args["xlim"] is not None:
         axes.set_xlim(args["xlim"][0], args["xlim"][1])
@@ -185,7 +210,11 @@ def plot_error_norm_vs_time(
             title_suffix = f" cutoff={args['shell_cutoff']}"
 
     title = g_plt_utils.generate_title(
-        header_dicts[0], args, title_header="Error vs time", title_suffix=title_suffix
+        args,
+        header_dict=header_dicts[0],
+        title_header="Error vs time",
+        title_suffix=title_suffix,
+        detailed="detailed_title" in plot_args,
     )
     axes.set_title(title)
 
@@ -193,7 +222,13 @@ def plot_error_norm_vs_time(
 
 
 def plot_energy(
-    time=None, u_data=None, header_dict=None, axes=None, args=None, zero_time_ref=None
+    time=None,
+    u_data=None,
+    header_dict=None,
+    axes=None,
+    args=None,
+    zero_time_ref=None,
+    plot_args=["detailed_title"],
 ):
     # If data is not present, import it
     if time is None or u_data is None or header_dict is None:
@@ -213,7 +248,10 @@ def plot_energy(
     header_dict = g_utils.handle_different_headers(header_dict)
 
     title = g_plt_utils.generate_title(
-        header_dict, args, title_header="Energy vs. time"
+        args,
+        header_dict=header_dict,
+        title_header="Energy vs. time",
+        detailed="detailed_title" in plot_args,
     )
     axes.set_title(title)
 

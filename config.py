@@ -1,6 +1,4 @@
-__all__ = ["MODEL", "LICENCE", "NUMBA_CACHE"]
-
-import pathlib as pl
+import general.plotting.plot_config as plt_config
 from general.params.params import GlobalParams
 import general.utils.licence_utils.model_licence_utils as md_license_ut
 import general.utils.licence_utils.exp_licence_utils as exp_licence_ut
@@ -8,8 +6,11 @@ import general.utils.licence_utils.exp_licence_utils as exp_licence_ut
 # Get model
 MODEL = md_license_ut.detect_model_in_use()
 
-# Get licence
-LICENCE = exp_licence_ut.detect_exp_licence()
+# Initialise licence
+def init_licence():
+    global LICENCE
+    LICENCE = exp_licence_ut.detect_exp_licence()
+
 
 # Get global params
 GLOBAL_PARAMS = GlobalParams()

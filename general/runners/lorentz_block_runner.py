@@ -1,6 +1,7 @@
 """Perform the calculation of one or more lorentz blocks.
 
-Example:
+Example
+-------
 python ../general/runners/lorentz_block_runner.py
 --exp_setup=TestRun3
 --n_units=1
@@ -19,22 +20,22 @@ import general.utils.util_funcs as g_utils
 import general.utils.saving.save_data_funcs as g_save
 import general.utils.saving.save_utils as g_save_utils
 from general.params.env_params import *
-from general.params.model_licences import Models
 import general.utils.experiments.validate_exp_setups as ut_exp_val
 import general.utils.experiments.exp_utils as exp_utils
 import general.utils.runner_utils as r_utils
 import general.utils.user_interface as g_ui
 import general.utils.argument_parsers as a_parsers
-from config import MODEL, GLOBAL_PARAMS
+from general.params.model_licences import Models
+import config as cfg
 
 # Get parameters for model
-if MODEL == Models.SHELL_MODEL:
+if cfg.MODEL == Models.SHELL_MODEL:
     params = sh_params
-elif MODEL == Models.LORENTZ63:
+elif cfg.MODEL == Models.LORENTZ63:
     params = l63_params
 
 # Set global params
-GLOBAL_PARAMS.ref_run = False
+cfg.GLOBAL_PARAMS.ref_run = False
 
 
 def main(args):
@@ -79,7 +80,7 @@ def main(args):
         args["endpoint"] = True
         args["n_profiles"] = exp_setup["n_analyses"]
         args["n_runs_per_profile"] = 1
-        args["exp_folder"] = f"{parent_perturb_folder}/analysis_forecasts"
+        args["out_exp_folder"] = f"{parent_perturb_folder}/analysis_forecasts"
 
         args = g_utils.adjust_start_times_with_offset(args)
 
@@ -95,7 +96,7 @@ def main(args):
         args["endpoint"] = True
         args["n_profiles"] = 1
         args["n_runs_per_profile"] = exp_setup["n_analyses"]
-        args["exp_folder"] = f"{parent_perturb_folder}/forecasts"
+        args["out_exp_folder"] = f"{parent_perturb_folder}/forecasts"
 
         copy_args = copy.deepcopy(args)
         temp_processes, _, _ = pt_runner.main_setup(copy_args)
@@ -112,12 +113,14 @@ def main(args):
 
         if args["erda_run"]:
             path = pl.Path(args["datapath"], exp_setup["folder_name"])
-            g_save_utils.compress_dir(path, "test_temp1")
+            g_save_utils.compress_dir(path)
     else:
         print("No processes to run - check if blocks already exists")
 
 
 if __name__ == "__main__":
+    cfg.init_licence()
+
     # Get arguments
     mult_pert_arg_setup = a_parsers.MultiPerturbationArgSetup()
     mult_pert_arg_setup.setup_parser()

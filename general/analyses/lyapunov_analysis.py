@@ -9,14 +9,14 @@ import lorentz63_experiments.perturbations.normal_modes as l63_nm_estimator
 import general.utils.argument_parsers as a_parsers
 import general.utils.importing.import_data_funcs as g_import
 from general.params.model_licences import Models
-from config import MODEL
+import config as cfg
 
 # Get jacobian calculator for model
-if MODEL == Models.SHELL_MODEL:
+if cfg.MODEL == Models.SHELL_MODEL:
     init_jacobian = sh_nm_estimator.init_jacobian
     calc_jacobian = sh_nm_estimator.calc_jacobian
     params = sh_params
-elif MODEL == Models.LORENTZ63:
+elif cfg.MODEL == Models.LORENTZ63:
     init_jacobian = l63_nm_estimator.init_jacobian
     calc_jacobian = l63_nm_estimator.calc_jacobian
     params = l63_params

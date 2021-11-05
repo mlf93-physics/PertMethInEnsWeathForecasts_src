@@ -1,10 +1,15 @@
 import numpy as np
 from numba import njit, types
+from general.utils.module_import.type_import import *
 from lorentz63_experiments.params.params import *
-from config import NUMBA_CACHE
+import config as cfg
 
 
-def find_normal_modes(u_init_profiles, args, dev_plot_active=False, n_profiles=None):
+def find_normal_modes(
+    u_init_profiles: np.ndarray,
+    args: dict,
+    n_profiles: int = 1,
+) -> Tuple[np.ndarray, np.ndarray, list, list]:
     """Find the normal modes corresponding to the maximum positive
     eigenvalues of the initial vel. profile.
 
@@ -15,14 +20,23 @@ def find_normal_modes(u_init_profiles, args, dev_plot_active=False, n_profiles=N
 
     Parameters
     ----------
-    u_init_profiles : ndarray
+    u_init_profiles : np.ndarray
         The initial velocity profiles
+    args : dict
+        Run-time arguments
+    n_profiles : int, optional
+        The number of profiles to analyse for normal modes
 
     Returns
     -------
-    max_e_vector : ndarray
-        The eigenvectors corresponding to the minimal of the positive eigenvalues
-
+    Tuple[np.ndarray, np.ndarray, list, list]
+        (
+            e_vector_matrix : The eigen vectors corresponding to the maximum
+                eigen value collected in a matrix
+            e_values_max : The maximum eigenvalues
+            e_vector_collection : List of all eigen vectors
+            e_value_collection : List of all eigen values
+        )
     """
     print(
         "\nFinding the eigenvalues and eigenvectors at the position of the"
@@ -42,7 +56,8 @@ def find_normal_modes(u_init_profiles, args, dev_plot_active=False, n_profiles=N
     # Perform calculation for all u_profiles
     for i in range(n_profiles):
         # Calculate the Jacobian matrix
-        calc_jacobian(j_matrix, u_init_profiles[:, i], r_const=args["r_const"])
+        # np.copy is needed for Numba to work
+        calc_jacobian(j_matrix, np.copy(u_init_profiles[:, i]), r_const=args["r_const"])
 
         e_values, e_vectors = np.linalg.eig(j_matrix)
 
@@ -76,7 +91,7 @@ def init_jacobian(args):
         types.Array(types.float64, 1, "C", readonly=True),
         types.float64,
     ),
-    cache=NUMBA_CACHE,
+    cache=cfg.NUMBA_CACHE,
 )
 def calc_jacobian(j_matrix, u_profile, r_const):
     """Calculate the jacobian at a given point in time given through the u_profile

@@ -33,38 +33,62 @@ import lorentz63_experiments.params.params as l63_params
 import lorentz63_experiments.utils.util_funcs as ut_funcs
 import general.utils.util_funcs as g_utils
 import general.utils.importing.import_data_funcs as g_import
+import general.utils.importing.import_perturbation_data as pt_import
 from general.params.experiment_licences import Experiments as EXP
 import general.utils.saving.save_data_funcs as g_save
 import general.utils.saving.save_perturbation as pt_save
+import general.analyses.breed_vector_eof_analysis as bv_eof_anal
 import general.utils.perturb_utils as pt_utils
 import general.utils.exceptions as g_exceptions
 import general.utils.argument_parsers as a_parsers
 import general.utils.user_interface as g_ui
+from general.utils.module_import.type_import import *
 from general.params.model_licences import Models
-from config import MODEL, LICENCE, GLOBAL_PARAMS
+import config as cfg
 
 
 # Get parameters for model
-if MODEL == Models.SHELL_MODEL:
+if cfg.MODEL == Models.SHELL_MODEL:
     params = sh_params
-elif MODEL == Models.LORENTZ63:
+elif cfg.MODEL == Models.LORENTZ63:
     params = l63_params
 
 # Set global params
-GLOBAL_PARAMS.ref_run = False
+cfg.GLOBAL_PARAMS.ref_run = False
 
 
 def perturbation_runner(
-    u_old,
-    perturb_positions,
-    du_array,
-    data_out_list,
-    args,
-    run_count,
-    perturb_count,
-    u_ref=None,
+    u_old: np.ndarray,
+    perturb_positions: List[int],
+    du_array: np.ndarray,
+    data_out_list: List[np.ndarray],
+    args: dict,
+    run_count: int,
+    perturb_count: int,
+    u_ref: Union[np.ndarray, None] = None,
 ):
-    """Execute a given model on one given perturbed u_old profile"""
+    """Execute a given model on one given perturbed u_old profile
+
+    Parameters
+    ----------
+    u_old : np.ndarray
+        The previous velocity vector (i.e. the initial vel. vector)
+    perturb_positions : List[int]
+        List of perturbation index positions
+    du_array : np.ndarray
+        Array to store the du vector
+    data_out_list : List[np.ndarray]
+        List to store output data from processes (i.e. when LICENCE = BREEDING_VECTORS)
+    args : dict
+        Run-time arguments
+    run_count : int
+        Counter that holds the run number of the current process
+    perturb_count : int
+        Counter that holds the perturbation number of the current process
+        (i.e. including the number of existing perturbations)
+    u_ref : Union[np.ndarray, None], optional
+        The reference data (needed for TL models), by default None
+    """
     # Prepare array for saving
     data_out = np.zeros(
         (int(args["Nt"] * params.sample_rate) + args["endpoint"] * 1, params.sdim + 1),
@@ -77,8 +101,8 @@ def perturbation_runner(
         + f" {run_count // args['n_runs_per_profile']}, profile run"
         + f" {run_count % args['n_runs_per_profile']}"
     )
-    if MODEL == Models.SHELL_MODEL:
-        if MODEL.submodel is None:
+    if cfg.MODEL == Models.SHELL_MODEL:
+        if cfg.MODEL.submodel is None:
             sh_model(
                 u_old,
                 du_array,
@@ -91,10 +115,10 @@ def perturbation_runner(
         else:
             g_exceptions.ModelError(
                 "Submodel invalid or not implemented yet",
-                model=f"{MODEL.submodel} {MODEL}",
+                model=f"{cfg.MODEL.submodel} {cfg.MODEL}",
             )
-    elif MODEL == Models.LORENTZ63:
-        if MODEL.submodel is None:
+    elif cfg.MODEL == Models.LORENTZ63:
+        if cfg.MODEL.submodel is None:
             # Model specific setup
             deriv_matrix = ut_funcs.setup_deriv_matrix(args)
             l63_model(
@@ -104,7 +128,7 @@ def perturbation_runner(
                 data_out,
                 args["Nt"] + args["endpoint"] * 1,
             )
-        elif MODEL.submodel == "TL":
+        elif cfg.MODEL.submodel == "TL":
             deriv_matrix = l63_nm_estimator.init_jacobian(args)
 
             l63_tl_model(
@@ -124,7 +148,7 @@ def perturbation_runner(
         else:
             g_exceptions.ModelError(
                 "Submodel invalid or not implemented yet",
-                model=f"{MODEL.submodel} {MODEL}",
+                model=f"{cfg.MODEL.submodel} {cfg.MODEL}",
             )
 
     if not args["skip_save_data"]:
@@ -135,21 +159,22 @@ def perturbation_runner(
             args=args,
         )
 
-    if LICENCE == EXP.BREEDING_VECTORS or LICENCE == EXP.LYAPUNOV_VECTORS:
+    if cfg.LICENCE == EXP.BREEDING_VECTORS or cfg.LICENCE == EXP.LYAPUNOV_VECTORS:
         # Save latest state vector to output dir
         data_out_list.append(data_out[-1, 1:])
 
 
-def prepare_run_times(args):
+def prepare_run_times(
+    args: dict,
+) -> Tuple[np.ndarray, np.ndarray]:
 
-    if LICENCE != EXP.LORENTZ_BLOCK:
-        num_perturbations = args["n_runs_per_profile"] * args["n_profiles"]
+    num_perturbations = args["n_runs_per_profile"] * args["n_profiles"]
+
+    if cfg.LICENCE != EXP.LORENTZ_BLOCK:
         times_to_run = np.ones(num_perturbations) * args["time_to_run"]
         Nt_array = (times_to_run / params.dt).astype(np.int64)
 
     else:
-        num_perturbations = args["n_runs_per_profile"] * args["n_profiles"]
-
         if len(args["start_times"]) > 1:
             start_times = np.array(args["start_times"])
         else:
@@ -161,7 +186,9 @@ def prepare_run_times(args):
     return times_to_run, Nt_array
 
 
-def prepare_perturbations(args, raw_perturbations=False):
+def prepare_perturbations(
+    args: dict, raw_perturbations: bool = False
+) -> Tuple[np.ndarray, List[int]]:
     """Prepare the perturbed initial conditions according to the desired perturbation
     type (given by args["pert_mode"])
 
@@ -176,7 +203,11 @@ def prepare_perturbations(args, raw_perturbations=False):
     Returns
     -------
     tuple
-        (perturbed u profiles, position of the perturbation (in samples))
+        (
+            u_return : perturbed u profiles
+            perturb_positions : position of the perturbation (in samples)
+        )
+
 
     Raises
     ------
@@ -196,18 +227,23 @@ def prepare_perturbations(args, raw_perturbations=False):
 
     # Only import start profiles beforehand if not using breed_vector perturbations,
     # i.e. also when running in singel_shell_perturb mode
-    if args["pert_mode"] != "breed_vectors":
+    if args["pert_mode"] not in ["bv", "bv_eof"]:
         (
             u_init_profiles,
             perturb_positions,
             header_dict,
         ) = g_import.import_start_u_profiles(args=args)
 
+    # NM pert generation mode; if True, the perturbations are generated in the
+    # plane of the complex-conjugate pair of the leading NM. Otherwise only one
+    # perturbation is made
+    # nm_complex_conj = False
+
     if args["pert_mode"] is not None:
 
         if args["pert_mode"] == "nm":
             print("\nRunning with NORMAL MODE perturbations\n")
-            if MODEL == Models.SHELL_MODEL:
+            if cfg.MODEL == Models.SHELL_MODEL:
                 (perturb_vectors, _, _,) = sh_nm_estimator.find_normal_modes(
                     u_init_profiles[
                         :,
@@ -218,24 +254,54 @@ def prepare_perturbations(args, raw_perturbations=False):
                     dev_plot_active=False,
                     local_ny=header_dict["ny"],
                 )
-            elif MODEL == Models.LORENTZ63:
-                perturb_vectors, _, _, _ = l63_nm_estimator.find_normal_modes(
+            elif cfg.MODEL == Models.LORENTZ63:
+                (
+                    perturb_vectors,
+                    e_values_max,
+                    _,
+                    _,
+                ) = l63_nm_estimator.find_normal_modes(
                     u_init_profiles[
                         :,
                         0 : args["n_profiles"]
                         * args["n_runs_per_profile"] : args["n_runs_per_profile"],
                     ],
                     args,
-                    dev_plot_active=False,
                     n_profiles=args["n_profiles"],
                 )
         elif args["pert_mode"] == "bv":
             print("\nRunning with BREED VECTOR perturbations\n")
             (
+                perturb_vectors,
                 u_init_profiles,
                 perturb_positions,
-                perturb_vectors,
-            ) = pt_utils.prepare_breed_vectors(args)
+                _,
+            ) = pt_import.import_perturb_vectors(args)
+
+            # Reshape perturb_vectors
+            perturb_vectors = np.reshape(
+                np.transpose(perturb_vectors, axes=(2, 0, 1)),
+                (params.sdim, args["n_profiles"] * args["n_runs_per_profile"]),
+            )
+
+        elif args["pert_mode"] == "bv_eof":
+            print("\nRunning with BREED VECTOR EOF perturbations\n")
+
+            (
+                breed_vectors,
+                u_init_profiles,
+                perturb_positions,
+                _,
+            ) = pt_import.import_perturb_vectors(args)
+
+            eof_vectors: np.ndarray = bv_eof_anal.calc_bv_eof_vectors(
+                breed_vectors, args["n_runs_per_profile"]
+            )
+            # Reshape and save as perturb_vectors
+            perturb_vectors = np.reshape(
+                np.transpose(eof_vectors, axes=(1, 0, 2)),
+                (params.sdim, args["n_profiles"] * args["n_runs_per_profile"]),
+            )
 
         elif args["pert_mode"] == "rd":
             print("\nRunning with RANDOM perturbations\n")
@@ -245,11 +311,11 @@ def prepare_perturbations(args, raw_perturbations=False):
     # Check if single shell perturb should be activated
     elif args["single_shell_perturb"] is not None:
         # Specific to shell model setup
-        if MODEL == Models.SHELL_MODEL:
+        if cfg.MODEL == Models.SHELL_MODEL:
             print("\nRunning in single shell perturb mode\n")
             perturb_vectors = None
         else:
-            raise g_exceptions.ModelError(model=MODEL)
+            raise g_exceptions.ModelError(model=cfg.MODEL)
     else:
         _pert_arg = (
             "pert_mode: " + args["pert_mode"]
@@ -276,14 +342,14 @@ def prepare_perturbations(args, raw_perturbations=False):
 
 
 def prepare_processes(
-    u_profiles_perturbed,
-    perturb_positions,
-    times_to_run,
-    Nt_array,
-    n_perturbation_files,
-    u_ref=None,
-    args=None,
-):
+    u_profiles_perturbed: np.ndarray,
+    perturb_positions: List[int],
+    times_to_run: np.ndarray,
+    Nt_array: np.ndarray,
+    n_perturbation_files: int,
+    u_ref: np.ndarray = None,
+    args: dict = None,
+) -> Tuple[List[multiprocessing.Process], List[np.ndarray]]:
     # Prepare and start the perturbation_runner in multiple processes
     processes = []
     # Prepare return data list
@@ -364,7 +430,7 @@ def main_setup(
 
         raw_perturbations = False
         # Get only raw_perturbations if licence is LYAPUNOV_VECTORS
-        if LICENCE == EXP.LYAPUNOV_VECTORS:
+        if cfg.LICENCE == EXP.LYAPUNOV_VECTORS:
             raw_perturbations = True
 
         u_profiles_perturbed, perturb_positions = prepare_perturbations(
@@ -374,7 +440,7 @@ def main_setup(
     # Detect if other perturbations exist in the perturbation_folder and calculate
     # perturbation count to start at
     # Check if path exists
-    expected_path = pl.Path(args["datapath"], args["exp_folder"])
+    expected_path = pl.Path(args["datapath"], args["out_exp_folder"])
     dir_exists = os.path.isdir(expected_path)
     if dir_exists:
         n_perturbation_files = len(list(expected_path.glob("*.csv")))
@@ -416,9 +482,9 @@ def main_run(processes, args=None, n_units=None):
     num_processes = len(processes)
 
     # if n_units is not None:
-    #     if LICENCE == EXP.NORMAL_PERTURBATION or LICENCE == EXP.BREEDING_VECTORS:
+    #     if cfg.LICENCE == EXP.NORMAL_PERTURBATION or cfg.LICENCE == EXP.BREEDING_VECTORS:
     #         num_processes_per_unit = args["n_profiles"] * args["n_runs_per_profile"]
-    #     elif LICENCE == EXP.LORENTZ_BLOCK:
+    #     elif cfg.LICENCE == EXP.LORENTZ_BLOCK:
     #         num_processes_per_unit = 2 * args["n_profiles"] * args["n_runs_per_profile"]
 
     for j in range(num_processes // cpu_count):
@@ -458,6 +524,8 @@ def main_run(processes, args=None, n_units=None):
 
 
 if __name__ == "__main__":
+    cfg.init_licence()
+
     # Get arguments
     pert_arg_setup = a_parsers.PerturbationArgSetup()
     pert_arg_setup.setup_parser()

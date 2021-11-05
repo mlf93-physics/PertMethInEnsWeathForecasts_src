@@ -2,6 +2,7 @@ import sys
 
 sys.path.append("..")
 import numpy as np
+from general.utils.module_import.type_import import *
 from shell_model_experiments.params.params import *
 
 
@@ -9,7 +10,12 @@ from shell_model_experiments.params.params import *
 #        types.Array(types.complex128, 2, 'C', readonly=False),
 #        types.Array(types.complex128, 2, 'C', readonly=False),
 #        types.boolean, types.int64, types.float64), parallel=True, cache=True)
-def find_normal_modes(u_init_profiles, args, dev_plot_active=False, local_ny=None):
+def find_normal_modes(
+    u_init_profiles: np.ndarray,
+    args: dict,
+    dev_plot_active: bool = False,
+    local_ny: float = None,
+) -> Tuple[np.ndarray, list, list]:
     """Find the eigenvector corresponding to the minimal of the positive
     eigenvalues of the initial vel. profile.
 
@@ -20,15 +26,26 @@ def find_normal_modes(u_init_profiles, args, dev_plot_active=False, local_ny=Non
 
     Parameters
     ----------
-    u_init_profiles : ndarray
+    u_init_profiles : np.ndarray
         The initial velocity profiles
+    args : dict
+        Run-time arguments
+    dev_plot_active : bool, optional
+        Make development plots or not, by default False
+    local_ny : float, optional
+        Local value of ny, by default None
 
     Returns
     -------
-    max_e_vector : ndarray
-        The eigenvectors corresponding to the minimal of the positive eigenvalues
-
+    Tuple[np.ndarray, list, list]
+        (
+            e_vector_matrix : The eigen vectors corresponding to the maximum
+                eigen value collected in a matrix
+            e_vector_collection : List of all eigen vectors
+            e_value_collection : List of all eigen values
+        )
     """
+
     print(
         "\nFinding the eigenvalues and eigenvectors at the position of the"
         + " given velocity profiles\n"

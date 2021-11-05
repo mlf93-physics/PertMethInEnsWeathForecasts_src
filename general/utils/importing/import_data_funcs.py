@@ -6,21 +6,23 @@ import re
 import json
 import pathlib as pl
 import numpy as np
+from general.utils.module_import.type_import import *
 import shell_model_experiments.params as sh_params
 import lorentz63_experiments.params.params as l63_params
 from general.params.model_licences import Models
 import general.utils.util_funcs as g_utils
 import general.utils.exceptions as g_exceptions
-from config import MODEL
+from general.utils.module_import.type_import import *
+import config as cfg
 
 # Get parameters for model
-if MODEL == Models.SHELL_MODEL:
+if cfg.MODEL == Models.SHELL_MODEL:
     params = sh_params
-elif MODEL == Models.LORENTZ63:
+elif cfg.MODEL == Models.LORENTZ63:
     params = l63_params
 
 
-def import_header(folder="", file_name=None):
+def import_header(folder: Union[str, pl.Path] = "", file_name: str = "") -> dict:
     path = pl.Path(folder, file_name)
 
     # Import header
@@ -164,10 +166,21 @@ def imported_sorted_perturbation_info(folder_name, args, search_pattern="*.csv")
     )
 
 
-def import_data(file_name, start_line=0, max_lines=None, step=1):
+def import_data(
+    file_name: pl.Path, start_line: int = 0, max_lines: int = None, step: int = 1
+) -> Tuple[np.ndarray, dict]:
 
     # Import header
     header_dict = import_header(file_name=file_name)
+
+    # Test length of file
+    # with open(file_name) as file:
+    #     for i, _ in enumerate(file):
+    #         pass
+    #     len_file = i  # Not +1 to skip header from length
+
+    # if len_file == 0:
+    #     raise ImportError(f"File is empty; file_name = {file_name}")
 
     stop_line = None if max_lines is None else start_line + max_lines
     # Import data
@@ -183,6 +196,12 @@ def import_data(file_name, start_line=0, max_lines=None, step=1):
             line_iterator, dtype=params.dtype, delimiter=","
         )
 
+    if data_in.size == 0:
+        raise ImportError(
+            "No data was imported; file contained empty lines. "
+            + f"File_name = {file_name}"
+        )
+
     if len(data_in.shape) == 1:
         data_in = np.reshape(data_in, (1, data_in.size))
 
@@ -193,6 +212,9 @@ def import_ref_data(args=None):
     """Import reference file consisting of multiple records"""
 
     ref_record_names = list(pl.Path(args["datapath"], "ref_data").glob("*.csv"))
+    if len(ref_record_names) == 0:
+        raise ImportError("No reference csv files found")
+
     ref_files_sort_index = np.argsort(
         [str(ref_record_name) for ref_record_name in ref_record_names]
     )
@@ -284,7 +306,7 @@ def import_perturbation_velocities(
         Raised if no datapath is specified
     """
 
-    if MODEL != Models.SHELL_MODEL:
+    if cfg.MODEL != Models.SHELL_MODEL:
         if "shell_cutoff" in args:
             if args["shellcutoff"] is not None:
                 raise g_exceptions.InvalidRuntimeArgument(argument="shell_cutoff")
@@ -310,7 +332,7 @@ def import_perturbation_velocities(
     ref_header_dict = import_info_file(pl.Path(args["datapath"], "ref_data"))
     # Match the positions to the relevant ref files
     ref_file_match = g_utils.match_start_positions_to_ref_file(
-        args=args, ref_header_dict=ref_header_dict, positions=perturb_time_pos_list
+        ref_header_dict=ref_header_dict, positions=perturb_time_pos_list
     )
     ref_file_match_keys_array = np.array(list(ref_file_match.keys()))
 
@@ -423,9 +445,29 @@ def import_perturbation_velocities(
     )
 
 
-def import_start_u_profiles(args=None):
-    """Import all u profiles to start perturbations from"""
+def import_start_u_profiles(args: dict = None) -> Tuple[np.ndarray, List[int], dict]:
+    """Import all u profiles to start perturbations from
 
+    Parameters
+    ----------
+    args : dict, optional
+        Run-time arguments, by default None
+
+    Returns
+    -------
+    tuple
+        (
+            u_init_profiles : The initial velocity profiles
+            positions : The index position of the profiles
+            ref_header_dict : The header dictionary of the reference data file
+        )
+
+    Raises
+    ------
+    KeyError
+        Raised if an unknown key is used to store the time_to_run information
+        in the reference header
+    """
     n_profiles = args["n_profiles"]
     n_runs_per_profile = args["n_runs_per_profile"]
 
@@ -460,14 +502,18 @@ def import_start_u_profiles(args=None):
                 (division_size + args["Nt"] * params.sample_rate) * i
                 + rand_division_start[i]
                 for i in range(n_profiles)
-            ]
+            ],
+            dtype=np.int64,
         )
     else:
         print(
             f"\nImporting {n_profiles} velocity profiles positioned as "
             + "requested in reference datafile\n"
         )
-        positions = np.array(args["start_times"]) * params.tts
+        # Make sure to round and convert to int in a proper way
+        positions = np.round(np.array(args["start_times"]) * params.tts).astype(
+            np.int64
+        )
 
     print(
         "\nPositions of perturbation start: ",
@@ -477,7 +523,7 @@ def import_start_u_profiles(args=None):
 
     # Match the positions to the relevant ref files
     ref_file_match = g_utils.match_start_positions_to_ref_file(
-        args=args, ref_header_dict=ref_header_dict, positions=positions
+        ref_header_dict=ref_header_dict, positions=positions
     )
 
     # Get sorted file paths
@@ -490,7 +536,7 @@ def import_start_u_profiles(args=None):
     )
 
     # Import velocity profiles
-    counter = 0
+    _counter = 0
 
     for file_id in ref_file_match.keys():
         for position in ref_file_match[int(file_id)]:
@@ -504,10 +550,14 @@ def import_start_u_profiles(args=None):
 
             # Skip time datapoint and pad array with zeros
             if n_runs_per_profile == 1:
-                indices = counter
+                indices = _counter
                 u_init_profiles[params.u_slice, indices] = temp_u_init_profile[1:]
+
+                # Update counter
+                _counter += 1
             elif n_runs_per_profile > 1:
-                indices = np.s_[counter : counter + n_runs_per_profile : 1]
+                indices = np.s_[_counter : _counter + n_runs_per_profile : 1]
+
                 u_init_profiles[params.u_slice, indices] = np.repeat(
                     np.reshape(
                         temp_u_init_profile[1:], (temp_u_init_profile[1:].size, 1)
@@ -516,7 +566,8 @@ def import_start_u_profiles(args=None):
                     axis=1,
                 )
 
-            counter += 1
+                # Update counter
+                _counter += n_runs_per_profile
 
     return (
         u_init_profiles,
@@ -525,10 +576,38 @@ def import_start_u_profiles(args=None):
     )
 
 
-def import_exp_info_file(args):
+def import_exp_info_file(args: dict):
+    """Import the experiment info file
 
+    Parameters
+    ----------
+    args : dict
+        Run-time arguments
+
+    Returns
+    -------
+    dict
+        The experiment info file parsed as a dict
+
+    Raises
+    ------
+    ImportError
+        Raised if no subfolder is given to search for the experiment info file
+    ValueError
+        Raised if more than one experiment info file are found
+    ImportError
+        Raised if no experiment info file is found.
+    """
+
+    subfolder = pl.Path("")
+    # Add pert_vector_folder if present
+    if "pert_vector_folder" in args:
+        if args["pert_vector_folder"] is not None:
+            subfolder /= args["pert_vector_folder"]
+
+    # Add the specified exp_folder
     if args["exp_folder"] is not None:
-        subfolder = args["exp_folder"]
+        subfolder /= args["exp_folder"]
     else:
         raise ImportError("No valid subfolder to search for exp_setup")
 

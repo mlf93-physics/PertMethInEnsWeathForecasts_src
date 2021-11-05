@@ -5,35 +5,41 @@ from math import floor, log10
 import numpy as np
 import shell_model_experiments.params as sh_params
 import lorentz63_experiments.params.params as l63_params
+from general.utils.module_import.type_import import *
 import general.utils.dev_plots as g_dev_plots
 import general.utils.importing.import_data_funcs as g_import
 import general.utils.importing.import_perturbation_data as pt_import
 import general.utils.util_funcs as g_utils
 from general.params.model_licences import Models
-from config import MODEL
+import config as cfg
 
 # Get parameters for model
-if MODEL == Models.SHELL_MODEL:
+if cfg.MODEL == Models.SHELL_MODEL:
     params = sh_params
-elif MODEL == Models.LORENTZ63:
+elif cfg.MODEL == Models.LORENTZ63:
     params = l63_params
 
 
-def calculate_perturbations(perturb_vectors, dev_plot_active=False, args=None):
+def calculate_perturbations(
+    perturb_vectors: np.ndarray, dev_plot_active: bool = False, args: dict = None
+) -> np.ndarray:
     """Calculate a random perturbation with a specific norm for each profile.
 
     The norm of the error is defined in the parameter seeked_error_norm
 
     Parameters
     ----------
-    perturb_vectors : ndarray
-        The eigenvectors along which to perform the perturbations
+    perturb_vectors : ndarray((sdim, args["n_profiles"]*args["n_runs_per_profile"]))
+        The vectors along which to perform the perturbations
+    dev_plot_active: bool
+        If plotting dev plots or not
+    args: dict
+        Run-time arguments
 
     Returns
     -------
-    perturbations : ndarray
+    perturbations : ndarray((params.sdim + 2 * params.bd_size, n_profiles * n_runs_per_profile))
         The random perturbations
-
     """
     n_profiles = args["n_profiles"]
     n_runs_per_profile = args["n_runs_per_profile"]
@@ -57,28 +63,49 @@ def calculate_perturbations(perturb_vectors, dev_plot_active=False, args=None):
                 # Generate random error
                 error = np.random.rand(2 * params.sdim).astype(np.float64) * 2 - 1
 
-                if MODEL == Models.SHELL_MODEL:
+                if cfg.MODEL == Models.SHELL_MODEL:
                     perturb.real = error[: params.sdim]
                     perturb.imag = error[params.sdim :]
-                elif MODEL == Models.LORENTZ63:
+                elif cfg.MODEL == Models.LORENTZ63:
                     perturb = error[: params.sdim]
 
             # Apply normal mode perturbation
             elif args["pert_mode"] == "nm":
-                # Generate random weights of the complex-conjugate eigenvector pair
-                _weights = np.random.rand(2) * 2 - 1
-                # Make perturbation vector
-                perturb = (
-                    _weights[0] * perturb_vectors_conj[:, i // n_runs_per_profile]
-                    + _weights[1] * perturb_vectors[:, i // n_runs_per_profile]
-                ).real
+                # NOTE - for explanation see https://math.stackexchange.com/questions/3847121/the-importance-of-complex-eigenvectors-in-phase-plane-plotting
+                if cfg.MODEL == Models.SHELL_MODEL:
+                    # Generate random weights
+                    _rand_numbers = np.random.rand(4) * 2 - 1
+                    _weight = np.empty(2, dtype=np.complex128)
+                    _weight.real = _rand_numbers[:2]
+                    _weight.imag = _rand_numbers[2:]
+
+                    # Make perturbation vector from the complex-conjugate pair
+                    perturb = (
+                        _weight[0] * perturb_vectors_conj[:, i // n_runs_per_profile]
+                        + _weight[1] * perturb_vectors[:, i // n_runs_per_profile]
+                    )
+                elif cfg.MODEL == Models.LORENTZ63:
+                    # Generate random weight
+                    _rand_numbers = np.random.rand(2) * 2 - 1
+                    _weight = complex(_rand_numbers[0], _rand_numbers[1])
+
+                    # Make real perturbation vector from the complex-conjugate pair
+                    perturb = (
+                        _weight * perturb_vectors_conj[:, i // n_runs_per_profile]
+                        + _weight.conjugate()
+                        * perturb_vectors[:, i // n_runs_per_profile]
+                    ).real
 
             # Apply breed vector perturbation
             elif args["pert_mode"] == "bv":
                 # Generate random weights of the complex-conjugate eigenvector pair
-                _weight = np.random.rand() * 2 - 1
+                # _weight = np.random.rand() * 2 - 1
                 # Make perturbation vector
-                perturb = _weight * perturb_vectors[:, i]
+                perturb = perturb_vectors[:, i]
+
+            # Apply breed vector EOF perturbations
+            elif args["pert_mode"] == "bv_eof":
+                perturb = perturb_vectors[:, i]
 
         # Apply single shell perturbation
         elif args["single_shell_perturb"] is not None:
@@ -110,7 +137,22 @@ def calculate_perturbations(perturb_vectors, dev_plot_active=False, args=None):
     return perturbations
 
 
-def rescale_perturbations(perturb_data, args):
+def rescale_perturbations(perturb_data: np.ndarray, args: dict) -> np.ndarray:
+    """Rescale a set of perturbations to the seeked error norm relative to
+    the reference data
+
+    Parameters
+    ----------
+    perturb_data : np.ndarray
+        The perturbations that are rescaled
+    args : dict
+        Run-time arguments
+
+    Returns
+    -------
+    np.ndarray
+        The rescaled perturbations added to the reference data
+    """
 
     num_perturbations = args["n_runs_per_profile"]
 
@@ -139,36 +181,12 @@ def rescale_perturbations(perturb_data, args):
         * params.seeked_error_norm
     )
 
+    print(
+        "Norm between first 2 perturbations after rescaling",
+        np.linalg.norm(rescaled_data[:, 0] - rescaled_data[:, 1], axis=0),
+    )
+
     # Add rescaled data to u_init_profiles
     u_init_profiles += rescaled_data
 
     return u_init_profiles
-
-
-def prepare_breed_vectors(args):
-    # Get BVs
-    perturb_vectors, perturb_header_dicts = pt_import.import_perturb_vectors(args)
-
-    if perturb_vectors.size == 0:
-        raise ValueError("No perturbation vectors imported")
-
-    # Reshape and transpose
-    perturb_vectors = np.reshape(
-        perturb_vectors,
-        (args["n_profiles"] * args["n_runs_per_profile"], params.sdim),
-    ).T
-
-    # Prepare start times for import
-    args["start_times"] = [
-        perturb_header_dicts[i]["val_pos"] * params.stt
-        for i in range(len(perturb_header_dicts))
-    ]
-
-    # Import start u profiles
-    (
-        u_init_profiles,
-        perturb_positions,
-        header_dict,
-    ) = g_import.import_start_u_profiles(args=args)
-
-    return u_init_profiles, perturb_positions, perturb_vectors

@@ -1,0 +1,40 @@
+{
+    "TestRun0": {
+        "general": {
+            "folder_name": "compare_pert_test3",
+            "eval_times": [
+                10
+            ],
+            "n_units": 6,
+            "unit_offset": 1.0
+        },
+        "bv_gen_setup": {
+            "sub_exp_folder": "perturb_data",
+            "integration_time": 1.0,
+            "n_cycles": 4,
+            "n_vectors": 8
+        },
+        "pert_setup": {
+            "time_to_run": 1.0
+        }
+    },
+    "TestRun1": {
+        "general": {
+            "folder_name": "compare_pert_ttr0.1",
+            "eval_times": [
+                10
+            ],
+            "n_units": 10,
+            "unit_offset": 0.1
+        },
+        "bv_gen_setup": {
+            "sub_exp_folder": "perturb_data",
+            "integration_time": 0.1,
+            "n_cycles": 4,
+            "n_vectors": 8
+        },
+        "pert_setup": {
+            "time_to_run": 0.1
+        }
+    }
+}

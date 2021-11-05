@@ -1,6 +1,6 @@
 import pprint as pp
 import pyperclip
-from config import MODEL, LICENCE, GLOBAL_PARAMS, NUMBA_CACHE
+import config as cfg
 
 
 def ask_user(question: str):
@@ -46,14 +46,14 @@ def get_name_input(formulation: str, proposed_input: str = ""):
 
 def confirm_run_setup(args: dict):
     print("CONFIRM SETUP TO RUN:\n")
-    print(f"Model: {MODEL}")
-    print(f"Licence: {LICENCE}")
-    print(f"Numba cache: {NUMBA_CACHE}")
+    print(f"Model: {cfg.MODEL}")
+    print(f"Licence: {cfg.LICENCE}")
+    print(f"Numba cache: {cfg.NUMBA_CACHE}")
     print()
 
     print("\nRun-time arguments:\n\n", pp.pformat(args))
 
-    print("\nGlobal parameters\n\n", pp.pformat(GLOBAL_PARAMS.__dict__))
+    print("\nGlobal parameters\n\n", pp.pformat(cfg.GLOBAL_PARAMS.__dict__))
 
     confirm = ask_user("Please confirm the current setup to run")
 

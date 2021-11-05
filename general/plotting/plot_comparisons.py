@@ -1,34 +1,31 @@
 import sys
 
 sys.path.append("..")
-import pathlib as pl
 import math
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sb
-import general.plotting.plot_config as g_plt_config
-import shell_model_experiments.params as sh_params
-import shell_model_experiments.plotting.plot_data as sh_plot
+import pathlib as pl
+
+import config as cfg
+import general.plotting.plot_data as g_plt_data
+import general.utils.argument_parsers as a_parsers
+import general.utils.importing.import_data_funcs as g_import
+import general.utils.importing.import_perturbation_data as pt_import
+import general.utils.importing.import_utils as g_imp_utils
+import general.utils.plot_utils as g_plt_utils
+import general.utils.user_interface as g_ui
+import general.utils.util_funcs as g_utils
 import lorentz63_experiments.params.params as l63_params
 import lorentz63_experiments.plotting.plot_data as l63_plot
-import general.utils.importing.import_data_funcs as g_import
-import general.utils.util_funcs as g_utils
-import general.utils.plot_utils as g_plt_utils
-import general.plotting.plot_data as g_plt_data
-import general.analyses.plot_analyses as g_plt_anal
-import general.utils.importing.import_perturbation_data as pt_import
-import general.utils.argument_parsers as a_parsers
+import matplotlib.pyplot as plt
+import seaborn as sb
+import shell_model_experiments.params as sh_params
+import shell_model_experiments.plotting.plot_data as sh_plot
 from general.params.model_licences import Models
-from config import MODEL
 
 # Get parameters for model
-if MODEL == Models.SHELL_MODEL:
+if cfg.MODEL == Models.SHELL_MODEL:
     params = sh_params
-elif MODEL == Models.LORENTZ63:
+elif cfg.MODEL == Models.LORENTZ63:
     params = l63_params
-
-# Setup plotting defaults
-g_plt_config.setup_plotting_defaults()
 
 
 def plt_vector_comparison(args):
@@ -104,20 +101,108 @@ def plt_vector_comparison(args):
         axes2[i].set_title(f"Orthogonality between\nBreed/Lyapunov vectors | unit {i}")
 
 
+def plot_error_norm_comparison(args: dict):
+    """Plots a comparison of the error norm based in several different
+    perturbation techniques
+
+    Parameters
+    ----------
+    args : dict
+        Run-time arguments
+    """
+    fig, axes = plt.subplots(nrows=2, ncols=1, sharex=True)
+
+    args["endpoint"] = True
+
+    if args["exp_folders"] is not None:
+        len_folders = len(args["exp_folders"])
+    elif args["exp_folder"] is not None:
+        # Get dirs in path
+        _path = pl.Path(args["datapath"], args["exp_folder"])
+        _dirs = g_utils.get_dirs_in_path(_path)
+        len_folders = len(_dirs)
+
+        if len_folders == 0:
+            args["exp_folders"] = [args["exp_folder"]]
+        else:
+            # Sort out dirs not named *_perturbations
+            args["exp_folders"] = [
+                str(pl.Path(_dirs[i].parent.name, _dirs[i].name))
+                for i in range(len_folders)
+                if "perturbations" in _dirs[i].name
+            ]
+
+        # Update number of folders after filtering
+        len_folders = len(args["exp_folders"])
+
+    cmap_list = plt.rcParams["axes.prop_cycle"].by_key()["color"]
+
+    line_counter = 0
+    for i, folder in enumerate(args["exp_folders"]):
+        # Set exp_folder
+        args["exp_folder"] = folder
+
+        g_plt_data.plot_error_norm_vs_time(
+            args,
+            axes=axes[0],
+            cmap_list=[cmap_list[i]],
+            legend_on=False,
+            normalize_start_time=False,
+            plot_args=[],
+        )
+        lines: list = list(axes[0].get_lines())
+        lines[line_counter].set_label(folder)
+
+        len_lines = len(lines)
+        line_counter += len_lines - line_counter
+
+        # for j in range(0, len_lines, 3):
+        #     lines[j].set_linestyle("-")
+        #     lines[(j + 1) % len_lines].set_linestyle("--")
+        #     lines[(j + 2) % len_lines].set_linestyle("-.")
+
+    axes[0].legend()
+
+    # Import perturbation and experiment info files of last perturbation folder
+    pert_info_dict = g_import.import_info_file(
+        pl.Path(args["datapath"], args["exp_folder"])
+    )
+    exp_setup = g_import.import_exp_info_file(args)
+
+    start_time, end_time = g_imp_utils.get_start_end_times_from_exp_setup(
+        exp_setup, pert_info_dict
+    )
+
+    args["ref_start_time"] = start_time
+    args["ref_end_time"] = end_time
+
+    if cfg.MODEL == Models.SHELL_MODEL:
+        sh_plot.plots_related_to_energy(
+            args,
+            axes=axes[1],
+            plot_args=[],
+        )
+    elif cfg.MODEL == Models.LORENTZ63:
+        l63_plot.plot_energy(args, axes=axes[1])
+
+
 if __name__ == "__main__":
+    cfg.init_licence()
+
     # Get arguments
     stand_plot_arg_parser = a_parsers.StandardPlottingArgParser()
     stand_plot_arg_parser.setup_parser()
     compare_plot_arg_parser = a_parsers.ComparisonPlottingArgParser()
     compare_plot_arg_parser.setup_parser()
-    args = compare_plot_arg_parser.args
-    print("args", args)
+    args: dict = compare_plot_arg_parser.args
+
+    g_ui.confirm_run_setup(args)
 
     if "vec_compare" in args["plot_type"]:
         plt_vector_comparison(args)
+    elif "error_norm_compare" in args["plot_type"]:
+        plot_error_norm_comparison(args)
     else:
         raise ValueError("No valid plot type given as input argument")
 
-    if not args["noplot"]:
-        plt.tight_layout()
-        plt.show()
+    g_plt_utils.save_or_show_plot(args)

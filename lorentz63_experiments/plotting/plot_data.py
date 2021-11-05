@@ -1,3 +1,11 @@
+"""Plotting functions relevant for the Lorentz63 model experiments
+
+Example
+-------
+python plotting/plot_data.py --plot_type=error_norm --exp_folder=test_breed_vector_eof
+
+"""
+
 import sys
 
 sys.path.append("..")
@@ -14,6 +22,8 @@ import general.utils.importing.import_data_funcs as g_import
 import general.plotting.plot_data as g_plt_data
 import general.utils.plot_utils as g_plt_utils
 import general.utils.argument_parsers as a_parsers
+import general.utils.user_interface as g_ui
+import config as cfg
 
 
 def plot_attractor(args, ax=None):
@@ -84,7 +94,7 @@ def plot_energy(args, axes=None):
 
 def plot_error_norm_vs_time(args):
 
-    g_plt_data.plot_error_norm_vs_time(args)
+    g_plt_data.plot_error_norm_vs_time(args, normalize_start_time=False)
 
 
 def plot_normal_mode_dist(args):
@@ -121,8 +131,8 @@ def plot_normal_mode_dist(args):
     )
 
     e_value_dist_title = g_plt_utils.generate_title(
-        ref_header_dict,
         args,
+        header_dict=ref_header_dict,
         title_header="Eigen value dist | Lorentz63 model \n",
         title_suffix=f"$N_{{points}}$={args['n_profiles']}",
     )
@@ -147,8 +157,8 @@ def plot_normal_mode_dist(args):
     )
 
     e_vector_dist_title = g_plt_utils.generate_title(
-        ref_header_dict,
         args,
+        header_dict=ref_header_dict,
         title_header="Eigen vector dist colored by eigen values | Lorentz63 model \n",
         title_suffix=f"$N_{{points}}$={args['n_profiles']}",
     )
@@ -187,7 +197,7 @@ def plot_energy_dist(args):
     )
 
     e_dist_title = g_plt_utils.generate_title(
-        ref_header_dict, args, title_header="E dist | Lorentz63 model \n"
+        args, header_dict=ref_header_dict, title_header="E dist | Lorentz63 model \n"
     )
 
     line_plot1 = ax1.add_collection(coll1)
@@ -231,7 +241,7 @@ def plot_energy_dist(args):
     coll2.set_array((dE_array[1:] + dE_array[:-1]) / 2)
 
     de_dist_title = g_plt_utils.generate_title(
-        ref_header_dict, args, title_header="dE dist | Lorentz63 model \n"
+        args, header_dict=ref_header_dict, title_header="dE dist | Lorentz63 model \n"
     )
 
     ax2.add_collection(coll2)
@@ -245,12 +255,14 @@ def plot_energy_dist(args):
 
 
 if __name__ == "__main__":
+    cfg.init_licence()
+
     # Get arguments
     stand_plot_arg_parser = a_parsers.StandardPlottingArgParser()
     stand_plot_arg_parser.setup_parser()
 
     args = stand_plot_arg_parser.args
-    print("args", args)
+    g_ui.confirm_run_setup(args)
 
     if "time_to_run" in args:
         args["Nt"] = int(args["time_to_run"] / dt * sample_rate)

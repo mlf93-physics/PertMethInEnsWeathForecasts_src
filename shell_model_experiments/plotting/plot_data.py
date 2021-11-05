@@ -3,50 +3,82 @@ import sys
 sys.path.append("..")
 from pathlib import Path
 from typing import List
-import numpy as np
+
+import config as cfg
+import general.plotting.plot_data as g_plt_data
+from general.utils.module_import.type_import import *
+import general.utils.argument_parsers as a_parsers
+import general.utils.importing.import_data_funcs as g_import
+import general.utils.importing.import_perturbation_data as pt_import
+import general.utils.plot_utils as g_plt_utils
+import general.utils.user_interface as g_ui
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mpl_ticker
-from mpl_toolkits import mplot3d
-import matplotlib.colors as colors
-from shell_model_experiments.params.params import *
+import numpy as np
+import shell_model_experiments.analyses.analyse_data as sh_analysis
 import shell_model_experiments.perturbations.normal_modes as sh_nm_estimator
-import general.plotting.plot_data as g_plt_data
-import general.utils.importing.import_data_funcs as g_import
-import general.utils.argument_parsers as a_parsers
-import general.utils.plot_utils as g_plt_utils
-import general.utils.exceptions as g_exceptions
-import general.utils.importing.import_perturbation_data as pt_import
+from mpl_toolkits import mplot3d
+from shell_model_experiments.params.params import *
 
 
 def plot_energy_spectrum(
     u_data: np.ndarray,
     header_dict: dict,
     axes: plt.Axes = None,
-    plot_arg_list: list = ["kolmogorov"],
-    plot_kwarg_list: dict = {},
+    plot_arg_list: list = ["kolmogorov", "calculate"],
+    plot_kwargs: dict = {},
+    args: dict = {},
 ):
-
+    # Make axes if not present
     if axes is None:
         fig = plt.figure()
         axes = plt.axes()
 
-    # Calculate mean energy
-    mean_energy = np.mean(
-        (u_data * np.conj(u_data)).real,
-        axis=0,
-    )
+    # React on plot_arg options
+    if "calculate" in plot_arg_list:
+        # Calculate mean energy
+        mean_energy = sh_analysis.get_mean_energy(u_data)
+    else:
+        mean_energy = u_data.real.ravel()
+
     # Plot Kolmogorov scaling
     if "kolmogorov" in plot_arg_list:
         axes.plot(
             np.log2(k_vec_temp), k_vec_temp ** (-2 / 3), "k--", label="$k^{{-2/3}}$"
         )
 
+    label: str = (
+        plot_kwargs["label"]
+        if "label" in plot_kwargs
+        else (
+            f"$n_{{\\nu}}$={int(header_dict['ny_n'])}, "
+            + f"$\\alpha$={int(header_dict['diff_exponent'])}"
+        )
+    )
+    title_suffix: str = ""
+    color = plot_kwargs["color"] if "color" in plot_kwargs else None
+
+    # Fit the slope of the spectrum
+    k_vectors = np.log2(k_vec_temp)
+    if "fit_slope" in plot_arg_list or "rel_fit" in plot_arg_list:
+        slope, intercept = sh_analysis.fit_spectrum_slope(mean_energy, header_dict)
+    if "fit_slope" in plot_arg_list:
+        label += f", slope={slope:.2e}, b={intercept:.2e}"
+        slope_plot = axes.plot(k_vectors, np.exp(slope * k_vectors + intercept), "--")
+        if color is None:
+            color = slope_plot[0].get_color()
+
+    # Normlize energy spectrum to fit
+    if "rel_fit" in plot_arg_list:
+        mean_energy /= np.exp(slope * np.log2(k_vec_temp) + intercept)
+        title_suffix += "rel. fit, "
+
     # Plot energy spectrum
     axes.plot(
-        np.log2(k_vec_temp),
+        k_vectors,
         mean_energy,
-        label=f"$n_{{\\nu}}$={int(header_dict['ny_n'])}, "
-        + f"$\\alpha$={int(header_dict['diff_exponent'])}",
+        label=label,
+        color=color,
     )
 
     # Axes setup
@@ -57,45 +89,122 @@ def plot_energy_spectrum(
 
     # Limit y axis if necessary
     min_mean_energy = np.min(mean_energy)
-    if min_mean_energy > 0:
+    if args["ylim"] is not None:
+        axes.set_ylim(args["ylim"][0], args["ylim"][1])
+    elif min_mean_energy > 0:
         if np.log(min_mean_energy) < -15:
             axes.set_ylim(1e-15, 10)
     else:
         axes.set_ylim(1e-15, 10)
 
     # Title setup
-    if "title" in plot_kwarg_list:
-        title = plot_kwarg_list["title"]
+    if "title" in plot_kwargs:
+        title = plot_kwargs["title"]
     else:
         title = g_plt_utils.generate_title(
-            header_dict, args, title_header="Energy spectrum"
+            args,
+            header_dict=header_dict,
+            title_header="Energy spectrum",
+            title_suffix=title_suffix,
         )
     axes.set_title(title)
 
 
-def plot_spectrum_comparison(args):
-    if args["datapaths"] is None:
-        raise g_exceptions.InvalidRuntimeArgument(
-            "Argument not set", argument="datapaths"
+def plot_helicity_spectrum(
+    u_data: np.ndarray,
+    header_dict: dict,
+    args: dict,
+    axes: plt.Axes = None,
+    plot_arg_list: list = ["calculate", "hel_sign"],
+    plot_kwargs: dict = {},
+):
+    # Make axes if not present
+    if axes is None:
+        fig = plt.figure()
+        axes = plt.axes()
+
+    if "calculate" in plot_arg_list:
+        mean_helicity = sh_analysis.get_mean_helicity(u_data)
+    else:
+        mean_helicity = u_data.real.ravel()
+
+    # Plot Kolmogorov scaling
+    if "kolmogorov" in plot_arg_list:
+        axes.plot(
+            np.log2(k_vec_temp), k_vec_temp ** (1 / 3), "k--", label="$k^{{1/3}}$"
         )
 
-    axes = plt.axes()
-
-    for i, path in enumerate(args["datapaths"]):
-        args["datapath"] = path
-        # Import reference data
-        time, u_data, header_dict = g_import.import_ref_data(args=args)
-
-        plot_arg_list = [] if i > 0 else ["kolmogorov"]
-
-        plot_energy_spectrum(
-            u_data,
-            header_dict,
-            axes=axes,
-            plot_arg_list=plot_arg_list,
-            plot_kwarg_list={"title": "Energy spectrum vs $n_{{\\nu}}$ and $\\alpha$"},
+    label: str = (
+        plot_kwargs["label"]
+        if "label" in plot_kwargs
+        else (
+            f"$n_{{\\nu}}$={int(header_dict['ny_n'])}, "
+            + f"$\\alpha$={int(header_dict['diff_exponent'])}"
         )
-        plt.legend()
+    )
+    title_suffix: str = ""
+    color = plot_kwargs["color"] if "color" in plot_kwargs else None
+
+    helicity_sign = np.array([i % 2 for i in range(n_k_vec)], dtype=np.int)
+    mean_helicity = np.abs(mean_helicity)
+
+    # Fit the slope of the spectrum
+    k_vectors = np.log2(k_vec_temp)
+    if "fit_slope" in plot_arg_list or "rel_fit" in plot_arg_list:
+        slope, intercept = sh_analysis.fit_spectrum_slope(mean_helicity, header_dict)
+    if "fit_slope" in plot_arg_list:
+        label += f", slope={slope:.2e}, b={intercept:.2e}"
+        slope_plot = axes.plot(k_vectors, np.exp(slope * k_vectors + intercept), "--")
+        if color is None:
+            color = slope_plot[0].get_color()
+
+    # Normlize energy spectrum to fit
+    if "rel_fit" in plot_arg_list:
+        mean_helicity /= np.exp(slope * np.log2(k_vec_temp) + intercept)
+        title_suffix += "rel. fit, "
+
+    # Plot curves
+    axes.plot(
+        np.log2(k_vec_temp),
+        mean_helicity,
+        label=label,
+        color=color,
+    )
+    if "hel_sign" in plot_arg_list:
+        # Plot annotation according to sign of helicity
+        _offset = 1e4
+        axes.scatter(
+            np.log2(k_vec_temp)[helicity_sign == 1],
+            _offset * np.ones(np.sum(helicity_sign == 1)),
+            label="_nolegend_",
+            marker="+",
+            color="k",
+        )
+        axes.scatter(
+            np.log2(k_vec_temp)[helicity_sign == 0],
+            _offset * np.ones(np.sum(helicity_sign == 0)),
+            label="_nolegend_",
+            marker="_",
+            color="k",
+        )
+
+    # Axes setup
+    axes.set_yscale("log")
+    axes.set_xlabel("k")
+    axes.set_ylabel("Helicity")
+    axes.xaxis.set_major_locator(mpl_ticker.MaxNLocator(integer=True))
+
+    # Title setup
+    if "title" in plot_kwargs:
+        title = plot_kwargs["title"]
+    else:
+        title = g_plt_utils.generate_title(
+            args,
+            header_dict=header_dict,
+            title_header="Helicity spectrum",
+            title_suffix=title_suffix,
+        )
+    axes.set_title(title)
 
 
 def plot_energy_per_shell(
@@ -112,8 +221,8 @@ def plot_energy_per_shell(
     ax.set_ylabel("Energy")
 
     title = g_plt_utils.generate_title(
-        header_dict,
         args,
+        header_dict=header_dict,
         title_header="Cummulative shell energy vs time",
     )
 
@@ -201,15 +310,17 @@ def plot_energy_per_shell(
                 break
 
 
-def plots_related_to_energy(args=None, axes=None):
+def plots_related_to_energy(args=None, axes=None, plot_args=["detailed_title"]):
 
     # Import reference data
     time, u_data, header_dict = g_import.import_ref_data(args=args)
 
     # Conserning ny
-    # plot_energy_spectrum(u_data, header_dict)
-    # g_plt_data.plot_energy(time, u_data, header_dict, axes=axes, args=args)
-    plot_energy_per_shell(time, u_data, header_dict, path=args["datapath"], args=args)
+    # plot_energy_spectrum(u_data, header_dict, args=args)
+    g_plt_data.plot_energy(
+        time, u_data, header_dict, axes=axes, args=args, plot_args=plot_args
+    )
+    # plot_energy_per_shell(time, u_data, header_dict, path=args["datapath"], args=args)
 
 
 def plot_shell_error_vs_time(args=None):
@@ -246,8 +357,8 @@ def plot_shell_error_vs_time(args=None):
         plt.legend(k_vec_temp)
 
         title = g_plt_utils.generate_title(
-            header_dicts[0],
             args,
+            header_dict=header_dicts[0],
             title_header="Shell error vs time",
         )
         plt.title(title)
@@ -376,8 +487,8 @@ def plot_3D_eigen_mode_analysis(
     figs[0].colorbar(surf_plot, ax=axes[0])
 
     title = g_plt_utils.generate_title(
-        header_dict,
         args,
+        header_dict=header_dict,
         title_header="Eigenvectors vs shell numbers",
         title_suffix=f'N_tot={args["n_profiles"]*args["n_runs_per_profile"]}, ',
     )
@@ -552,7 +663,7 @@ def plot_pert_traject_energy_spectrum(args):
     axes = plt.axes()
 
     for u_data in u_stores:
-        plot_energy_spectrum(u_data, header_dicts[0], axes=axes)
+        plot_energy_spectrum(u_data, header_dicts[0], axes=axes, args=args)
 
 
 def plot_error_energy_spectrum_vs_time_2D(args: dict = None, axes: plt.Axes = None):
@@ -617,8 +728,8 @@ def plot_error_energy_spectrum_vs_time_2D(args: dict = None, axes: plt.Axes = No
     axes.set_ylim(1e-22, 10)
 
     title = g_plt_utils.generate_title(
-        header_dicts[0],
         args,
+        header_dict=header_dicts[0],
         title_header="Error energy spectrum vs time",
         title_suffix=f"N_tot={n_files}, ",
     )
@@ -801,8 +912,8 @@ def plot_howmoller_diagram_u_energy_rel_mean(args=None):
     axes.set_xlabel("Time")
 
     title = g_plt_utils.generate_title(
-        header_dict,
         args,
+        header_dict=header_dict,
         title_header="Howmöller diagram for $|u|²$ - $\\langle|u|²\\rangle_t$",
     )
 
@@ -810,14 +921,71 @@ def plot_howmoller_diagram_u_energy_rel_mean(args=None):
     fig.colorbar(pcm, ax=axes, pad=0.1, label="$|u|² - \\langle|u|²\\rangle_t$")
 
 
+def plot_howmoller_diagram_helicity_rel_mean(args=None):
+
+    # Import reference data
+    time, u_data, header_dict = g_import.import_ref_data(args=args)
+
+    # Prepare mesh
+    time2D, shell2D = np.meshgrid(time.real, k_vec_temp)
+    helicity_array = (hel_pre_factor * (u_data * np.conj(u_data)).real).T
+    # Prepare helicity rel mean
+    mean_helicity = np.reshape(np.mean(helicity_array, axis=1), (n_k_vec, 1))
+
+    # Take absolute value
+    helicity_array = np.abs(helicity_array)
+    mean_helicity = np.abs(mean_helicity)
+    helicity_rel_mean_array = np.log(helicity_array) - np.log(mean_helicity)
+    # print("np.min(helicity_rel_mean_array)", np.min(helicity_rel_mean_array))
+
+    fig, axes = plt.subplots(nrows=1, ncols=1)
+
+    vmax = np.nanmax(helicity_rel_mean_array)
+    vmin = -6
+
+    # Get cmap
+    cmap, norm = g_plt_utils.get_cmap_distributed_around_zero(
+        vmin=vmin,
+        vmax=vmax,
+        neg_thres=0.4,
+        pos_thres=0.6,
+        cmap_handle=plt.cm.bwr,
+    )
+
+    # Make contourplot
+    pcm = axes.contourf(
+        time2D,
+        np.log2(shell2D),
+        np.clip(helicity_rel_mean_array, vmin, vmax),
+        norm=norm,
+        cmap=cmap,
+        levels=100,
+        extend="neither",
+    )
+    pcm.negative_linestyle = "solid"
+    axes.set_ylabel("Shell number, n")
+    axes.set_xlabel("Time")
+
+    title = g_plt_utils.generate_title(
+        args,
+        header_dict=header_dict,
+        title_header="Howmöller diagram for helicity rel. mean helicity",
+    )
+
+    axes.set_title(title)
+    fig.colorbar(pcm, ax=axes, pad=0.1, label="Helicity rel. mean helicity")
+
+
 if __name__ == "__main__":
+    cfg.init_licence()
+
     # Get arguments
     stand_plot_arg_parser = a_parsers.StandardPlottingArgParser()
     stand_plot_arg_parser.setup_parser()
 
     args = stand_plot_arg_parser.args
 
-    print("args", args)
+    g_ui.confirm_run_setup(args)
 
     if "time_to_run" in args:
         args["Nt"] = int(args["time_to_run"] / dt * sample_rate)
@@ -825,6 +993,16 @@ if __name__ == "__main__":
     # Perform plotting
     if "energy_plots" in args["plot_type"]:
         plots_related_to_energy(args=args)
+
+    if "energy_spectrum" in args["plot_type"]:
+        # Import reference data
+        _, _temp_u_data, _temp_header_dict = g_import.import_ref_data(args=args)
+        plot_energy_spectrum(
+            _temp_u_data,
+            _temp_header_dict,
+            plot_arg_list=["kolmogorov", "calculate"],
+            args=args,
+        )
 
     if "pert_traj_energy_spectrum" in args["plot_type"]:
         plot_pert_traject_energy_spectrum(args)
@@ -862,10 +1040,14 @@ if __name__ == "__main__":
     if "error_vector_spectrum" in args["plot_type"]:
         plot_error_vector_spectrum(args=args)
 
-    if "spec_compare" in args["plot_type"]:
-        plot_spectrum_comparison(args=args)
-
-    if "u_howmoller_rel_mean" in args["plot_type"]:
+    if "energy_howmoller_rel_mean" in args["plot_type"]:
         plot_howmoller_diagram_u_energy_rel_mean(args=args)
+
+    if "hel_howmoller_rel_mean" in args["plot_type"]:
+        plot_howmoller_diagram_helicity_rel_mean(args=args)
+
+    if "helicity_spectrum" in args["plot_type"]:
+        _, u_data, header_dict = g_import.import_ref_data(args=args)
+        plot_helicity_spectrum(u_data, header_dict, args)
 
     g_plt_utils.save_or_show_plot(args)

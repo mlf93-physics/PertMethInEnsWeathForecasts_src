@@ -2,20 +2,20 @@ import os
 import pathlib as pl
 import random
 import itertools as it
-from typing import Tuple
 import numpy as np
 import shell_model_experiments.params as sh_params
 import lorentz63_experiments.params.params as l63_params
 import general.utils.util_funcs as g_utils
 import general.utils.importing.import_data_funcs as g_import
 import general.utils.exceptions as g_exceptions
+from general.utils.module_import.type_import import *
 from general.params.model_licences import Models
-from config import MODEL
+import config as cfg
 
 # Get parameters for model
-if MODEL == Models.SHELL_MODEL:
+if cfg.MODEL == Models.SHELL_MODEL:
     params = sh_params
-elif MODEL == Models.LORENTZ63:
+elif cfg.MODEL == Models.LORENTZ63:
     params = l63_params
 
 
@@ -32,7 +32,7 @@ def import_lorentz_block_perturbations(args=None, raw_perturbations=True):
 
     """
 
-    if MODEL != Models.SHELL_MODEL:
+    if cfg.MODEL != Models.SHELL_MODEL:
         if "shell_cutoff" in args:
             if args["shell_cutoff"] is not None:
                 raise g_exceptions.InvalidRuntimeArgument(argument="shell_cutoff")
@@ -59,7 +59,7 @@ def import_lorentz_block_perturbations(args=None, raw_perturbations=True):
     ) = g_import.imported_sorted_perturbation_info(args["exp_folder"], args)
     # Match the positions to the relevant ref files
     ref_file_match = g_utils.match_start_positions_to_ref_file(
-        args=args, ref_header_dict=ref_header_dict, positions=perturb_time_pos_list
+        ref_header_dict=ref_header_dict, positions=perturb_time_pos_list
     )
 
     # Get sorted file paths
@@ -203,14 +203,61 @@ def import_profiles_for_nm_analysis(args: dict = None) -> Tuple[np.ndarray, dict
     return profiles, ref_header_dict
 
 
-def import_perturb_vectors(args):
-    # Set arguments
-    args["n_files"] = args["n_units"]
+def import_perturb_vectors(
+    args: dict,
+) -> Tuple[np.ndarray, np.ndarray, List[int], List[dict]]:
+    """Import units of perturbation vectors, e.g. BVs or SVs
 
-    pt_vector_dirname = "pt_vectors"
+    Parameters
+    ----------
+    args : dict
+        Run-time arguments
 
-    if not os.path.isdir(pl.Path(args["datapath"], pt_vector_dirname)):
-        raise ImportError(f"No perturbation path named {pt_vector_dirname}")
+    Returns
+    -------
+    Tuple[np.ndarray, np.ndarray, list, list]
+        (
+            vector_units : The perturbation vectors stored as units.
+                           Shape: (n_units, n_vectors, sdim)
+            u_init_profiles : The ref velocity profiles at evaluation time
+            eval_pos : The index position of the evaluation time
+            perturb_header_dicts : List of header dicts of the vector units
+        )
+
+    Raises
+    ------
+    ImportError
+        Raised if the pert_vector_folder is not found on disc
+    g_exceptions.InvalidRuntimeArgument
+        Raised if the function is unable to infer the number of vector files to
+        import from args
+    """
+    # Infer the number of files
+    if "n_units" in args:
+        if args["n_units"] < np.inf:
+            args["n_files"] = args["n_units"]
+        elif "n_profiles" in args:
+            args["n_files"] = args["n_profiles"]
+        else:
+            raise g_exceptions.InvalidRuntimeArgument(
+                "Unable to infer the number of files from args"
+            )
+    elif "n_profiles" in args:
+        args["n_files"] = args["n_profiles"]
+    else:
+        raise g_exceptions.InvalidRuntimeArgument(
+            "Unable to infer the number of files from args"
+        )
+
+    # Get experiment info
+    exp_info = g_import.import_exp_info_file(args)
+
+    # Infer number of runs per profile from exp info file
+    if args["n_runs_per_profile"] < 0:
+        args["n_runs_per_profile"] = exp_info["n_vectors"]
+
+    if not os.path.isdir(pl.Path(args["datapath"], args["pert_vector_folder"])):
+        raise ImportError(f"No perturbation path named {args['pert_vector_folder']}")
 
     (
         perturb_time_pos_list,
@@ -218,32 +265,43 @@ def import_perturb_vectors(args):
         perturb_header_dicts,
         perturb_file_names,
     ) = g_import.imported_sorted_perturbation_info(
-        pl.Path(pt_vector_dirname, args["exp_folder"]),
+        pl.Path(args["pert_vector_folder"], args["exp_folder"]),
         args,
         search_pattern="*vectors*.csv",
     )
+
+    # Prepare start_time to import correct u_profiles
+    eval_pos: List[int] = []
+    for i in range(len(perturb_file_names)):
+        eval_pos.append(int(round(perturb_header_dicts[i]["val_pos"])))
+
+    args["start_times"] = np.array(eval_pos) * params.stt
+
+    # Import reference data
+    (
+        u_init_profiles,
+        _,
+        _,
+    ) = g_import.import_start_u_profiles(args=args)
 
     vector_units = []
 
     for i, file_name in enumerate(perturb_file_names):
         vector_unit, _ = g_import.import_data(
-            file_name, max_lines=args["n_runs_per_profile"] + 1
+            file_name,
+            max_lines=args["n_runs_per_profile"] + 1,
         )
 
-        # Prepare start_time to import correct u_profiles
-        args["start_times"] = [perturb_header_dicts[i]["val_pos"] * params.stt]
-
-        # Import reference data
-        (
-            u_init_profiles,
-            _,
-            _,
-        ) = g_import.import_start_u_profiles(args=args)
-
-        vector_units.append(vector_unit - u_init_profiles.T)
-        if i + 1 >= args["n_units"]:
+        vector_units.append(vector_unit)
+        if i + 1 >= args["n_files"]:
             break
 
     vector_units = np.array(vector_units)
+    # u_init_profiles is reshaped to fit shape (n_units, n_runs_per_profile, sdim)
+    # of vector_units array
+    vector_units = vector_units - np.reshape(
+        u_init_profiles[params.u_slice, :].T,
+        (args["n_files"], args["n_runs_per_profile"], params.sdim),
+    )
 
-    return vector_units, perturb_header_dicts
+    return vector_units, u_init_profiles, eval_pos, perturb_header_dicts

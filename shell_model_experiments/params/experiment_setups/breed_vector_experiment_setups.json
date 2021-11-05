@@ -1,15 +1,18 @@
 {
     "BV_in_short_pred_regime": {
         "folder_name": "pt_vectors/shell_model_breed_vectors_short_pred",
-        "integration_time": 0.05,
-        "n_cycles": 20,
+        "sub_exp_folder": "perturb_data",
+        "integration_time": 0.01,
+        "n_cycles": 2,
         "n_vectors": 8,
+        "vector_offset": 0.01,
         "start_times": [
             11.2
         ]
     },
     "BV_in_long_pred_regime": {
         "folder_name": "pt_vectors/shell_model_breed_vectors_long_pred",
+        "sub_exp_folder": "perturb_data",
         "integration_time": 0.1,
         "n_cycles": 20,
         "n_vectors": 8,
@@ -18,10 +21,14 @@
         ]
     },
     "TestRun2": {
-        "folder_name": "shell_model_breed_vectors_test",
-        "integration_time": 0.05,
-        "n_cycles": 1,
-        "n_vectors": 4,
-        "vector_offset": 2
+        "folder_name": "pt_vectors/shell_model_breed_vectors_16cycles",
+        "sub_exp_folder": "perturb_data",
+        "integration_time": 0.01,
+        "n_cycles": 16,
+        "n_vectors": 8,
+        "vector_offset": 0.01,
+        "eval_times": [
+            11.22
+        ]
     }
 }

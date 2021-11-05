@@ -18,16 +18,16 @@ import general.utils.saving.save_vector_funcs as v_save
 import general.utils.argument_parsers as a_parsers
 import general.utils.user_interface as g_ui
 from general.params.model_licences import Models
-from config import MODEL, GLOBAL_PARAMS
+import config as cfg
 
 # Get parameters for model
-if MODEL == Models.SHELL_MODEL:
+if cfg.MODEL == Models.SHELL_MODEL:
     params = sh_params
-elif MODEL == Models.LORENTZ63:
+elif cfg.MODEL == Models.LORENTZ63:
     params = l63_params
 
 # Set global params
-GLOBAL_PARAMS.ref_run = False
+cfg.GLOBAL_PARAMS.ref_run = False
 
 
 def main(args):
@@ -67,7 +67,7 @@ def main(args):
         args["endpoint"] = True
         args["n_profiles"] = 1
         args["n_runs_per_profile"] = exp_setup["n_vectors"]
-        args["exp_folder"] = pl.Path(
+        args["out_exp_folder"] = pl.Path(
             exp_setup["folder_name"], exp_setup["sub_exp_folder"]
         )
         args = g_utils.adjust_start_times_with_offset(args)
@@ -98,27 +98,29 @@ def main(args):
         # Prepare Lyapunov vector data to be saved
         data_out = np.array(data_out_list)
         # Set out folder
-        args["exp_folder"] = pl.Path(exp_setup["folder_name"])
+        args["out_exp_folder"] = pl.Path(exp_setup["folder_name"])
         # Save lyapunov vectors
         v_save.save_vector_unit(
             data_out,
-            perturb_position=int(start_times[i] * params.tts),
+            perturb_position=int(round(start_times[i] * params.tts)),
             unit=i,
             args=args,
             exp_setup=exp_setup,
         )
 
     # Reset exp_folder
-    args["exp_folder"] = exp_setup["folder_name"]
+    args["out_exp_folder"] = exp_setup["folder_name"]
     # Save exp setup to exp folder
     g_save.save_exp_info(exp_setup, args)
 
     if args["erda_run"]:
         path = pl.Path(args["datapath"], exp_setup["folder_name"])
-        g_save_utils.compress_dir(path, "test_temp1")
+        g_save_utils.compress_dir(path)
 
 
 if __name__ == "__main__":
+    cfg.init_licence()
+
     # Get arguments
     mult_pert_arg_setup = a_parsers.MultiPerturbationArgSetup()
     mult_pert_arg_setup.setup_parser()
@@ -129,10 +131,10 @@ if __name__ == "__main__":
     g_ui.confirm_run_setup(args)
 
     # Add submodel attribute
-    MODEL.submodel = "TL"
+    cfg.MODEL.submodel = "TL"
 
     # Add ny argument
-    if MODEL == Models.SHELL_MODEL:
+    if cfg.MODEL == Models.SHELL_MODEL:
         args["ny"] = params.ny_from_ny_n_and_forcing(
             args["forcing"], args["ny_n"], args["diff_exponent"]
         )

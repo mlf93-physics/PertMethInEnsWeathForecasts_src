@@ -12,12 +12,13 @@ import numpy as np
 import general.utils.user_interface as g_ui
 from general.plotting.plot_params import *
 from general.params.model_licences import Models
-from config import MODEL
+import config as cfg
 
 
-def get_non_repeating_colors(n_colors: int = 1):
-    colormap = plt.cm.gist_rainbow
-    cmap_list = [colormap(i) for i in np.linspace(0, 1, n_colors)]
+def get_non_repeating_colors(
+    n_colors: int = 1, cmap: colors.LinearSegmentedColormap = plt.cm.gist_rainbow
+):
+    cmap_list = [cmap(i) for i in np.linspace(0, 1, n_colors)]
 
     return cmap_list
 
@@ -100,59 +101,65 @@ def save_figure(subpath: pl.Path = None, file_name="figure1", fig: plt.Figure = 
     # Save png
     plot_handle.savefig(full_path / (file_name + ".png"), dpi=400, format="png")
 
-    # Save pgf
-    plot_handle.savefig(
-        full_path / (file_name + ".pgf"),
-        dpi=400,
-        format="pgf",
-    )
+    # # Save pgf
+    # plot_handle.savefig(
+    #     full_path / (file_name + ".pgf"),
+    #     dpi=400,
+    #     format="pgf",
+    # )
 
     print(f"\nFigures (png, pgf) saved as {file_name} at figures/{str(subpath)}\n")
 
 
 def generate_title(
-    header_dict: dict,
     args: dict,
+    header_dict: dict = {},
     title_header: str = "PUT TITLE TEXT HERE",
     title_suffix: str = "",
+    detailed: bool = True,
 ):
 
-    if args["exp_folder"] is not None:
-        exp_suffix = f'Experiment: {args["exp_folder"]}; '
-    else:
-        exp_suffix = ""
+    exp_suffix = ""
+    if "exp_folders" in args:
+        if args["exp_folders"] is not None:
+            exp_suffix = f'Experiments: {", ".join(args["exp_folders"])}; '
+    elif "exp_folder" in args:
+        if args["exp_folder"] is not None:
+            exp_suffix = f'Experiment: {args["exp_folder"]}; '
 
-    if args["n_files"] < np.inf:
-        file_suffix = (
-            f'Files: {args["file_offset"]}-{args["file_offset"] + args["n_files"]}, '
-        )
-    else:
-        file_suffix = ""
+    file_suffix = ""
+    if "n_files" in args:
+        if args["n_files"] < np.inf:
+            file_suffix = f'Files: {args["file_offset"]}-{args["file_offset"] + args["n_files"]}, '
 
-    if MODEL == Models.SHELL_MODEL:
-        title = (
-            f'; $\\alpha$={int(header_dict["diff_exponent"])}'
-            + f', $n_{{\\nu}}$={int(header_dict["ny_n"])}, $\\nu$={header_dict["ny"]:.2e}'
-            + f', time={header_dict["time_to_run"]}, '
-        )
-    elif MODEL == Models.LORENTZ63:
-        title = (
-            f'; sigma={header_dict["sigma"]}'
-            + f', $b$={header_dict["b_const"]:.2e}, r={header_dict["r_const"]}'
-            + f', time={header_dict["time_to_run"]}, '
-        )
+    title = ""
+    if len(header_dict.keys()) > 0:
+        if cfg.MODEL == Models.SHELL_MODEL:
+            title = (
+                f'; $\\alpha$={int(header_dict["diff_exponent"])}'
+                + f', $n_{{\\nu}}$={int(header_dict["ny_n"])}, $\\nu$={header_dict["ny"]:.2e}'
+                + f', time={header_dict["time_to_run"]}, '
+            )
+        elif cfg.MODEL == Models.LORENTZ63:
+            title = (
+                f'; sigma={header_dict["sigma"]}'
+                + f', $b$={header_dict["b_const"]:.2e}, r={header_dict["r_const"]}'
+                + f', time={header_dict["time_to_run"]}, '
+            )
 
     # Add prefixes
     title = title_header + title
-    # Add suffixes
-    title += exp_suffix + file_suffix + title_suffix
+
+    if detailed:
+        # Add suffixes
+        title += exp_suffix + file_suffix + title_suffix
 
     # Strip trailing commas
     title = title.rstrip(",")
     title = title.rstrip(", ")
 
     # Wrap title
-    title = "\n".join(textwrap.wrap(title, 40))
+    title = "\n".join(textwrap.wrap(title, 80))
 
     return title
 
@@ -160,12 +167,12 @@ def generate_title(
 def save_or_show_plot(args: dict):
     if args["save_fig"]:
         subpath = pl.Path(
-            "shell_model_experiments/hyper_diffusivity/lyapunov_fourier_correspondenceTest"
+            "shell_model_experiments/hyper_diffusivity/helicity_investigations/"
         )
 
         for i in plt.get_fignums():
             fig = plt.figure(i)
-            file_name = "lyapunov_fourier_correspondence_hyp_diff_comparison"
+            file_name = "howmoller_for_helicity_alpha2_ny_n19"
 
             name = g_ui.get_name_input(
                 "Proposed name of figure: ", proposed_input=file_name

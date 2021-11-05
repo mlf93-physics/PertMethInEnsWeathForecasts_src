@@ -1,3 +1,8 @@
+"""
+Example
+-------
+python ../general/runners/breed_vector_runner.py --exp_setup=TestRun2 --n_units=1 --pert_mode=rd --start_times=11.2
+"""
 import sys
 
 sys.path.append("..")
@@ -6,7 +11,7 @@ import copy
 from pyinstrument import Profiler
 import shell_model_experiments.params as sh_params
 import lorentz63_experiments.params.params as l63_params
-import perturbation_runner as pt_runner
+import general.runners.perturbation_runner as pt_runner
 import general.utils.experiments.exp_utils as exp_utils
 import general.utils.experiments.validate_exp_setups as ut_exp_val
 import general.utils.runner_utils as r_utils
@@ -18,25 +23,26 @@ import general.utils.perturb_utils as pt_utils
 import general.utils.argument_parsers as a_parsers
 import general.utils.user_interface as g_ui
 from general.params.model_licences import Models
-from config import MODEL, GLOBAL_PARAMS
+import config as cfg
 
 # Get parameters for model
-if MODEL == Models.SHELL_MODEL:
+if cfg.MODEL == Models.SHELL_MODEL:
     params = sh_params
-elif MODEL == Models.LORENTZ63:
+elif cfg.MODEL == Models.LORENTZ63:
     params = l63_params
 
 # Set global params
-GLOBAL_PARAMS.ref_run = False
+cfg.GLOBAL_PARAMS.ref_run = False
 
 
-def main(args):
-    # Set exp_setup path
-    exp_file_path = pl.Path(
-        "./params/experiment_setups/breed_vector_experiment_setups.json"
-    )
-    # Get the current experiment setup
-    exp_setup = exp_utils.get_exp_setup(exp_file_path, args)
+def main(args: dict, exp_setup: dict = None):
+    if exp_setup is None:
+        # Set exp_setup path
+        exp_file_path = pl.Path(
+            "./params/experiment_setups/breed_vector_experiment_setups.json"
+        )
+        # Get the current experiment setup
+        exp_setup = exp_utils.get_exp_setup(exp_file_path, args)
 
     # Get number of existing blocks
     n_existing_units = g_utils.count_existing_files_or_dirs(
@@ -67,7 +73,7 @@ def main(args):
         args["endpoint"] = True
         args["n_profiles"] = 1
         args["n_runs_per_profile"] = exp_setup["n_vectors"]
-        args["exp_folder"] = pl.Path(
+        args["out_exp_folder"] = pl.Path(
             exp_setup["folder_name"], exp_setup["sub_exp_folder"]
         )
         args = g_utils.adjust_start_times_with_offset(args)
@@ -114,11 +120,11 @@ def main(args):
             print("No processes to run - check if units already exists")
 
         # Set out folder
-        args["exp_folder"] = pl.Path(exp_setup["folder_name"])
+        args["out_exp_folder"] = pl.Path(exp_setup["folder_name"])
         # Save breed vector data
         v_save.save_vector_unit(
             rescaled_data,
-            perturb_position=start_times[i] * params.tts,
+            perturb_position=int(round(start_times[i] * params.tts)),
             unit=i,
             args=args,
             exp_setup=exp_setup,
@@ -129,17 +135,19 @@ def main(args):
 
     if args["erda_run"]:
         path = pl.Path(args["datapath"], exp_setup["folder_name"])
-        g_save_utils.compress_dir(path, "test_temp1")
+        g_save_utils.compress_dir(path)
 
 
 if __name__ == "__main__":
+    cfg.init_licence()
+
     # Get arguments
     mult_pert_arg_setup = a_parsers.MultiPerturbationArgSetup()
     mult_pert_arg_setup.setup_parser()
     args = mult_pert_arg_setup.args
 
     # Add ny argument
-    if MODEL == Models.SHELL_MODEL:
+    if cfg.MODEL == Models.SHELL_MODEL:
         args["ny"] = params.ny_from_ny_n_and_forcing(
             args["forcing"], args["ny_n"], args["diff_exponent"]
         )

@@ -11,14 +11,14 @@ import lorentz63_experiments.perturbations.normal_modes as l63_nm_estimator
 import general.utils.saving.save_data_funcs as g_save
 import general.utils.importing.import_data_funcs as g_import
 import general.utils.argument_parsers as a_parsers
-from config import NUMBA_CACHE, GLOBAL_PARAMS
+import config as cfg
 
 import matplotlib.pyplot as plt
 
 profiler = Profiler()
 
 # Set global params
-GLOBAL_PARAMS.record_max_time = 3000
+cfg.GLOBAL_PARAMS.record_max_time = 3000
 
 
 @njit(
@@ -31,7 +31,7 @@ GLOBAL_PARAMS.record_max_time = 3000
         types.int64,
         types.float64,
     ),
-    cache=NUMBA_CACHE,
+    cache=cfg.NUMBA_CACHE,
 )
 def run_model(u_old, du_array, u_ref, deriv_matrix, data_out, Nt_local, r_const):
     """Execute the integration of the tangent linear Lorentz63 model.
