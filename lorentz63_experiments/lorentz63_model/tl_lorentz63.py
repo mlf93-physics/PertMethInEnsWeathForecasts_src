@@ -100,6 +100,8 @@ def main(args=None):
 
 
 if __name__ == "__main__":
+    cfg.init_licence()
+
     # Get arguments
     stand_arg_setup = a_parsers.StandardRunnerArgSetup()
     stand_arg_setup.setup_parser()

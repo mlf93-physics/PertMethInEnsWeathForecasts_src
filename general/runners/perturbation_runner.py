@@ -24,6 +24,7 @@ import numpy as np
 import multiprocessing
 from pyinstrument import Profiler
 from shell_model_experiments.sabra_model.sabra_model import run_model as sh_model
+from shell_model_experiments.sabra_model.tl_sabra_model import run_model as sh_tl_model
 import shell_model_experiments.params as sh_params
 import shell_model_experiments.perturbations.normal_modes as sh_nm_estimator
 import lorentz63_experiments.perturbations.normal_modes as l63_nm_estimator
@@ -111,6 +112,20 @@ def perturbation_runner(
                 args["ny"],
                 args["forcing"],
                 args["diff_exponent"],
+            )
+        elif cfg.MODEL.submodel == "TL":
+            # Prepare prefactor
+            prefactor_reshaped = np.reshape(params.pre_factor, (-1, 1))
+
+            sh_tl_model(
+                np.copy(u_ref[:, run_count]),
+                du_array,
+                data_out,
+                args["Nt"],
+                args["ny"],
+                args["diff_exponent"],
+                args["forcing"],
+                prefactor_reshaped,
             )
         else:
             g_exceptions.ModelError(
