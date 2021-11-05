@@ -87,7 +87,7 @@ def rd_pert_experiment(args: dict, local_exp_setup: dict):
     processes = []
 
     # Prepare arguments for perturbation run
-    args["n_runs_per_profile"] = 50
+    args["n_runs_per_profile"] = 20
     args["pert_mode"] = "rd"
     args["start_times"] = local_exp_setup["eval_times"]
     args["start_time_offset"] = local_exp_setup["unit_offset"]
@@ -119,7 +119,7 @@ def nm_pert_experiment(args: dict, local_exp_setup: dict):
     processes = []
 
     # Prepare arguments for perturbation run
-    args["n_runs_per_profile"] = 50
+    args["n_runs_per_profile"] = 20
     args["n_profiles"] = local_exp_setup["n_units"]
     args["pert_mode"] = "nm"
     args["start_times"] = local_exp_setup["eval_times"]
@@ -257,6 +257,13 @@ if __name__ == "__main__":
     mult_pert_arg_setup = a_parsers.MultiPerturbationArgSetup()
     mult_pert_arg_setup.setup_parser()
     args = mult_pert_arg_setup.args
+
+    # Add ny argument
+    if cfg.MODEL == Models.SHELL_MODEL:
+        args["ny"] = params.ny_from_ny_n_and_forcing(
+            args["forcing"], args["ny_n"], args["diff_exponent"]
+        )
+
     g_ui.confirm_run_setup(args)
 
     main(args)

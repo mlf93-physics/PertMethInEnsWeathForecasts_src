@@ -7,14 +7,18 @@ import pathlib as pl
 import config as cfg
 import general.plotting.plot_data as g_plt_data
 import general.utils.argument_parsers as a_parsers
+import general.utils.importing.import_data_funcs as g_import
 import general.utils.importing.import_perturbation_data as pt_import
+import general.utils.importing.import_utils as g_imp_utils
 import general.utils.plot_utils as g_plt_utils
 import general.utils.user_interface as g_ui
 import general.utils.util_funcs as g_utils
 import lorentz63_experiments.params.params as l63_params
+import lorentz63_experiments.plotting.plot_data as l63_plot
 import matplotlib.pyplot as plt
 import seaborn as sb
 import shell_model_experiments.params as sh_params
+import shell_model_experiments.plotting.plot_data as sh_plot
 from general.params.model_licences import Models
 
 # Get parameters for model
@@ -106,7 +110,7 @@ def plot_error_norm_comparison(args: dict):
     args : dict
         Run-time arguments
     """
-    axes = plt.axes()
+    fig, axes = plt.subplots(nrows=2, ncols=1, sharex=True)
 
     args["endpoint"] = True
 
@@ -140,12 +144,13 @@ def plot_error_norm_comparison(args: dict):
 
         g_plt_data.plot_error_norm_vs_time(
             args,
-            axes=axes,
+            axes=axes[0],
             cmap_list=[cmap_list[i]],
             legend_on=False,
             normalize_start_time=False,
+            plot_args=[],
         )
-        lines: list = list(axes.get_lines())
+        lines: list = list(axes[0].get_lines())
         lines[line_counter].set_label(folder)
 
         len_lines = len(lines)
@@ -156,7 +161,29 @@ def plot_error_norm_comparison(args: dict):
         #     lines[(j + 1) % len_lines].set_linestyle("--")
         #     lines[(j + 2) % len_lines].set_linestyle("-.")
 
-    plt.legend()
+    axes[0].legend()
+
+    # Import perturbation and experiment info files of last perturbation folder
+    pert_info_dict = g_import.import_info_file(
+        pl.Path(args["datapath"], args["exp_folder"])
+    )
+    exp_setup = g_import.import_exp_info_file(args)
+
+    start_time, end_time = g_imp_utils.get_start_end_times_from_exp_setup(
+        exp_setup, pert_info_dict
+    )
+
+    args["ref_start_time"] = start_time
+    args["ref_end_time"] = end_time
+
+    if cfg.MODEL == Models.SHELL_MODEL:
+        sh_plot.plots_related_to_energy(
+            args,
+            axes=axes[1],
+            plot_args=[],
+        )
+    elif cfg.MODEL == Models.LORENTZ63:
+        l63_plot.plot_energy(args, axes=axes[1])
 
 
 if __name__ == "__main__":

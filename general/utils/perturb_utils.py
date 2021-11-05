@@ -72,15 +72,29 @@ def calculate_perturbations(
             # Apply normal mode perturbation
             elif args["pert_mode"] == "nm":
                 # NOTE - for explanation see https://math.stackexchange.com/questions/3847121/the-importance-of-complex-eigenvectors-in-phase-plane-plotting
-                # Generate random weight
-                _rand_numbers = np.random.rand(2) * 2 - 1
-                _weight = complex(_rand_numbers[0], _rand_numbers[1])
+                if cfg.MODEL == Models.SHELL_MODEL:
+                    # Generate random weights
+                    _rand_numbers = np.random.rand(4) * 2 - 1
+                    _weight = np.empty(2, dtype=np.complex128)
+                    _weight.real = _rand_numbers[:2]
+                    _weight.imag = _rand_numbers[2:]
 
-                # Make real perturbation vector from the complex-conjugate pair
-                perturb = (
-                    _weight * perturb_vectors_conj[:, i // n_runs_per_profile]
-                    + _weight.conjugate() * perturb_vectors[:, i // n_runs_per_profile]
-                ).real
+                    # Make perturbation vector from the complex-conjugate pair
+                    perturb = (
+                        _weight[0] * perturb_vectors_conj[:, i // n_runs_per_profile]
+                        + _weight[1] * perturb_vectors[:, i // n_runs_per_profile]
+                    )
+                elif cfg.MODEL == Models.LORENTZ63:
+                    # Generate random weight
+                    _rand_numbers = np.random.rand(2) * 2 - 1
+                    _weight = complex(_rand_numbers[0], _rand_numbers[1])
+
+                    # Make real perturbation vector from the complex-conjugate pair
+                    perturb = (
+                        _weight * perturb_vectors_conj[:, i // n_runs_per_profile]
+                        + _weight.conjugate()
+                        * perturb_vectors[:, i // n_runs_per_profile]
+                    ).real
 
             # Apply breed vector perturbation
             elif args["pert_mode"] == "bv":
@@ -123,7 +137,22 @@ def calculate_perturbations(
     return perturbations
 
 
-def rescale_perturbations(perturb_data, args):
+def rescale_perturbations(perturb_data: np.ndarray, args: dict) -> np.ndarray:
+    """Rescale a set of perturbations to the seeked error norm relative to
+    the reference data
+
+    Parameters
+    ----------
+    perturb_data : np.ndarray
+        The perturbations that are rescaled
+    args : dict
+        Run-time arguments
+
+    Returns
+    -------
+    np.ndarray
+        The rescaled perturbations added to the reference data
+    """
 
     num_perturbations = args["n_runs_per_profile"]
 
@@ -145,10 +174,6 @@ def rescale_perturbations(perturb_data, args):
 
     # Diff data
     diff_data = perturb_data.T - u_init_profiles
-    print("diff_data", diff_data.shape)
-    # rescaled_data = g_utils.normalize_array(
-    #     diff_data, norm_value=params.seeked_error_norm, axis=1
-    # )
     # Rescale data
     rescaled_data = (
         diff_data
@@ -156,61 +181,12 @@ def rescale_perturbations(perturb_data, args):
         * params.seeked_error_norm
     )
 
-    print("rescaled_data", rescaled_data.shape, rescaled_data)
-    input()
+    print(
+        "Norm between first 2 perturbations after rescaling",
+        np.linalg.norm(rescaled_data[:, 0] - rescaled_data[:, 1], axis=0),
+    )
 
     # Add rescaled data to u_init_profiles
     u_init_profiles += rescaled_data
 
     return u_init_profiles
-
-
-# NOTE Remove the following code - unused.
-# def prepare_breed_vectors(args: dict) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
-#     """Import and prepare the breed vectors
-
-#     Parameters
-#     ----------
-#     args : dict
-#         Run-time arguments
-
-#     Returns
-#     -------
-#     Tuple[np.ndarray, np.ndarray, np.ndarray]
-#         (
-#             u_init_profiles : The vel. profiles at the validation time
-#             eval_positions : The index position of the evaluation time
-#             breed_vectors : The breed vectors
-#         )
-
-#     Raises
-#     ------
-#     ValueError
-#         Raised if no breed vectors was imported
-#     """
-#     # Get BVs
-#     breed_vectors, breed_vector_header_dicts = pt_import.import_perturb_vectors(args)
-
-#     if breed_vectors.size == 0:
-#         raise ValueError("No perturbation vectors imported")
-
-#     # Reshape and transpose
-#     breed_vectors = np.reshape(
-#         breed_vectors,
-#         (args["n_profiles"] * args["n_runs_per_profile"], params.sdim),
-#     ).T
-
-#     # Prepare start times for import
-#     args["start_times"] = [
-#         breed_vector_header_dicts[i]["val_pos"] * params.stt
-#         for i in range(len(breed_vector_header_dicts))
-#     ]
-
-#     # Import start u profiles
-#     (
-#         u_init_profiles,
-#         eval_positions,
-#         header_dict,
-#     ) = g_import.import_start_u_profiles(args=args)
-
-#     return u_init_profiles, eval_positions, breed_vectors

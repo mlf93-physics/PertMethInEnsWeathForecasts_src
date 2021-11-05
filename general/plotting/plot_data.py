@@ -92,8 +92,10 @@ def plot_error_norm_vs_time(
     linestyle: str = "-",
     linewidth: float = 2,
     alpha: float = 1.0,
+    zorder: float = 0.0,
     cmap_list: Union[None, list] = None,
     legend_on: bool = True,
+    plot_args: list = ["detailed_title"],
 ):
 
     if exp_setup is None:
@@ -166,9 +168,12 @@ def plot_error_norm_vs_time(
         cmap_list = g_plt_utils.get_non_repeating_colors(n_colors=n_colors)
     axes.set_prop_cycle("color", cmap_list)
 
-    if header_dicts[0]["pert_mode"] in ["rd"]:
+    if header_dicts[0]["pert_mode"] in ["rd", "nm"]:
         linewidth: float = 1.0
         alpha: float = 0.5
+        zorder: float = 0
+    else:
+        zorder: float = 10
 
     axes.plot(
         time_array,
@@ -176,6 +181,7 @@ def plot_error_norm_vs_time(
         linestyle=linestyle,
         alpha=alpha,
         linewidth=linewidth,
+        zorder=zorder,
     )
 
     if args["plot_mode"] == "detailed":
@@ -208,6 +214,7 @@ def plot_error_norm_vs_time(
         header_dict=header_dicts[0],
         title_header="Error vs time",
         title_suffix=title_suffix,
+        detailed="detailed_title" in plot_args,
     )
     axes.set_title(title)
 
@@ -215,7 +222,13 @@ def plot_error_norm_vs_time(
 
 
 def plot_energy(
-    time=None, u_data=None, header_dict=None, axes=None, args=None, zero_time_ref=None
+    time=None,
+    u_data=None,
+    header_dict=None,
+    axes=None,
+    args=None,
+    zero_time_ref=None,
+    plot_args=["detailed_title"],
 ):
     # If data is not present, import it
     if time is None or u_data is None or header_dict is None:
@@ -235,7 +248,10 @@ def plot_energy(
     header_dict = g_utils.handle_different_headers(header_dict)
 
     title = g_plt_utils.generate_title(
-        args, header_dict=header_dict, title_header="Energy vs. time"
+        args,
+        header_dict=header_dict,
+        title_header="Energy vs. time",
+        detailed="detailed_title" in plot_args,
     )
     axes.set_title(title)
 

@@ -2,24 +2,28 @@ import sys
 
 sys.path.append("..")
 import pathlib as pl
-import matplotlib.pyplot as plt
-from mpl_toolkits import mplot3d
-import numpy as np
-import shell_model_experiments.params as sh_params
-import shell_model_experiments.plotting.plot_data as sh_plot
+
+import config as cfg
+import general.analyses.breed_vector_eof_analysis as bv_analysis
+import general.analyses.plot_analyses as g_plt_anal
+import general.plotting.plot_data as g_plt_data
+import general.utils.argument_parsers as a_parsers
+import general.utils.importing.import_data_funcs as g_import
+import general.utils.importing.import_perturbation_data as pt_import
+import general.utils.importing.import_utils as g_imp_utils
+import general.utils.plot_utils as g_plt_utils
+import general.utils.user_interface as g_ui
 import lorentz63_experiments.params.params as l63_params
 import lorentz63_experiments.perturbations.normal_modes as l63_nm_estimator
 import lorentz63_experiments.plotting.plot_data as l63_plot
-import general.utils.importing.import_perturbation_data as pt_import
-import general.utils.importing.import_data_funcs as g_import
-import general.plotting.plot_data as g_plt_data
-import general.utils.plot_utils as g_plt_utils
-import general.analyses.plot_analyses as g_plt_anal
-import general.analyses.breed_vector_eof_analysis as bv_analysis
-import general.utils.argument_parsers as a_parsers
-import general.utils.user_interface as g_ui
+import matplotlib.pyplot as plt
+import numpy as np
+import shell_model_experiments.params as sh_params
+import shell_model_experiments.plotting.plot_data as sh_plot
 from general.params.model_licences import Models
-import config as cfg
+from general.utils.module_import.type_import import *
+from mpl_toolkits import mplot3d
+from pyinstrument import Profiler
 
 # Get parameters for model
 if cfg.MODEL == Models.SHELL_MODEL:
@@ -195,29 +199,9 @@ def plot_breed_error_norm(args):
     if args["ylim"] is not None:
         axes[0].set_ylim(args["ylim"][0], args["ylim"][1])
 
-    # Prepare ref import
-    if "start_times" in exp_setup:
-        start_time = exp_setup["start_times"][0]
-        end_time = (
-            exp_setup["start_times"][0]
-            + exp_setup["n_cycles"] * exp_setup["integration_time"]
-        )
-    elif "eval_times" in exp_setup:
-        # Adjust start- and endtime differently depending on if only last
-        # perturbation data is saved, or all perturbation data is saved.
-        if pert_info_dict["save_last_pert"]:
-            start_time = exp_setup["eval_times"][0] - exp_setup["integration_time"]
-            end_time = (
-                start_time + pert_info_dict["n_units"] * exp_setup["integration_time"]
-            )
-        else:
-            start_time = (
-                exp_setup["eval_times"][0]
-                - exp_setup["n_cycles"] * exp_setup["integration_time"]
-            )
-            end_time = exp_setup["eval_times"][0]
-    else:
-        raise ValueError("start_time could not be determined from exp setup")
+    start_time, end_time = g_imp_utils.get_start_end_times_from_exp_setup(
+        exp_setup, pert_info_dict
+    )
 
     args["ref_start_time"] = start_time
     args["ref_end_time"] = end_time
@@ -273,6 +257,10 @@ if __name__ == "__main__":
 
     g_ui.confirm_run_setup(args)
 
+    # Make profiler
+    profiler = Profiler()
+    profiler.start()
+
     if "pert_vector_folder" in args["plot_type"]:
         plot_breed_vectors(args)
     elif "nm_compare" in args["plot_type"]:
@@ -284,4 +272,6 @@ if __name__ == "__main__":
     else:
         raise ValueError("No valid plot type given as input argument")
 
+    profiler.stop()
+    print(profiler.output_text())
     g_plt_utils.save_or_show_plot(args)

@@ -66,7 +66,7 @@ def plot_energy_spectrum_comparison(args: dict):
         if ny_n_counter_array[ny_n_index] == 0:
             label = f"$n_{{\\nu}}$={int(header_dict['ny_n'])}"
 
-        plot_kwarg_list = {
+        plot_kwargs = {
             "title": "Energy spectrum vs $n_{{\\nu}}$ and $\\alpha$ rel. fit",
             "color": cmap_list[ny_n_index],
             "label": label,
@@ -77,7 +77,7 @@ def plot_energy_spectrum_comparison(args: dict):
             header_dict,
             axes=axes,
             plot_arg_list=plot_arg_list,
-            plot_kwarg_list=plot_kwarg_list,
+            plot_kwargs=plot_kwargs,
             args=args,
         )
         ny_n_counter_array[ny_n_index] += 1
@@ -122,7 +122,7 @@ def plot_helicity_spectrum_comparison(args: dict):
         if ny_n_counter_array[ny_n_index] == 0:
             label = f"$n_{{\\nu}}$={int(header_dict['ny_n'])}"
 
-        plot_kwarg_list = {
+        plot_kwargs = {
             "title": "Helicity spectrum vs $n_{{\\nu}}$ and $\\alpha$",
             # "color": cmap_list[ny_n_index],
             # "label": label,
@@ -134,7 +134,7 @@ def plot_helicity_spectrum_comparison(args: dict):
             args,
             axes=axes,
             plot_arg_list=plot_arg_list,
-            plot_kwarg_list=plot_kwarg_list,
+            plot_kwargs=plot_kwargs,
         )
         axes.set_ylim(1e-3, 1e5)
         ny_n_counter_array[ny_n_index] += 1

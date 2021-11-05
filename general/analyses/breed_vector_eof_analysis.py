@@ -50,7 +50,8 @@ def calc_bv_eof_vectors(breed_vectors: np.ndarray, n_eof_vectors: int) -> np.nda
 
     # Calculate eigenvalues and -vectors
     e_values, e_vectors = np.linalg.eig(cov_matrix)
-    # Take absolute in order to avoid negative variances
+    # Take absolute in order to avoid negative variances - observed from values
+    # very close to 0 but negative - like -1e-25
     e_values = np.abs(e_values)
 
     sort_indices = np.argsort(e_values, axis=1)[:, ::-1]

@@ -174,13 +174,13 @@ def import_data(
     header_dict = import_header(file_name=file_name)
 
     # Test length of file
-    with open(file_name) as file:
-        for i, _ in enumerate(file):
-            pass
-        len_file = i  # Not +1 to skip header from length
+    # with open(file_name) as file:
+    #     for i, _ in enumerate(file):
+    #         pass
+    #     len_file = i  # Not +1 to skip header from length
 
-    if len_file == 0:
-        raise ImportError(f"File is empty; file_name = {file_name}")
+    # if len_file == 0:
+    #     raise ImportError(f"File is empty; file_name = {file_name}")
 
     stop_line = None if max_lines is None else start_line + max_lines
     # Import data

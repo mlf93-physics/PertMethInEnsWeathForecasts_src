@@ -26,7 +26,7 @@ def plot_energy_spectrum(
     header_dict: dict,
     axes: plt.Axes = None,
     plot_arg_list: list = ["kolmogorov", "calculate"],
-    plot_kwarg_list: dict = {},
+    plot_kwargs: dict = {},
     args: dict = {},
 ):
     # Make axes if not present
@@ -48,15 +48,15 @@ def plot_energy_spectrum(
         )
 
     label: str = (
-        plot_kwarg_list["label"]
-        if "label" in plot_kwarg_list
+        plot_kwargs["label"]
+        if "label" in plot_kwargs
         else (
             f"$n_{{\\nu}}$={int(header_dict['ny_n'])}, "
             + f"$\\alpha$={int(header_dict['diff_exponent'])}"
         )
     )
     title_suffix: str = ""
-    color = plot_kwarg_list["color"] if "color" in plot_kwarg_list else None
+    color = plot_kwargs["color"] if "color" in plot_kwargs else None
 
     # Fit the slope of the spectrum
     k_vectors = np.log2(k_vec_temp)
@@ -98,8 +98,8 @@ def plot_energy_spectrum(
         axes.set_ylim(1e-15, 10)
 
     # Title setup
-    if "title" in plot_kwarg_list:
-        title = plot_kwarg_list["title"]
+    if "title" in plot_kwargs:
+        title = plot_kwargs["title"]
     else:
         title = g_plt_utils.generate_title(
             args,
@@ -116,7 +116,7 @@ def plot_helicity_spectrum(
     args: dict,
     axes: plt.Axes = None,
     plot_arg_list: list = ["calculate", "hel_sign"],
-    plot_kwarg_list: dict = {},
+    plot_kwargs: dict = {},
 ):
     # Make axes if not present
     if axes is None:
@@ -135,15 +135,15 @@ def plot_helicity_spectrum(
         )
 
     label: str = (
-        plot_kwarg_list["label"]
-        if "label" in plot_kwarg_list
+        plot_kwargs["label"]
+        if "label" in plot_kwargs
         else (
             f"$n_{{\\nu}}$={int(header_dict['ny_n'])}, "
             + f"$\\alpha$={int(header_dict['diff_exponent'])}"
         )
     )
     title_suffix: str = ""
-    color = plot_kwarg_list["color"] if "color" in plot_kwarg_list else None
+    color = plot_kwargs["color"] if "color" in plot_kwargs else None
 
     helicity_sign = np.array([i % 2 for i in range(n_k_vec)], dtype=np.int)
     mean_helicity = np.abs(mean_helicity)
@@ -195,8 +195,8 @@ def plot_helicity_spectrum(
     axes.xaxis.set_major_locator(mpl_ticker.MaxNLocator(integer=True))
 
     # Title setup
-    if "title" in plot_kwarg_list:
-        title = plot_kwarg_list["title"]
+    if "title" in plot_kwargs:
+        title = plot_kwargs["title"]
     else:
         title = g_plt_utils.generate_title(
             args,
@@ -310,14 +310,16 @@ def plot_energy_per_shell(
                 break
 
 
-def plots_related_to_energy(args=None, axes=None):
+def plots_related_to_energy(args=None, axes=None, plot_args=["detailed_title"]):
 
     # Import reference data
     time, u_data, header_dict = g_import.import_ref_data(args=args)
 
     # Conserning ny
     # plot_energy_spectrum(u_data, header_dict, args=args)
-    g_plt_data.plot_energy(time, u_data, header_dict, axes=axes, args=args)
+    g_plt_data.plot_energy(
+        time, u_data, header_dict, axes=axes, args=args, plot_args=plot_args
+    )
     # plot_energy_per_shell(time, u_data, header_dict, path=args["datapath"], args=args)
 
 

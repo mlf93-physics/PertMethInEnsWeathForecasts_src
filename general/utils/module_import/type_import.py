@@ -1,1 +1,1 @@
-from typing import Tuple, Union, List
+from typing import Tuple, Union, List, Dict

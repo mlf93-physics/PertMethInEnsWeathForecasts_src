@@ -116,6 +116,7 @@ def generate_title(
     header_dict: dict = {},
     title_header: str = "PUT TITLE TEXT HERE",
     title_suffix: str = "",
+    detailed: bool = True,
 ):
 
     exp_suffix = ""
@@ -148,15 +149,17 @@ def generate_title(
 
     # Add prefixes
     title = title_header + title
-    # Add suffixes
-    title += exp_suffix + file_suffix + title_suffix
+
+    if detailed:
+        # Add suffixes
+        title += exp_suffix + file_suffix + title_suffix
 
     # Strip trailing commas
     title = title.rstrip(",")
     title = title.rstrip(", ")
 
     # Wrap title
-    title = "\n".join(textwrap.wrap(title, 40))
+    title = "\n".join(textwrap.wrap(title, 80))
 
     return title
 
