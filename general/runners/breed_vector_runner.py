@@ -6,24 +6,25 @@ python ../general/runners/breed_vector_runner.py --exp_setup=TestRun2 --n_units=
 import sys
 
 sys.path.append("..")
-import pathlib as pl
 import copy
-from pyinstrument import Profiler
-import shell_model_experiments.params as sh_params
-import lorentz63_experiments.params.params as l63_params
+import pathlib as pl
+
+import config as cfg
 import general.runners.perturbation_runner as pt_runner
+import general.utils.argument_parsers as a_parsers
 import general.utils.experiments.exp_utils as exp_utils
 import general.utils.experiments.validate_exp_setups as ut_exp_val
+import general.utils.perturb_utils as pt_utils
 import general.utils.runner_utils as r_utils
-import general.utils.util_funcs as g_utils
 import general.utils.saving.save_data_funcs as g_save
 import general.utils.saving.save_utils as g_save_utils
 import general.utils.saving.save_vector_funcs as v_save
-import general.utils.perturb_utils as pt_utils
-import general.utils.argument_parsers as a_parsers
 import general.utils.user_interface as g_ui
+import general.utils.util_funcs as g_utils
+import lorentz63_experiments.params.params as l63_params
+import shell_model_experiments.params as sh_params
 from general.params.model_licences import Models
-import config as cfg
+from pyinstrument import Profiler
 
 # Get parameters for model
 if cfg.MODEL == Models.SHELL_MODEL:
@@ -123,7 +124,7 @@ def main(args: dict, exp_setup: dict = None):
         args["out_exp_folder"] = pl.Path(exp_setup["folder_name"])
         # Save breed vector data
         v_save.save_vector_unit(
-            rescaled_data,
+            rescaled_data[params.u_slice, :].T,
             perturb_position=int(round(start_times[i] * params.tts)),
             unit=i,
             args=args,

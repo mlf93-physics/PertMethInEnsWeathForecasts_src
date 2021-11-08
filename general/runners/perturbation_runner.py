@@ -19,34 +19,34 @@ import sys
 
 sys.path.append("..")
 import copy
-import pathlib as pl
-import numpy as np
 import multiprocessing
+import pathlib as pl
+
+import config as cfg
+import general.analyses.breed_vector_eof_analysis as bv_eof_anal
+import general.utils.argument_parsers as a_parsers
+import general.utils.exceptions as g_exceptions
+import general.utils.importing.import_data_funcs as g_import
+import general.utils.importing.import_perturbation_data as pt_import
+import general.utils.perturb_utils as pt_utils
+import general.utils.saving.save_data_funcs as g_save
+import general.utils.saving.save_perturbation as pt_save
+import general.utils.user_interface as g_ui
+import general.utils.util_funcs as g_utils
+import lorentz63_experiments.params.params as l63_params
+import lorentz63_experiments.perturbations.normal_modes as l63_nm_estimator
+import lorentz63_experiments.utils.util_funcs as ut_funcs
+import numpy as np
+import shell_model_experiments.params as sh_params
+import shell_model_experiments.perturbations.normal_modes as sh_nm_estimator
+from general.params.experiment_licences import Experiments as EXP
+from general.params.model_licences import Models
+from general.utils.module_import.type_import import *
+from lorentz63_experiments.lorentz63_model.lorentz63 import run_model as l63_model
+from lorentz63_experiments.lorentz63_model.tl_lorentz63 import run_model as l63_tl_model
 from pyinstrument import Profiler
 from shell_model_experiments.sabra_model.sabra_model import run_model as sh_model
 from shell_model_experiments.sabra_model.tl_sabra_model import run_model as sh_tl_model
-import shell_model_experiments.params as sh_params
-import shell_model_experiments.perturbations.normal_modes as sh_nm_estimator
-import lorentz63_experiments.perturbations.normal_modes as l63_nm_estimator
-from lorentz63_experiments.lorentz63_model.lorentz63 import run_model as l63_model
-from lorentz63_experiments.lorentz63_model.tl_lorentz63 import run_model as l63_tl_model
-import lorentz63_experiments.params.params as l63_params
-import lorentz63_experiments.utils.util_funcs as ut_funcs
-import general.utils.util_funcs as g_utils
-import general.utils.importing.import_data_funcs as g_import
-import general.utils.importing.import_perturbation_data as pt_import
-from general.params.experiment_licences import Experiments as EXP
-import general.utils.saving.save_data_funcs as g_save
-import general.utils.saving.save_perturbation as pt_save
-import general.analyses.breed_vector_eof_analysis as bv_eof_anal
-import general.utils.perturb_utils as pt_utils
-import general.utils.exceptions as g_exceptions
-import general.utils.argument_parsers as a_parsers
-import general.utils.user_interface as g_ui
-from general.utils.module_import.type_import import *
-from general.params.model_licences import Models
-import config as cfg
-
 
 # Get parameters for model
 if cfg.MODEL == Models.SHELL_MODEL:
@@ -118,10 +118,11 @@ def perturbation_runner(
             prefactor_reshaped = np.reshape(params.pre_factor, (-1, 1))
 
             sh_tl_model(
+                u_old,
                 np.copy(u_ref[:, run_count]),
                 du_array,
                 data_out,
-                args["Nt"],
+                args["Nt"] + args["endpoint"] * 1,
                 args["ny"],
                 args["diff_exponent"],
                 args["forcing"],
@@ -187,8 +188,7 @@ def prepare_run_times(
 
     if cfg.LICENCE != EXP.LORENTZ_BLOCK:
         times_to_run = np.ones(num_perturbations) * args["time_to_run"]
-        Nt_array = (times_to_run / params.dt).astype(np.int64)
-
+        Nt_array = np.round(times_to_run / params.dt).astype(np.int64)
     else:
         if len(args["start_times"]) > 1:
             start_times = np.array(args["start_times"])

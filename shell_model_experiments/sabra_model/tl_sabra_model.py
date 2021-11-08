@@ -7,16 +7,15 @@ python sabra_model/tl_sabra_model.py --time_to_run=1
 import sys
 
 sys.path.append("..")
-import numpy as np
-from numba import njit, types
-from pyinstrument import Profiler
-import shell_model_experiments.sabra_model.runge_kutta4 as rk4
-from shell_model_experiments.params.params import *
-import general.utils.saving.save_data_funcs as g_save
-import general.utils.saving.save_utils as g_save_utils
+import config as cfg
 import general.utils.argument_parsers as a_parsers
 import general.utils.importing.import_data_funcs as g_import
-import config as cfg
+import general.utils.saving.save_data_funcs as g_save
+import numpy as np
+import shell_model_experiments.sabra_model.runge_kutta4 as rk4
+from numba import njit, types
+from pyinstrument import Profiler
+from shell_model_experiments.params.params import *
 
 profiler = Profiler()
 
@@ -29,6 +28,7 @@ cfg.GLOBAL_PARAMS.ref_run = False
     (types.Array(types.complex128, 1, "C", readonly=False))(
         types.Array(types.complex128, 1, "C", readonly=False),
         types.Array(types.complex128, 1, "C", readonly=False),
+        types.Array(types.complex128, 1, "C", readonly=False),
         types.Array(types.complex128, 2, "C", readonly=False),
         types.int64,
         types.float64,
@@ -39,6 +39,7 @@ cfg.GLOBAL_PARAMS.ref_run = False
     cache=cfg.NUMBA_CACHE,
 )
 def run_model(
+    u_tl_old: np.ndarray,
     u_ref: np.ndarray,
     du_array: np.ndarray,
     data_out: np.ndarray,
@@ -61,15 +62,15 @@ def run_model(
         An array to store samples of the integrated shell velocities.
 
     """
-    # Make u_tl_old equal ref data on first iteration
-    u_tl_old = u_ref
     sample_number = 0
     # Perform calculations
     for i in range(Nt_local):
         # Save samples for plotting
         if i % int(1 / sample_rate) == 0:
             data_out[sample_number, 0] = dt * i + 0j
-            data_out[sample_number, 1:] = u_tl_old[bd_size:-bd_size]
+            data_out[sample_number, 1:] = (
+                u_ref[bd_size:-bd_size] + u_tl_old[bd_size:-bd_size]
+            )
             sample_number += 1
 
         # Solve the TL model
