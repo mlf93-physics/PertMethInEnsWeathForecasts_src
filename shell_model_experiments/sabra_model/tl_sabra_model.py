@@ -15,6 +15,7 @@ import numpy as np
 import shell_model_experiments.sabra_model.runge_kutta4 as rk4
 from numba import njit, types
 from pyinstrument import Profiler
+import shell_model_experiments.params as params
 from shell_model_experiments.params.params import *
 
 profiler = Profiler()
@@ -34,7 +35,9 @@ cfg.GLOBAL_PARAMS.ref_run = False
         types.float64,
         types.float64,
         types.float64,
-        types.Array(types.complex128, 2, "C", readonly=True),
+        types.Array(types.complex128, 1, "C", readonly=True),
+        types.int32,
+        types.Array(types.float64, 1, "C", readonly=True),
     ),
     cache=cfg.NUMBA_CACHE,
 )
@@ -48,6 +51,8 @@ def run_model(
     diff_exponent: int,
     forcing: float,
     pre_factor: np.ndarray,
+    sdim_local: int,
+    k_vec_temp_local: np.ndarray,
 ):
     """Execute the integration of the sabra shell model.
 
@@ -62,6 +67,8 @@ def run_model(
         An array to store samples of the integrated shell velocities.
 
     """
+    # Prepare prefactor
+    prefactor_reshaped: np.ndarray = np.reshape(pre_factor, (-1, 1))
     sample_number = 0
     # Perform calculations
     for i in range(Nt_local):
@@ -81,20 +88,19 @@ def run_model(
             u_ref=u_ref,
             diff_exponent=diff_exponent,
             local_ny=ny,
-            prefactor=pre_factor,
+            pre_factor=prefactor_reshaped,
+            sdim_local=sdim_local,
+            k_vec_temp_local=k_vec_temp_local,
         )
 
         # Solve nonlinear equation to get reference velocity
         u_ref = rk4.runge_kutta4(
-            y0=u_ref,
-            h=dt,
-            du=du_array,
-            forcing=forcing,
+            y0=u_ref, h=dt, du=du_array, forcing=forcing, pre_factor=pre_factor
         )
 
         # Solve linear diffusive term explicitly
         u_ref[bd_size:-bd_size] = u_ref[bd_size:-bd_size] * np.exp(
-            -ny * k_vec_temp ** diff_exponent * dt
+            -ny * k_vec_temp_local ** diff_exponent * dt
         )
 
     return u_tl_old
@@ -105,7 +111,7 @@ def main(args=None):
     # Import reference data
     u_ref, _, ref_header_dict = g_import.import_start_u_profiles(args=args)
 
-    if u_ref.size > sdim + 2 * bd_size:
+    if u_ref.size > params.sdim + 2 * bd_size:
         raise ValueError(
             "To many reference u profiles imported for the TL. Only one is needed"
         )
@@ -116,10 +122,7 @@ def main(args=None):
     print(f'\nRunning TL sabra model for {args["Nt"]*dt:.2f}s')
 
     # Prepare data out array and prefactor
-    data_out = np.zeros(
-        (int(args["Nt"] * sample_rate), n_k_vec + 1), dtype=np.complex128
-    )
-    prefactor_reshaped = np.reshape(pre_factor, (-1, 1))
+    data_out = np.zeros((int(args["Nt"] * sample_rate), sdim + 1), dtype=np.complex128)
 
     # Run model
     run_model(
@@ -130,7 +133,9 @@ def main(args=None):
         args["ny"],
         args["diff_exponent"],
         args["forcing"],
-        prefactor_reshaped,
+        params.pre_factor,
+        params.sdim,
+        params.k_vec_temp,
     )
 
     if not args["skip_save_data"]:
@@ -149,6 +154,8 @@ if __name__ == "__main__":
     ref_arg_setup.setup_parser()
     args = ref_arg_setup.args
 
+    # Initiate variables
+    initiate_sdim_arrays(args["sdim"])
     args["ny"] = ny_from_ny_n_and_forcing(
         args["forcing"], args["ny_n"], args["diff_exponent"]
     )

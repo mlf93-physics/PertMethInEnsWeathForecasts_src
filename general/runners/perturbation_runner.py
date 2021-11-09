@@ -108,10 +108,12 @@ def perturbation_runner(
                 u_old,
                 du_array,
                 data_out,
+                params.k_vec_temp,
                 args["Nt"] + args["endpoint"] * 1,
                 args["ny"],
                 args["forcing"],
                 args["diff_exponent"],
+                params.pre_factor,
             )
         elif cfg.MODEL.submodel == "TL":
             # Prepare prefactor
@@ -127,6 +129,8 @@ def perturbation_runner(
                 args["diff_exponent"],
                 args["forcing"],
                 prefactor_reshaped,
+                params.sdim,
+                params.k_vec_temp,
             )
         else:
             g_exceptions.ModelError(
@@ -437,6 +441,8 @@ def main_setup(
     exp_setup=None,
     u_ref=None,
 ):
+    # Initiate arrays
+    params.initiate_sdim_arrays(args["sdim"])
 
     times_to_run, Nt_array = prepare_run_times(args)
 
@@ -547,6 +553,8 @@ if __name__ == "__main__":
     pert_arg_setup.validate_arguments()
     args = pert_arg_setup.args
 
+    # Initiate arrays
+    params.initiate_sdim_arrays(args["sdim"])
     args = g_utils.adjust_start_times_with_offset(args)
 
     g_ui.confirm_run_setup(args)

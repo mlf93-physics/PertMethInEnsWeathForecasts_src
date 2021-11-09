@@ -13,6 +13,7 @@ import config as cfg
         types.Array(types.complex128, 1, "C", readonly=True),
         types.Array(types.complex128, 1, "C", readonly=False),
         types.float64,
+        types.Array(types.complex128, 1, "C", readonly=True),
     ),
     cache=cfg.NUMBA_CACHE,
 )
@@ -20,6 +21,7 @@ def derivative_evaluator(
     u_old: np.ndarray = None,
     du: np.ndarray = None,
     forcing: float = None,
+    pre_factor: np.ndarray = None,
 ):
     """Derivative evaluator used in the Runge-Kutta method.
 
@@ -59,6 +61,7 @@ def derivative_evaluator(
         types.float64,
         types.Array(types.complex128, 1, "C", readonly=False),
         types.float64,
+        types.Array(types.complex128, 1, "C", readonly=True),
     ),
     cache=cfg.NUMBA_CACHE,
 )
@@ -67,6 +70,7 @@ def runge_kutta4(
     h: float = 1,
     du: np.ndarray = None,
     forcing: float = None,
+    pre_factor: np.ndarray = None,
 ):
     """Performs the Runge-Kutta-4 integration of non-linear part of the shell velocities.
 
@@ -89,10 +93,18 @@ def runge_kutta4(
 
     """
     # Calculate the k's
-    k1 = h * derivative_evaluator(u_old=y0, du=du, forcing=forcing)
-    k2 = h * derivative_evaluator(u_old=y0 + 1 / 2 * k1, du=du, forcing=forcing)
-    k3 = h * derivative_evaluator(u_old=y0 + 1 / 2 * k2, du=du, forcing=forcing)
-    k4 = h * derivative_evaluator(u_old=y0 + k3, du=du, forcing=forcing)
+    k1 = h * derivative_evaluator(
+        u_old=y0, du=du, forcing=forcing, pre_factor=pre_factor
+    )
+    k2 = h * derivative_evaluator(
+        u_old=y0 + 1 / 2 * k1, du=du, forcing=forcing, pre_factor=pre_factor
+    )
+    k3 = h * derivative_evaluator(
+        u_old=y0 + 1 / 2 * k2, du=du, forcing=forcing, pre_factor=pre_factor
+    )
+    k4 = h * derivative_evaluator(
+        u_old=y0 + k3, du=du, forcing=forcing, pre_factor=pre_factor
+    )
 
     # Update y
     y0 = y0 + 1 / 6 * k1 + 1 / 3 * k2 + 1 / 3 * k3 + 1 / 6 * k4
@@ -108,11 +120,20 @@ def runge_kutta4(
         types.float64,
         types.float64,
         types.Array(types.complex128, 2, "C", readonly=True),
+        types.int32,
+        types.Array(types.float64, 1, "C", readonly=True),
     ),
     cache=cfg.NUMBA_CACHE,
 )
 def tl_derivative_evaluator(
-    u_old=None, du=None, u_ref=None, diff_exponent=None, local_ny=None, prefactor=None
+    u_old=None,
+    du=None,
+    u_ref=None,
+    diff_exponent=None,
+    local_ny=None,
+    pre_factor=None,
+    sdim_local=None,
+    k_vec_temp_local=None,
 ):
     """Derivative evaluator used in the TL Runge-Kutta method.
 
@@ -134,7 +155,7 @@ def tl_derivative_evaluator(
     """
     # Update the deriv_matrix
     j_matrix: np.ndarray = sh_nm_estimator.calc_jacobian(
-        u_ref, diff_exponent, local_ny, prefactor
+        u_ref, diff_exponent, local_ny, pre_factor, sdim_local, k_vec_temp_local
     )
 
     # Calculate change in u (du)
@@ -152,11 +173,21 @@ def tl_derivative_evaluator(
         types.float64,
         types.float64,
         types.Array(types.complex128, 2, "C", readonly=True),
+        types.int32,
+        types.Array(types.float64, 1, "C", readonly=True),
     ),
     cache=cfg.NUMBA_CACHE,
 )
 def tl_runge_kutta4(
-    y0=0, h=1, du=None, u_ref=None, diff_exponent=None, local_ny=None, prefactor=None
+    y0=0,
+    h=1,
+    du=None,
+    u_ref=None,
+    diff_exponent=None,
+    local_ny=None,
+    pre_factor=None,
+    sdim_local=None,
+    k_vec_temp_local=None,
 ):
     """Performs the Runge-Kutta-4 integration of the lorentz model.
 
@@ -185,7 +216,9 @@ def tl_runge_kutta4(
         u_ref=u_ref,
         diff_exponent=diff_exponent,
         local_ny=local_ny,
-        prefactor=prefactor,
+        pre_factor=pre_factor,
+        sdim_local=sdim_local,
+        k_vec_temp_local=k_vec_temp_local,
     )
     k2 = h * tl_derivative_evaluator(
         u_old=y0 + 1 / 2 * k1,
@@ -193,7 +226,9 @@ def tl_runge_kutta4(
         u_ref=u_ref,
         diff_exponent=diff_exponent,
         local_ny=local_ny,
-        prefactor=prefactor,
+        pre_factor=pre_factor,
+        sdim_local=sdim_local,
+        k_vec_temp_local=k_vec_temp_local,
     )
     k3 = h * tl_derivative_evaluator(
         u_old=y0 + 1 / 2 * k2,
@@ -201,7 +236,9 @@ def tl_runge_kutta4(
         u_ref=u_ref,
         diff_exponent=diff_exponent,
         local_ny=local_ny,
-        prefactor=prefactor,
+        pre_factor=pre_factor,
+        sdim_local=sdim_local,
+        k_vec_temp_local=k_vec_temp_local,
     )
     k4 = h * tl_derivative_evaluator(
         u_old=y0 + k3,
@@ -209,7 +246,9 @@ def tl_runge_kutta4(
         u_ref=u_ref,
         diff_exponent=diff_exponent,
         local_ny=local_ny,
-        prefactor=prefactor,
+        pre_factor=pre_factor,
+        sdim_local=sdim_local,
+        k_vec_temp_local=k_vec_temp_local,
     )
 
     # Update y

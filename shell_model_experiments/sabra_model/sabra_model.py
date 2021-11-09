@@ -12,6 +12,7 @@ import numpy as np
 from numba import njit, types
 from pyinstrument import Profiler
 from shell_model_experiments.sabra_model.runge_kutta4 import runge_kutta4
+import shell_model_experiments.params as params
 from shell_model_experiments.params.params import *
 import general.utils.saving.save_data_funcs as g_save
 import general.utils.saving.save_utils as g_save_utils
@@ -29,10 +30,12 @@ cfg.GLOBAL_PARAMS.record_max_time = 30
         types.Array(types.complex128, 1, "C", readonly=False),
         types.Array(types.complex128, 1, "C", readonly=False),
         types.Array(types.complex128, 2, "C", readonly=False),
+        types.Array(types.float64, 1, "C", readonly=True),
         types.int64,
         types.float64,
         types.float64,
         types.float64,
+        types.Array(types.complex128, 1, "C", readonly=True),
     ),
     cache=cfg.NUMBA_CACHE,
 )
@@ -40,10 +43,12 @@ def run_model(
     u_old: np.ndarray,
     du_array: np.ndarray,
     data_out: np.ndarray,
+    k_vec_temp_local: np.ndarray,
     Nt_local: int,
     ny: float,
     forcing: float,
     diff_exponent: int,
+    pre_factor: np.ndarray,
 ):
     """Execute the integration of the sabra shell model.
 
@@ -69,14 +74,11 @@ def run_model(
 
         # Solve nonlinear terms + forcing
         u_old = runge_kutta4(
-            y0=u_old,
-            h=dt,
-            du=du_array,
-            forcing=forcing,
+            y0=u_old, h=dt, du=du_array, forcing=forcing, pre_factor=pre_factor
         )
         # Solve linear diffusive term explicitly
         u_old[bd_size:-bd_size] = u_old[bd_size:-bd_size] * np.exp(
-            -ny * k_vec_temp ** diff_exponent * dt
+            -ny * k_vec_temp_local ** diff_exponent * dt
         )
 
     return u_old
@@ -85,7 +87,7 @@ def run_model(
 def main(args=None):
 
     # Define u_old
-    u_old = (u0 * initial_k_vec).astype(np.complex128)
+    u_old = (u0 * params.initial_k_vec).astype(np.complex128)
     u_old = np.pad(u_old, pad_width=bd_size, mode="constant")
 
     # Get number of records
@@ -103,18 +105,20 @@ def main(args=None):
 
     # Burn in the model for the desired burn in time
     data_out = np.zeros(
-        (int(args["burn_in_time"] * tts), n_k_vec + 1), dtype=np.complex128
+        (int(args["burn_in_time"] * tts), params.sdim + 1), dtype=np.complex128
     )
 
     print(f'running burn-in phase of {args["burn_in_time"]}s\n')
     u_old = run_model(
         u_old,
-        du_array,
+        params.du_array,
         data_out,
+        params.k_vec_temp,
         int(args["burn_in_time"] / dt),
         args["ny"],
         args["forcing"],
         args["diff_exponent"],
+        params.pre_factor,
     )
 
     for ir in range(args["n_records"]):
@@ -129,18 +133,20 @@ def main(args=None):
                     * sample_rate
                 )
 
-        data_out = np.zeros((out_array_size, n_k_vec + 1), dtype=np.complex128)
+        data_out = np.zeros((out_array_size, params.sdim + 1), dtype=np.complex128)
 
         # Run model
         print(f'running record {ir + 1}/{args["n_records"]}')
         u_old = run_model(
             u_old,
-            du_array,
+            params.du_array,
             data_out,
+            params.k_vec_temp,
             int(out_array_size / sample_rate),
             args["ny"],
             args["forcing"],
             args["diff_exponent"],
+            params.pre_factor,
         )
 
         # Add record_id to datafile header
@@ -164,6 +170,8 @@ if __name__ == "__main__":
     stand_arg_setup.setup_parser()
     args = stand_arg_setup.args
 
+    # Initiate variables
+    initiate_sdim_arrays(args["sdim"])
     args["ny"] = ny_from_ny_n_and_forcing(
         args["forcing"], args["ny_n"], args["diff_exponent"]
     )

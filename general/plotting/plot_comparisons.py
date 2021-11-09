@@ -215,6 +215,9 @@ if __name__ == "__main__":
     compare_plot_arg_parser.setup_parser()
     args: dict = compare_plot_arg_parser.args
 
+    # Initiate variables
+    params.initiate_sdim_arrays(args["sdim"])
+
     g_ui.confirm_run_setup(args)
 
     if "vec_compare" in args["plot_type"]:

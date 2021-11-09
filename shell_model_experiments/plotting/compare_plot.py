@@ -333,6 +333,9 @@ if __name__ == "__main__":
 
     args = stand_plot_arg_parser.args
 
+    # Initiate variables
+    initiate_sdim_arrays(args["sdim"])
+
     g_ui.confirm_run_setup(args)
 
     if "energy_spec_compare" in args["plot_type"]:

@@ -12,14 +12,12 @@ from general.params.model_licences import Models
 import config as cfg
 
 # Get jacobian calculator for model
-if cfg.MODEL == Models.SHELL_MODEL:
-    init_jacobian = sh_nm_estimator.init_jacobian
-    calc_jacobian = sh_nm_estimator.calc_jacobian
-    params = sh_params
-elif cfg.MODEL == Models.LORENTZ63:
+if cfg.MODEL == Models.LORENTZ63:
     init_jacobian = l63_nm_estimator.init_jacobian
     calc_jacobian = l63_nm_estimator.calc_jacobian
     params = l63_params
+else:
+    raise TypeError("The present analysis are not set up for the Sabra model")
 
 
 def lyapunov_analyser(u_data):

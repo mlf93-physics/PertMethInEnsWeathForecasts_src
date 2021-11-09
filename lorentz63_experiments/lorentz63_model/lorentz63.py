@@ -126,6 +126,8 @@ if __name__ == "__main__":
     stand_arg_setup.setup_parser()
     args = stand_arg_setup.args
 
+    initiate_sdim_arrays(args["sdim"])
+
     # Add/edit arguments
     args["Nt"] = int(args["time_to_run"] / dt)
 

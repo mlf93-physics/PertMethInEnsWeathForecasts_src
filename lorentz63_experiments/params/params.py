@@ -3,7 +3,6 @@ import numpy as np
 # Parameters for the Lorentz63 model
 sample_rate = 1  # sample rate of saved data
 dt = 0.01  # the timestep
-sdim = 3  # Dimension of dynamical system
 bd_size = 0
 
 # Parameters for perturbations
@@ -21,6 +20,18 @@ dtype = np.float64
 # Define u_slice
 u_slice = np.s_[0::]
 
-# Arrays
-du_array = np.zeros(sdim, dtype=np.float64)
-deriv_matrix = np.zeros((sdim, sdim))
+
+def initiate_sdim_arrays(sdim_local: int):
+    """Initiate the arrays depending on sdim
+
+    Parameters
+    ----------
+    sdim_local : int
+        The dimension of the system
+    """
+    global sdim, du_array, deriv_matrix
+    # Make sdim global
+    sdim = sdim_local
+    # Arrays
+    du_array = np.zeros(sdim, dtype=np.float64)
+    deriv_matrix = np.zeros((sdim, sdim))

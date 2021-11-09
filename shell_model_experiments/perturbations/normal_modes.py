@@ -4,6 +4,7 @@ sys.path.append("..")
 import numpy as np
 from numba import njit, types
 from general.utils.module_import.type_import import *
+import shell_model_experiments.params as params
 from shell_model_experiments.params.params import *
 import config as cfg
 
@@ -53,19 +54,21 @@ def find_normal_modes(
     e_vector_collection = []
     e_value_collection = []
 
-    e_vector_matrix = np.zeros((n_k_vec, args["n_profiles"]), dtype=np.complex128)
+    e_vector_matrix = np.zeros((params.sdim, args["n_profiles"]), dtype=np.complex128)
 
     # Prepare prefactor vector to multiply on J_matrix
-    prefactor_reshaped = np.reshape(pre_factor, (-1, 1))
+    prefactor_reshaped = np.reshape(params.pre_factor, (-1, 1))
     # Perform calculation for all u_profiles
     for i in range(args["n_profiles"]):
         # Calculate the Jacobian matrix
-        # J_matrix = np.zeros((n_k_vec, n_k_vec), dtype=np.complex128)
+        # J_matrix = np.zeros((params.sdim, params.sdim), dtype=np.complex128)
         J_matrix = calc_jacobian(
-            u_init_profiles[:, i],
+            np.copy(u_init_profiles[:, i]),
             args["diff_exponent"],
             local_ny,
             prefactor_reshaped,
+            params.sdim,
+            params.k_vec_temp,
         )
 
         e_values, e_vectors = np.linalg.eig(J_matrix)
@@ -93,19 +96,23 @@ def find_normal_modes(
         types.float64,
         types.float64,
         types.Array(types.complex128, 2, "C", readonly=True),
+        types.int16,
+        types.Array(types.float64, 1, "C", readonly=True),
     ),
     cache=cfg.NUMBA_CACHE,
 )
 def calc_jacobian(
-    ref_u_vector: np.ndarray((sdim + 2 * bd_size)),
+    ref_u_vector: np.ndarray,
     diff_exponent,
     local_ny,
     prefactor,
+    sdim_local,
+    k_vec_temp_local,
 ):
     # Perform the conjugation
     ref_u_vector_conj: np.ndarray = ref_u_vector.conj()
     # Initialise the Jacobian
-    J_matrix = np.zeros((n_k_vec, n_k_vec), dtype=np.complex128)
+    J_matrix = np.zeros((sdim_local, sdim_local), dtype=np.complex128)
 
     # Add k=2 diagonal
     J_matrix += np.diag(ref_u_vector_conj[bd_size + 1 : -bd_size - 1], k=2)
@@ -135,6 +142,6 @@ def calc_jacobian(
     J_matrix = J_matrix * prefactor
 
     # Add the k=0 diagonal
-    J_matrix -= np.diag(local_ny * k_vec_temp ** diff_exponent, k=0)
+    J_matrix -= np.diag(local_ny * k_vec_temp_local ** diff_exponent, k=0)
 
     return J_matrix

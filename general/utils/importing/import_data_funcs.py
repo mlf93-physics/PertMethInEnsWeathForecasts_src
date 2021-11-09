@@ -8,7 +8,7 @@ import pathlib as pl
 import numpy as np
 from general.utils.module_import.type_import import *
 import shell_model_experiments.params as sh_params
-import lorentz63_experiments.params.params as l63_params
+import lorentz63_experiments.params as l63_params
 from general.params.model_licences import Models
 import general.utils.util_funcs as g_utils
 import general.utils.exceptions as g_exceptions
@@ -18,8 +18,10 @@ import config as cfg
 # Get parameters for model
 if cfg.MODEL == Models.SHELL_MODEL:
     params = sh_params
+    pp = params.params
 elif cfg.MODEL == Models.LORENTZ63:
     params = l63_params
+    pp = params.params
 
 
 def import_header(folder: Union[str, pl.Path] = "", file_name: str = "") -> dict:
