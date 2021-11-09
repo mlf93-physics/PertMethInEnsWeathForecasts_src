@@ -7,6 +7,7 @@ from general.utils.module_import.type_import import *
 import general.utils.importing.import_data_funcs as g_import
 import general.utils.plot_utils as g_plt_utils
 import general.utils.util_funcs as g_utils
+from general.plotting.plot_params import *
 from general.params.experiment_licences import Experiments as EXP
 from general.params.model_licences import Models
 import config as cfg
@@ -175,7 +176,10 @@ def plot_error_norm_vs_time(
     else:
         zorder: float = 10
 
-    axes.plot(
+    if header_dicts[0]["pert_mode"] == "nm":
+        zorder = 2
+
+    lines = axes.plot(
         time_array,
         error_norm_vs_time,
         linestyle=linestyle,
@@ -183,6 +187,9 @@ def plot_error_norm_vs_time(
         linewidth=linewidth,
         zorder=zorder,
     )
+    # if header_dicts[0]["pert_mode"] == "bv_eof":
+    #     for i, line in enumerate(lines):
+    #         line.set_linestyle(LINESTYLES[i % 3])
 
     if args["plot_mode"] == "detailed":
         # Plot perturbation error norms

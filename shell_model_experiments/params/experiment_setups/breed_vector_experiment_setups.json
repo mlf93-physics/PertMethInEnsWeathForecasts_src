@@ -30,5 +30,16 @@
         "eval_times": [
             4.5
         ]
+    },
+    "TestRun3": {
+        "folder_name": "pt_vectors/shell_model_breed_vectors_8cycles_err_norm1e-8_start_time11.5",
+        "sub_exp_folder": "perturb_data",
+        "integration_time": 0.02,
+        "n_cycles": 8,
+        "n_vectors": 8,
+        "vector_offset": 0.02,
+        "eval_times": [
+            11.5
+        ]
     }
 }

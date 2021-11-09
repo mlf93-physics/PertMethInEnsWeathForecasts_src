@@ -87,7 +87,7 @@ def rd_pert_experiment(args: dict, local_exp_setup: dict):
     processes = []
 
     # Prepare arguments for perturbation run
-    args["n_runs_per_profile"] = 20
+    args["n_runs_per_profile"] = 50
     args["pert_mode"] = "rd"
     args["start_times"] = local_exp_setup["eval_times"]
     args["start_time_offset"] = local_exp_setup["unit_offset"]
@@ -119,7 +119,7 @@ def nm_pert_experiment(args: dict, local_exp_setup: dict):
     processes = []
 
     # Prepare arguments for perturbation run
-    args["n_runs_per_profile"] = 20
+    args["n_runs_per_profile"] = 50
     args["n_profiles"] = local_exp_setup["n_units"]
     args["pert_mode"] = "nm"
     args["start_times"] = local_exp_setup["eval_times"]

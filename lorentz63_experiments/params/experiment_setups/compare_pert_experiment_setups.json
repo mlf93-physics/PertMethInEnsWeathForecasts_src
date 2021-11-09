@@ -36,5 +36,24 @@
         "pert_setup": {
             "time_to_run": 0.1
         }
+    },
+    "TestRun2": {
+        "general": {
+            "folder_name": "compare_pert_ttr1.0_2",
+            "eval_times": [
+                10
+            ],
+            "n_units": 10,
+            "unit_offset": 1.0
+        },
+        "bv_gen_setup": {
+            "sub_exp_folder": "perturb_data",
+            "integration_time": 1.0,
+            "n_cycles": 4,
+            "n_vectors": 8
+        },
+        "pert_setup": {
+            "time_to_run": 1.0
+        }
     }
 }

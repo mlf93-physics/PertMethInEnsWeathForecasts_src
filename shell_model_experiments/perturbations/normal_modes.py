@@ -62,7 +62,7 @@ def find_normal_modes(
         # Calculate the Jacobian matrix
         # J_matrix = np.zeros((n_k_vec, n_k_vec), dtype=np.complex128)
         J_matrix = calc_jacobian(
-            u_init_profiles[:, i],
+            np.copy(u_init_profiles[:, i]),
             args["diff_exponent"],
             local_ny,
             prefactor_reshaped,

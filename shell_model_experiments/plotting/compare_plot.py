@@ -110,9 +110,11 @@ def plot_helicity_spectrum_comparison(args: dict):
         # Import data
         u_data, header_dict = g_import.import_data(file_path, start_line=1)
 
-        plot_arg_list = ["hel_sign", "fit_slope"]
-        # if i == 0:
-        #     plot_arg_list.append("kolmogorov")
+        plot_arg_list = [
+            "hel_sign",
+        ]
+        if i == 0:
+            plot_arg_list.append("kolmogorov")
 
         # Get ny_n index
         ny_n_index = ny_n_values.index(int(header_dict["ny_n"]))
@@ -124,8 +126,8 @@ def plot_helicity_spectrum_comparison(args: dict):
 
         plot_kwargs = {
             "title": "Helicity spectrum vs $n_{{\\nu}}$ and $\\alpha$",
-            # "color": cmap_list[ny_n_index],
-            # "label": label,
+            "color": cmap_list[ny_n_index],
+            "label": label,
         }
 
         sh_plt_data.plot_helicity_spectrum(
