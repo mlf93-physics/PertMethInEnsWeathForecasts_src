@@ -14,6 +14,7 @@ import lorentz63_experiments.plotting.plot_data as l63_plot
 import general.utils.importing.import_data_funcs as g_import
 import general.plotting.plot_data as g_plt_data
 import general.analyses.plot_analyses as g_plt_anal
+import general.utils.user_interface as g_ui
 import general.utils.argument_parsers as a_parsers
 from general.params.model_licences import Models
 import config as cfg
@@ -37,11 +38,19 @@ def plot_tlm_solution(args, axes=None):
             + f"2 is needed; {len(axes)}"
         )
 
+    # Import exp and perturb info files
     exp_setup = g_import.import_exp_info_file(args)
+    pert_info_dict = g_import.import_info_file(
+        pl.Path(args["datapath"], args["exp_folder"], "perturb_data")
+    )
 
     args["exp_folder"] = pl.Path(exp_setup["folder_name"], exp_setup["sub_exp_folder"])
     g_plt_data.plot_error_norm_vs_time(
-        args=args, normalize_start_time=False, axes=axes[0], exp_setup=exp_setup
+        args=args,
+        normalize_start_time=False,
+        axes=axes[0],
+        exp_setup=exp_setup,
+        legend_on=False,
     )
 
     # Prepare ref import
@@ -53,7 +62,9 @@ def plot_tlm_solution(args, axes=None):
         raise ValueError("start_time could not be determined from exp setup")
 
     args["ref_start_time"] = start_time
-    args["ref_end_time"] = start_time + 6 * exp_setup["vector_offset"]
+    args["ref_end_time"] = (
+        start_time + pert_info_dict["n_units"] * exp_setup["vector_offset"]
+    )
 
     if cfg.MODEL == Models.SHELL_MODEL:
         sh_plot.plots_related_to_energy(args, axes=axes[1])
@@ -79,8 +90,11 @@ def plot_tlm_solution_orthogonality_vs_time(args, axes=None):
     if axes is None:
         axes = plt.axes()
 
-    # Import exp setup
+    # Import exp and pert setup
     exp_setup = g_import.import_exp_info_file(args)
+    pert_info_dict = g_import.import_info_file(
+        pl.Path(args["datapath"], args["exp_folder"], "perturb_data")
+    )
     # Set exp folder to a subfolder
     args["exp_folder"] = pl.Path(exp_setup["folder_name"], exp_setup["sub_exp_folder"])
 
@@ -98,11 +112,11 @@ def plot_tlm_solution_orthogonality_vs_time(args, axes=None):
     # The number of time steps per unit
     n_time_steps_per_unit = int(round(exp_setup["integration_time"] * params.tts, 0))
     # The total number of time steps for all units
-    n_time_steps = int(header_dicts[0]["n_units"] * n_time_steps_per_unit)
+    n_time_steps = int(pert_info_dict["n_units"] * n_time_steps_per_unit)
     # Prepare time array
     start_time = exp_setup["start_times"][0] if "start_times" in exp_setup else 0
     time_array = (
-        np.arange(0, header_dicts[0]["n_units"]) * exp_setup["integration_time"]
+        np.arange(0, pert_info_dict["n_units"]) * exp_setup["integration_time"]
         + start_time
     )
 
@@ -110,7 +124,7 @@ def plot_tlm_solution_orthogonality_vs_time(args, axes=None):
     orthogonality_collection = np.zeros((n_entries, n_time_steps))
 
     # Run through all units
-    for i in range(int(header_dict["n_units"])):
+    for i in range(int(pert_info_dict["n_units"])):
         # Get TL model solutions of current unit
         tlm_vectors = np.array(
             u_stores[i * exp_setup["n_vectors"] : (i + 1) * exp_setup["n_vectors"]]
@@ -126,9 +140,7 @@ def plot_tlm_solution_orthogonality_vs_time(args, axes=None):
                 (exp_setup["n_vectors"], 1),
             )
             # Calculate orthonormality
-            orthogonality_matrix = g_plt_anal.orthogonality_of_vectors(
-                norm_tlm_vectors, args
-            )
+            orthogonality_matrix = g_plt_anal.orthogonality_of_vectors(norm_tlm_vectors)
 
             # Save orthogonality measure for plotting
             orthogonality_collection[
@@ -159,11 +171,13 @@ def plot_tlm_solution_and_orthogonality(args):
 
 
 if __name__ == "__main__":
+    cfg.init_licence()
     # Get arguments
     stand_plot_arg_parser = a_parsers.StandardPlottingArgParser()
     stand_plot_arg_parser.setup_parser()
     args = stand_plot_arg_parser.args
-    print("args", args)
+
+    g_ui.confirm_run_setup(args)
 
     if "tlm_error_norm" in args["plot_type"]:
         plot_tlm_solution(args)

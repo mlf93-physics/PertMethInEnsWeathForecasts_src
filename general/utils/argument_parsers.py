@@ -220,7 +220,7 @@ class PerturbationArgSetup:
         # Add optional arguments
         self._parser.add_argument("--endpoint", action="store_true")
         pert_mode_group = self._parser.add_mutually_exclusive_group(
-            required=cfg.LICENCE != EXP.COMPARISON
+            required=cfg.LICENCE not in [EXP.COMPARISON, EXP.LYAPUNOV_VECTORS]
         )
         pert_mode_group.add_argument(
             "--pert_mode", choices=["rd", "nm", "bv", "bv_eof"], type=str

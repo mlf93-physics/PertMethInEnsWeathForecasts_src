@@ -41,7 +41,7 @@ u_slice = np.s_[bd_size:-bd_size:1]
 initial_k_vec = k_vec_temp ** (-1 / 3)
 
 #### Initialise Lyaponov exponent estimator constants ####
-seeked_error_norm = 1e-8
+seeked_error_norm = 1e-4
 
 
 def ny_from_ny_n_and_forcing(forcing, ny_n, diff_exponent):

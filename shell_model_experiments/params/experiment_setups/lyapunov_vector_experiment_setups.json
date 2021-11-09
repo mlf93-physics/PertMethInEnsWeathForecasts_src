@@ -1,0 +1,42 @@
+{
+    "TestRun1": {
+        "folder_name": "pt_vectors/shell_model_lyapunov_vectors_it0.04",
+        "sub_exp_folder": "perturb_data",
+        "integration_time": 0.04,
+        "n_vectors": 8,
+        "vector_offset": 0.04,
+        "eval_times": [
+            4.5
+        ]
+    },
+    "TestRun2": {
+        "folder_name": "pt_vectors/shell_model_lyapunov_vectors_it2.0",
+        "sub_exp_folder": "perturb_data",
+        "integration_time": 2.0,
+        "n_vectors": 8,
+        "vector_offset": 2.0,
+        "start_times": [
+            1
+        ]
+    },
+    "TestRun3": {
+        "folder_name": "pt_vectors/shell_model_lyapunov_vectors_it12.0",
+        "sub_exp_folder": "perturb_data",
+        "integration_time": 12.0,
+        "n_vectors": 8,
+        "vector_offset": 12.0,
+        "start_times": [
+            1
+        ]
+    },
+    "TestRun4": {
+        "folder_name": "pt_vectors/debug_temp1",
+        "sub_exp_folder": "perturb_data",
+        "integration_time": 0.02,
+        "n_vectors": 4,
+        "vector_offset": 0.02,
+        "eval_times": [
+            4.5
+        ]
+    }
+}

@@ -16,6 +16,7 @@ import general.utils.util_funcs as g_utils
 import lorentz63_experiments.params.params as l63_params
 import lorentz63_experiments.plotting.plot_data as l63_plot
 import matplotlib.pyplot as plt
+import numpy as np
 import seaborn as sb
 import shell_model_experiments.params as sh_params
 import shell_model_experiments.plotting.plot_data as sh_plot
@@ -42,7 +43,9 @@ def plt_vector_comparison(args):
     # First folder: breed vectors
     args["exp_folder"] = args["exp_folders"][0]
 
-    breed_vector_units, breed_vec_header_dicts = pt_import.import_perturb_vectors(args)
+    breed_vector_units, _, _, breed_vec_header_dicts = pt_import.import_perturb_vectors(
+        args
+    )
     # breed_vector_units = np.squeeze(breed_vector_units, axis=0)
     # Normalize vectors
     breed_vector_units = g_utils.normalize_array(
@@ -51,9 +54,12 @@ def plt_vector_comparison(args):
 
     # Second folder: lyapunov vectors
     args["exp_folder"] = args["exp_folders"][1]
-    lyapunov_vector_units, lyapunov_vec_header_dicts = pt_import.import_perturb_vectors(
-        args
-    )
+    (
+        lyapunov_vector_units,
+        _,
+        _,
+        lyapunov_vec_header_dicts,
+    ) = pt_import.import_perturb_vectors(args)
 
     # lyapunov_vector_units = np.squeeze(lyapunov_vector_units, axis=0)
     # Normalize vectors
@@ -63,26 +69,33 @@ def plt_vector_comparison(args):
 
     n_vectors = args["n_runs_per_profile"]
 
-    num_subplot_cols = math.floor(args["n_units"] / 2)
-    num_subplot_rows = math.ceil(args["n_units"] / num_subplot_cols)
+    num_subplot_cols = math.floor(args["n_profiles"] / 2)
+    num_subplot_rows = math.ceil(args["n_profiles"] / num_subplot_cols)
 
-    _, axes1 = plt.subplots(num_subplot_rows, num_subplot_cols)
-    _, axes2 = plt.subplots(num_subplot_rows, num_subplot_cols)
+    fig1, axes1 = plt.subplots(
+        num_subplot_rows, num_subplot_cols, sharex=True, sharey=True
+    )
+    fig2, axes2 = plt.subplots(
+        num_subplot_rows, num_subplot_cols, sharex=True, sharey=True
+    )
     axes1 = axes1.ravel()
     axes2 = axes2.ravel()
 
-    for i in range(args["n_units"]):
+    # Add cbar axes
+    cbar_ax = fig2.add_axes([0.91, 0.3, 0.03, 0.4])
+
+    for i in range(args["n_profiles"]):
         cmap_list = g_plt_utils.get_non_repeating_colors(n_colors=n_vectors)
         axes1[i].set_prop_cycle("color", cmap_list)
-        axes1[i].plot(lyapunov_vector_units[i, :, :].T, "--")
+        axes1[i].plot(lyapunov_vector_units[i, :, :].T.real, "--")
 
         # Reset color cycle
         axes1[i].set_prop_cycle("color", cmap_list)
-        axes1[i].plot(breed_vector_units[i, :, :].T, "-")
-        axes1[i].set_title(f"Breed(-)/Lyapunov(--) vectors | unit {i}")
+        axes1[i].plot(breed_vector_units[i, :, :].T.real, "-")
+        axes1[i].set_title(f"unit {i}")
 
-        orthogonality_matrix = (
-            breed_vector_units[i, :, :] @ lyapunov_vector_units[i, :, :].T
+        orthogonality_matrix = np.abs(
+            breed_vector_units[i, :, :].conj() @ lyapunov_vector_units[i, :, :].T
         )
 
         sb.heatmap(
@@ -93,12 +106,18 @@ def plt_vector_comparison(args):
             annot=True,
             fmt=".2f",
             ax=axes2[i],
+            cbar=i == 0,
+            cbar_ax=None if i else cbar_ax,
             annot_kws={"fontsize": 8},
         )
         axes2[i].invert_yaxis()
         axes2[i].set_xlabel("Lyapunov vector index")
         axes2[i].set_ylabel("Breed vector index")
-        axes2[i].set_title(f"Orthogonality between\nBreed/Lyapunov vectors | unit {i}")
+        axes2[i].set_title(f"unit {i}")
+
+    fig1.suptitle(f"Breed(-)/Lyapunov(--) vectors")
+    fig2.suptitle(f"Orthogonality between\nBreed/Lyapunov vectors")
+    fig2.tight_layout(rect=[0, 0, 0.9, 1])
 
 
 def plot_error_norm_comparison(args: dict):

@@ -2,14 +2,12 @@ import sys
 
 sys.path.append("..")
 import numpy as np
+from numba import njit, types
 from general.utils.module_import.type_import import *
 from shell_model_experiments.params.params import *
+import config as cfg
 
 
-# @jit((types.Array(types.complex128, 2, 'C', readonly=True),
-#        types.Array(types.complex128, 2, 'C', readonly=False),
-#        types.Array(types.complex128, 2, 'C', readonly=False),
-#        types.boolean, types.int64, types.float64), parallel=True, cache=True)
 def find_normal_modes(
     u_init_profiles: np.ndarray,
     args: dict,
@@ -57,54 +55,18 @@ def find_normal_modes(
 
     e_vector_matrix = np.zeros((n_k_vec, args["n_profiles"]), dtype=np.complex128)
 
-    # Perform the conjugation
-    u_init_profiles_conj = u_init_profiles.conj()
     # Prepare prefactor vector to multiply on J_matrix
     prefactor_reshaped = np.reshape(pre_factor, (-1, 1))
     # Perform calculation for all u_profiles
     for i in range(args["n_profiles"]):
         # Calculate the Jacobian matrix
-        J_matrix = np.zeros((n_k_vec, n_k_vec), dtype=np.complex128)
-        # Add k=2 diagonal
-        J_matrix += np.diag(u_init_profiles_conj[bd_size + 1 : -bd_size - 1, i], k=2)
-        # Add k=1 diagonal
-        J_matrix += factor2 * np.diag(
-            np.concatenate(
-                (np.array([0 + 0j]), u_init_profiles_conj[bd_size : -bd_size - 2, i])
-            ),
-            k=1,
+        # J_matrix = np.zeros((n_k_vec, n_k_vec), dtype=np.complex128)
+        J_matrix = calc_jacobian(
+            u_init_profiles[:, i],
+            args["diff_exponent"],
+            local_ny,
+            prefactor_reshaped,
         )
-        # Add k=-1 diagonal
-        J_matrix += factor3 * np.diag(
-            np.concatenate(
-                (np.array([0 + 0j]), u_init_profiles[bd_size : -bd_size - 2, i])
-            ),
-            k=-1,
-        )
-        # Add k=-2 diagonal
-        J_matrix += factor3 * np.diag(
-            u_init_profiles[bd_size + 1 : -bd_size - 1, i], k=-2
-        )
-
-        # Add contribution from derivatives of the complex conjugates:
-        J_matrix += np.diag(
-            np.concatenate(
-                (u_init_profiles[bd_size + 2 : -bd_size, i], np.array([0 + 0j]))
-            ),
-            k=1,
-        )
-        J_matrix += factor2 * np.diag(
-            np.concatenate(
-                (u_init_profiles[bd_size + 2 : -bd_size, i], np.array([0 + 0j]))
-            ),
-            k=-1,
-        )
-
-        J_matrix = J_matrix * prefactor_reshaped
-
-        # Add the k=0 diagonal
-        # temp_ny = args['ny'] if header is None else header['ny']
-        J_matrix -= np.diag(local_ny * k_vec_temp ** args["diff_exponent"], k=0)
 
         e_values, e_vectors = np.linalg.eig(J_matrix)
 
@@ -115,7 +77,6 @@ def find_normal_modes(
         chosen_e_value_index = np.argmax(e_values.real)
 
         e_vector_matrix[:, i] = e_vectors[:, chosen_e_value_index]
-        J_matrix.fill(0 + 0j)
 
         # if dev_plot_active:
         #     print('Largest positive eigenvalue', e_values[chosen_e_value_index])
@@ -124,3 +85,56 @@ def find_normal_modes(
         #         header=header, perturb_pos=perturb_positions[i])
 
     return e_vector_matrix, e_vector_collection, e_value_collection
+
+
+@njit(
+    (types.Array(types.complex128, 2, "C", readonly=False))(
+        types.Array(types.complex128, 1, "C", readonly=True),
+        types.float64,
+        types.float64,
+        types.Array(types.complex128, 2, "C", readonly=True),
+    ),
+    cache=cfg.NUMBA_CACHE,
+)
+def calc_jacobian(
+    ref_u_vector: np.ndarray((sdim + 2 * bd_size)),
+    diff_exponent,
+    local_ny,
+    prefactor,
+):
+    # Perform the conjugation
+    ref_u_vector_conj: np.ndarray = ref_u_vector.conj()
+    # Initialise the Jacobian
+    J_matrix = np.zeros((n_k_vec, n_k_vec), dtype=np.complex128)
+
+    # Add k=2 diagonal
+    J_matrix += np.diag(ref_u_vector_conj[bd_size + 1 : -bd_size - 1], k=2)
+    # Add k=1 diagonal
+    J_matrix += factor2 * np.diag(
+        np.concatenate((np.array([0 + 0j]), ref_u_vector_conj[bd_size : -bd_size - 2])),
+        k=1,
+    )
+    # Add k=-1 diagonal
+    J_matrix += factor3 * np.diag(
+        np.concatenate((np.array([0 + 0j]), ref_u_vector[bd_size : -bd_size - 2])),
+        k=-1,
+    )
+    # Add k=-2 diagonal
+    J_matrix += factor3 * np.diag(ref_u_vector[bd_size + 1 : -bd_size - 1], k=-2)
+
+    # Add contribution from derivatives of the complex conjugates:
+    J_matrix += np.diag(
+        np.concatenate((ref_u_vector[bd_size + 2 : -bd_size], np.array([0 + 0j]))),
+        k=1,
+    )
+    J_matrix += factor2 * np.diag(
+        np.concatenate((ref_u_vector[bd_size + 2 : -bd_size], np.array([0 + 0j]))),
+        k=-1,
+    )
+
+    J_matrix = J_matrix * prefactor
+
+    # Add the k=0 diagonal
+    J_matrix -= np.diag(local_ny * k_vec_temp ** diff_exponent, k=0)
+
+    return J_matrix

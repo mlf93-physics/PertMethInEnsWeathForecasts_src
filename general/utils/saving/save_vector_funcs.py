@@ -1,11 +1,12 @@
 import pathlib as pl
+
+import config as cfg
+import general.utils.saving.save_utils as g_save_utils
+import lorentz63_experiments.params.params as l63_params
 import numpy as np
 import shell_model_experiments.params as sh_params
-import lorentz63_experiments.params.params as l63_params
-import general.utils.saving.save_utils as g_save_utils
 from general.params.experiment_licences import Experiments as EXP
 from general.params.model_licences import Models
-import config as cfg
 
 # Get parameters for model
 if cfg.MODEL == Models.SHELL_MODEL:
@@ -21,11 +22,11 @@ def save_vector_unit(
     args: dict = None,
     exp_setup: dict = None,
 ) -> None:
-    """Save a vector unit to disk (e.g. BV unit)
+    """Save a vector unit to disk (e.g. BV or Lyapunov unit)
 
     Parameters
     ----------
-    data : np.ndarray
+    data : np.ndarray((n_vectors, sdim))
         The vector data to be saved
     perturb_position : int, optional
         The index position of the vector, by default None
@@ -36,9 +37,6 @@ def save_vector_unit(
     exp_setup : dict, optional
         Experiment setup, by default None
     """
-    if data.shape[0] == params.sdim + 2 * params.bd_size:
-        data = data.T
-
     # Prepare variables to be used when saving
     n_data = data.shape[0]
 
@@ -80,7 +78,7 @@ def save_vector_unit(
     # Save data
     np.savetxt(
         pl.Path(expected_path, f"{prefix}{out_name}{suffix}.csv"),
-        data[:, params.u_slice],
+        data,
         delimiter=",",
         header=header,
     )
