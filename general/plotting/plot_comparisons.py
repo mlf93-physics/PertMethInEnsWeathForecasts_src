@@ -148,7 +148,8 @@ def plot_error_norm_comparison(args: dict):
             args["exp_folders"] = [
                 str(pl.Path(_dirs[i].parent.name, _dirs[i].name))
                 for i in range(len_folders)
-                if "rd" in _dirs[i].name or "nm" in _dirs[i].name
+                if "bv" in _dirs[i].name
+                # if "rd" in _dirs[i].name or "nm" in _dirs[i].name
             ]
 
         # Update number of folders after filtering

@@ -266,6 +266,9 @@ def plot_period4_spectrum_ratio_vs_alpha(args: dict):
         u_data, header_dict = g_import.import_data(file_path, start_line=1)
         u_data = u_data.real
 
+        if header_dict["ny_n"] == 19:
+            continue
+
         # Save ref data since it's at the first index due to above trick
         # if i == 0:
         #     ref_data = u_data
@@ -291,7 +294,7 @@ def plot_period4_spectrum_ratio_vs_alpha(args: dict):
         _slice_upper = np.s_[2 : current_ny_n - 1 : step]
 
         # calculate difference data between upper and lower peaks
-        diff = rel_u_data[0, _slice_upper] - rel_u_data[0, _slice_lower]
+        diff = np.log(rel_u_data[0, _slice_upper]) - np.log(rel_u_data[0, _slice_lower])
         diff_data_collection[current_ny_n].append(diff)
 
     for key in diff_data_collection.keys():
@@ -319,7 +322,7 @@ def plot_period4_spectrum_ratio_vs_alpha(args: dict):
     title = g_plt_utils.generate_title(
         args, title_header="Peak-to-peak amplitude rel. fit vs. $\\alpha$"
     )
-    axes.set_yscale("log")
+    # axes.set_yscale("log")
     axes.set_xlabel("$\\alpha$")
     axes.set_ylabel("Peak-to-peak amplitude rel. fit")
     axes.set_title(title)
