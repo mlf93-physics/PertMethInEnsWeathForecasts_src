@@ -76,11 +76,11 @@ def run_model(
             forcing=forcing,
         )
         # Solve linear diffusive term explicitly
-        u_old[bd_size:-bd_size] = u_old[bd_size:-bd_size] * np.exp(
-            -ny * k_vec_temp ** diff_exponent * dt
-        )
+        # u_old[bd_size:-bd_size] = u_old[bd_size:-bd_size] * np.exp(
+        #     -ny * k_vec_temp ** diff_exponent * dt
+        # )
 
-        # u_old[-(bd_size + 1)] = 0
+        u_old[-(bd_size + 1)] = 0
 
     return u_old
 
