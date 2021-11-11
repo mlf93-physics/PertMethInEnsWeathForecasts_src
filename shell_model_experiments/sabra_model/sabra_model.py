@@ -14,6 +14,7 @@ from pyinstrument import Profiler
 from shell_model_experiments.sabra_model.runge_kutta4 import runge_kutta4
 from shell_model_experiments.params.params import *
 import shell_model_experiments.utils.util_funcs as sh_utils
+import shell_model_experiments.utils.custom_decorators as dec
 import general.utils.saving.save_data_funcs as g_save
 import general.utils.saving.save_utils as g_save_utils
 import general.utils.argument_parsers as a_parsers
@@ -25,19 +26,12 @@ profiler = Profiler()
 cfg.GLOBAL_PARAMS.record_max_time = 30
 
 
+@dec.diffusion_type_decorator
 @njit(
-    (
-        types.Array(types.complex128, 1, "C", readonly=False),
-        types.Array(types.complex128, 1, "C", readonly=False),
-        types.Array(types.complex128, 2, "C", readonly=False),
-        types.int64,
-        types.float64,
-        types.float64,
-        types.float64,
-    ),
-    cache=cfg.NUMBA_CACHE,
+    cache=False,
 )
 def run_model(
+    diffusion_func: callable,
     u_old: np.ndarray,
     du_array: np.ndarray,
     data_out: np.ndarray,
@@ -75,12 +69,9 @@ def run_model(
             du=du_array,
             forcing=forcing,
         )
-        # Solve linear diffusive term explicitly
-        # u_old[bd_size:-bd_size] = u_old[bd_size:-bd_size] * np.exp(
-        #     -ny * k_vec_temp ** diff_exponent * dt
-        # )
 
-        u_old[-(bd_size + 1)] = 0
+        # Solve diffusion depending on method
+        u_old = diffusion_func(u_old, ny, diff_exponent)
 
     return u_old
 
@@ -104,21 +95,23 @@ def main(args=None):
         + f"are saved to disk each with {cfg.GLOBAL_PARAMS.record_max_time:.1f}s data\n"
     )
 
-    # Burn in the model for the desired burn in time
-    data_out = np.zeros(
-        (int(args["burn_in_time"] * tts), sdim + 1), dtype=np.complex128
-    )
+    if args["burn_in_time"] > 0:
+        # Burn in the model for the desired burn in time
+        data_out = np.zeros(
+            (int(args["burn_in_time"] * tts), sdim + 1), dtype=np.complex128
+        )
 
-    print(f'running burn-in phase of {args["burn_in_time"]}s\n')
-    u_old = run_model(
-        u_old,
-        du_array,
-        data_out,
-        int(args["burn_in_time"] / dt),
-        args["ny"],
-        args["forcing"],
-        args["diff_exponent"],
-    )
+        print(f'running burn-in phase of {args["burn_in_time"]}s\n')
+        u_old = run_model(
+            u_old,
+            du_array,
+            data_out,
+            int(args["burn_in_time"] / dt),
+            args["ny"],
+            args["forcing"],
+            args["diff_exponent"],
+            diff_type=args["diff_type"],
+        )
 
     for ir in range(args["n_records"]):
         # Calculate data out size
@@ -144,6 +137,7 @@ def main(args=None):
             args["ny"],
             args["forcing"],
             args["diff_exponent"],
+            diff_type=args["diff_type"],
         )
 
         # Add record_id to datafile header

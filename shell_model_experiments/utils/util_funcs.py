@@ -2,7 +2,9 @@ import sys
 
 sys.path.append("..")
 import math
+from numba import njit, types
 from shell_model_experiments.params.params import *
+import config as cfg
 
 
 def ny_from_ny_n_and_forcing(forcing, ny_n, diff_exponent):
@@ -46,3 +48,33 @@ def ny_n_from_ny_and_forcing(forcing, ny, diff_exponent):
     )
 
     return ny_n
+
+
+@njit(
+    (types.Array(types.complex128, 1, "C", readonly=False))(
+        types.Array(types.complex128, 1, "C", readonly=False),
+        types.float64,
+        types.float64,
+    ),
+    cache=cfg.NUMBA_CACHE,
+)
+def normal_diffusion(u_old, ny, diff_exponent):
+    # Solve linear diffusive term explicitly
+    u_old[bd_size:-bd_size] = u_old[bd_size:-bd_size] * np.exp(
+        -ny * k_vec_temp ** diff_exponent * dt
+    )
+    return u_old
+
+
+@njit(
+    (types.Array(types.complex128, 1, "C", readonly=False))(
+        types.Array(types.complex128, 1, "C", readonly=False),
+        types.float64,
+        types.float64,
+    ),
+    cache=cfg.NUMBA_CACHE,
+)
+def infinit_hyper_diffusion(u_old, ny, diff_exponent):
+    # Use infinit hyperdiffusion
+    u_old[-(bd_size + 1)] = 0
+    return u_old
