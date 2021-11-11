@@ -110,9 +110,11 @@ def plot_helicity_spectrum_comparison(args: dict):
         # Import data
         u_data, header_dict = g_import.import_data(file_path, start_line=1)
 
-        plot_arg_list = ["hel_sign", "fit_slope"]
-        # if i == 0:
-        #     plot_arg_list.append("kolmogorov")
+        plot_arg_list = [
+            "hel_sign",
+        ]
+        if i == 0:
+            plot_arg_list.append("kolmogorov")
 
         # Get ny_n index
         ny_n_index = ny_n_values.index(int(header_dict["ny_n"]))
@@ -124,8 +126,8 @@ def plot_helicity_spectrum_comparison(args: dict):
 
         plot_kwargs = {
             "title": "Helicity spectrum vs $n_{{\\nu}}$ and $\\alpha$",
-            # "color": cmap_list[ny_n_index],
-            # "label": label,
+            "color": cmap_list[ny_n_index],
+            "label": label,
         }
 
         sh_plt_data.plot_helicity_spectrum(
@@ -264,6 +266,9 @@ def plot_period4_spectrum_ratio_vs_alpha(args: dict):
         u_data, header_dict = g_import.import_data(file_path, start_line=1)
         u_data = u_data.real
 
+        if header_dict["ny_n"] == 19:
+            continue
+
         # Save ref data since it's at the first index due to above trick
         # if i == 0:
         #     ref_data = u_data
@@ -289,7 +294,7 @@ def plot_period4_spectrum_ratio_vs_alpha(args: dict):
         _slice_upper = np.s_[2 : current_ny_n - 1 : step]
 
         # calculate difference data between upper and lower peaks
-        diff = rel_u_data[0, _slice_upper] - rel_u_data[0, _slice_lower]
+        diff = np.log(rel_u_data[0, _slice_upper]) - np.log(rel_u_data[0, _slice_lower])
         diff_data_collection[current_ny_n].append(diff)
 
     for key in diff_data_collection.keys():
@@ -317,7 +322,7 @@ def plot_period4_spectrum_ratio_vs_alpha(args: dict):
     title = g_plt_utils.generate_title(
         args, title_header="Peak-to-peak amplitude rel. fit vs. $\\alpha$"
     )
-    axes.set_yscale("log")
+    # axes.set_yscale("log")
     axes.set_xlabel("$\\alpha$")
     axes.set_ylabel("Peak-to-peak amplitude rel. fit")
     axes.set_title(title)

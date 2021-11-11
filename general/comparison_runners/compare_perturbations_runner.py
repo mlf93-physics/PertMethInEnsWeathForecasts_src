@@ -13,6 +13,7 @@ sys.path.append("..")
 import pathlib as pl
 import copy
 import shell_model_experiments.params as sh_params
+import shell_model_experiments.utils.util_funcs as sh_utils
 import lorentz63_experiments.params.params as l63_params
 import general.utils.experiments.exp_utils as exp_utils
 import general.utils.user_interface as g_ui
@@ -87,7 +88,7 @@ def rd_pert_experiment(args: dict, local_exp_setup: dict):
     processes = []
 
     # Prepare arguments for perturbation run
-    args["n_runs_per_profile"] = 20
+    args["n_runs_per_profile"] = 50
     args["pert_mode"] = "rd"
     args["start_times"] = local_exp_setup["eval_times"]
     args["start_time_offset"] = local_exp_setup["unit_offset"]
@@ -119,7 +120,7 @@ def nm_pert_experiment(args: dict, local_exp_setup: dict):
     processes = []
 
     # Prepare arguments for perturbation run
-    args["n_runs_per_profile"] = 20
+    args["n_runs_per_profile"] = 50
     args["n_profiles"] = local_exp_setup["n_units"]
     args["pert_mode"] = "nm"
     args["start_times"] = local_exp_setup["eval_times"]
@@ -260,7 +261,7 @@ if __name__ == "__main__":
 
     # Add ny argument
     if cfg.MODEL == Models.SHELL_MODEL:
-        args["ny"] = params.ny_from_ny_n_and_forcing(
+        args["ny"] = sh_utils.ny_from_ny_n_and_forcing(
             args["forcing"], args["ny_n"], args["diff_exponent"]
         )
 

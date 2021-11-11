@@ -1,9 +1,9 @@
 {
     "TestRun0": {
         "general": {
-            "folder_name": "compare_pert_test_seeked_error1e-8-new_nm",
+            "folder_name": "compare_pert_test_seeked_error1e-2-high_pred",
             "eval_times": [
-                11.22
+                11.5
             ],
             "n_units": 6,
             "unit_offset": 0.01

@@ -16,6 +16,7 @@ import shell_model_experiments.sabra_model.runge_kutta4 as rk4
 from numba import njit, types
 from pyinstrument import Profiler
 from shell_model_experiments.params.params import *
+import shell_model_experiments.utils.util_funcs as sh_utils
 
 profiler = Profiler()
 
@@ -116,9 +117,7 @@ def main(args=None):
     print(f'\nRunning TL sabra model for {args["Nt"]*dt:.2f}s')
 
     # Prepare data out array and prefactor
-    data_out = np.zeros(
-        (int(args["Nt"] * sample_rate), n_k_vec + 1), dtype=np.complex128
-    )
+    data_out = np.zeros((int(args["Nt"] * sample_rate), sdim + 1), dtype=np.complex128)
     prefactor_reshaped = np.reshape(pre_factor, (-1, 1))
 
     # Run model
@@ -149,7 +148,7 @@ if __name__ == "__main__":
     ref_arg_setup.setup_parser()
     args = ref_arg_setup.args
 
-    args["ny"] = ny_from_ny_n_and_forcing(
+    args["ny"] = sh_utils.ny_from_ny_n_and_forcing(
         args["forcing"], args["ny_n"], args["diff_exponent"]
     )
 

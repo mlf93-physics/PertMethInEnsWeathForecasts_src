@@ -145,7 +145,7 @@ def plot_helicity_spectrum(
     title_suffix: str = ""
     color = plot_kwargs["color"] if "color" in plot_kwargs else None
 
-    helicity_sign = np.array([i % 2 for i in range(n_k_vec)], dtype=np.int)
+    helicity_sign = np.array([i % 2 for i in range(sdim)], dtype=np.int)
     mean_helicity = np.abs(mean_helicity)
 
     # Fit the slope of the spectrum
@@ -262,7 +262,7 @@ def plot_energy_per_shell(
         for idx in range(len(index)):
 
             point_plot = plt.plot(
-                np.ones(n_k_vec) * header_dicts[idx]["perturb_pos"] * stt,
+                np.ones(sdim) * header_dicts[idx]["perturb_pos"] * stt,
                 energy_vs_time[int(header_dicts[idx]["perturb_pos"])],
                 "o",
             )
@@ -468,8 +468,8 @@ def plot_3D_eigen_mode_analysis(
     e_vector_collection = np.array(e_vector_collection)
 
     # Make data.
-    shells = np.arange(0, n_k_vec, 1)
-    lyaponov_index = np.arange(0, n_k_vec, 1)
+    shells = np.arange(0, sdim, 1)
+    lyaponov_index = np.arange(0, sdim, 1)
     lyaponov_index, shells = np.meshgrid(lyaponov_index, shells)
 
     surf_plot = axes[0].plot_surface(
@@ -497,10 +497,10 @@ def plot_3D_eigen_mode_analysis(
 
     # Set axis limits
     if right_handed:
-        axes[0].set_xlim(n_k_vec, 0)
+        axes[0].set_xlim(sdim, 0)
     else:
-        axes[0].set_xlim(0, n_k_vec)
-    axes[0].set_ylim(0, n_k_vec)
+        axes[0].set_xlim(0, sdim)
+    axes[0].set_ylim(0, sdim)
 
     pcolorplot = axes[1].pcolormesh(
         np.mean(np.abs(e_vector_collection) ** 2, axis=0), cmap="Reds"
@@ -510,7 +510,7 @@ def plot_3D_eigen_mode_analysis(
     axes[1].set_title(title)
 
     if right_handed:
-        axes[1].set_xlim(n_k_vec, 0)
+        axes[1].set_xlim(sdim, 0)
         axes[1].yaxis.tick_right()
         axes[1].yaxis.set_label_position("right")
         axes[1].xaxis.set_major_locator(mpl_ticker.MaxNLocator(integer=True))
@@ -620,7 +620,7 @@ def plot_eigen_vector_comparison(args=None):
             + f', $n_f$={int(header_dict["n_f"])}, $\\nu$={header_dict["ny"]:.2e}'
             + f', time={header_dict["time_to_run"]}s, N_tot={args["n_profiles"]*args["n_runs_per_profile"]}'
         )
-        plt.xlim(n_k_vec, 0)
+        plt.xlim(sdim, 0)
         axes.yaxis.tick_right()
         axes.yaxis.set_label_position("right")
         plt.colorbar(pad=0.1)
@@ -697,14 +697,14 @@ def plot_error_energy_spectrum_vs_time_2D(args: dict = None, axes: plt.Axes = No
     time_exp_indices = np.unique(time_exp_indices)
     # Update numbe of divisions
     n_divisions = time_exp_indices.size
-    error_spectra = np.zeros((n_files, n_divisions, n_k_vec), dtype=np.float64)
+    error_spectra = np.zeros((n_files, n_divisions, sdim), dtype=np.float64)
 
     for ifile in range(n_files):
         for i, data_index in enumerate(time_exp_indices):
             error_spectra[ifile, i, :] = np.abs(u_stores[ifile][data_index, :]).real
 
     # Calculate mean and std
-    error_mean_spectra = np.zeros((n_divisions, n_k_vec), dtype=np.float64)
+    error_mean_spectra = np.zeros((n_divisions, sdim), dtype=np.float64)
     # Find zeros
     error_spectra[np.where(error_spectra == 0)] = np.nan
 
@@ -831,9 +831,7 @@ def plot_error_vector_spectrum(args=None):
         local_ny=header_dict["ny"],
     )
 
-    sorted_time_and_pert_mean_scaled_e_vectors = np.zeros(
-        (args["n_files"], n_k_vec, n_k_vec)
-    )
+    sorted_time_and_pert_mean_scaled_e_vectors = np.zeros((args["n_files"], sdim, sdim))
 
     for j in range(args["n_files"]):
         sort_id = e_value_collection[j].argsort()[::-1]
@@ -869,7 +867,7 @@ def plot_error_vector_spectrum(args=None):
         + f', $n_f$={int(header_dict["n_f"])}, $\\nu$={header_dict["ny"]:.2e}'
         + f', time={header_dict["time_to_run"]}s, N_tot={args["n_profiles"]*args["n_runs_per_profile"]}'
     )
-    plt.xlim(n_k_vec, 0)
+    plt.xlim(sdim, 0)
     axes.yaxis.tick_right()
     axes.yaxis.set_label_position("right")
     plt.colorbar(pad=0.1)
@@ -884,7 +882,7 @@ def plot_howmoller_diagram_u_energy_rel_mean(args=None):
     time2D, shell2D = np.meshgrid(time.real, k_vec_temp)
     energy_array = (u_data * np.conj(u_data)).real.T
     # Prepare energy rel mean
-    mean_energy = np.reshape(np.mean(energy_array, axis=1), (n_k_vec, 1))
+    mean_energy = np.reshape(np.mean(energy_array, axis=1), (sdim, 1))
     energy_rel_mean_array = energy_array - mean_energy
 
     fig, axes = plt.subplots(nrows=1, ncols=1)
@@ -930,7 +928,7 @@ def plot_howmoller_diagram_helicity_rel_mean(args=None):
     time2D, shell2D = np.meshgrid(time.real, k_vec_temp)
     helicity_array = (hel_pre_factor * (u_data * np.conj(u_data)).real).T
     # Prepare helicity rel mean
-    mean_helicity = np.reshape(np.mean(helicity_array, axis=1), (n_k_vec, 1))
+    mean_helicity = np.reshape(np.mean(helicity_array, axis=1), (sdim, 1))
 
     # Take absolute value
     helicity_array = np.abs(helicity_array)
