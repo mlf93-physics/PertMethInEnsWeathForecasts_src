@@ -53,14 +53,14 @@ def find_normal_modes(
     e_vector_collection = []
     e_value_collection = []
 
-    e_vector_matrix = np.zeros((n_k_vec, args["n_profiles"]), dtype=np.complex128)
+    e_vector_matrix = np.zeros((sdim, args["n_profiles"]), dtype=np.complex128)
 
     # Prepare prefactor vector to multiply on J_matrix
     prefactor_reshaped = np.reshape(pre_factor, (-1, 1))
     # Perform calculation for all u_profiles
     for i in range(args["n_profiles"]):
         # Calculate the Jacobian matrix
-        # J_matrix = np.zeros((n_k_vec, n_k_vec), dtype=np.complex128)
+        # J_matrix = np.zeros((sdim, sdim), dtype=np.complex128)
         J_matrix = calc_jacobian(
             np.copy(u_init_profiles[:, i]),
             args["diff_exponent"],
@@ -105,7 +105,7 @@ def calc_jacobian(
     # Perform the conjugation
     ref_u_vector_conj: np.ndarray = ref_u_vector.conj()
     # Initialise the Jacobian
-    J_matrix = np.zeros((n_k_vec, n_k_vec), dtype=np.complex128)
+    J_matrix = np.zeros((sdim, sdim), dtype=np.complex128)
 
     # Add k=2 diagonal
     J_matrix += np.diag(ref_u_vector_conj[bd_size + 1 : -bd_size - 1], k=2)

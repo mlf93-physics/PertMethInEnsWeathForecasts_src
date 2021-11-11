@@ -4,6 +4,7 @@ sys.path.append("..")
 import copy
 import pathlib as pl
 import shell_model_experiments.params as sh_params
+import shell_model_experiments.utils.util_funcs as sh_utils
 import perturbation_runner as pt_runner
 import general.utils.saving.save_data_funcs as g_save
 import general.utils.saving.save_utils as g_save_utils
@@ -40,7 +41,7 @@ def main(args):
     args["ny_n"] = exp_setup["ny_n"]
 
     # Prepare ny
-    args["ny"] = params.ny_from_ny_n_and_forcing(
+    args["ny"] = sh_utils.ny_from_ny_n_and_forcing(
         args["forcing"], args["ny_n"], args["diff_exponent"]
     )
 

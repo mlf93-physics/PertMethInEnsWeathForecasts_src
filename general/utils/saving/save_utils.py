@@ -150,7 +150,7 @@ def generate_header(
         header += (
             f", n_f={sh_params.n_forcing}, dt={sh_params.dt}, epsilon={sh_params.epsilon}, "
             + f"lambda={sh_params.lambda_const}, N_data={n_data}, "
-            + f"sample_rate={sh_params.sample_rate}, "
+            + f"sample_rate={sh_params.sample_rate}, sdim={sh_params.sdim}, "
         )
     elif cfg.MODEL == Models.LORENTZ63:
         header += (

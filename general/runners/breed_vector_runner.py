@@ -23,6 +23,7 @@ import general.utils.user_interface as g_ui
 import general.utils.util_funcs as g_utils
 import lorentz63_experiments.params.params as l63_params
 import shell_model_experiments.params as sh_params
+import shell_model_experiments.utils.util_funcs as sh_utils
 from general.params.model_licences import Models
 from pyinstrument import Profiler
 
@@ -149,7 +150,7 @@ if __name__ == "__main__":
 
     # Add ny argument
     if cfg.MODEL == Models.SHELL_MODEL:
-        args["ny"] = params.ny_from_ny_n_and_forcing(
+        args["ny"] = sh_utils.ny_from_ny_n_and_forcing(
             args["forcing"], args["ny_n"], args["diff_exponent"]
         )
 

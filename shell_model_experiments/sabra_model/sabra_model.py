@@ -13,6 +13,7 @@ from numba import njit, types
 from pyinstrument import Profiler
 from shell_model_experiments.sabra_model.runge_kutta4 import runge_kutta4
 from shell_model_experiments.params.params import *
+import shell_model_experiments.utils.util_funcs as sh_utils
 import general.utils.saving.save_data_funcs as g_save
 import general.utils.saving.save_utils as g_save_utils
 import general.utils.argument_parsers as a_parsers
@@ -103,7 +104,7 @@ def main(args=None):
 
     # Burn in the model for the desired burn in time
     data_out = np.zeros(
-        (int(args["burn_in_time"] * tts), n_k_vec + 1), dtype=np.complex128
+        (int(args["burn_in_time"] * tts), sdim + 1), dtype=np.complex128
     )
 
     print(f'running burn-in phase of {args["burn_in_time"]}s\n')
@@ -129,7 +130,7 @@ def main(args=None):
                     * sample_rate
                 )
 
-        data_out = np.zeros((out_array_size, n_k_vec + 1), dtype=np.complex128)
+        data_out = np.zeros((out_array_size, sdim + 1), dtype=np.complex128)
 
         # Run model
         print(f'running record {ir + 1}/{args["n_records"]}')
@@ -164,7 +165,7 @@ if __name__ == "__main__":
     stand_arg_setup.setup_parser()
     args = stand_arg_setup.args
 
-    args["ny"] = ny_from_ny_n_and_forcing(
+    args["ny"] = sh_utils.ny_from_ny_n_and_forcing(
         args["forcing"], args["ny_n"], args["diff_exponent"]
     )
 

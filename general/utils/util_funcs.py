@@ -210,12 +210,12 @@ def determine_params_from_header_dict(header_dict: dict, args: dict):
         #     if args["forcing"] == 0:
         #         args["ny_n"] = 0
         #     else:
-        #         args["ny_n"] = params.ny_n_from_ny_and_forcing(
+        #         args["ny_n"] = sh_utils.ny_n_from_ny_and_forcing(
         #             args["forcing"], header_dict["ny"], header_dict["diff_exponent"]
         #         )
         #     # Take ny from reference file
         # else:
-        #     args["ny"] = params.ny_from_ny_n_and_forcing(
+        #     args["ny"] = sh_utils.ny_from_ny_n_and_forcing(
         #         args["forcing"], args["ny_n"], args["diff_exponent"]
         #     )
 
