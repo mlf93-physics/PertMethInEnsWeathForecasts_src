@@ -2,6 +2,7 @@ import os
 import pathlib as pl
 import subprocess as sp
 from shell_model_experiments.params.params import PAR as PAR_SH
+from shell_model_experiments.params.params import ParamsStructType
 import lorentz63_experiments.params.params as l63_params
 from general.params.model_licences import Models
 import config as cfg

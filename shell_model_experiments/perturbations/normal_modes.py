@@ -7,7 +7,7 @@ from general.utils.module_import.type_import import *
 
 # import shell_model_experiments.params as params
 # from shell_model_experiments.params.params import *
-from shell_model_experiments.params.params import PAR, Params
+from shell_model_experiments.params.params import PAR, ParamsStructType
 import config as cfg
 
 
@@ -93,15 +93,15 @@ def find_normal_modes(
 
 
 @njit(
-    (types.Array(types.complex128, 2, "C", readonly=False))(
-        types.Array(types.complex128, 1, "C", readonly=True),
-        types.float64,
-        types.float64,
-        # types.Array(types.complex128, 2, "C", readonly=True),
-        # types.int16,
-        # types.Array(types.float64, 1, "C", readonly=True),
-        Params.class_type.instance_type,
-    ),
+    # (types.Array(types.complex128, 2, "C", readonly=False))(
+    #     types.Array(types.complex128, 1, "C", readonly=True),
+    #     types.float64,
+    #     types.float64,
+    #     # types.Array(types.complex128, 2, "C", readonly=True),
+    #     # types.int16,
+    #     # types.Array(types.float64, 1, "C", readonly=True),
+    #     Params.class_type.instance_type,
+    # ),
     cache=cfg.NUMBA_CACHE,
 )
 def calc_jacobian(
@@ -111,7 +111,7 @@ def calc_jacobian(
     # prefactor,
     # sdim_local,
     # k_vec_temp_local,
-    PAR: Params,
+    PAR,
 ):
     # Perform the conjugation
     ref_u_vector_conj: np.ndarray = ref_u_vector.conj()

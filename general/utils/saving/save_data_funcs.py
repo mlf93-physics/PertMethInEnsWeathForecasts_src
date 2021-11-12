@@ -6,6 +6,7 @@ import json
 import pathlib as pl
 import numpy as np
 from shell_model_experiments.params.params import PAR as PAR_SH
+from shell_model_experiments.params.params import ParamsStructType
 import lorentz63_experiments.params.params as l63_params
 import general.utils.saving.save_data_funcs as g_save
 import general.utils.saving.save_utils as g_save_utils

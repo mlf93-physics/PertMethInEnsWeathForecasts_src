@@ -4,7 +4,7 @@ sys.path.append("..")
 import math
 import numpy as np
 from numba import njit, types
-from shell_model_experiments.params.params import PAR, Params
+from shell_model_experiments.params.params import PAR, ParamsStructType
 import config as cfg
 
 
@@ -54,15 +54,15 @@ def ny_n_from_ny_and_forcing(forcing, ny, diff_exponent):
 
 
 @njit(
-    (types.Array(types.complex128, 1, "C", readonly=False))(
-        types.Array(types.complex128, 1, "C", readonly=False),
-        Params.class_type.instance_type,
-        types.float64,
-        types.float64,
-    ),
+    # (types.Array(types.complex128, 1, "C", readonly=False))(
+    #     types.Array(types.complex128, 1, "C", readonly=False),
+    #     Params.class_type.instance_type,
+    #     types.float64,
+    #     types.float64,
+    # ),
     cache=cfg.NUMBA_CACHE,
 )
-def normal_diffusion(u_old, PAR: Params, ny, diff_exponent):
+def normal_diffusion(u_old, PAR, ny, diff_exponent):
     # Solve linear diffusive term explicitly
     u_old[PAR.bd_size : -PAR.bd_size] = u_old[PAR.bd_size : -PAR.bd_size] * np.exp(
         -ny * PAR.k_vec_temp ** diff_exponent * PAR.dt
@@ -71,15 +71,30 @@ def normal_diffusion(u_old, PAR: Params, ny, diff_exponent):
 
 
 @njit(
-    (types.Array(types.complex128, 1, "C", readonly=False))(
-        types.Array(types.complex128, 1, "C", readonly=False),
-        Params.class_type.instance_type,
-        types.float64,
-        types.float64,
-    ),
+    # (types.Array(types.complex128, 1, "C", readonly=False))(
+    #     types.Array(types.complex128, 1, "C", readonly=False),
+    #     Params.class_type.instance_type,
+    #     types.float64,
+    #     types.float64,
+    # ),
     cache=cfg.NUMBA_CACHE,
 )
-def infinit_hyper_diffusion(u_old, PAR: Params, ny, diff_exponent):
+def infinit_hyper_diffusion(u_old, PAR, ny, diff_exponent):
     # Use infinit hyperdiffusion
     u_old[-(PAR.bd_size + 1)] = 0
     return u_old
+
+
+@njit(cache=cfg.NUMBA_CACHE)
+def update_arrays(struct):
+    struct.k_vec_temp = np.arange(struct.sdim, dtype=np.float64)
+
+    # Define arrays
+    struct.k_vec_temp = np.array(
+        [struct.lambda_const ** (n + 1) for n in range(struct.sdim)],
+        dtype=np.float64,
+    )
+    struct.pre_factor = 1j * struct.k_vec_temp
+    struct.hel_pre_factor = (-1) ** (np.arange(1, struct.sdim + 1)) * struct.k_vec_temp
+    struct.du_array = np.zeros(struct.sdim + 2 * struct.bd_size, dtype=np.complex128)
+    struct.initial_k_vec = struct.k_vec_temp ** (-1 / 3)
