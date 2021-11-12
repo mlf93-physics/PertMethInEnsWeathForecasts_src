@@ -12,10 +12,11 @@ import numpy as np
 from numba import njit, types
 from pyinstrument import Profiler
 from shell_model_experiments.sabra_model.runge_kutta4 import runge_kutta4
-from shell_model_experiments.params.params import PAR
+from shell_model_experiments.params.params import PAR, Params
 import shell_model_experiments.utils.util_funcs as ut_funcs
 import general.utils.saving.save_data_funcs as g_save
-import general.utils.saving.save_utils as g_save_utils
+
+# import general.utils.saving.save_utils as g_save_utils
 import general.utils.argument_parsers as a_parsers
 import config as cfg
 
@@ -28,27 +29,29 @@ cfg.GLOBAL_PARAMS.record_max_time = 30
 @njit(
     (
         types.Array(types.complex128, 1, "C", readonly=False),
-        types.Array(types.complex128, 1, "C", readonly=False),
+        # types.Array(types.complex128, 1, "C", readonly=False),
         types.Array(types.complex128, 2, "C", readonly=False),
-        types.Array(types.float64, 1, "C", readonly=True),
+        # types.Array(types.float64, 1, "C", readonly=True),
         types.int64,
         types.float64,
         types.float64,
         types.float64,
-        types.Array(types.complex128, 1, "C", readonly=True),
+        # types.Array(types.complex128, 1, "C", readonly=True),
+        Params.class_type.instance_type,
     ),
     cache=cfg.NUMBA_CACHE,
 )
 def run_model(
     u_old: np.ndarray,
-    du_array: np.ndarray,
+    # du_array: np.ndarray,
     data_out: np.ndarray,
-    k_vec_temp_local: np.ndarray,
+    # k_vec_temp_local: np.ndarray,
     Nt_local: int,
     ny: float,
     forcing: float,
     diff_exponent: int,
-    pre_factor: np.ndarray,
+    # pre_factor: np.ndarray,
+    PAR: Params,
 ):
     """Execute the integration of the sabra shell model.
 
@@ -74,11 +77,16 @@ def run_model(
 
         # Solve nonlinear terms + forcing
         u_old = runge_kutta4(
-            y0=u_old, h=PAR.dt, du=du_array, forcing=forcing, pre_factor=pre_factor
+            y0=u_old,
+            # h=PAR.dt,
+            # du=PAR.du_array,
+            forcing=forcing,
+            PAR=PAR
+            # pre_factor=PAR.pre_factor
         )
         # Solve linear diffusive term explicitly
         u_old[PAR.bd_size : -PAR.bd_size] = u_old[PAR.bd_size : -PAR.bd_size] * np.exp(
-            -ny * k_vec_temp_local ** diff_exponent * PAR.dt
+            -ny * PAR.k_vec_temp ** diff_exponent * PAR.dt
         )
 
     return u_old
@@ -113,14 +121,15 @@ def main(args=None):
     print(f'running burn-in phase of {args["burn_in_time"]}s\n')
     u_old = run_model(
         u_old,
-        PAR.du_array,
+        # PAR.du_array,
         data_out,
-        PAR.k_vec_temp,
+        # PAR.k_vec_temp,
         int(args["burn_in_time"] / PAR.dt),
         args["ny"],
         args["forcing"],
         args["diff_exponent"],
-        PAR.pre_factor,
+        # PAR.pre_factor,
+        PAR,
     )
 
     for ir in range(args["n_records"]):
@@ -141,14 +150,15 @@ def main(args=None):
         print(f'running record {ir + 1}/{args["n_records"]}')
         u_old = run_model(
             u_old,
-            PAR.du_array,
+            # PAR.du_array,
             data_out,
-            PAR.k_vec_temp,
+            # PAR.k_vec_temp,
             int(out_array_size / PAR.sample_rate),
             args["ny"],
             args["forcing"],
             args["diff_exponent"],
-            PAR.pre_factor,
+            # PAR.pre_factor,
+            PAR,
         )
 
         # Add record_id to datafile header
@@ -157,10 +167,10 @@ def main(args=None):
             print(f"saving record\n")
             save_path = g_save.save_data(data_out, args=args)
 
-    if args["erda_run"]:
-        stand_data_name = g_save_utils.generate_standard_data_name(args)
-        compress_out_name = f"ref_data_{stand_data_name}"
-        g_save_utils.compress_dir(save_path, compress_out_name)
+    # if args["erda_run"]:
+    #     stand_data_name = g_save_utils.generate_standard_data_name(args)
+    #     compress_out_name = f"ref_data_{stand_data_name}"
+    #     g_save_utils.compress_dir(save_path, compress_out_name)
 
     profiler.stop()
     print(profiler.output_text())
@@ -173,7 +183,8 @@ if __name__ == "__main__":
     args = stand_arg_setup.args
 
     # Initiate variables
-    PAR.initiate_sdim_arrays(args["sdim"])
+    PAR.sdim = args["sdim"]
+    PAR.initialise_sdim_arrays()
     args["ny"] = ut_funcs.ny_from_ny_n_and_forcing(
         args["forcing"], args["ny_n"], args["diff_exponent"]
     )

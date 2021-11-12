@@ -1,7 +1,7 @@
 import os
 import pathlib as pl
 import subprocess as sp
-import shell_model_experiments.params as sh_params
+from shell_model_experiments.params.params import PAR as PAR_SH
 import lorentz63_experiments.params.params as l63_params
 from general.params.model_licences import Models
 import config as cfg
@@ -40,7 +40,7 @@ def generate_standard_data_name(args):
     if cfg.MODEL == Models.SHELL_MODEL:
         file_name = (
             f"ny{adj_args['ny']}_ny_n{args['ny_n']}_t{adj_args['time_to_run']}"
-            + f"_n_f{sh_params.n_forcing}_f{adj_args['forcing']}"
+            + f"_n_f{PAR_SH.n_forcing}_f{adj_args['forcing']}"
             f"_kexp{args['diff_exponent']}"
         )
     elif cfg.MODEL == Models.LORENTZ63:
@@ -148,9 +148,9 @@ def generate_header(
 
     if cfg.MODEL == Models.SHELL_MODEL:
         header += (
-            f", n_f={sh_params.n_forcing}, dt={sh_params.dt}, epsilon={sh_params.epsilon}, "
-            + f"lambda={sh_params.lambda_const}, N_data={n_data}, "
-            + f"sample_rate={sh_params.sample_rate}, "
+            f", n_f={PAR_SH.n_forcing}, dt={PAR_SH.dt}, epsilon={PAR_SH.epsilon}, "
+            + f"lambda={PAR_SH.lambda_const}, N_data={n_data}, "
+            + f"sample_rate={PAR_SH.sample_rate}, "
         )
     elif cfg.MODEL == Models.LORENTZ63:
         header += (

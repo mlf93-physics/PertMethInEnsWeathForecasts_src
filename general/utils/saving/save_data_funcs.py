@@ -5,8 +5,7 @@ sys.path.append("..")
 import json
 import pathlib as pl
 import numpy as np
-import shell_model_experiments.params as sh_params
-import config
+from shell_model_experiments.params.params import PAR as PAR_SH
 import lorentz63_experiments.params.params as l63_params
 import general.utils.saving.save_data_funcs as g_save
 import general.utils.saving.save_utils as g_save_utils
@@ -15,9 +14,9 @@ import config as cfg
 
 # Get parameters for model
 if cfg.MODEL == Models.SHELL_MODEL:
-    params = sh_params
+    PAR = PAR_SH
 elif cfg.MODEL == Models.LORENTZ63:
-    params = l63_params
+    PAR = l63_params
 
 
 def save_data(
@@ -114,7 +113,7 @@ def save_reference_info(args):
     info_line = g_save_utils.args_to_string(args)
     append_extra = f"record_max_time={cfg.GLOBAL_PARAMS.record_max_time}, "
     info_line += g_save_utils.generate_header(
-        args, args["Nt"] * params.sample_rate, append_extra=append_extra
+        args, args["Nt"] * PAR.sample_rate, append_extra=append_extra
     )
 
     # Write to file
@@ -145,7 +144,7 @@ def save_perturb_info(args=None, exp_setup=None):
     exp_setup_line = g_save_utils.args_to_string(exp_setup)
 
     info_line = g_save_utils.generate_header(
-        args, args["Nt"] * params.sample_rate, append_options=["licence"]
+        args, args["Nt"] * PAR.sample_rate, append_options=["licence"]
     )
     info_line += exp_setup_line
 

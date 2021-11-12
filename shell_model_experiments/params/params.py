@@ -1,11 +1,15 @@
 import sys
 
 sys.path.append("..")
-import math
 import numpy as np
 import numba as nb
 from numba.experimental import jitclass
 from general.utils.module_import.type_import import *
+import config as cfg
+
+
+# Define variables not suited for numba jitclass
+dtype: type = np.complex128
 
 
 @jitclass(
@@ -59,12 +63,10 @@ class Params:
         self.hel_pre_factor: np.ndarray = (-1) ** (
             np.arange(1, self.sdim + 1)
         ) * self.k_vec_temp
-        self.du_array: np.ndarray = np.zeros(
-            self.sdim + 2 * self.bd_size, dtype=np.complex128
-        )
+        self.du_array: np.ndarray = np.zeros(self.sdim + 2 * self.bd_size, dtype=dtype)
         self.initial_k_vec: np.ndarray = self.k_vec_temp ** (-1 / 3)
 
-    def initialise_arrays(self):
+    def initialise_sdim_arrays(self):
 
         # Define k vector indices array
         self.k_vec_temp = np.array(
@@ -79,26 +81,30 @@ class Params:
         self.hel_pre_factor = (-1) ** (np.arange(1, self.sdim + 1)) * self.k_vec_temp
 
         # Define du array to store derivative
-        self.du_array = np.zeros(self.sdim + 2 * self.bd_size, dtype=np.complex128)
+        self.du_array = np.zeros(self.sdim + 2 * self.bd_size, dtype=dtype)
 
         # Calculate initial k and u profile. Put in zeros at the boundaries
         self.initial_k_vec = self.k_vec_temp ** (-1 / 3)
 
 
-PAR = Params()
+@nb.jit(cache=cfg.NUMBA_CACHE)
+def wrapper():
+    PAR = Params()
+    return PAR
 
-print(hex(id(PAR.pre_factor)), PAR.pre_factor.size)
-print(hex(id(PAR.pre_factor)), PAR.pre_factor.size)
-PAR.sdim = 30
-PAR.initialise_arrays()
-print(hex(id(PAR.pre_factor)), PAR.pre_factor.size)
-print(hex(id(PAR.pre_factor)), PAR.pre_factor.size)
+
+PAR = wrapper()
 
 # Define variables not suited for numba jitclass
 u_slice: slice = slice(PAR.bd_size, -PAR.bd_size, 1)
-dtype: type = np.complex128
 
-# # array1 = np.arange(20)
+# print(hex(id(PAR.pre_factor)), PAR.pre_factor.size)
+# print(hex(id(PAR.pre_factor)), PAR.pre_factor.size)
+# PAR.sdim = 30
+# PAR.initialise_sdim_arrays()
+# print(hex(id(PAR.pre_factor)), PAR.pre_factor.size)
+# print(hex(id(PAR.pre_factor)), PAR.pre_factor.size)
+
 
 # s1 = s.k_vec_temp
 # print("size", s1.size)
