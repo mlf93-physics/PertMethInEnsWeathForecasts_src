@@ -10,16 +10,16 @@ import general.utils.custom_decorators as c_dec
 import config as cfg
 
 
-@njit(
-    # (
-    #     types.Array(types.complex128, 1, "C", readonly=True),
-    #     # types.Array(types.complex128, 1, "C", readonly=False),
-    #     types.float64,
-    #     # types.Array(types.complex128, 1, "C", readonly=True),
-    #     Params.class_type.instance_type,
-    # ),
-    cache=cfg.NUMBA_CACHE,
-)
+# @njit(
+#     # (
+#     #     types.Array(types.complex128, 1, "C", readonly=True),
+#     #     # types.Array(types.complex128, 1, "C", readonly=False),
+#     #     types.float64,
+#     #     # types.Array(types.complex128, 1, "C", readonly=True),
+#     #     Params.class_type.instance_type,
+#     # ),
+#     cache=cfg.NUMBA_CACHE,
+# )
 def derivative_evaluator(
     u_old: np.ndarray = None,
     du_array: np.ndarray = None,
@@ -61,17 +61,17 @@ def derivative_evaluator(
     return du_array
 
 
-@njit(
-    # types.Array(types.complex128, 1, "C", readonly=False)(
-    #     types.Array(types.complex128, 1, "C", readonly=False),
-    #     # types.float64,
-    #     # types.Array(types.complex128, 1, "C", readonly=False),
-    #     types.float64,
-    #     # types.Array(types.complex128, 1, "C", readonly=True),
-    #     Params.class_type.instance_type,
-    # ),
-    cache=cfg.NUMBA_CACHE,
-)
+# @njit(
+#     # types.Array(types.complex128, 1, "C", readonly=False)(
+#     #     types.Array(types.complex128, 1, "C", readonly=False),
+#     #     # types.float64,
+#     #     # types.Array(types.complex128, 1, "C", readonly=False),
+#     #     types.float64,
+#     #     # types.Array(types.complex128, 1, "C", readonly=True),
+#     #     Params.class_type.instance_type,
+#     # ),
+#     cache=cfg.NUMBA_CACHE,
+# )
 def runge_kutta4(
     y0: np.ndarray = 0,
     # h: float = 1,

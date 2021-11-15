@@ -26,21 +26,21 @@ profiler = Profiler()
 cfg.GLOBAL_PARAMS.record_max_time = 30
 
 
-@njit(
-    # (
-    #     types.Array(types.complex128, 1, "C", readonly=False),
-    #     # types.Array(types.complex128, 1, "C", readonly=False),
-    #     types.Array(types.complex128, 2, "C", readonly=False),
-    #     # types.Array(types.float64, 1, "C", readonly=True),
-    #     types.int64,
-    #     types.float64,
-    #     types.float64,
-    #     types.float64,
-    #     # types.Array(types.complex128, 1, "C", readonly=True),
-    #     Params.class_type.instance_type,
-    # ),
-    cache=cfg.NUMBA_CACHE,
-)
+# @njit(
+#     # (
+#     #     types.Array(types.complex128, 1, "C", readonly=False),
+#     #     # types.Array(types.complex128, 1, "C", readonly=False),
+#     #     types.Array(types.complex128, 2, "C", readonly=False),
+#     #     # types.Array(types.float64, 1, "C", readonly=True),
+#     #     types.int64,
+#     #     types.float64,
+#     #     types.float64,
+#     #     types.float64,
+#     #     # types.Array(types.complex128, 1, "C", readonly=True),
+#     #     Params.class_type.instance_type,
+#     # ),
+#     cache=cfg.NUMBA_CACHE,
+# )
 def run_model(
     u_old: np.ndarray,
     du_array: np.ndarray,
@@ -84,10 +84,16 @@ def run_model(
             PAR=PAR
             # pre_factor=PAR.pre_factor
         )
+
+        print("u_old after rk4, before diff", u_old)
+        input()
         # Solve linear diffusive term explicitly
         u_old[PAR.bd_size : -PAR.bd_size] = u_old[PAR.bd_size : -PAR.bd_size] * np.exp(
             -ny * PAR.k_vec_temp ** diff_exponent * PAR.dt
         )
+
+        print("u_old after diff", u_old)
+        input()
 
     return u_old
 
