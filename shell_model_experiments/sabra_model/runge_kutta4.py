@@ -1,8 +1,9 @@
 import sys
 
 sys.path.append("..")
-from numba import njit, types
+from numba import njit, types, typeof
 from shell_model_experiments.params.params import *
+from shell_model_experiments.params.params import PAR, ParamsStructType
 import shell_model_experiments.perturbations.normal_modes as sh_nm_estimator
 import general.utils.custom_decorators as c_dec
 
@@ -10,21 +11,19 @@ import general.utils.custom_decorators as c_dec
 import config as cfg
 
 
-# @njit(
-#     # (
-#     #     types.Array(types.complex128, 1, "C", readonly=True),
-#     #     # types.Array(types.complex128, 1, "C", readonly=False),
-#     #     types.float64,
-#     #     # types.Array(types.complex128, 1, "C", readonly=True),
-#     #     Params.class_type.instance_type,
-#     # ),
-#     cache=cfg.NUMBA_CACHE,
-# )
+@njit(
+    (types.Array(types.complex128, 1, "C", readonly=False))(
+        types.Array(types.complex128, 1, "C", readonly=True),
+        types.Array(types.complex128, 1, "C", readonly=False),
+        types.float64,
+        typeof(PAR),
+    ),
+    cache=cfg.NUMBA_CACHE,
+)
 def derivative_evaluator(
     u_old: np.ndarray = None,
     du_array: np.ndarray = None,
     forcing: float = None,
-    # pre_factor: np.ndarray = None,
     PAR=None,
 ):
     """Derivative evaluator used in the Runge-Kutta method.
@@ -61,23 +60,19 @@ def derivative_evaluator(
     return du_array
 
 
-# @njit(
-#     # types.Array(types.complex128, 1, "C", readonly=False)(
-#     #     types.Array(types.complex128, 1, "C", readonly=False),
-#     #     # types.float64,
-#     #     # types.Array(types.complex128, 1, "C", readonly=False),
-#     #     types.float64,
-#     #     # types.Array(types.complex128, 1, "C", readonly=True),
-#     #     Params.class_type.instance_type,
-#     # ),
-#     cache=cfg.NUMBA_CACHE,
-# )
+@njit(
+    types.Array(types.complex128, 1, "C", readonly=False)(
+        types.Array(types.complex128, 1, "C", readonly=False),
+        types.Array(types.complex128, 1, "C", readonly=False),
+        types.float64,
+        typeof(PAR),
+    ),
+    cache=cfg.NUMBA_CACHE,
+)
 def runge_kutta4(
     y0: np.ndarray = 0,
-    # h: float = 1,
     du_array: np.ndarray = None,
     forcing: float = None,
-    # pre_factor: np.ndarray = None,
     PAR=None,
 ):
     """Performs the Runge-Kutta-4 integration of non-linear part of the shell velocities.

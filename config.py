@@ -19,7 +19,7 @@ GLOBAL_PARAMS = GlobalParams()
 # plt_config.latex_plot_settings()
 
 # Other general configurations
-NUMBA_CACHE = False
+NUMBA_CACHE = True
 NUMBA_ON = True
 # Disable stdout
 # sys.stdout = open(os.devnull, "w")

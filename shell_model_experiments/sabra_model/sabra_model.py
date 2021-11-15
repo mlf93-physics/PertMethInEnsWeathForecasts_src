@@ -9,7 +9,7 @@ import sys
 sys.path.append("..")
 from math import ceil
 import numpy as np
-from numba import njit, types
+import numba as nb
 from pyinstrument import Profiler
 from shell_model_experiments.sabra_model.runge_kutta4 import runge_kutta4
 from shell_model_experiments.params.params import PAR, ParamsStructType
@@ -26,31 +26,27 @@ profiler = Profiler()
 cfg.GLOBAL_PARAMS.record_max_time = 30
 
 
-# @njit(
-#     # (
-#     #     types.Array(types.complex128, 1, "C", readonly=False),
-#     #     # types.Array(types.complex128, 1, "C", readonly=False),
-#     #     types.Array(types.complex128, 2, "C", readonly=False),
-#     #     # types.Array(types.float64, 1, "C", readonly=True),
-#     #     types.int64,
-#     #     types.float64,
-#     #     types.float64,
-#     #     types.float64,
-#     #     # types.Array(types.complex128, 1, "C", readonly=True),
-#     #     Params.class_type.instance_type,
-#     # ),
-#     cache=cfg.NUMBA_CACHE,
-# )
+@nb.njit(
+    (nb.types.Array(nb.types.complex128, 1, "C", readonly=False))(
+        nb.types.Array(nb.types.complex128, 1, "C", readonly=False),
+        nb.types.Array(nb.types.complex128, 1, "C", readonly=False),
+        nb.types.Array(nb.types.complex128, 2, "C", readonly=False),
+        nb.types.int64,
+        nb.types.float64,
+        nb.types.float64,
+        nb.types.float64,
+        nb.typeof(PAR),
+    ),
+    cache=cfg.NUMBA_CACHE,
+)
 def run_model(
     u_old: np.ndarray,
     du_array: np.ndarray,
     data_out: np.ndarray,
-    # k_vec_temp_local: np.ndarray,
     Nt_local: int,
     ny: float,
     forcing: float,
     diff_exponent: int,
-    # pre_factor: np.ndarray,
     PAR,
 ):
     """Execute the integration of the sabra shell model.
@@ -74,26 +70,13 @@ def run_model(
             data_out[sample_number, 0] = PAR.dt * i + 0j
             data_out[sample_number, 1:] = u_old[PAR.bd_size : -PAR.bd_size]
             sample_number += 1
-
         # Solve nonlinear terms + forcing
-        u_old = runge_kutta4(
-            y0=u_old,
-            # h=PAR.dt,
-            du_array=du_array,
-            forcing=forcing,
-            PAR=PAR
-            # pre_factor=PAR.pre_factor
-        )
+        u_old = runge_kutta4(y0=u_old, du_array=du_array, forcing=forcing, PAR=PAR)
 
-        print("u_old after rk4, before diff", u_old)
-        input()
         # Solve linear diffusive term explicitly
         u_old[PAR.bd_size : -PAR.bd_size] = u_old[PAR.bd_size : -PAR.bd_size] * np.exp(
             -ny * PAR.k_vec_temp ** diff_exponent * PAR.dt
         )
-
-        print("u_old after diff", u_old)
-        input()
 
     return u_old
 
@@ -129,12 +112,10 @@ def main(args=None):
         u_old,
         PAR.du_array,
         data_out,
-        # PAR.k_vec_temp,
         int(args["burn_in_time"] / PAR.dt),
         args["ny"],
         args["forcing"],
         args["diff_exponent"],
-        # PAR.pre_factor,
         PAR,
     )
 
@@ -158,12 +139,10 @@ def main(args=None):
             u_old,
             PAR.du_array,
             data_out,
-            # PAR.k_vec_temp,
             int(out_array_size / PAR.sample_rate),
             args["ny"],
             args["forcing"],
             args["diff_exponent"],
-            # PAR.pre_factor,
             PAR,
         )
 
@@ -190,6 +169,7 @@ if __name__ == "__main__":
 
     # Initiate variables
     # PAR.sdim = args["sdim"]
+    ut_funcs.update_params(PAR)
     ut_funcs.update_arrays(PAR)
     args["ny"] = ut_funcs.ny_from_ny_n_and_forcing(
         args["forcing"], args["ny_n"], args["diff_exponent"]

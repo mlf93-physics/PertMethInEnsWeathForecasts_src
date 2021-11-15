@@ -3,7 +3,7 @@ import sys
 sys.path.append("..")
 import math
 import numpy as np
-from numba import njit, types
+import numba as nb
 from shell_model_experiments.params.params import PAR, ParamsStructType
 import config as cfg
 
@@ -53,13 +53,13 @@ def ny_n_from_ny_and_forcing(forcing, ny, diff_exponent):
     return ny_n
 
 
-@njit(
-    # (types.Array(types.complex128, 1, "C", readonly=False))(
-    #     types.Array(types.complex128, 1, "C", readonly=False),
-    #     Params.class_type.instance_type,
-    #     types.float64,
-    #     types.float64,
-    # ),
+@nb.njit(
+    (nb.types.Array(nb.types.complex128, 1, "C", readonly=False))(
+        nb.types.Array(nb.types.complex128, 1, "C", readonly=False),
+        nb.typeof(PAR),
+        nb.types.float64,
+        nb.types.float64,
+    ),
     cache=cfg.NUMBA_CACHE,
 )
 def normal_diffusion(u_old, PAR, ny, diff_exponent):
@@ -70,13 +70,13 @@ def normal_diffusion(u_old, PAR, ny, diff_exponent):
     return u_old
 
 
-@njit(
-    # (types.Array(types.complex128, 1, "C", readonly=False))(
-    #     types.Array(types.complex128, 1, "C", readonly=False),
-    #     Params.class_type.instance_type,
-    #     types.float64,
-    #     types.float64,
-    # ),
+@nb.njit(
+    (nb.types.Array(nb.types.complex128, 1, "C", readonly=False))(
+        nb.types.Array(nb.types.complex128, 1, "C", readonly=False),
+        nb.typeof(PAR),
+        nb.types.float64,
+        nb.types.float64,
+    ),
     cache=cfg.NUMBA_CACHE,
 )
 def infinit_hyper_diffusion(u_old, PAR, ny, diff_exponent):
@@ -85,11 +85,16 @@ def infinit_hyper_diffusion(u_old, PAR, ny, diff_exponent):
     return u_old
 
 
-@njit(cache=cfg.NUMBA_CACHE)
-def update_arrays(struct):
-    struct.k_vec_temp = np.arange(struct.sdim, dtype=np.float64)
+@nb.njit((nb.types.none)(nb.typeof(PAR)), cache=cfg.NUMBA_CACHE)
+def update_arrays(struct: ParamsStructType):
+    """Update arrays based on other parameters
 
-    # Define arrays
+    Parameters
+    ----------
+    struct : ParamsStructType
+        The struct holding parameters and arrays
+
+    """
     struct.k_vec_temp = np.array(
         [struct.lambda_const ** (n + 1) for n in range(struct.sdim)],
         dtype=np.float64,
@@ -98,3 +103,18 @@ def update_arrays(struct):
     struct.hel_pre_factor = (-1) ** (np.arange(1, struct.sdim + 1)) * struct.k_vec_temp
     struct.du_array = np.zeros(struct.sdim + 2 * struct.bd_size, dtype=np.complex128)
     struct.initial_k_vec = struct.k_vec_temp ** (-1 / 3)
+
+
+@nb.njit((nb.types.none)(nb.typeof(PAR)), cache=cfg.NUMBA_CACHE)
+def update_params(struct: ParamsStructType):
+    """Update parameters based on other parameters
+
+    Parameters
+    ----------
+    struct : ParamsStructType
+        The struct holding parameters and arrays
+    """
+    struct.tts = int(round(struct.sample_rate / struct.dt))
+    struct.stt = struct.dt / struct.sample_rate
+    struct.factor2 = -struct.epsilon / struct.lambda_const
+    struct.factor3 = (1 - struct.epsilon) / struct.lambda_const ** 2
