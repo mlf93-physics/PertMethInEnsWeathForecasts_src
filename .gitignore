@@ -12,3 +12,4 @@ doc/source/code_doc/
 
 # Specific files
 test_script.py
+test_struct.py
