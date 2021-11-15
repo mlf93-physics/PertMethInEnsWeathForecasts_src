@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from shell_model_experiments.params.params import *
+from shell_model_experiments.params.params import ParamsStructType
+from shell_model_experiments.params.params import PAR
 
 
 def dev_plot_eigen_mode_analysis(
@@ -10,7 +11,7 @@ def dev_plot_eigen_mode_analysis(
     if header is not None:
         title_append = (
             f"; $\\nu$={header['ny']:.2e}, f={header['f']}, "
-            + f"position={perturb_pos/sample_rate*dt:.2f}s"
+            + f"position={perturb_pos/PAR.sample_rate*PAR.dt:.2f}s"
         )
     else:
         title_append = ""

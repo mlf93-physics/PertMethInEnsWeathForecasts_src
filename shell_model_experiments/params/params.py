@@ -15,9 +15,6 @@ from numba import njit
 from numba.core import types
 from numba.experimental import structref
 
-# Define variables not suited for numba structref
-dtype: type = np.complex128
-
 # Define a StructRef.
 # `structref.register` associates the type with the default data model.
 # This will also install getters and setters to the fields of

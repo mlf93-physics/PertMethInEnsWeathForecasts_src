@@ -8,17 +8,18 @@ import sys
 
 sys.path.append("..")
 from math import ceil
-import numpy as np
-import numba as nb
-from pyinstrument import Profiler
-from shell_model_experiments.sabra_model.runge_kutta4 import runge_kutta4
-from shell_model_experiments.params.params import PAR, ParamsStructType
-import shell_model_experiments.utils.util_funcs as ut_funcs
-import general.utils.saving.save_data_funcs as g_save
 
-# import general.utils.saving.save_utils as g_save_utils
-import general.utils.argument_parsers as a_parsers
 import config as cfg
+import general.utils.argument_parsers as a_parsers
+import general.utils.saving.save_data_funcs as g_save
+import general.utils.saving.save_utils as g_save_utils
+import general.utils.user_interface as g_ui
+import numba as nb
+import numpy as np
+import shell_model_experiments.utils.util_funcs as ut_funcs
+from pyinstrument import Profiler
+from shell_model_experiments.params.params import PAR, ParamsStructType
+from shell_model_experiments.sabra_model.runge_kutta4 import runge_kutta4
 
 profiler = Profiler()
 
@@ -152,10 +153,10 @@ def main(args=None):
             print(f"saving record\n")
             save_path = g_save.save_data(data_out, args=args)
 
-    # if args["erda_run"]:
-    #     stand_data_name = g_save_utils.generate_standard_data_name(args)
-    #     compress_out_name = f"ref_data_{stand_data_name}"
-    #     g_save_utils.compress_dir(save_path, compress_out_name)
+    if args["erda_run"]:
+        stand_data_name = g_save_utils.generate_standard_data_name(args)
+        compress_out_name = f"ref_data_{stand_data_name}"
+        g_save_utils.compress_dir(save_path, compress_out_name)
 
     profiler.stop()
     print(profiler.output_text())
@@ -167,9 +168,10 @@ if __name__ == "__main__":
     stand_arg_setup.setup_parser()
     args = stand_arg_setup.args
 
-    # Initiate variables
-    # PAR.sdim = args["sdim"]
-    ut_funcs.update_params(PAR)
+    g_ui.confirm_run_setup(args)
+
+    # Initiate and update variables and arrays
+    ut_funcs.update_params(PAR, sdim=int(args["sdim"]))
     ut_funcs.update_arrays(PAR)
     args["ny"] = ut_funcs.ny_from_ny_n_and_forcing(
         args["forcing"], args["ny_n"], args["diff_exponent"]

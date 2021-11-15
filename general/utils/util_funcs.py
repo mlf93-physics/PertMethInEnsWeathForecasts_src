@@ -7,13 +7,14 @@ import config as cfg
 import general.utils.importing.import_data_funcs as g_import
 import lorentz63_experiments.params.params as l63_params
 import numpy as np
-import shell_model_experiments.params as sh_params
+from shell_model_experiments.params.params import ParamsStructType
+from shell_model_experiments.params.params import PAR as PAR_SH
 from general.params.model_licences import Models
 from general.utils.module_import.type_import import *
 
 # Get parameters for model
 if cfg.MODEL == Models.SHELL_MODEL:
-    params = sh_params
+    params = PAR_SH
 elif cfg.MODEL == Models.LORENTZ63:
     params = l63_params
 

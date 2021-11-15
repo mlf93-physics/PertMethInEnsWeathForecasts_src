@@ -7,7 +7,10 @@ import json
 import pathlib as pl
 import numpy as np
 from general.utils.module_import.type_import import *
-import shell_model_experiments.params as sh_params
+from shell_model_experiments.params.params import ParamsStructType
+from shell_model_experiments.params.params import PAR as PAR_SH
+import shell_model_experiments.params.special_params as sh_sparams
+import lorentz63_experiments.params.special_params as l63_sparams
 import lorentz63_experiments.params as l63_params
 from general.params.model_licences import Models
 import general.utils.util_funcs as g_utils
@@ -17,11 +20,11 @@ import config as cfg
 
 # Get parameters for model
 if cfg.MODEL == Models.SHELL_MODEL:
-    params = sh_params
-    pp = params.params
+    params = PAR_SH
+    sparams = sh_sparams
 elif cfg.MODEL == Models.LORENTZ63:
     params = l63_params
-    pp = params.params
+    sparams = l63_sparams
 
 
 def import_header(folder: Union[str, pl.Path] = "", file_name: str = "") -> dict:
@@ -194,8 +197,8 @@ def import_data(
             stop_line,
             step,
         )
-        data_in: np.ndarray(dtype=params.dtype) = np.genfromtxt(
-            line_iterator, dtype=params.dtype, delimiter=","
+        data_in: np.ndarray(dtype=sparams.dtype) = np.genfromtxt(
+            line_iterator, dtype=sparams.dtype, delimiter=","
         )
 
     if data_in.size == 0:
@@ -367,7 +370,7 @@ def import_perturbation_velocities(
         returned_perturb_header_dicts.append(perturb_header_dict)
 
         # Initialise ref_data_in of null size
-        ref_data_in = np.array([], dtype=params.dtype).reshape(0, params.sdim + 1)
+        ref_data_in = np.array([], dtype=sparams.dtype).reshape(0, params.sdim + 1)
 
         # Determine offset to work with perturb_pos=0
         _offset = 1 * (perturb_header_dict["perturb_pos"] == 0)
@@ -534,7 +537,7 @@ def import_start_u_profiles(args: dict = None) -> Tuple[np.ndarray, List[int], d
     # Prepare u_init_profiles matrix
     u_init_profiles = np.zeros(
         (params.sdim + 2 * params.bd_size, n_profiles * n_runs_per_profile),
-        dtype=params.dtype,
+        dtype=sparams.dtype,
     )
 
     # Import velocity profiles
@@ -544,7 +547,7 @@ def import_start_u_profiles(args: dict = None) -> Tuple[np.ndarray, List[int], d
         for position in ref_file_match[int(file_id)]:
             temp_u_init_profile = np.genfromtxt(
                 ref_record_names_sorted[int(file_id)],
-                dtype=params.dtype,
+                dtype=sparams.dtype,
                 delimiter=",",
                 skip_header=np.int64(round(position, 0)),
                 max_rows=1,
@@ -553,14 +556,14 @@ def import_start_u_profiles(args: dict = None) -> Tuple[np.ndarray, List[int], d
             # Skip time datapoint and pad array with zeros
             if n_runs_per_profile == 1:
                 indices = _counter
-                u_init_profiles[params.u_slice, indices] = temp_u_init_profile[1:]
+                u_init_profiles[sparams.u_slice, indices] = temp_u_init_profile[1:]
 
                 # Update counter
                 _counter += 1
             elif n_runs_per_profile > 1:
                 indices = np.s_[_counter : _counter + n_runs_per_profile : 1]
 
-                u_init_profiles[params.u_slice, indices] = np.repeat(
+                u_init_profiles[sparams.u_slice, indices] = np.repeat(
                     np.reshape(
                         temp_u_init_profile[1:], (temp_u_init_profile[1:].size, 1)
                     ),

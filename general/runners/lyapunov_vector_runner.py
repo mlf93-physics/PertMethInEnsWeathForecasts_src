@@ -17,14 +17,15 @@ import general.utils.user_interface as g_ui
 import general.utils.util_funcs as g_utils
 import lorentz63_experiments.params.params as l63_params
 import numpy as np
-import shell_model_experiments.params as sh_params
+from shell_model_experiments.params.params import ParamsStructType
+from shell_model_experiments.params.params import PAR as PAR_SH
 from general.params.model_licences import Models
 
 import perturbation_runner as pt_runner
 
 # Get parameters for model
 if cfg.MODEL == Models.SHELL_MODEL:
-    params = sh_params
+    params = PAR_SH
 elif cfg.MODEL == Models.LORENTZ63:
     params = l63_params
 

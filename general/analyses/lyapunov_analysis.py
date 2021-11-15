@@ -2,8 +2,6 @@ import sys
 
 sys.path.append("..")
 import numpy as np
-import shell_model_experiments.params as sh_params
-import shell_model_experiments.perturbations.normal_modes as sh_nm_estimator
 import lorentz63_experiments.params.params as l63_params
 import lorentz63_experiments.perturbations.normal_modes as l63_nm_estimator
 import general.utils.argument_parsers as a_parsers

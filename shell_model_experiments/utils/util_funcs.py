@@ -105,16 +105,23 @@ def update_arrays(struct: ParamsStructType):
     struct.initial_k_vec = struct.k_vec_temp ** (-1 / 3)
 
 
-@nb.njit((nb.types.none)(nb.typeof(PAR)), cache=cfg.NUMBA_CACHE)
-def update_params(struct: ParamsStructType):
-    """Update parameters based on other parameters
+@nb.njit((nb.types.none)(nb.typeof(PAR), nb.types.int32), cache=cfg.NUMBA_CACHE)
+def update_params(struct: ParamsStructType, sdim: int = None):
+    """Update parameters based on other parameters and specific params given
+    as input arguments
 
     Parameters
     ----------
     struct : ParamsStructType
         The struct holding parameters and arrays
     """
+
+    # Update parameters based on other parameters
     struct.tts = int(round(struct.sample_rate / struct.dt))
     struct.stt = struct.dt / struct.sample_rate
     struct.factor2 = -struct.epsilon / struct.lambda_const
     struct.factor3 = (1 - struct.epsilon) / struct.lambda_const ** 2
+
+    # Update parameters from input arguments
+    if sdim is not None:
+        struct.sdim = sdim

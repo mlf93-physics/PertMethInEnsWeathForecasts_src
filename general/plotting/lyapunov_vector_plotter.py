@@ -7,7 +7,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sb
 import general.plotting.plot_config as g_plt_config
-import shell_model_experiments.params as sh_params
+from shell_model_experiments.params.params import ParamsStructType
+from shell_model_experiments.params.params import PAR as PAR_SH
 import shell_model_experiments.plotting.plot_data as sh_plot
 import lorentz63_experiments.params.params as l63_params
 import lorentz63_experiments.plotting.plot_data as l63_plot
@@ -21,7 +22,7 @@ import config as cfg
 
 # Get parameters for model
 if cfg.MODEL == Models.SHELL_MODEL:
-    params = sh_params
+    params = PAR_SH
 elif cfg.MODEL == Models.LORENTZ63:
     params = l63_params
 

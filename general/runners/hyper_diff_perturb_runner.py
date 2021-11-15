@@ -3,7 +3,8 @@ import sys
 sys.path.append("..")
 import copy
 import pathlib as pl
-import shell_model_experiments.params as sh_params
+from shell_model_experiments.params.params import ParamsStructType
+from shell_model_experiments.params.params import PAR as PAR_SH
 import perturbation_runner as pt_runner
 import general.utils.saving.save_data_funcs as g_save
 import general.utils.saving.save_utils as g_save_utils
@@ -16,7 +17,7 @@ import general.utils.user_interface as g_ui
 import config as cfg
 
 # Get parameters for model
-params = sh_params
+params = PAR_SH
 
 # Set global params
 cfg.GLOBAL_PARAMS.ref_run = False

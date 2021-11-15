@@ -37,7 +37,8 @@ import lorentz63_experiments.params.params as l63_params
 import lorentz63_experiments.perturbations.normal_modes as l63_nm_estimator
 import lorentz63_experiments.utils.util_funcs as ut_funcs
 import numpy as np
-import shell_model_experiments.params as sh_params
+from shell_model_experiments.params.params import ParamsStructType
+from shell_model_experiments.params.params import PAR as PAR_SH
 import shell_model_experiments.perturbations.normal_modes as sh_nm_estimator
 from general.params.experiment_licences import Experiments as EXP
 from general.params.model_licences import Models
@@ -50,7 +51,7 @@ from shell_model_experiments.sabra_model.tl_sabra_model import run_model as sh_t
 
 # Get parameters for model
 if cfg.MODEL == Models.SHELL_MODEL:
-    params = sh_params
+    params = PAR_SH
 elif cfg.MODEL == Models.LORENTZ63:
     params = l63_params
 
@@ -117,7 +118,7 @@ def perturbation_runner(
             )
         elif cfg.MODEL.submodel == "TL":
             # Prepare prefactor
-            prefactor_reshaped = np.reshape(params.pre_factor, (-1, 1))
+            pre_factor_reshaped = np.reshape(params.pre_factor, (-1, 1))
 
             sh_tl_model(
                 u_old,
@@ -128,7 +129,7 @@ def perturbation_runner(
                 args["ny"],
                 args["diff_exponent"],
                 args["forcing"],
-                prefactor_reshaped,
+                pre_factor_reshaped,
                 params.sdim,
                 params.k_vec_temp,
             )
