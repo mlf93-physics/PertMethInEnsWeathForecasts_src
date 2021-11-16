@@ -160,7 +160,7 @@ if __name__ == "__main__":
 
     # Initiate and update variables and arrays
     # initiate_sdim_arrays(args["sdim"])
-    ut_funcs.update_params(PAR, sdim=int(args["sdim"]))
+    ut_funcs.update_dependent_params(PAR, sdim=int(args["sdim"]))
     ut_funcs.update_arrays(PAR)
     args["ny"] = ut_funcs.ny_from_ny_n_and_forcing(
         args["forcing"], args["ny_n"], args["diff_exponent"]

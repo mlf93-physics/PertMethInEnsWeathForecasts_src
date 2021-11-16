@@ -1106,7 +1106,7 @@ if __name__ == "__main__":
     # Initiate arrays
     # initiate_PAR.sdim_arrays(args["PAR.sdim"])
     # Initiate and update variables and arrays
-    sh_utils.update_params(PAR)
+    sh_utils.update_dependent_params(PAR)
     sh_utils.update_arrays(PAR)
 
     g_ui.confirm_run_setup(args)

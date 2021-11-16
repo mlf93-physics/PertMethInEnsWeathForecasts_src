@@ -336,7 +336,7 @@ if __name__ == "__main__":
     # Initiate variables
     # initiate_sdim_arrays(args["sdim"])
     # Initiate and update variables and arrays
-    ut_funcs.update_params(PAR)
+    ut_funcs.update_dependent_params(PAR)
     ut_funcs.update_arrays(PAR)
 
     g_ui.confirm_run_setup(args)

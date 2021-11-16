@@ -171,7 +171,7 @@ if __name__ == "__main__":
     g_ui.confirm_run_setup(args)
 
     # Initiate and update variables and arrays
-    ut_funcs.update_params(PAR, sdim=int(args["sdim"]))
+    ut_funcs.update_dependent_params(PAR, sdim=int(args["sdim"]))
     ut_funcs.update_arrays(PAR)
     args["ny"] = ut_funcs.ny_from_ny_n_and_forcing(
         args["forcing"], args["ny_n"], args["diff_exponent"]

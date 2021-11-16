@@ -113,7 +113,28 @@ def update_arrays(struct: ParamsStructType):
     ],
     cache=cfg.NUMBA_CACHE,
 )
-def update_params(struct: ParamsStructType, sdim: int = None):
+def set_params(struct: ParamsStructType, sdim: int = None):
+    """Set parameters in param struct
+
+    Parameters
+    ----------
+    struct : ParamsStructType
+        The parameter struct
+    sdim : int, optional
+        The dimension parameter, by default None
+    """
+    if sdim is not None:
+        struct.sdim = sdim
+
+
+@nb.njit(
+    [
+        (nb.types.none)(nb.typeof(PAR), nb.types.int32),
+        (nb.types.none)(nb.typeof(PAR), nb.types.Omitted(None)),
+    ],
+    cache=cfg.NUMBA_CACHE,
+)
+def update_dependent_params(struct: ParamsStructType, sdim: int = None):
     """Update parameters based on other parameters and specific params given
     as input arguments
 
@@ -129,6 +150,30 @@ def update_params(struct: ParamsStructType, sdim: int = None):
     struct.factor2 = -struct.epsilon / struct.lambda_const
     struct.factor3 = (1 - struct.epsilon) / struct.lambda_const ** 2
 
-    # Update parameters from input arguments
     if sdim is not None:
-        struct.sdim = sdim
+        set_params(struct, sdim=sdim)
+
+
+def format_params_to_string():
+    """Run through all attributes of PAR and format attr, value pair into string
+
+    Returns
+    -------
+    str
+        The resulting string of attr, value pairs
+    """
+
+    attr_list: list = []
+
+    for attr in dir(PAR):
+        if (
+            not attr.startswith("__")
+            and not attr.startswith("_")
+            and not callable(getattr(PAR, attr))
+            and not isinstance(getattr(PAR, attr), np.ndarray)
+        ):
+            attr_list.append((attr, PAR.__getattribute__(attr)))
+
+    string: str = ", ".join(map(lambda item: f"{item[0]}={item[1]}", attr_list))
+
+    return string

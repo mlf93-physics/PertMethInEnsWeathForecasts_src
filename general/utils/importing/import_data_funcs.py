@@ -16,6 +16,7 @@ from general.params.model_licences import Models
 import general.utils.util_funcs as g_utils
 import general.utils.exceptions as g_exceptions
 from general.utils.module_import.type_import import *
+import general.utils.custom_decorators as dec
 import config as cfg
 
 # Get parameters for model
@@ -27,6 +28,7 @@ elif cfg.MODEL == Models.LORENTZ63:
     sparams = l63_sparams
 
 
+@dec.check_dimension
 def import_header(folder: Union[str, pl.Path] = "", file_name: str = "") -> dict:
     path = pl.Path(folder, file_name)
 
@@ -322,6 +324,9 @@ def import_perturbation_velocities(
     if args["datapath"] is None:
         raise ValueError("No path specified")
 
+    # Check if ref path exists
+    ref_header_dict = import_info_file(pl.Path(args["datapath"], "ref_data"))
+
     (
         perturb_time_pos_list,
         perturb_time_pos_list_legend,
@@ -333,8 +338,6 @@ def import_perturbation_velocities(
         search_pattern=search_pattern,
     )
 
-    # Check if ref path exists
-    ref_header_dict = import_info_file(pl.Path(args["datapath"], "ref_data"))
     # Match the positions to the relevant ref files
     ref_file_match = g_utils.match_start_positions_to_ref_file(
         ref_header_dict=ref_header_dict, positions=perturb_time_pos_list
