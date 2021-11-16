@@ -32,7 +32,6 @@ cfg.GLOBAL_PARAMS.record_max_time = 30
 @nb.njit(
     (nb.types.Array(nb.types.complex128, 1, "C", readonly=False))(
         nb.types.Array(nb.types.complex128, 1, "C", readonly=False),
-        nb.types.Array(nb.types.complex128, 1, "C", readonly=False),
         nb.types.Array(nb.types.complex128, 2, "C", readonly=False),
         nb.types.int64,
         nb.types.float64,
@@ -44,7 +43,6 @@ cfg.GLOBAL_PARAMS.record_max_time = 30
 )
 def run_model(
     u_old: np.ndarray,
-    du_array: np.ndarray,
     data_out: np.ndarray,
     Nt_local: int,
     ny: float,
@@ -74,7 +72,7 @@ def run_model(
             data_out[sample_number, 1:] = u_old[PAR.bd_size : -PAR.bd_size]
             sample_number += 1
         # Solve nonlinear terms + forcing
-        u_old = runge_kutta4(y0=u_old, du_array=du_array, forcing=forcing, PAR=PAR)
+        u_old = runge_kutta4(y0=u_old, forcing=forcing, PAR=PAR)
 
         # Solve linear diffusive term explicitly
         u_old[PAR.bd_size : -PAR.bd_size] = u_old[PAR.bd_size : -PAR.bd_size] * np.exp(
@@ -113,7 +111,6 @@ def main(args=None):
     print(f'running burn-in phase of {args["burn_in_time"]}s\n')
     u_old = run_model(
         u_old,
-        PAR.du_array,
         data_out,
         int(args["burn_in_time"] / PAR.dt),
         args["ny"],
@@ -140,7 +137,6 @@ def main(args=None):
         print(f'running record {ir + 1}/{args["n_records"]}')
         u_old = run_model(
             u_old,
-            PAR.du_array,
             data_out,
             int(out_array_size / PAR.sample_rate),
             args["ny"],
@@ -161,10 +157,12 @@ def main(args=None):
         g_save_utils.compress_dir(save_path, compress_out_name)
 
     profiler.stop()
-    print(profiler.output_text())
+    print(profiler.output_text(color=True))
 
 
 if __name__ == "__main__":
+    cfg.init_licence()
+
     # Get arguments
     stand_arg_setup = a_parsers.StandardRunnerArgSetup()
     stand_arg_setup.setup_parser()

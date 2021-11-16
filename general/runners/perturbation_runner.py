@@ -112,7 +112,6 @@ def perturbation_runner(
         if cfg.MODEL.submodel is None:
             sh_model(
                 u_old,
-                du_array,
                 data_out,
                 args["Nt"] + args["endpoint"] * 1,
                 args["ny"],
@@ -124,7 +123,6 @@ def perturbation_runner(
             sh_tl_model(
                 u_old,
                 np.copy(u_ref[:, run_count]),
-                du_array,
                 data_out,
                 args["Nt"] + args["endpoint"] * 1,
                 args["ny"],
@@ -572,4 +570,4 @@ if __name__ == "__main__":
     main_run(processes, args=args)
 
     profiler.stop()
-    print(profiler.output_text())
+    print(profiler.output_text(color=True))

@@ -33,7 +33,6 @@ cfg.GLOBAL_PARAMS.ref_run = False
     (types.Array(types.complex128, 1, "C", readonly=False))(
         types.Array(types.complex128, 1, "C", readonly=False),
         types.Array(types.complex128, 1, "C", readonly=False),
-        types.Array(types.complex128, 1, "C", readonly=False),
         types.Array(types.complex128, 2, "C", readonly=False),
         types.int64,
         types.float64,
@@ -46,7 +45,6 @@ cfg.GLOBAL_PARAMS.ref_run = False
 def run_model(
     u_tl_old: np.ndarray,
     u_ref: np.ndarray,
-    du_array: np.ndarray,
     data_out: np.ndarray,
     Nt_local: int,
     ny: float,
@@ -83,7 +81,6 @@ def run_model(
         # Solve the TL model
         u_tl_old: np.ndarray = rk4.tl_runge_kutta4(
             y0=u_tl_old,
-            du_array=du_array,
             u_ref=u_ref,
             diff_exponent=diff_exponent,
             local_ny=ny,
@@ -92,7 +89,7 @@ def run_model(
         )
 
         # Solve nonlinear equation to get reference velocity
-        u_ref = rk4.runge_kutta4(y0=u_ref, du_array=du_array, forcing=forcing, PAR=PAR)
+        u_ref = rk4.runge_kutta4(y0=u_ref, forcing=forcing, PAR=PAR)
 
         # Solve linear diffusive term explicitly
         u_ref[PAR.bd_size : -PAR.bd_size] = u_ref[PAR.bd_size : -PAR.bd_size] * np.exp(
@@ -137,7 +134,6 @@ def main(args=None):
     run_model(
         u_tl_old,
         u_ref,
-        PAR.du_array,
         data_out,
         args["Nt"],
         args["ny"],
@@ -151,7 +147,7 @@ def main(args=None):
         save_path = g_save.save_data(data_out, args=args, prefix="tl_")
 
     profiler.stop()
-    print(profiler.output_text())
+    print(profiler.output_text(color=True))
 
 
 if __name__ == "__main__":

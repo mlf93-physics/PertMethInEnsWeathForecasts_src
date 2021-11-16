@@ -171,4 +171,4 @@ if __name__ == "__main__":
     profiler.start()
     main(args)
     profiler.stop()
-    print(profiler.output_text())
+    print(profiler.output_text(color=True))

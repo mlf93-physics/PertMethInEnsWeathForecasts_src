@@ -264,7 +264,7 @@ if __name__ == "__main__":
     args = stand_plot_arg_parser.args
 
     # Initiate arrays
-    initiate_sdim_arrays(args["sdim"])
+    # initiate_sdim_arrays(args["sdim"])
     g_ui.confirm_run_setup(args)
 
     if "time_to_run" in args:

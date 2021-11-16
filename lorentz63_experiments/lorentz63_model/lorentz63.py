@@ -117,7 +117,7 @@ def main(args=None):
             g_save.save_data(data_out, args=args)
 
     profiler.stop()
-    print(profiler.output_text())
+    print(profiler.output_text(color=True))
 
 
 if __name__ == "__main__":
@@ -126,7 +126,7 @@ if __name__ == "__main__":
     stand_arg_setup.setup_parser()
     args = stand_arg_setup.args
 
-    initiate_sdim_arrays(args["sdim"])
+    # initiate_sdim_arrays(args["sdim"])
 
     # Add/edit arguments
     args["Nt"] = int(args["time_to_run"] / dt)

@@ -292,5 +292,5 @@ if __name__ == "__main__":
         raise ValueError("No valid plot type given as input argument")
 
     profiler.stop()
-    print(profiler.output_text())
+    print(profiler.output_text(color=True))
     g_plt_utils.save_or_show_plot(args)

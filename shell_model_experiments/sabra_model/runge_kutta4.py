@@ -14,7 +14,6 @@ import config as cfg
 @njit(
     (types.Array(types.complex128, 1, "C", readonly=False))(
         types.Array(types.complex128, 1, "C", readonly=True),
-        types.Array(types.complex128, 1, "C", readonly=False),
         types.float64,
         typeof(PAR),
     ),
@@ -22,7 +21,6 @@ import config as cfg
 )
 def derivative_evaluator(
     u_old: np.ndarray = None,
-    du_array: np.ndarray = None,
     forcing: float = None,
     PAR=None,
 ):
@@ -45,7 +43,7 @@ def derivative_evaluator(
 
     """
     # Calculate change in u (du)
-    du_array[PAR.bd_size : -PAR.bd_size] = PAR.pre_factor * (
+    PAR.du_array[PAR.bd_size : -PAR.bd_size] = PAR.pre_factor * (
         u_old.conj()[PAR.bd_size + 1 : -PAR.bd_size + 1] * u_old[PAR.bd_size + 2 :]
         + PAR.factor2
         * u_old.conj()[PAR.bd_size - 1 : -PAR.bd_size - 1]
@@ -56,13 +54,12 @@ def derivative_evaluator(
     )
 
     # Apply forcing
-    du_array[PAR.n_forcing + PAR.bd_size] += forcing
-    return du_array
+    PAR.du_array[PAR.n_forcing + PAR.bd_size] += forcing
+    return PAR.du_array
 
 
 @njit(
     types.Array(types.complex128, 1, "C", readonly=False)(
-        types.Array(types.complex128, 1, "C", readonly=False),
         types.Array(types.complex128, 1, "C", readonly=False),
         types.float64,
         typeof(PAR),
@@ -71,7 +68,6 @@ def derivative_evaluator(
 )
 def runge_kutta4(
     y0: np.ndarray = 0,
-    du_array: np.ndarray = None,
     forcing: float = None,
     PAR=None,
 ):
@@ -96,18 +92,10 @@ def runge_kutta4(
 
     """
     # Calculate the k's
-    k1 = PAR.dt * derivative_evaluator(
-        u_old=y0, du_array=du_array, forcing=forcing, PAR=PAR
-    )
-    k2 = PAR.dt * derivative_evaluator(
-        u_old=y0 + 1 / 2 * k1, du_array=du_array, forcing=forcing, PAR=PAR
-    )
-    k3 = PAR.dt * derivative_evaluator(
-        u_old=y0 + 1 / 2 * k2, du_array=du_array, forcing=forcing, PAR=PAR
-    )
-    k4 = PAR.dt * derivative_evaluator(
-        u_old=y0 + k3, du_array=du_array, forcing=forcing, PAR=PAR
-    )
+    k1 = PAR.dt * derivative_evaluator(u_old=y0, forcing=forcing, PAR=PAR)
+    k2 = PAR.dt * derivative_evaluator(u_old=y0 + 1 / 2 * k1, forcing=forcing, PAR=PAR)
+    k3 = PAR.dt * derivative_evaluator(u_old=y0 + 1 / 2 * k2, forcing=forcing, PAR=PAR)
+    k4 = PAR.dt * derivative_evaluator(u_old=y0 + k3, forcing=forcing, PAR=PAR)
 
     # Update y
     y0 = y0 + 1 / 6 * k1 + 1 / 3 * k2 + 1 / 3 * k3 + 1 / 6 * k4
@@ -118,7 +106,6 @@ def runge_kutta4(
 @njit(
     types.Array(types.complex128, 1, "C", readonly=False)(
         types.Array(types.complex128, 1, "C", readonly=True),
-        types.Array(types.complex128, 1, "C", readonly=False),
         types.Array(types.complex128, 1, "C", readonly=True),
         types.float64,
         types.float64,
@@ -129,7 +116,6 @@ def runge_kutta4(
 )
 def tl_derivative_evaluator(
     u_old=None,
-    du_array=None,
     u_ref=None,
     diff_exponent=None,
     local_ny=None,
@@ -164,14 +150,15 @@ def tl_derivative_evaluator(
     )
 
     # Calculate change in u (du_array)
-    du_array[PAR.bd_size : -PAR.bd_size] = j_matrix @ u_old[PAR.bd_size : -PAR.bd_size]
+    PAR.du_array[PAR.bd_size : -PAR.bd_size] = (
+        j_matrix @ u_old[PAR.bd_size : -PAR.bd_size]
+    )
 
-    return du_array
+    return PAR.du_array
 
 
 @njit(
     types.Array(types.complex128, 1, "C", readonly=False)(
-        types.Array(types.complex128, 1, "C", readonly=False),
         types.Array(types.complex128, 1, "C", readonly=False),
         types.Array(types.complex128, 1, "C", readonly=True),
         types.float64,
@@ -183,7 +170,6 @@ def tl_derivative_evaluator(
 )
 def tl_runge_kutta4(
     y0=0,
-    du_array=None,
     u_ref=None,
     diff_exponent=None,
     local_ny=None,
@@ -213,7 +199,6 @@ def tl_runge_kutta4(
     # Calculate the k's
     k1 = PAR.dt * tl_derivative_evaluator(
         u_old=y0,
-        du_array=du_array,
         u_ref=u_ref,
         diff_exponent=diff_exponent,
         local_ny=local_ny,
@@ -222,7 +207,6 @@ def tl_runge_kutta4(
     )
     k2 = PAR.dt * tl_derivative_evaluator(
         u_old=y0 + 1 / 2 * k1,
-        du_array=du_array,
         u_ref=u_ref,
         diff_exponent=diff_exponent,
         local_ny=local_ny,
@@ -231,7 +215,6 @@ def tl_runge_kutta4(
     )
     k3 = PAR.dt * tl_derivative_evaluator(
         u_old=y0 + 1 / 2 * k2,
-        du_array=du_array,
         u_ref=u_ref,
         diff_exponent=diff_exponent,
         local_ny=local_ny,
@@ -240,7 +223,6 @@ def tl_runge_kutta4(
     )
     k4 = PAR.dt * tl_derivative_evaluator(
         u_old=y0 + k3,
-        du_array=du_array,
         u_ref=u_ref,
         diff_exponent=diff_exponent,
         local_ny=local_ny,
