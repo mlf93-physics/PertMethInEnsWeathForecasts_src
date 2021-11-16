@@ -5,6 +5,7 @@ import numpy as np
 import numba as nb
 from general.utils.module_import.type_import import *
 from shell_model_experiments.params.params import PAR, ParamsStructType
+import shell_model_experiments.utils.special_params as sparams
 import config as cfg
 
 
@@ -53,14 +54,14 @@ def find_normal_modes(
     e_vector_collection = []
     e_value_collection = []
 
-    e_vector_matrix = np.zeros((PAR.sdim, args["n_profiles"]), dtype=np.complex128)
+    e_vector_matrix = np.zeros((PAR.sdim, args["n_profiles"]), dtype=sparams.dtype)
 
     # Prepare prefactor vector to multiply on J_matrix
     pre_factor_reshaped = np.reshape(PAR.pre_factor, (-1, 1))
     # Perform calculation for all u_profiles
     for i in range(args["n_profiles"]):
         # Calculate the Jacobian matrix
-        # J_matrix = np.zeros((PAR.sdim, PAR.sdim), dtype=np.complex128)
+        # J_matrix = np.zeros((PAR.sdim, PAR.sdim), dtype=sparams.dtype)
         J_matrix = calc_jacobian(
             np.copy(u_init_profiles[:, i]),
             args["diff_exponent"],
@@ -109,7 +110,7 @@ def calc_jacobian(
     # Perform the conjugation
     ref_u_vector_conj: np.ndarray = ref_u_vector.conj()
     # Initialise the Jacobian
-    J_matrix = np.zeros((PAR.sdim, PAR.sdim), dtype=np.complex128)
+    J_matrix = np.zeros((PAR.sdim, PAR.sdim), dtype=sparams.dtype)
 
     # Add k=2 diagonal
     J_matrix += np.diag(ref_u_vector_conj[PAR.bd_size + 1 : -PAR.bd_size - 1], k=2)

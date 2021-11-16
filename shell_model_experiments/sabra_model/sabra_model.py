@@ -20,6 +20,8 @@ import shell_model_experiments.utils.util_funcs as ut_funcs
 from pyinstrument import Profiler
 from shell_model_experiments.params.params import PAR, ParamsStructType
 from shell_model_experiments.sabra_model.runge_kutta4 import runge_kutta4
+import shell_model_experiments.utils.special_params as sparams
+
 
 profiler = Profiler()
 
@@ -105,7 +107,7 @@ def main(args=None):
 
     # Burn in the model for the desired burn in time
     data_out = np.zeros(
-        (int(args["burn_in_time"] * PAR.tts), PAR.sdim + 1), dtype=np.complex128
+        (int(args["burn_in_time"] * PAR.tts), PAR.sdim + 1), dtype=sparams.dtype
     )
 
     print(f'running burn-in phase of {args["burn_in_time"]}s\n')
@@ -132,7 +134,7 @@ def main(args=None):
                     * PAR.sample_rate
                 )
 
-        data_out = np.zeros((out_array_size, PAR.sdim + 1), dtype=np.complex128)
+        data_out = np.zeros((out_array_size, PAR.sdim + 1), dtype=sparams.dtype)
 
         # Run model
         print(f'running record {ir + 1}/{args["n_records"]}')

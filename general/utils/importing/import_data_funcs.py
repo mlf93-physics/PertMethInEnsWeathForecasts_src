@@ -9,7 +9,7 @@ import numpy as np
 from general.utils.module_import.type_import import *
 from shell_model_experiments.params.params import ParamsStructType
 from shell_model_experiments.params.params import PAR as PAR_SH
-import shell_model_experiments.params.special_params as sh_sparams
+import shell_model_experiments.utils.special_params as sh_sparams
 import lorentz63_experiments.params.special_params as l63_sparams
 import lorentz63_experiments.params as l63_params
 from general.params.model_licences import Models

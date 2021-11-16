@@ -6,6 +6,8 @@ import numpy as np
 from shell_model_experiments.params.params import ParamsStructType
 from shell_model_experiments.params.params import PAR as PAR_SH
 import lorentz63_experiments.params.params as l63_params
+import shell_model_experiments.utils.special_params as sh_sparams
+import lorentz63_experiments.params.special_params as l63_sparams
 import general.utils.util_funcs as g_utils
 import general.utils.importing.import_data_funcs as g_import
 import general.utils.exceptions as g_exceptions
@@ -16,8 +18,10 @@ import config as cfg
 # Get parameters for model
 if cfg.MODEL == Models.SHELL_MODEL:
     params = PAR_SH
+    sparams = sh_sparams
 elif cfg.MODEL == Models.LORENTZ63:
     params = l63_params
+    sparams = l63_sparams
 
 
 def import_lorentz_block_perturbations(args=None, raw_perturbations=True):
@@ -189,7 +193,7 @@ def import_profiles_for_nm_analysis(args: dict = None) -> Tuple[np.ndarray, dict
         lines = map(lambda x: x.strip().split(","), lines)
         profiles.extend(list(lines))
 
-    profiles = np.array(profiles, dtype=params.dtype)[:, 1:]
+    profiles = np.array(profiles, dtype=sparams.dtype)[:, 1:]
 
     # Pad profiles if necessary
     if params.bd_size > 0:

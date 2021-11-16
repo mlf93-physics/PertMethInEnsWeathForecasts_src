@@ -9,17 +9,21 @@ import general.utils.importing.import_data_funcs as g_import
 import general.utils.importing.import_perturbation_data as pt_import
 import general.utils.util_funcs as g_utils
 import lorentz63_experiments.params.params as l63_params
+import lorentz63_experiments.params.special_params as l63_sparams
 import numpy as np
-from shell_model_experiments.params.params import ParamsStructType
-from shell_model_experiments.params.params import PAR as PAR_SH
+import shell_model_experiments.utils.special_params as sh_sparams
 from general.params.model_licences import Models
 from general.utils.module_import.type_import import *
+from shell_model_experiments.params.params import PAR as PAR_SH
+from shell_model_experiments.params.params import ParamsStructType
 
 # Get parameters for model
 if cfg.MODEL == Models.SHELL_MODEL:
     params = PAR_SH
+    sparams = sh_sparams
 elif cfg.MODEL == Models.LORENTZ63:
     params = l63_params
+    sparams = l63_sparams
 
 
 def calculate_perturbations(
@@ -47,7 +51,7 @@ def calculate_perturbations(
     n_runs_per_profile = args["n_runs_per_profile"]
     perturbations = np.zeros(
         (params.sdim + 2 * params.bd_size, n_profiles * n_runs_per_profile),
-        dtype=params.dtype,
+        dtype=sparams.dtype,
     )
 
     if args["pert_mode"] == "nm":
@@ -59,44 +63,13 @@ def calculate_perturbations(
         if args["pert_mode"] is not None:
             # Apply random perturbation
             if args["pert_mode"] == "rd":
-                # Generate random perturbation error
-                # Reshape into complex array
-                perturb = np.empty(params.sdim, dtype=params.dtype)
-                # Generate random error
-                error = np.random.rand(2 * params.sdim).astype(np.float64) * 2 - 1
-
-                if cfg.MODEL == Models.SHELL_MODEL:
-                    perturb.real = error[: params.sdim]
-                    perturb.imag = error[params.sdim :]
-                elif cfg.MODEL == Models.LORENTZ63:
-                    perturb = error[: params.sdim]
+                perturb = generate_rd_perturbations()
 
             # Apply normal mode perturbation
             elif args["pert_mode"] == "nm":
-                # NOTE - for explanation see https://math.stackexchange.com/questions/3847121/the-importance-of-complex-eigenvectors-in-phase-plane-plotting
-                if cfg.MODEL == Models.SHELL_MODEL:
-                    # Generate random weights
-                    _rand_numbers = np.random.rand(4) * 2 - 1
-                    _weight = np.empty(2, dtype=np.complex128)
-                    _weight.real = _rand_numbers[:2]
-                    _weight.imag = _rand_numbers[2:]
-
-                    # Make perturbation vector from the complex-conjugate pair
-                    perturb = (
-                        _weight[0] * perturb_vectors_conj[:, i // n_runs_per_profile]
-                        + _weight[1] * perturb_vectors[:, i // n_runs_per_profile]
-                    )
-                elif cfg.MODEL == Models.LORENTZ63:
-                    # Generate random weight
-                    _rand_numbers = np.random.rand(2) * 2 - 1
-                    _weight = complex(_rand_numbers[0], _rand_numbers[1])
-
-                    # Make real perturbation vector from the complex-conjugate pair
-                    perturb = (
-                        _weight * perturb_vectors_conj[:, i // n_runs_per_profile]
-                        + _weight.conjugate()
-                        * perturb_vectors[:, i // n_runs_per_profile]
-                    ).real
+                perturb = generate_nm_perturbations(
+                    perturb_vectors, perturb_vectors_conj, n_runs_per_profile, i
+                )
 
             # Apply breed vector perturbation
             elif args["pert_mode"] == "bv":
@@ -111,7 +84,7 @@ def calculate_perturbations(
 
         # Apply single shell perturbation
         elif args["single_shell_perturb"] is not None:
-            perturb = np.zeros(params.sdim, dtype=params.dtype)
+            perturb = np.zeros(params.sdim, dtype=sparams.dtype)
             perturb.real[args["single_shell_perturb"]] = (
                 np.random.rand(1)[0].astype(np.float64) * 2 - 1
             )
@@ -192,3 +165,75 @@ def rescale_perturbations(perturb_data: np.ndarray, args: dict) -> np.ndarray:
     u_init_profiles += rescaled_data
 
     return u_init_profiles
+
+
+def generate_rd_perturbations() -> np.ndarray:
+    """Generate RD perturbations according to the model in use
+
+    Returns
+    -------
+    np.ndarray
+        The generated perturbations
+    """
+    # Generate random perturbation error
+    # Reshape into complex array
+    perturb = np.empty(params.sdim, dtype=sparams.dtype)
+    # Generate random error
+    error = np.random.rand(2 * params.sdim).astype(np.float64) * 2 - 1
+
+    if cfg.MODEL == Models.SHELL_MODEL:
+        perturb.real = error[: params.sdim]
+        perturb.imag = error[params.sdim :]
+    elif cfg.MODEL == Models.LORENTZ63:
+        perturb = error[: params.sdim]
+
+    return perturb
+
+
+def generate_nm_perturbations(
+    perturb_vectors: np.ndarray,
+    perturb_vectors_conj: np.ndarray,
+    n_runs_per_profile: int,
+    index: int,
+) -> np.ndarray:
+    """Generate the NM perturbations according to the model in use
+
+    Parameters
+    ----------
+    perturb_vectors : np.ndarray
+        The vectors to be used to generate perturbations from (i.e. eigen vectors in this case)
+    perturb_vectors_conj : np.ndarray
+        The conjugated perturb vectors
+    n_runs_per_profile : int
+        The number of runs per profile
+    index : int
+        The index of the current perturbation vector
+
+    Returns
+    -------
+    np.ndarray
+        The generated perturbations
+    """
+    # NOTE - for explanation see https://math.stackexchange.com/questions/3847121/the-importance-of-complex-eigenvectors-in-phase-plane-plotting
+    if cfg.MODEL == Models.SHELL_MODEL:
+        # Generate random weights
+        _rand_numbers = np.random.rand(4) * 2 - 1
+        _weight = np.empty(2, dtype=sparams.dtype)
+        _weight.real = _rand_numbers[:2]
+        _weight.imag = _rand_numbers[2:]
+
+        # Make perturbation vector from the complex-conjugate pair
+        perturb = (
+            _weight[0] * perturb_vectors_conj[:, index // n_runs_per_profile]
+            + _weight[1] * perturb_vectors[:, index // n_runs_per_profile]
+        )
+    elif cfg.MODEL == Models.LORENTZ63:
+        # Generate random weight
+        _rand_numbers = np.random.rand(2) * 2 - 1
+        _weight = complex(_rand_numbers[0], _rand_numbers[1])
+
+        # Make real perturbation vector from the complex-conjugate pair
+        perturb = (
+            _weight * perturb_vectors_conj[:, index // n_runs_per_profile]
+            + _weight.conjugate() * perturb_vectors[:, index // n_runs_per_profile]
+        ).real

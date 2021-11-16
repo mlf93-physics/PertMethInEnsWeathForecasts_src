@@ -5,6 +5,7 @@ import math
 import numpy as np
 import numba as nb
 from shell_model_experiments.params.params import PAR, ParamsStructType
+import shell_model_experiments.utils.special_params as sparams
 import config as cfg
 
 
@@ -101,7 +102,7 @@ def update_arrays(struct: ParamsStructType):
     )
     struct.pre_factor = 1j * struct.k_vec_temp
     struct.hel_pre_factor = (-1) ** (np.arange(1, struct.sdim + 1)) * struct.k_vec_temp
-    struct.du_array = np.zeros(struct.sdim + 2 * struct.bd_size, dtype=np.complex128)
+    struct.du_array = np.zeros(struct.sdim + 2 * struct.bd_size, dtype=sparams.dtype)
     struct.initial_k_vec = struct.k_vec_temp ** (-1 / 3)
 
 

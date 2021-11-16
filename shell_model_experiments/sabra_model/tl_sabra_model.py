@@ -11,8 +11,11 @@ import config as cfg
 import general.utils.argument_parsers as a_parsers
 import general.utils.importing.import_data_funcs as g_import
 import general.utils.saving.save_data_funcs as g_save
+import general.utils.util_funcs as g_utils
+import general.utils.perturb_utils as pt_utils
 import numpy as np
 import shell_model_experiments.sabra_model.runge_kutta4 as rk4
+import shell_model_experiments.utils.special_params as sparams
 import shell_model_experiments.utils.util_funcs as ut_funcs
 from numba import njit, types, typeof
 from pyinstrument import Profiler
@@ -111,16 +114,28 @@ def main(args=None):
     else:
         u_ref = u_ref.ravel()
 
+    # Prepare random perturbation
+    perturb = pt_utils.generate_rd_perturbations()
+    # Normalize perturbation
+    u_tl_old = g_utils.normalize_array(perturb, norm_value=PAR.seeked_error_norm)
+    # Pad array
+    u_tl_old = np.pad(
+        u_tl_old,
+        pad_width=((PAR.bd_size, PAR.bd_size)),
+        mode="constant",
+    )
+
     profiler.start()
     print(f'\nRunning TL sabra model for {args["Nt"]*PAR.dt:.2f}s')
 
     # Prepare data out array and prefactor
     data_out = np.zeros(
-        (int(args["Nt"] * PAR.sample_rate), PAR.sdim + 1), dtype=np.complex128
+        (int(args["Nt"] * PAR.sample_rate), PAR.sdim + 1), dtype=sparams.dtype
     )
 
     # Run model
     run_model(
+        u_tl_old,
         u_ref,
         PAR.du_array,
         data_out,

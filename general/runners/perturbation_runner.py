@@ -39,6 +39,8 @@ import lorentz63_experiments.utils.util_funcs as ut_funcs
 import numpy as np
 from shell_model_experiments.params.params import ParamsStructType
 from shell_model_experiments.params.params import PAR as PAR_SH
+import shell_model_experiments.utils.special_params as sh_sparams
+import lorentz63_experiments.params.special_params as l63_sparams
 import shell_model_experiments.perturbations.normal_modes as sh_nm_estimator
 from general.params.experiment_licences import Experiments as EXP
 from general.params.model_licences import Models
@@ -52,8 +54,10 @@ from shell_model_experiments.sabra_model.tl_sabra_model import run_model as sh_t
 # Get parameters for model
 if cfg.MODEL == Models.SHELL_MODEL:
     params = PAR_SH
+    sparams = sh_sparams
 elif cfg.MODEL == Models.LORENTZ63:
     params = l63_params
+    sparams = l63_sparams
 
 # Set global params
 cfg.GLOBAL_PARAMS.ref_run = False
@@ -94,7 +98,7 @@ def perturbation_runner(
     # Prepare array for saving
     data_out = np.zeros(
         (int(args["Nt"] * params.sample_rate) + args["endpoint"] * 1, params.sdim + 1),
-        dtype=params.dtype,
+        dtype=sparams.dtype,
     )
 
     print(
@@ -326,7 +330,7 @@ def prepare_perturbations(
         elif args["pert_mode"] == "rd":
             print("\nRunning with RANDOM perturbations\n")
             perturb_vectors = np.ones(
-                (params.sdim, args["n_profiles"]), dtype=params.dtype
+                (params.sdim, args["n_profiles"]), dtype=sparams.dtype
             )
     # Check if single shell perturb should be activated
     elif args["single_shell_perturb"] is not None:
