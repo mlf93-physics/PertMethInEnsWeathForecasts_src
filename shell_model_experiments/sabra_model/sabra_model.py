@@ -19,8 +19,9 @@ import numpy as np
 import shell_model_experiments.utils.util_funcs as ut_funcs
 from pyinstrument import Profiler
 from shell_model_experiments.params.params import PAR, ParamsStructType
-from shell_model_experiments.sabra_model.runge_kutta4 import runge_kutta4
 import shell_model_experiments.utils.special_params as sparams
+from shell_model_experiments.sabra_model.runge_kutta4 import runge_kutta4
+import shell_model_experiments.utils.custom_decorators as dec
 
 
 profiler = Profiler()
@@ -29,19 +30,34 @@ profiler = Profiler()
 cfg.GLOBAL_PARAMS.record_max_time = 30
 
 
+@dec.diffusion_type_decorator
 @nb.njit(
-    (nb.types.Array(nb.types.complex128, 1, "C", readonly=False))(
-        nb.types.Array(nb.types.complex128, 1, "C", readonly=False),
-        nb.types.Array(nb.types.complex128, 2, "C", readonly=False),
-        nb.types.int64,
-        nb.types.float64,
-        nb.types.float64,
-        nb.types.float64,
-        nb.typeof(PAR),
-    ),
+    [
+        (nb.types.Array(nb.types.complex128, 1, "C", readonly=False))(
+            nb.typeof(ut_funcs.normal_diffusion),
+            nb.types.Array(nb.types.complex128, 1, "C", readonly=False),
+            nb.types.Array(nb.types.complex128, 2, "C", readonly=False),
+            nb.types.int64,
+            nb.types.float64,
+            nb.types.float64,
+            nb.types.float64,
+            nb.typeof(PAR),
+        ),
+        (nb.types.Array(nb.types.complex128, 1, "C", readonly=False))(
+            nb.typeof(ut_funcs.infinit_hyper_diffusion),
+            nb.types.Array(nb.types.complex128, 1, "C", readonly=False),
+            nb.types.Array(nb.types.complex128, 2, "C", readonly=False),
+            nb.types.int64,
+            nb.types.float64,
+            nb.types.float64,
+            nb.types.float64,
+            nb.typeof(PAR),
+        ),
+    ],
     cache=cfg.NUMBA_CACHE,
 )
 def run_model(
+    diffusion_func: callable,
     u_old: np.ndarray,
     data_out: np.ndarray,
     Nt_local: int,
@@ -71,13 +87,12 @@ def run_model(
             data_out[sample_number, 0] = PAR.dt * i + 0j
             data_out[sample_number, 1:] = u_old[PAR.bd_size : -PAR.bd_size]
             sample_number += 1
+
         # Solve nonlinear terms + forcing
         u_old = runge_kutta4(y0=u_old, forcing=forcing, PAR=PAR)
 
-        # Solve linear diffusive term explicitly
-        u_old[PAR.bd_size : -PAR.bd_size] = u_old[PAR.bd_size : -PAR.bd_size] * np.exp(
-            -ny * PAR.k_vec_temp ** diff_exponent * PAR.dt
-        )
+        # Solve diffusion depending on method
+        u_old = diffusion_func(u_old, PAR, ny, diff_exponent)
 
     return u_old
 
@@ -103,21 +118,23 @@ def main(args=None):
         + f"are saved to disk each with {cfg.GLOBAL_PARAMS.record_max_time:.1f}s data\n"
     )
 
-    # Burn in the model for the desired burn in time
-    data_out = np.zeros(
-        (int(args["burn_in_time"] * PAR.tts), PAR.sdim + 1), dtype=sparams.dtype
-    )
+    if args["burn_in_time"] > 0:
+        # Burn in the model for the desired burn in time
+        data_out = np.zeros(
+            (int(args["burn_in_time"] * PAR.tts), PAR.sdim + 1), dtype=sparams.dtype
+        )
 
-    print(f'running burn-in phase of {args["burn_in_time"]}s\n')
-    u_old = run_model(
-        u_old,
-        data_out,
-        int(args["burn_in_time"] / PAR.dt),
-        args["ny"],
-        args["forcing"],
-        args["diff_exponent"],
-        PAR,
-    )
+        print(f'running burn-in phase of {args["burn_in_time"]}s\n')
+        u_old = run_model(
+            u_old,
+            data_out,
+            int(args["burn_in_time"] / PAR.dt),
+            args["ny"],
+            args["forcing"],
+            args["diff_exponent"],
+            PAR,
+            diff_type=args["diff_type"],
+        )
 
     for ir in range(args["n_records"]):
         # Calculate data out size
@@ -143,6 +160,7 @@ def main(args=None):
             args["forcing"],
             args["diff_exponent"],
             PAR,
+            diff_type=args["diff_type"],
         )
 
         # Add record_id to datafile header

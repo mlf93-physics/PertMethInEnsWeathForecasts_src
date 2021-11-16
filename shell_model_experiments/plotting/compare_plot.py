@@ -54,7 +54,7 @@ def plot_energy_spectrum_comparison(args: dict):
         # time, u_data, header_dict = g_import.import_ref_data(args=args)
 
         # Setup plot args
-        plot_arg_list = ["rel_fit"]
+        plot_arg_list = []
         # if i == 0:
         #     plot_arg_list.append("kolmogorov")
 
@@ -138,7 +138,6 @@ def plot_helicity_spectrum_comparison(args: dict):
             plot_arg_list=plot_arg_list,
             plot_kwargs=plot_kwargs,
         )
-        axes.set_ylim(1e-3, 1e5)
         ny_n_counter_array[ny_n_index] += 1
         plt.legend()
 

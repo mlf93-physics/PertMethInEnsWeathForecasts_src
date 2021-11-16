@@ -207,6 +207,16 @@ def plot_helicity_spectrum(
             color="k",
         )
 
+    # Limit y axis if necessary
+    min_mean_helicity = np.min(mean_helicity)
+    if args["ylim"] is not None:
+        axes.set_ylim(args["ylim"][0], args["ylim"][1])
+    elif min_mean_helicity > 0:
+        if np.log(min_mean_helicity) < -3:
+            axes.set_ylim(1e-3, 1e5)
+    else:
+        axes.set_ylim(1e-3, 1e5)
+
     # Axes setup
     axes.set_yscale("log")
     axes.set_xlabel("k")
@@ -1092,7 +1102,7 @@ def plot_error_vector_spectrum(args=None):
     plt.colorbar(pad=0.1)
 
 
-def plot_howmoller_diagram_u_energy_rel_mean(args=None):
+def plot_howmoller_diagram_u_energy(args=None, plt_args: list = ["rel_mean"]):
 
     # Import reference data
     time, u_data, header_dict = g_import.import_ref_data(args=args)
@@ -1100,20 +1110,27 @@ def plot_howmoller_diagram_u_energy_rel_mean(args=None):
     # Prepare mesh
     time2D, shell2D = np.meshgrid(time.real, PAR.k_vec_temp)
     energy_array = (u_data * np.conj(u_data)).real.T
-    # Prepare energy rel mean
-    mean_energy = np.reshape(np.mean(energy_array, axis=1), (PAR.sdim, 1))
-    energy_rel_mean_array = energy_array - mean_energy
 
     fig, axes = plt.subplots(nrows=1, ncols=1)
 
-    # Get cmap
-    cmap, norm = g_plt_utils.get_cmap_distributed_around_zero(
-        vmin=np.min(energy_rel_mean_array),
-        vmax=np.max(energy_rel_mean_array),
-        neg_thres=0.4,
-        pos_thres=0.6,
-        cmap_handle=plt.cm.bwr,
-    )
+    if "rel_mean" in plt_args:
+        # Prepare energy rel mean
+        mean_energy = np.reshape(np.mean(energy_array, axis=1), (PAR.sdim, 1))
+        energy_rel_mean_array = energy_array - mean_energy
+        # energy_rel_mean_array = np.clip(energy_rel_mean_array, -15, None)
+
+        # Get cmap
+        cmap, norm = g_plt_utils.get_cmap_distributed_around_zero(
+            vmin=np.min(energy_rel_mean_array),
+            vmax=np.max(energy_rel_mean_array),
+            neg_thres=0.4,
+            pos_thres=0.6,
+            cmap_handle=plt.cm.bwr,
+        )
+    else:
+        cmap = "Reds"
+        norm = None
+        energy_rel_mean_array = np.log(energy_array)
 
     # Make contourplot
     pcm = axes.contourf(
@@ -1122,23 +1139,28 @@ def plot_howmoller_diagram_u_energy_rel_mean(args=None):
         energy_rel_mean_array,
         norm=norm,
         cmap=cmap,
-        levels=20,
+        levels=30,
     )
     pcm.negative_linestyle = "solid"
     axes.set_ylabel("Shell number, n")
     axes.set_xlabel("Time")
 
+    title_header = "Howmöller diagram for $|u|^2$"
+    title_header += "- $\\langle|u|^2\\rangle_t$" if "rel_mean" in plt_args else ""
     title = g_plt_utils.generate_title(
         args,
         header_dict=header_dict,
-        title_header="Howmöller diagram for $|u|²$ - $\\langle|u|²\\rangle_t$",
+        title_header=title_header,
     )
 
     axes.set_title(title)
-    fig.colorbar(pcm, ax=axes, pad=0.1, label="$|u|² - \\langle|u|²\\rangle_t$")
+
+    cbar_label = "$|u|²$"
+    cbar_label += " - $\\langle|u|²\\rangle_t$" if "rel_mean" in plt_args else ""
+    fig.colorbar(pcm, ax=axes, pad=0.1, label=cbar_label)
 
 
-def plot_howmoller_diagram_helicity_rel_mean(args=None):
+def plot_howmoller_diagram_helicity(args=None, plt_args: list = ["rel_mean"]):
 
     # Import reference data
     time, u_data, header_dict = g_import.import_ref_data(args=args)
@@ -1146,37 +1168,45 @@ def plot_howmoller_diagram_helicity_rel_mean(args=None):
     # Prepare mesh
     time2D, shell2D = np.meshgrid(time.real, PAR.k_vec_temp)
     helicity_array = (PAR.hel_pre_factor * (u_data * np.conj(u_data)).real).T
-    # Prepare helicity rel mean
-    mean_helicity = np.reshape(np.mean(helicity_array, axis=1), (PAR.sdim, 1))
 
     # Take absolute value
     helicity_array = np.abs(helicity_array)
-    mean_helicity = np.abs(mean_helicity)
-    helicity_rel_mean_array = np.log(helicity_array) - np.log(mean_helicity)
-    # print("np.min(helicity_rel_mean_array)", np.min(helicity_rel_mean_array))
+
+    if "rel_mean" in plt_args:
+        # Prepare helicity rel mean
+        mean_helicity = np.reshape(np.mean(helicity_array, axis=1), (PAR.sdim, 1))
+        mean_helicity = np.abs(mean_helicity)
+        helicity_rel_mean_array = np.log(helicity_array) - np.log(mean_helicity)
+    else:
+        helicity_rel_mean_array = np.log(helicity_array)
 
     fig, axes = plt.subplots(nrows=1, ncols=1)
 
-    vmax = np.nanmax(helicity_rel_mean_array)
-    vmin = -6
+    if "rel_mean" in plt_args:
+        vmax = np.nanmax(helicity_rel_mean_array)
+        vmin = -6
+        helicity_rel_mean_array = np.clip(helicity_rel_mean_array, vmin, vmax)
 
-    # Get cmap
-    cmap, norm = g_plt_utils.get_cmap_distributed_around_zero(
-        vmin=vmin,
-        vmax=vmax,
-        neg_thres=0.4,
-        pos_thres=0.6,
-        cmap_handle=plt.cm.bwr,
-    )
+        # Get cmap
+        cmap, norm = g_plt_utils.get_cmap_distributed_around_zero(
+            vmin=vmin,
+            vmax=vmax,
+            neg_thres=0.4,
+            pos_thres=0.6,
+            cmap_handle=plt.cm.bwr,
+        )
+    else:
+        cmap = "Reds"
+        norm = None
 
     # Make contourplot
     pcm = axes.contourf(
         time2D,
         np.log2(shell2D),
-        np.clip(helicity_rel_mean_array, vmin, vmax),
+        helicity_rel_mean_array,
         norm=norm,
         cmap=cmap,
-        levels=100,
+        levels=30,
         extend="neither",
     )
     pcm.negative_linestyle = "solid"
@@ -1186,11 +1216,19 @@ def plot_howmoller_diagram_helicity_rel_mean(args=None):
     title = g_plt_utils.generate_title(
         args,
         header_dict=header_dict,
-        title_header="Howmöller diagram for helicity rel. mean helicity",
+        title_header="Howmöller diagram for helicity",
+        title_suffix="rel. mean helicity, " if "rel_mean" in plt_args else "",
     )
 
     axes.set_title(title)
-    fig.colorbar(pcm, ax=axes, pad=0.1, label="Helicity rel. mean helicity")
+    cbar_label = "log[H]"
+    cbar_label += "- log[H_mean]" if "rel_mean" in plt_args else ""
+    fig.colorbar(
+        pcm,
+        ax=axes,
+        pad=0.1,
+        label=cbar_label,
+    )
 
 
 if __name__ == "__main__":
@@ -1284,10 +1322,10 @@ if __name__ == "__main__":
         plot_error_vector_spectrum(args=args)
 
     if "energy_howmoller_rel_mean" in args["plot_type"]:
-        plot_howmoller_diagram_u_energy_rel_mean(args=args)
+        plot_howmoller_diagram_u_energy(args=args, plt_args=["rel_mean"])
 
     if "hel_howmoller_rel_mean" in args["plot_type"]:
-        plot_howmoller_diagram_helicity_rel_mean(args=args)
+        plot_howmoller_diagram_helicity(args=args, plt_args=[])
 
     if "helicity_spectrum" in args["plot_type"]:
         _, u_data, header_dict = g_import.import_ref_data(args=args)

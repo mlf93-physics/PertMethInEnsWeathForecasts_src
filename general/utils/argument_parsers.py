@@ -77,6 +77,12 @@ class StandardModelArgSetup:
             self._parser.add_argument("--ny_n", default=19, type=int)
             self._parser.add_argument("--forcing", default=1, type=float)
             self._parser.add_argument("--diff_exponent", default=2, type=int)
+            self._parser.add_argument(
+                "--diff_type",
+                choices=["normal", "inf_hyper"],
+                default="normal",
+                type=str,
+            )
             self._parser.add_argument("--sdim", default=20, type=int)
 
         elif cfg.MODEL == Models.LORENTZ63:
