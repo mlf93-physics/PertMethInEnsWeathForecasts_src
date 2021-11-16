@@ -32,15 +32,28 @@ cfg.GLOBAL_PARAMS.record_max_time = 30
 
 @dec.diffusion_type_decorator
 @nb.njit(
-    (nb.types.Array(nb.types.complex128, 1, "C", readonly=False))(
-        nb.types.Array(nb.types.complex128, 1, "C", readonly=False),
-        nb.types.Array(nb.types.complex128, 2, "C", readonly=False),
-        nb.types.int64,
-        nb.types.float64,
-        nb.types.float64,
-        nb.types.float64,
-        nb.typeof(PAR),
-    ),
+    [
+        (nb.types.Array(nb.types.complex128, 1, "C", readonly=False))(
+            nb.typeof(ut_funcs.normal_diffusion),
+            nb.types.Array(nb.types.complex128, 1, "C", readonly=False),
+            nb.types.Array(nb.types.complex128, 2, "C", readonly=False),
+            nb.types.int64,
+            nb.types.float64,
+            nb.types.float64,
+            nb.types.float64,
+            nb.typeof(PAR),
+        ),
+        (nb.types.Array(nb.types.complex128, 1, "C", readonly=False))(
+            nb.typeof(ut_funcs.infinit_hyper_diffusion),
+            nb.types.Array(nb.types.complex128, 1, "C", readonly=False),
+            nb.types.Array(nb.types.complex128, 2, "C", readonly=False),
+            nb.types.int64,
+            nb.types.float64,
+            nb.types.float64,
+            nb.types.float64,
+            nb.typeof(PAR),
+        ),
+    ],
     cache=cfg.NUMBA_CACHE,
 )
 def run_model(
@@ -79,7 +92,7 @@ def run_model(
         u_old = runge_kutta4(y0=u_old, forcing=forcing, PAR=PAR)
 
         # Solve diffusion depending on method
-        u_old = diffusion_func(u_old, ny, diff_exponent)
+        u_old = diffusion_func(u_old, PAR, ny, diff_exponent)
 
     return u_old
 
