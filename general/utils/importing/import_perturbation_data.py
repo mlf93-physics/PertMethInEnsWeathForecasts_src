@@ -305,7 +305,7 @@ def import_perturb_vectors(
     # u_init_profiles is reshaped to fit shape (n_units, n_runs_per_profile, sdim)
     # of vector_units array
     vector_units = vector_units - np.reshape(
-        u_init_profiles[params.u_slice, :].T,
+        u_init_profiles[sparams.u_slice, :].T,
         (args["n_files"], args["n_runs_per_profile"], params.sdim),
     )
 

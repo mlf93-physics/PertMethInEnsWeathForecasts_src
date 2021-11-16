@@ -34,20 +34,21 @@ import general.utils.saving.save_perturbation as pt_save
 import general.utils.user_interface as g_ui
 import general.utils.util_funcs as g_utils
 import lorentz63_experiments.params.params as l63_params
+import lorentz63_experiments.params.special_params as l63_sparams
 import lorentz63_experiments.perturbations.normal_modes as l63_nm_estimator
 import lorentz63_experiments.utils.util_funcs as ut_funcs
 import numpy as np
-from shell_model_experiments.params.params import ParamsStructType
-from shell_model_experiments.params.params import PAR as PAR_SH
-import shell_model_experiments.utils.special_params as sh_sparams
-import lorentz63_experiments.params.special_params as l63_sparams
 import shell_model_experiments.perturbations.normal_modes as sh_nm_estimator
+import shell_model_experiments.utils.special_params as sh_sparams
+import shell_model_experiments.utils.util_funcs as sh_utils
 from general.params.experiment_licences import Experiments as EXP
 from general.params.model_licences import Models
 from general.utils.module_import.type_import import *
 from lorentz63_experiments.lorentz63_model.lorentz63 import run_model as l63_model
 from lorentz63_experiments.lorentz63_model.tl_lorentz63 import run_model as l63_tl_model
 from pyinstrument import Profiler
+from shell_model_experiments.params.params import PAR as PAR_SH
+from shell_model_experiments.params.params import ParamsStructType
 from shell_model_experiments.sabra_model.sabra_model import run_model as sh_model
 from shell_model_experiments.sabra_model.tl_sabra_model import run_model as sh_tl_model
 
@@ -113,17 +114,13 @@ def perturbation_runner(
                 u_old,
                 du_array,
                 data_out,
-                params.k_vec_temp,
                 args["Nt"] + args["endpoint"] * 1,
                 args["ny"],
                 args["forcing"],
                 args["diff_exponent"],
-                params.pre_factor,
+                params,
             )
         elif cfg.MODEL.submodel == "TL":
-            # Prepare prefactor
-            pre_factor_reshaped = np.reshape(params.pre_factor, (-1, 1))
-
             sh_tl_model(
                 u_old,
                 np.copy(u_ref[:, run_count]),
@@ -133,9 +130,7 @@ def perturbation_runner(
                 args["ny"],
                 args["diff_exponent"],
                 args["forcing"],
-                pre_factor_reshaped,
-                params.sdim,
-                params.k_vec_temp,
+                params,
             )
         else:
             g_exceptions.ModelError(
@@ -447,7 +442,7 @@ def main_setup(
     u_ref=None,
 ):
     # Initiate arrays
-    params.initiate_sdim_arrays(args["sdim"])
+    # params.initiate_sdim_arrays(args["sdim"])
 
     times_to_run, Nt_array = prepare_run_times(args)
 
@@ -558,8 +553,12 @@ if __name__ == "__main__":
     pert_arg_setup.validate_arguments()
     args = pert_arg_setup.args
 
+    if cfg.MODEL == Models.SHELL_MODEL:
+        # Initiate and update variables and arrays
+        sh_utils.update_params(params, sdim=int(args["sdim"]))
+        sh_utils.update_arrays(params)
     # Initiate arrays
-    params.initiate_sdim_arrays(args["sdim"])
+    # params.initiate_sdim_arrays(args["sdim"])
     args = g_utils.adjust_start_times_with_offset(args)
 
     g_ui.confirm_run_setup(args)

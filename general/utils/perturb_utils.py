@@ -104,7 +104,7 @@ def calculate_perturbations(
             decimal=abs(floor(log10(params.seeked_error_norm))) + 1,
         )
 
-        perturbations[params.u_slice, i] = perturb
+        perturbations[sparams.u_slice, i] = perturb
 
         if dev_plot_active:
             g_dev_plots.dev_plot_perturbation_generation(perturb, perturb_temp)
@@ -156,10 +156,11 @@ def rescale_perturbations(perturb_data: np.ndarray, args: dict) -> np.ndarray:
         * params.seeked_error_norm
     )
 
-    print(
-        "Norm between first 2 perturbations after rescaling",
-        np.linalg.norm(rescaled_data[:, 0] - rescaled_data[:, 1], axis=0),
-    )
+    if rescaled_data.size > params.sdim + 2 * params.bd_size:
+        print(
+            "Norm between first 2 perturbations after rescaling",
+            np.linalg.norm(rescaled_data[:, 0] - rescaled_data[:, 1], axis=0),
+        )
 
     # Add rescaled data to u_init_profiles
     u_init_profiles += rescaled_data
@@ -237,3 +238,5 @@ def generate_nm_perturbations(
             _weight * perturb_vectors_conj[:, index // n_runs_per_profile]
             + _weight.conjugate() * perturb_vectors[:, index // n_runs_per_profile]
         ).real
+
+    return perturb

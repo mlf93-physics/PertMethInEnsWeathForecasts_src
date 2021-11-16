@@ -1,3 +1,13 @@
+"""Make plots related to the calculation of one or more Lorentz blocks
+
+Example
+-------
+python ../general/plotting/lorentz_block_plotter.py
+--plot_type=blocks
+--exp_folder=test_temp2
+--average
+"""
+
 import sys
 
 sys.path.append("..")
@@ -10,6 +20,7 @@ from pyinstrument import Profiler
 import general.plotting.plot_config as g_plt_config
 from shell_model_experiments.params.params import ParamsStructType
 from shell_model_experiments.params.params import PAR as PAR_SH
+import shell_model_experiments.utils.util_funcs as sh_utils
 import lorentz63_experiments.params.params as l63_params
 import shell_model_experiments.plotting.plot_data as pl_data
 import general.analyses.lorentz_block_analysis as lr_analysis
@@ -381,6 +392,12 @@ if __name__ == "__main__":
             "Argument is None -" + " please select an experiment folder",
             argument="exp_folder",
         )
+
+        # Shell model specific
+    if cfg.MODEL == Models.SHELL_MODEL:
+        # Initiate and update variables and arrays
+        sh_utils.update_params(params)
+        sh_utils.update_arrays(params)
 
     if "blocks" in args["plot_type"]:
         plt_lorentz_block(args)

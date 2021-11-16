@@ -1,3 +1,14 @@
+"""Make plots related to the standard shell model
+
+Example
+-------
+python plotting/plot_data.py
+--plot_type=error_norm
+--exp_folder=temp1_test_no_hyper_diffusivity_ny_n16
+--shell_cutoff=12
+--endpoint
+"""
+
 import sys
 
 sys.path.append("..")
@@ -15,6 +26,7 @@ import general.utils.user_interface as g_ui
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mpl_ticker
 import numpy as np
+import shell_model_experiments.utils.util_funcs as sh_utils
 import shell_model_experiments.analyses.analyse_data as sh_analysis
 import shell_model_experiments.perturbations.normal_modes as sh_nm_estimator
 from mpl_toolkits import mplot3d
@@ -1093,6 +1105,9 @@ if __name__ == "__main__":
     args = stand_plot_arg_parser.args
     # Initiate arrays
     # initiate_PAR.sdim_arrays(args["PAR.sdim"])
+    # Initiate and update variables and arrays
+    sh_utils.update_params(PAR)
+    sh_utils.update_arrays(PAR)
 
     g_ui.confirm_run_setup(args)
 

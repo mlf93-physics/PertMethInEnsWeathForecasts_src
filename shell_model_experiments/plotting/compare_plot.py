@@ -16,7 +16,6 @@ import shell_model_experiments.utils.util_funcs as ut_funcs
 from general.plotting.plot_params import *
 from general.utils.module_import.type_import import *
 from shell_model_experiments.params.params import PAR, ParamsStructType
-
 import plot_data as sh_plt_data
 
 
@@ -336,6 +335,9 @@ if __name__ == "__main__":
 
     # Initiate variables
     # initiate_sdim_arrays(args["sdim"])
+    # Initiate and update variables and arrays
+    ut_funcs.update_params(PAR)
+    ut_funcs.update_arrays(PAR)
 
     g_ui.confirm_run_setup(args)
 

@@ -67,8 +67,7 @@ def find_normal_modes(
             args["diff_exponent"],
             local_ny,
             pre_factor_reshaped,
-            PAR.sdim,
-            PAR.k_vec_temp,
+            PAR,
         )
 
         e_values, e_vectors = np.linalg.eig(J_matrix)

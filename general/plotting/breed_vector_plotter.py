@@ -1,3 +1,14 @@
+"""Make plots related to the breed vector calculations
+
+Example
+-------
+python ../general/plotting/breed_vector_plotter.py
+--plot_type=bv_error_norm
+--exp_folder=pt_vectors/test1_after_params_refactor
+--endpoint
+
+"""
+
 import sys
 
 sys.path.append("..")
@@ -18,13 +29,14 @@ import lorentz63_experiments.perturbations.normal_modes as l63_nm_estimator
 import lorentz63_experiments.plotting.plot_data as l63_plot
 import matplotlib.pyplot as plt
 import numpy as np
-from shell_model_experiments.params.params import ParamsStructType
-from shell_model_experiments.params.params import PAR as PAR_SH
 import shell_model_experiments.plotting.plot_data as sh_plot
+import shell_model_experiments.utils.util_funcs as sh_utils
 from general.params.model_licences import Models
 from general.utils.module_import.type_import import *
 from mpl_toolkits import mplot3d
 from pyinstrument import Profiler
+from shell_model_experiments.params.params import PAR as PAR_SH
+from shell_model_experiments.params.params import ParamsStructType
 
 # Get parameters for model
 if cfg.MODEL == Models.SHELL_MODEL:
@@ -257,6 +269,12 @@ if __name__ == "__main__":
     args = stand_plot_arg_parser.args
 
     g_ui.confirm_run_setup(args)
+
+    # Shell model specific
+    if cfg.MODEL == Models.SHELL_MODEL:
+        # Initiate and update variables and arrays
+        sh_utils.update_params(params)
+        sh_utils.update_arrays(params)
 
     # Make profiler
     profiler = Profiler()

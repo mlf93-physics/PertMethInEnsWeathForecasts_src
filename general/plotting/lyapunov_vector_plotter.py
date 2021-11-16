@@ -1,24 +1,36 @@
+"""Make plots related to the calculation of the Lyapunov vectors
+
+Example
+-------
+python ../general/plotting/lyapunov_vector_plotter.py
+--plot_type=tlm_error_norm
+--exp_folder=pt_vectors/debug_temp1
+--endpoint
+"""
+
 import sys
 
 sys.path.append("..")
-import pathlib as pl
 import copy
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sb
+import pathlib as pl
+
+import config as cfg
+import general.analyses.plot_analyses as g_plt_anal
 import general.plotting.plot_config as g_plt_config
-from shell_model_experiments.params.params import ParamsStructType
-from shell_model_experiments.params.params import PAR as PAR_SH
-import shell_model_experiments.plotting.plot_data as sh_plot
+import general.plotting.plot_data as g_plt_data
+import general.utils.argument_parsers as a_parsers
+import general.utils.importing.import_data_funcs as g_import
+import general.utils.user_interface as g_ui
 import lorentz63_experiments.params.params as l63_params
 import lorentz63_experiments.plotting.plot_data as l63_plot
-import general.utils.importing.import_data_funcs as g_import
-import general.plotting.plot_data as g_plt_data
-import general.analyses.plot_analyses as g_plt_anal
-import general.utils.user_interface as g_ui
-import general.utils.argument_parsers as a_parsers
+import matplotlib.pyplot as plt
+import numpy as np
+import seaborn as sb
+import shell_model_experiments.plotting.plot_data as sh_plot
+import shell_model_experiments.utils.util_funcs as sh_utils
 from general.params.model_licences import Models
-import config as cfg
+from shell_model_experiments.params.params import PAR as PAR_SH
+from shell_model_experiments.params.params import ParamsStructType
 
 # Get parameters for model
 if cfg.MODEL == Models.SHELL_MODEL:
@@ -179,6 +191,12 @@ if __name__ == "__main__":
     args = stand_plot_arg_parser.args
 
     g_ui.confirm_run_setup(args)
+
+    # Shell model specific
+    if cfg.MODEL == Models.SHELL_MODEL:
+        # Initiate and update variables and arrays
+        sh_utils.update_params(params, sdim=int(args["sdim"]))
+        sh_utils.update_arrays(params)
 
     if "tlm_error_norm" in args["plot_type"]:
         plot_tlm_solution(args)

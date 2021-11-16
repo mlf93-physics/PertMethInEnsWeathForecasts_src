@@ -1,3 +1,11 @@
+"""Calculate the Lyapunov vectors
+
+Example
+-------
+python ../general/runners/lyapunov_vector_runner.py --exp_setup=TestRun4 --n_units=1
+
+"""
+
 import sys
 
 sys.path.append("..")
@@ -17,9 +25,10 @@ import general.utils.user_interface as g_ui
 import general.utils.util_funcs as g_utils
 import lorentz63_experiments.params.params as l63_params
 import numpy as np
-from shell_model_experiments.params.params import ParamsStructType
-from shell_model_experiments.params.params import PAR as PAR_SH
+import shell_model_experiments.utils.util_funcs as sh_utils
 from general.params.model_licences import Models
+from shell_model_experiments.params.params import PAR as PAR_SH
+from shell_model_experiments.params.params import ParamsStructType
 
 import perturbation_runner as pt_runner
 
@@ -138,12 +147,17 @@ if __name__ == "__main__":
 
     g_ui.confirm_run_setup(args)
 
+    if cfg.MODEL == Models.SHELL_MODEL:
+        # Initiate and update variables and arrays
+        sh_utils.update_params(params, sdim=int(args["sdim"]))
+        sh_utils.update_arrays(params)
+
     # Add submodel attribute
     cfg.MODEL.submodel = "TL"
 
     # Add ny argument
     if cfg.MODEL == Models.SHELL_MODEL:
-        args["ny"] = params.ny_from_ny_n_and_forcing(
+        args["ny"] = sh_utils.ny_from_ny_n_and_forcing(
             args["forcing"], args["ny_n"], args["diff_exponent"]
         )
 

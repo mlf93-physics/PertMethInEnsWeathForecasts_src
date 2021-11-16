@@ -216,7 +216,7 @@ def determine_params_from_header_dict(header_dict: dict, args: dict):
         #         )
         #     # Take ny from reference file
         # else:
-        #     args["ny"] = params.ny_from_ny_n_and_forcing(
+        #     args["ny"] = sh_utils.ny_from_ny_n_and_forcing(
         #         args["forcing"], args["ny_n"], args["diff_exponent"]
         #     )
 

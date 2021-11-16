@@ -5,7 +5,6 @@ Example
 python ../general/runners/lorentz_block_runner.py
 --exp_setup=TestRun3
 --n_units=1
---pert_mode=rd
 
 """
 import sys
@@ -13,21 +12,24 @@ import sys
 sys.path.append("..")
 import copy
 import pathlib as pl
-from shell_model_experiments.params.params import ParamsStructType
-from shell_model_experiments.params.params import PAR as PAR_SH
-import lorentz63_experiments.params.params as l63_params
-import perturbation_runner as pt_runner
-import general.utils.util_funcs as g_utils
+
+import config as cfg
+import general.utils.argument_parsers as a_parsers
+import general.utils.experiments.exp_utils as exp_utils
+import general.utils.experiments.validate_exp_setups as ut_exp_val
+import general.utils.runner_utils as r_utils
 import general.utils.saving.save_data_funcs as g_save
 import general.utils.saving.save_utils as g_save_utils
-from general.params.env_params import *
-import general.utils.experiments.validate_exp_setups as ut_exp_val
-import general.utils.experiments.exp_utils as exp_utils
-import general.utils.runner_utils as r_utils
 import general.utils.user_interface as g_ui
-import general.utils.argument_parsers as a_parsers
+import general.utils.util_funcs as g_utils
+import lorentz63_experiments.params.params as l63_params
+import shell_model_experiments.utils.util_funcs as sh_utils
+from general.params.env_params import *
 from general.params.model_licences import Models
-import config as cfg
+from shell_model_experiments.params.params import PAR as PAR_SH
+from shell_model_experiments.params.params import ParamsStructType
+
+import perturbation_runner as pt_runner
 
 # Get parameters for model
 if cfg.MODEL == Models.SHELL_MODEL:
@@ -59,6 +61,8 @@ def main(args):
     ut_exp_val.validate_start_time_method(exp_setup=exp_setup)
 
     start_times, num_possible_units = r_utils.generate_start_times(exp_setup, args)
+
+    args["pert_mode"] = "rd"
 
     processes = []
 
@@ -109,6 +113,8 @@ def main(args):
             args=copy_args,
             n_units=min(args["n_units"], num_possible_units - n_existing_units),
         )
+        # Update out_exp_folder
+        copy_args["out_exp_folder"] = exp_setup["folder_name"]
         # Save exp setup to exp folder
         g_save.save_exp_info(exp_setup, copy_args)
 
@@ -127,6 +133,11 @@ if __name__ == "__main__":
     mult_pert_arg_setup.setup_parser()
     args = mult_pert_arg_setup.args
     g_ui.confirm_run_setup(args)
+
+    if cfg.MODEL == Models.SHELL_MODEL:
+        # Initiate and update variables and arrays
+        sh_utils.update_params(params, sdim=int(args["sdim"]))
+        sh_utils.update_arrays(params)
 
     main(args)
 
