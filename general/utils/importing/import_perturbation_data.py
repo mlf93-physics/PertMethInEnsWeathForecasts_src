@@ -3,8 +3,11 @@ import pathlib as pl
 import random
 import itertools as it
 import numpy as np
-import shell_model_experiments.params as sh_params
+from shell_model_experiments.params.params import ParamsStructType
+from shell_model_experiments.params.params import PAR as PAR_SH
 import lorentz63_experiments.params.params as l63_params
+import shell_model_experiments.utils.special_params as sh_sparams
+import lorentz63_experiments.params.special_params as l63_sparams
 import general.utils.util_funcs as g_utils
 import general.utils.importing.import_data_funcs as g_import
 import general.utils.exceptions as g_exceptions
@@ -14,9 +17,11 @@ import config as cfg
 
 # Get parameters for model
 if cfg.MODEL == Models.SHELL_MODEL:
-    params = sh_params
+    params = PAR_SH
+    sparams = sh_sparams
 elif cfg.MODEL == Models.LORENTZ63:
     params = l63_params
+    sparams = l63_sparams
 
 
 def import_lorentz_block_perturbations(args=None, raw_perturbations=True):
@@ -188,7 +193,7 @@ def import_profiles_for_nm_analysis(args: dict = None) -> Tuple[np.ndarray, dict
         lines = map(lambda x: x.strip().split(","), lines)
         profiles.extend(list(lines))
 
-    profiles = np.array(profiles, dtype=params.dtype)[:, 1:]
+    profiles = np.array(profiles, dtype=sparams.dtype)[:, 1:]
 
     # Pad profiles if necessary
     if params.bd_size > 0:
@@ -300,7 +305,7 @@ def import_perturb_vectors(
     # u_init_profiles is reshaped to fit shape (n_units, n_runs_per_profile, sdim)
     # of vector_units array
     vector_units = vector_units - np.reshape(
-        u_init_profiles[params.u_slice, :].T,
+        u_init_profiles[sparams.u_slice, :].T,
         (args["n_files"], args["n_runs_per_profile"], params.sdim),
     )
 

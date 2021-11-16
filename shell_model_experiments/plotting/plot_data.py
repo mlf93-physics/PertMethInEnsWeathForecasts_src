@@ -1,3 +1,14 @@
+"""Make plots related to the standard shell model
+
+Example
+-------
+python plotting/plot_data.py
+--plot_type=error_norm
+--exp_folder=temp1_test_no_hyper_diffusivity_ny_n16
+--shell_cutoff=12
+--endpoint
+"""
+
 import sys
 
 sys.path.append("..")
@@ -15,10 +26,12 @@ import general.utils.user_interface as g_ui
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mpl_ticker
 import numpy as np
+import shell_model_experiments.utils.util_funcs as sh_utils
 import shell_model_experiments.analyses.analyse_data as sh_analysis
 import shell_model_experiments.perturbations.normal_modes as sh_nm_estimator
 from mpl_toolkits import mplot3d
-from shell_model_experiments.params.params import *
+from shell_model_experiments.params.params import ParamsStructType
+from shell_model_experiments.params.params import PAR
 
 
 def plot_energy_spectrum(
@@ -44,7 +57,10 @@ def plot_energy_spectrum(
     # Plot Kolmogorov scaling
     if "kolmogorov" in plot_arg_list:
         axes.plot(
-            np.log2(k_vec_temp), k_vec_temp ** (-2 / 3), "k--", label="$k^{{-2/3}}$"
+            np.log2(PAR.k_vec_temp),
+            PAR.k_vec_temp ** (-2 / 3),
+            "k--",
+            label="$k^{{-2/3}}$",
         )
 
     label: str = (
@@ -59,7 +75,7 @@ def plot_energy_spectrum(
     color = plot_kwargs["color"] if "color" in plot_kwargs else None
 
     # Fit the slope of the spectrum
-    k_vectors = np.log2(k_vec_temp)
+    k_vectors = np.log2(PAR.k_vec_temp)
     if "fit_slope" in plot_arg_list or "rel_fit" in plot_arg_list:
         slope, intercept = sh_analysis.fit_spectrum_slope(mean_energy, header_dict)
     if "fit_slope" in plot_arg_list:
@@ -70,7 +86,7 @@ def plot_energy_spectrum(
 
     # Normlize energy spectrum to fit
     if "rel_fit" in plot_arg_list:
-        mean_energy /= np.exp(slope * np.log2(k_vec_temp) + intercept)
+        mean_energy /= np.exp(slope * np.log2(PAR.k_vec_temp) + intercept)
         title_suffix += "rel. fit, "
 
     # Plot energy spectrum
@@ -131,7 +147,10 @@ def plot_helicity_spectrum(
     # Plot Kolmogorov scaling
     if "kolmogorov" in plot_arg_list:
         axes.plot(
-            np.log2(k_vec_temp), k_vec_temp ** (1 / 3), "k--", label="$k^{{1/3}}$"
+            np.log2(PAR.k_vec_temp),
+            PAR.k_vec_temp ** (1 / 3),
+            "k--",
+            label="$k^{{1/3}}$",
         )
 
     label: str = (
@@ -145,11 +164,11 @@ def plot_helicity_spectrum(
     title_suffix: str = ""
     color = plot_kwargs["color"] if "color" in plot_kwargs else None
 
-    helicity_sign = np.array([i % 2 for i in range(sdim)], dtype=np.int)
+    helicity_sign = np.array([i % 2 for i in range(PAR.sdim)], dtype=np.int)
     mean_helicity = np.abs(mean_helicity)
 
     # Fit the slope of the spectrum
-    k_vectors = np.log2(k_vec_temp)
+    k_vectors = np.log2(PAR.k_vec_temp)
     if "fit_slope" in plot_arg_list or "rel_fit" in plot_arg_list:
         slope, intercept = sh_analysis.fit_spectrum_slope(mean_helicity, header_dict)
     if "fit_slope" in plot_arg_list:
@@ -160,12 +179,12 @@ def plot_helicity_spectrum(
 
     # Normlize energy spectrum to fit
     if "rel_fit" in plot_arg_list:
-        mean_helicity /= np.exp(slope * np.log2(k_vec_temp) + intercept)
+        mean_helicity /= np.exp(slope * np.log2(PAR.k_vec_temp) + intercept)
         title_suffix += "rel. fit, "
 
     # Plot curves
     axes.plot(
-        np.log2(k_vec_temp),
+        np.log2(PAR.k_vec_temp),
         mean_helicity,
         label=label,
         color=color,
@@ -174,14 +193,14 @@ def plot_helicity_spectrum(
         # Plot annotation according to sign of helicity
         _offset = 1e4
         axes.scatter(
-            np.log2(k_vec_temp)[helicity_sign == 1],
+            np.log2(PAR.k_vec_temp)[helicity_sign == 1],
             _offset * np.ones(np.sum(helicity_sign == 1)),
             label="_nolegend_",
             marker="+",
             color="k",
         )
         axes.scatter(
-            np.log2(k_vec_temp)[helicity_sign == 0],
+            np.log2(PAR.k_vec_temp)[helicity_sign == 0],
             _offset * np.ones(np.sum(helicity_sign == 0)),
             label="_nolegend_",
             marker="_",
@@ -212,6 +231,104 @@ def plot_helicity_spectrum(
             args,
             header_dict=header_dict,
             title_header="Helicity spectrum",
+            title_suffix=title_suffix,
+        )
+    axes.set_title(title)
+
+
+def plot_velocity_spectrum(
+    u_data: np.ndarray,
+    header_dict: dict,
+    axes: plt.Axes = None,
+    plot_arg_list: list = ["kolmogorov", "calculate"],
+    plot_kwargs: dict = {},
+    args: dict = {},
+):
+    # Make axes if not present
+    if axes is None:
+        fig = plt.figure()
+        axes = plt.axes()
+
+    # React on plot_arg options
+    if "calculate" in plot_arg_list:
+        # Calculate mean energy
+        velocity = np.mean(np.abs(u_data), axis=0)
+    else:
+        velocity = u_data.real.ravel()
+
+    # Plot Kolmogorov scaling
+    if "kolmogorov" in plot_arg_list:
+        axes.plot(
+            np.log2(PAR.k_vec_temp),
+            np.exp(3) * PAR.k_vec_temp ** (-2 / 3),
+            "k--",
+            label="$k^{{-2/3}}$",
+        )
+        axes.plot(
+            np.log2(PAR.k_vec_temp),
+            np.exp(3) * PAR.k_vec_temp ** (-1 / 3),
+            "k:",
+            label="$k^{{-1/3}}$",
+        )
+
+    label: str = (
+        plot_kwargs["label"]
+        if "label" in plot_kwargs
+        else (
+            f"$n_{{\\nu}}$={int(header_dict['ny_n'])}, "
+            + f"$\\alpha$={int(header_dict['diff_exponent'])}"
+        )
+    )
+    title_suffix: str = ""
+    color = plot_kwargs["color"] if "color" in plot_kwargs else None
+
+    # Fit the slope of the spectrum
+    k_vectors = np.log2(PAR.k_vec_temp)
+    if "fit_slope" in plot_arg_list or "rel_fit" in plot_arg_list:
+        slope, intercept = sh_analysis.fit_spectrum_slope(velocity, header_dict)
+    if "fit_slope" in plot_arg_list:
+        label += f", slope={slope:.2e}, b={intercept:.2e}"
+        slope_plot = axes.plot(k_vectors, np.exp(slope * k_vectors + intercept), "--")
+        if color is None:
+            color = slope_plot[0].get_color()
+
+    # Normlize energy spectrum to fit
+    if "rel_fit" in plot_arg_list:
+        velocity /= np.exp(slope * np.log2(PAR.k_vec_temp) + intercept)
+        title_suffix += "rel. fit, "
+
+    # Plot energy spectrum
+    axes.plot(
+        k_vectors,
+        velocity,
+        label=label,
+        color=color,
+    )
+
+    # Axes setup
+    axes.set_yscale("log")
+    axes.set_xlabel("k")
+    axes.set_ylabel("Energy")
+    axes.xaxis.set_major_locator(mpl_ticker.MaxNLocator(integer=True))
+
+    # Limit y axis if necessary
+    min_velocity = np.min(velocity)
+    if args["ylim"] is not None:
+        axes.set_ylim(args["ylim"][0], args["ylim"][1])
+    elif min_velocity > 0:
+        if np.log(min_velocity) < -6:
+            axes.set_ylim(1e-6, 10)
+    else:
+        axes.set_ylim(1e-6, 10)
+
+    # Title setup
+    if "title" in plot_kwargs:
+        title = plot_kwargs["title"]
+    else:
+        title = g_plt_utils.generate_title(
+            args,
+            header_dict=header_dict,
+            title_header="Velocity spectrum",
             title_suffix=title_suffix,
         )
     axes.set_title(title)
@@ -272,7 +389,7 @@ def plot_energy_per_shell(
         for idx in range(len(index)):
 
             point_plot = plt.plot(
-                np.ones(sdim) * header_dicts[idx]["perturb_pos"] * stt,
+                np.ones(PAR.sdim) * header_dicts[idx]["perturb_pos"] * PAR.stt,
                 energy_vs_time[int(header_dicts[idx]["perturb_pos"])],
                 "o",
             )
@@ -280,7 +397,7 @@ def plot_energy_per_shell(
             time_array = np.linspace(
                 0,
                 header_dicts[idx]["time_to_run"],
-                int(header_dicts[idx]["time_to_run"] * tts) + args["endpoint"] * 1,
+                int(header_dicts[idx]["time_to_run"] * PAR.tts) + args["endpoint"] * 1,
                 dtype=np.float64,
                 endpoint=args["endpoint"],
             )
@@ -311,7 +428,7 @@ def plot_energy_per_shell(
                 axis=1,
             )
             ax.plot(
-                time_array + perturb_time_pos_list[idx] * stt,
+                time_array + perturb_time_pos_list[idx] * PAR.stt,
                 perturbation_energy_vs_time,
                 color=point_plot[0].get_color(),
             )
@@ -449,7 +566,7 @@ def plot_shell_error_vs_time(args=None):
     time_array = np.linspace(
         0,
         header_dicts[0]["time_to_run"],
-        int(header_dicts[0]["time_to_run"] * tts),
+        int(header_dicts[0]["time_to_run"] * PAR.tts),
         dtype=np.float64,
         endpoint=False,
     )
@@ -462,7 +579,7 @@ def plot_shell_error_vs_time(args=None):
         plt.yscale("log")
         plt.ylim(1e-16, 10)
         # plt.xlim(0.035, 0.070)
-        plt.legend(k_vec_temp)
+        plt.legend(PAR.k_vec_temp)
 
         title = g_plt_utils.generate_title(
             args,
@@ -493,7 +610,7 @@ def plot_2D_eigen_mode_analysis(args=None):
 
         # Prepare legend
         perturb_time_pos_list.append(
-            f"Time: {perturb_positions[i]/sample_rate*dt:.1f}s"
+            f"Time: {perturb_positions[i]/PAR.sample_rate*PAR.dt:.1f}s"
         )
 
     e_value_collection = np.array(e_value_collection, dtype=np.complex128).T
@@ -576,8 +693,8 @@ def plot_3D_eigen_mode_analysis(
     e_vector_collection = np.array(e_vector_collection)
 
     # Make data.
-    shells = np.arange(0, sdim, 1)
-    lyaponov_index = np.arange(0, sdim, 1)
+    shells = np.arange(0, PAR.sdim, 1)
+    lyaponov_index = np.arange(0, PAR.sdim, 1)
     lyaponov_index, shells = np.meshgrid(lyaponov_index, shells)
 
     surf_plot = axes[0].plot_surface(
@@ -605,10 +722,10 @@ def plot_3D_eigen_mode_analysis(
 
     # Set axis limits
     if right_handed:
-        axes[0].set_xlim(sdim, 0)
+        axes[0].set_xlim(PAR.sdim, 0)
     else:
-        axes[0].set_xlim(0, sdim)
-    axes[0].set_ylim(0, sdim)
+        axes[0].set_xlim(0, PAR.sdim)
+    axes[0].set_ylim(0, PAR.sdim)
 
     pcolorplot = axes[1].pcolormesh(
         np.mean(np.abs(e_vector_collection) ** 2, axis=0), cmap="Reds"
@@ -618,7 +735,7 @@ def plot_3D_eigen_mode_analysis(
     axes[1].set_title(title)
 
     if right_handed:
-        axes[1].set_xlim(sdim, 0)
+        axes[1].set_xlim(PAR.sdim, 0)
         axes[1].yaxis.tick_right()
         axes[1].yaxis.set_label_position("right")
         axes[1].xaxis.set_major_locator(mpl_ticker.MaxNLocator(integer=True))
@@ -728,7 +845,7 @@ def plot_eigen_vector_comparison(args=None):
             + f', $n_f$={int(header_dict["n_f"])}, $\\nu$={header_dict["ny"]:.2e}'
             + f', time={header_dict["time_to_run"]}s, N_tot={args["n_profiles"]*args["n_runs_per_profile"]}'
         )
-        plt.xlim(sdim, 0)
+        plt.xlim(PAR.sdim, 0)
         axes.yaxis.tick_right()
         axes.yaxis.set_label_position("right")
         plt.colorbar(pad=0.1)
@@ -805,14 +922,14 @@ def plot_error_energy_spectrum_vs_time_2D(args: dict = None, axes: plt.Axes = No
     time_exp_indices = np.unique(time_exp_indices)
     # Update numbe of divisions
     n_divisions = time_exp_indices.size
-    error_spectra = np.zeros((n_files, n_divisions, sdim), dtype=np.float64)
+    error_spectra = np.zeros((n_files, n_divisions, PAR.sdim), dtype=np.float64)
 
     for ifile in range(n_files):
         for i, data_index in enumerate(time_exp_indices):
             error_spectra[ifile, i, :] = np.abs(u_stores[ifile][data_index, :]).real
 
     # Calculate mean and std
-    error_mean_spectra = np.zeros((n_divisions, sdim), dtype=np.float64)
+    error_mean_spectra = np.zeros((n_divisions, PAR.sdim), dtype=np.float64)
     # Find zeros
     error_spectra[np.where(error_spectra == 0)] = np.nan
 
@@ -826,10 +943,12 @@ def plot_error_energy_spectrum_vs_time_2D(args: dict = None, axes: plt.Axes = No
     axes.set_prop_cycle("color", cmap_list)
     axes.xaxis.set_major_locator(mpl_ticker.MaxNLocator(integer=True))
 
-    axes.plot(np.log2(k_vec_temp), error_mean_spectra.T)
-    axes.plot(np.log2(k_vec_temp), k_vec_temp ** (-1 / 3), "k--", label="$k^{2/3}$")
+    axes.plot(np.log2(PAR.k_vec_temp), error_mean_spectra.T)
+    axes.plot(
+        np.log2(PAR.k_vec_temp), PAR.k_vec_temp ** (-1 / 3), "k--", label="$k^{2/3}$"
+    )
     axes.set_yscale("log")
-    legend = [f"{item/sample_rate*dt:.3e}" for item in time_exp_indices]
+    legend = [f"{item/PAR.sample_rate*PAR.dt:.3e}" for item in time_exp_indices]
     # axes.legend(legend, loc="center right", bbox_to_anchor=(1.3, 0.5))
     axes.set_xlabel("Shell number")
     axes.set_ylabel("$u_n - u^{'}_n$")
@@ -858,7 +977,7 @@ def plot_error_vector_spectrogram(args=None):
     ) = g_import.import_perturbation_velocities(args)
 
     args["start_times"] = np.array(
-        [perturb_time_pos_list[args["file_offset"]] * stt],
+        [perturb_time_pos_list[args["file_offset"]] * PAR.stt],
         dtype=np.float64,
     )
     args["n_profiles"] = len(args["start_times"])
@@ -882,8 +1001,8 @@ def plot_error_vector_spectrogram(args=None):
 
     # Make spectrogram
     plt.figure()
-    # time = np.linspace(0, perturb_header_dicts[0]['N_data']*dt/sample_rate, 10)
-    # x, y = np.meshgrid(time, np.log2(k_vec_temp))
+    # time = np.linspace(0, perturb_header_dicts[0]['N_data']*PAR.dt/PAR.sample_rate, 10)
+    # x, y = np.meshgrid(time, np.log2(PAR.k_vec_temp))
     plt.pcolormesh(np.abs(error_spectrum[sort_id, :]), cmap="Reds")
     plt.xlabel("Time")
     # plt.xticks(time)
@@ -918,7 +1037,7 @@ def plot_error_vector_spectrum(args=None):
 
     args["start_times"] = np.array(
         [
-            perturb_time_pos_list[args["file_offset"] + i] * stt
+            perturb_time_pos_list[args["file_offset"] + i] * PAR.stt
             for i in range(args["n_files"])
         ],
         dtype=np.float64,
@@ -939,7 +1058,9 @@ def plot_error_vector_spectrum(args=None):
         local_ny=header_dict["ny"],
     )
 
-    sorted_time_and_pert_mean_scaled_e_vectors = np.zeros((args["n_files"], sdim, sdim))
+    sorted_time_and_pert_mean_scaled_e_vectors = np.zeros(
+        (args["n_files"], PAR.sdim, PAR.sdim)
+    )
 
     for j in range(args["n_files"]):
         sort_id = e_value_collection[j].argsort()[::-1]
@@ -975,7 +1096,7 @@ def plot_error_vector_spectrum(args=None):
         + f', $n_f$={int(header_dict["n_f"])}, $\\nu$={header_dict["ny"]:.2e}'
         + f', time={header_dict["time_to_run"]}s, N_tot={args["n_profiles"]*args["n_runs_per_profile"]}'
     )
-    plt.xlim(sdim, 0)
+    plt.xlim(PAR.sdim, 0)
     axes.yaxis.tick_right()
     axes.yaxis.set_label_position("right")
     plt.colorbar(pad=0.1)
@@ -987,19 +1108,17 @@ def plot_howmoller_diagram_u_energy(args=None, plt_args: list = ["rel_mean"]):
     time, u_data, header_dict = g_import.import_ref_data(args=args)
 
     # Prepare mesh
-    time2D, shell2D = np.meshgrid(time.real, k_vec_temp)
+    time2D, shell2D = np.meshgrid(time.real, PAR.k_vec_temp)
     energy_array = (u_data * np.conj(u_data)).real.T
-    # Prepare energy rel mean
-    if "rel_mean" in plt_args:
-        mean_energy = np.reshape(np.mean(energy_array, axis=1), (sdim, 1))
-        energy_rel_mean_array = energy_array - mean_energy
-    else:
-        energy_rel_mean_array = np.log(energy_array)
-        # energy_rel_mean_array = np.clip(energy_rel_mean_array, -15, None)
 
     fig, axes = plt.subplots(nrows=1, ncols=1)
 
     if "rel_mean" in plt_args:
+        # Prepare energy rel mean
+        mean_energy = np.reshape(np.mean(energy_array, axis=1), (PAR.sdim, 1))
+        energy_rel_mean_array = energy_array - mean_energy
+        # energy_rel_mean_array = np.clip(energy_rel_mean_array, -15, None)
+
         # Get cmap
         cmap, norm = g_plt_utils.get_cmap_distributed_around_zero(
             vmin=np.min(energy_rel_mean_array),
@@ -1011,6 +1130,7 @@ def plot_howmoller_diagram_u_energy(args=None, plt_args: list = ["rel_mean"]):
     else:
         cmap = "Reds"
         norm = None
+        energy_rel_mean_array = np.log(energy_array)
 
     # Make contourplot
     pcm = axes.contourf(
@@ -1046,15 +1166,15 @@ def plot_howmoller_diagram_helicity(args=None, plt_args: list = ["rel_mean"]):
     time, u_data, header_dict = g_import.import_ref_data(args=args)
 
     # Prepare mesh
-    time2D, shell2D = np.meshgrid(time.real, k_vec_temp)
-    helicity_array = (hel_pre_factor * (u_data * np.conj(u_data)).real).T
+    time2D, shell2D = np.meshgrid(time.real, PAR.k_vec_temp)
+    helicity_array = (PAR.hel_pre_factor * (u_data * np.conj(u_data)).real).T
 
     # Take absolute value
     helicity_array = np.abs(helicity_array)
 
     if "rel_mean" in plt_args:
         # Prepare helicity rel mean
-        mean_helicity = np.reshape(np.mean(helicity_array, axis=1), (sdim, 1))
+        mean_helicity = np.reshape(np.mean(helicity_array, axis=1), (PAR.sdim, 1))
         mean_helicity = np.abs(mean_helicity)
         helicity_rel_mean_array = np.log(helicity_array) - np.log(mean_helicity)
     else:
@@ -1119,11 +1239,16 @@ if __name__ == "__main__":
     stand_plot_arg_parser.setup_parser()
 
     args = stand_plot_arg_parser.args
+    # Initiate arrays
+    # initiate_PAR.sdim_arrays(args["PAR.sdim"])
+    # Initiate and update variables and arrays
+    sh_utils.update_dependent_params(PAR)
+    sh_utils.update_arrays(PAR)
 
     g_ui.confirm_run_setup(args)
 
     if "time_to_run" in args:
-        args["Nt"] = int(args["time_to_run"] / dt * sample_rate)
+        args["Nt"] = int(args["time_to_run"] / PAR.dt * PAR.sample_rate)
 
     # Perform plotting
     if "energy_plots" in args["plot_type"]:
@@ -1133,6 +1258,16 @@ if __name__ == "__main__":
         # Import reference data
         _, _temp_u_data, _temp_header_dict = g_import.import_ref_data(args=args)
         plot_energy_spectrum(
+            _temp_u_data,
+            _temp_header_dict,
+            plot_arg_list=["kolmogorov", "calculate"],
+            args=args,
+        )
+    if "vel_spectrum" in args["plot_type"]:
+        # Import reference data
+        _, _temp_u_data, _temp_header_dict = g_import.import_ref_data(args=args)
+
+        plot_velocity_spectrum(
             _temp_u_data,
             _temp_header_dict,
             plot_arg_list=["kolmogorov", "calculate"],

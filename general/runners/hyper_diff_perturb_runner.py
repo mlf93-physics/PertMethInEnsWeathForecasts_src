@@ -1,9 +1,20 @@
+"""Run perturbations with hyper-diffusion
+
+Example
+-------
+python ../general/runners/hyper_diff_perturb_runner.py
+--exp_setup=StandardSetup
+--pert_mode=rd
+
+"""
+
 import sys
 
 sys.path.append("..")
 import copy
 import pathlib as pl
-import shell_model_experiments.params as sh_params
+from shell_model_experiments.params.params import ParamsStructType
+from shell_model_experiments.params.params import PAR as PAR_SH
 import shell_model_experiments.utils.util_funcs as sh_utils
 import perturbation_runner as pt_runner
 import general.utils.saving.save_data_funcs as g_save
@@ -17,7 +28,7 @@ import general.utils.user_interface as g_ui
 import config as cfg
 
 # Get parameters for model
-params = sh_params
+params = PAR_SH
 
 # Set global params
 cfg.GLOBAL_PARAMS.ref_run = False
@@ -75,6 +86,10 @@ if __name__ == "__main__":
     pert_arg_setup = a_parsers.PerturbationArgSetup()
     pert_arg_setup.setup_parser()
     args = pert_arg_setup.args
+
+    # Initiate and update variables and arrays
+    sh_utils.update_dependent_params(params, sdim=int(args["sdim"]))
+    sh_utils.update_arrays(params)
 
     g_ui.confirm_run_setup(args)
 

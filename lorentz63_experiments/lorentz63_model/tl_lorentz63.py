@@ -96,7 +96,7 @@ def main(args=None):
         g_save.save_data(data_out, args=args)
 
     profiler.stop()
-    print(profiler.output_text())
+    print(profiler.output_text(color=True))
 
 
 if __name__ == "__main__":
