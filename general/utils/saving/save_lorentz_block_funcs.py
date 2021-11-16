@@ -2,7 +2,8 @@ import sys
 
 sys.path.append("..")
 import numpy as np
-import shell_model_experiments.params as sh_params
+from shell_model_experiments.params.params import ParamsStructType
+from shell_model_experiments.params.params import PAR as PAR_SH
 import lorentz63_experiments.params.params as l63_params
 import general.utils.saving.save_utils as g_save_utils
 from general.params.model_licences import Models
@@ -10,7 +11,7 @@ import config as cfg
 
 # Get parameters for model
 if cfg.MODEL == Models.SHELL_MODEL:
-    params = sh_params
+    params = PAR_SH
 elif cfg.MODEL == Models.LORENTZ63:
     params = l63_params
 
@@ -34,7 +35,7 @@ def save_lorentz_block_data(
     data_out = perturb_data[slice, :]
 
     expected_path = g_save_utils.generate_dir(
-        args["datapath"], subfolder=f"{args['exp_folder']}", args=args
+        args["datapath"], subfolder=f"{args['out_exp_folder']}", args=args
     )
     if perturb_position is not None:
         lorentz_header_extra = f"perturb_pos={int(perturb_position)}, "

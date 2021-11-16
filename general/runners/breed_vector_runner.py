@@ -22,16 +22,21 @@ import general.utils.saving.save_vector_funcs as v_save
 import general.utils.user_interface as g_ui
 import general.utils.util_funcs as g_utils
 import lorentz63_experiments.params.params as l63_params
-import shell_model_experiments.params as sh_params
+from shell_model_experiments.params.params import ParamsStructType
+from shell_model_experiments.params.params import PAR as PAR_SH
 import shell_model_experiments.utils.util_funcs as sh_utils
+import shell_model_experiments.utils.special_params as sh_sparams
+import lorentz63_experiments.params.special_params as l63_sparams
 from general.params.model_licences import Models
 from pyinstrument import Profiler
 
 # Get parameters for model
 if cfg.MODEL == Models.SHELL_MODEL:
-    params = sh_params
+    params = PAR_SH
+    sparams = sh_sparams
 elif cfg.MODEL == Models.LORENTZ63:
     params = l63_params
+    sparams = l63_sparams
 
 # Set global params
 cfg.GLOBAL_PARAMS.ref_run = False
@@ -125,7 +130,7 @@ def main(args: dict, exp_setup: dict = None):
         args["out_exp_folder"] = pl.Path(exp_setup["folder_name"])
         # Save breed vector data
         v_save.save_vector_unit(
-            rescaled_data[params.u_slice, :].T,
+            rescaled_data[sparams.u_slice, :].T,
             perturb_position=int(round(start_times[i] * params.tts)),
             unit=i,
             args=args,
@@ -148,8 +153,12 @@ if __name__ == "__main__":
     mult_pert_arg_setup.setup_parser()
     args = mult_pert_arg_setup.args
 
-    # Add ny argument
+    # Shell model specific
     if cfg.MODEL == Models.SHELL_MODEL:
+        # Initiate and update variables and arrays
+        sh_utils.update_dependent_params(params, sdim=int(args["sdim"]))
+        sh_utils.update_arrays(params)
+        # Add ny argument
         args["ny"] = sh_utils.ny_from_ny_n_and_forcing(
             args["forcing"], args["ny_n"], args["diff_exponent"]
         )
@@ -162,4 +171,4 @@ if __name__ == "__main__":
     profiler.start()
     main(args)
     profiler.stop()
-    print(profiler.output_text())
+    print(profiler.output_text(color=True))

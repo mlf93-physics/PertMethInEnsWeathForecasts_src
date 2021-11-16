@@ -1,7 +1,9 @@
 import os
 import pathlib as pl
 import subprocess as sp
-import shell_model_experiments.params as sh_params
+from shell_model_experiments.params.params import PAR as PAR_SH
+from shell_model_experiments.params.params import ParamsStructType
+import shell_model_experiments.utils.util_funcs as sh_utils
 import lorentz63_experiments.params.params as l63_params
 from general.params.model_licences import Models
 import config as cfg
@@ -40,7 +42,7 @@ def generate_standard_data_name(args):
     if cfg.MODEL == Models.SHELL_MODEL:
         file_name = (
             f"ny{adj_args['ny']}_ny_n{args['ny_n']}_t{adj_args['time_to_run']}"
-            + f"_n_f{sh_params.n_forcing}_f{adj_args['forcing']}"
+            + f"_n_f{PAR_SH.n_forcing}_f{adj_args['forcing']}"
             f"_kexp{args['diff_exponent']}"
         )
     elif cfg.MODEL == Models.LORENTZ63:
@@ -64,7 +66,15 @@ def args_to_string(args):
     if args is None:
         return ""
 
-    arg_str_list = [f"{key}={value}" for key, value in args.items()]
+    # Filter out arguments which are present in params struct if running the shell
+    # model
+    if cfg.MODEL == Models.SHELL_MODEL:
+        arg_str_list = [
+            f"{key}={value}" for key, value in args.items() if not hasattr(PAR_SH, key)
+        ]
+    elif cfg.MODEL == Models.LORENTZ63:
+        arg_str_list = [f"{key}={value}" for key, value in args.items()]
+
     arg_str = ", ".join(arg_str_list)
 
     return arg_str
@@ -147,11 +157,8 @@ def generate_header(
     header = args_to_string(args)
 
     if cfg.MODEL == Models.SHELL_MODEL:
-        header += (
-            f", n_f={sh_params.n_forcing}, dt={sh_params.dt}, epsilon={sh_params.epsilon}, "
-            + f"lambda={sh_params.lambda_const}, N_data={n_data}, "
-            + f"sample_rate={sh_params.sample_rate}, sdim={sh_params.sdim}, "
-        )
+        param_string = sh_utils.format_params_to_string()
+        header += f", N_data={n_data}, " + param_string + ", "
     elif cfg.MODEL == Models.LORENTZ63:
         header += (
             f", dt={l63_params.dt}, N_data={n_data}, "

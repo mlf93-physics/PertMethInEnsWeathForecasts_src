@@ -2,8 +2,6 @@ import sys
 
 sys.path.append("..")
 import numpy as np
-import shell_model_experiments.params as sh_params
-import shell_model_experiments.perturbations.normal_modes as sh_nm_estimator
 import lorentz63_experiments.params.params as l63_params
 import lorentz63_experiments.perturbations.normal_modes as l63_nm_estimator
 import general.utils.argument_parsers as a_parsers
@@ -12,14 +10,12 @@ from general.params.model_licences import Models
 import config as cfg
 
 # Get jacobian calculator for model
-if cfg.MODEL == Models.SHELL_MODEL:
-    init_jacobian = sh_nm_estimator.init_jacobian
-    calc_jacobian = sh_nm_estimator.calc_jacobian
-    params = sh_params
-elif cfg.MODEL == Models.LORENTZ63:
+if cfg.MODEL == Models.LORENTZ63:
     init_jacobian = l63_nm_estimator.init_jacobian
     calc_jacobian = l63_nm_estimator.calc_jacobian
     params = l63_params
+else:
+    raise TypeError("The present analysis are not set up for the Sabra model")
 
 
 def lyapunov_analyser(u_data):

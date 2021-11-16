@@ -77,6 +77,7 @@ class StandardModelArgSetup:
             self._parser.add_argument("--ny_n", default=19, type=int)
             self._parser.add_argument("--forcing", default=1, type=float)
             self._parser.add_argument("--diff_exponent", default=2, type=int)
+            self._parser.add_argument("--sdim", default=20, type=int)
 
         elif cfg.MODEL == Models.LORENTZ63:
             self._parser.add_argument("--sigma", default=10, type=float)
@@ -220,7 +221,8 @@ class PerturbationArgSetup:
         # Add optional arguments
         self._parser.add_argument("--endpoint", action="store_true")
         pert_mode_group = self._parser.add_mutually_exclusive_group(
-            required=cfg.LICENCE not in [EXP.COMPARISON, EXP.LYAPUNOV_VECTORS]
+            required=cfg.LICENCE
+            not in [EXP.COMPARISON, EXP.LYAPUNOV_VECTORS, EXP.LORENTZ_BLOCK]
         )
         pert_mode_group.add_argument(
             "--pert_mode", choices=["rd", "nm", "bv", "bv_eof"], type=str

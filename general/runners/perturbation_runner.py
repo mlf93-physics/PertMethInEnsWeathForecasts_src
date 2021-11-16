@@ -34,25 +34,31 @@ import general.utils.saving.save_perturbation as pt_save
 import general.utils.user_interface as g_ui
 import general.utils.util_funcs as g_utils
 import lorentz63_experiments.params.params as l63_params
+import lorentz63_experiments.params.special_params as l63_sparams
 import lorentz63_experiments.perturbations.normal_modes as l63_nm_estimator
 import lorentz63_experiments.utils.util_funcs as ut_funcs
 import numpy as np
-import shell_model_experiments.params as sh_params
 import shell_model_experiments.perturbations.normal_modes as sh_nm_estimator
+import shell_model_experiments.utils.special_params as sh_sparams
+import shell_model_experiments.utils.util_funcs as sh_utils
 from general.params.experiment_licences import Experiments as EXP
 from general.params.model_licences import Models
 from general.utils.module_import.type_import import *
 from lorentz63_experiments.lorentz63_model.lorentz63 import run_model as l63_model
 from lorentz63_experiments.lorentz63_model.tl_lorentz63 import run_model as l63_tl_model
 from pyinstrument import Profiler
+from shell_model_experiments.params.params import PAR as PAR_SH
+from shell_model_experiments.params.params import ParamsStructType
 from shell_model_experiments.sabra_model.sabra_model import run_model as sh_model
 from shell_model_experiments.sabra_model.tl_sabra_model import run_model as sh_tl_model
 
 # Get parameters for model
 if cfg.MODEL == Models.SHELL_MODEL:
-    params = sh_params
+    params = PAR_SH
+    sparams = sh_sparams
 elif cfg.MODEL == Models.LORENTZ63:
     params = l63_params
+    sparams = l63_sparams
 
 # Set global params
 cfg.GLOBAL_PARAMS.ref_run = False
@@ -93,7 +99,7 @@ def perturbation_runner(
     # Prepare array for saving
     data_out = np.zeros(
         (int(args["Nt"] * params.sample_rate) + args["endpoint"] * 1, params.sdim + 1),
-        dtype=params.dtype,
+        dtype=sparams.dtype,
     )
 
     print(
@@ -106,27 +112,23 @@ def perturbation_runner(
         if cfg.MODEL.submodel is None:
             sh_model(
                 u_old,
-                du_array,
                 data_out,
                 args["Nt"] + args["endpoint"] * 1,
                 args["ny"],
                 args["forcing"],
                 args["diff_exponent"],
+                params,
             )
         elif cfg.MODEL.submodel == "TL":
-            # Prepare prefactor
-            prefactor_reshaped = np.reshape(params.pre_factor, (-1, 1))
-
             sh_tl_model(
                 u_old,
                 np.copy(u_ref[:, run_count]),
-                du_array,
                 data_out,
                 args["Nt"] + args["endpoint"] * 1,
                 args["ny"],
                 args["diff_exponent"],
                 args["forcing"],
-                prefactor_reshaped,
+                params,
             )
         else:
             g_exceptions.ModelError(
@@ -321,7 +323,7 @@ def prepare_perturbations(
         elif args["pert_mode"] == "rd":
             print("\nRunning with RANDOM perturbations\n")
             perturb_vectors = np.ones(
-                (params.sdim, args["n_profiles"]), dtype=params.dtype
+                (params.sdim, args["n_profiles"]), dtype=sparams.dtype
             )
     # Check if single shell perturb should be activated
     elif args["single_shell_perturb"] is not None:
@@ -437,6 +439,8 @@ def main_setup(
     exp_setup=None,
     u_ref=None,
 ):
+    # Initiate arrays
+    # params.initiate_sdim_arrays(args["sdim"])
 
     times_to_run, Nt_array = prepare_run_times(args)
 
@@ -547,6 +551,12 @@ if __name__ == "__main__":
     pert_arg_setup.validate_arguments()
     args = pert_arg_setup.args
 
+    if cfg.MODEL == Models.SHELL_MODEL:
+        # Initiate and update variables and arrays
+        sh_utils.update_dependent_params(params, sdim=int(args["sdim"]))
+        sh_utils.update_arrays(params)
+    # Initiate arrays
+    # params.initiate_sdim_arrays(args["sdim"])
     args = g_utils.adjust_start_times_with_offset(args)
 
     g_ui.confirm_run_setup(args)
@@ -560,4 +570,4 @@ if __name__ == "__main__":
     main_run(processes, args=args)
 
     profiler.stop()
-    print(profiler.output_text())
+    print(profiler.output_text(color=True))

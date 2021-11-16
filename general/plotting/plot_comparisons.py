@@ -1,3 +1,13 @@
+"""Make plots to compare the different perturbation methods
+
+Example
+-------
+python ../general/plotting/plot_comparisons.py
+--plot_type=error_norm_compare
+--exp_folder=test1_new_params
+
+"""
+
 import sys
 
 sys.path.append("..")
@@ -18,13 +28,15 @@ import lorentz63_experiments.plotting.plot_data as l63_plot
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sb
-import shell_model_experiments.params as sh_params
 import shell_model_experiments.plotting.plot_data as sh_plot
+import shell_model_experiments.utils.util_funcs as sh_utils
 from general.params.model_licences import Models
+from shell_model_experiments.params.params import PAR as PAR_SH
+from shell_model_experiments.params.params import ParamsStructType
 
 # Get parameters for model
 if cfg.MODEL == Models.SHELL_MODEL:
-    params = sh_params
+    params = PAR_SH
 elif cfg.MODEL == Models.LORENTZ63:
     params = l63_params
 
@@ -215,6 +227,14 @@ if __name__ == "__main__":
     compare_plot_arg_parser = a_parsers.ComparisonPlottingArgParser()
     compare_plot_arg_parser.setup_parser()
     args: dict = compare_plot_arg_parser.args
+
+    # Initiate variables
+    # params.initiate_sdim_arrays(args["sdim"])
+    # Shell model specific
+    if cfg.MODEL == Models.SHELL_MODEL:
+        # Initiate and update variables and arrays
+        sh_utils.update_dependent_params(params)
+        sh_utils.update_arrays(params)
 
     g_ui.confirm_run_setup(args)
 

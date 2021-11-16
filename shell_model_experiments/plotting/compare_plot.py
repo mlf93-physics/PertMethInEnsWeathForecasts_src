@@ -4,18 +4,18 @@ sys.path.append("..")
 import pathlib as pl
 
 import config as cfg
-from general.utils.module_import.type_import import *
 import general.utils.argument_parsers as a_parsers
 import general.utils.importing.import_data_funcs as g_import
 import general.utils.plot_utils as g_plt_utils
 import general.utils.user_interface as g_ui
 import general.utils.util_funcs as g_utils
-from general.plotting.plot_params import *
-import shell_model_experiments.analyses.analyse_data as sh_analysis
 import matplotlib.pyplot as plt
 import numpy as np
-from shell_model_experiments.params.params import *
-
+import shell_model_experiments.analyses.analyse_data as sh_analysis
+import shell_model_experiments.utils.util_funcs as ut_funcs
+from general.plotting.plot_params import *
+from general.utils.module_import.type_import import *
+from shell_model_experiments.params.params import PAR, ParamsStructType
 import plot_data as sh_plt_data
 
 
@@ -171,7 +171,7 @@ def plot_period4_spectrum_ratio(args: dict):
         # Fit data
         slope, intercept = sh_analysis.fit_spectrum_slope(u_data, header_dict)
         # Set ref data from slope and intercept
-        ref_data = np.exp(slope * np.log2(k_vec_temp) + intercept)
+        ref_data = np.exp(slope * np.log2(PAR.k_vec_temp) + intercept)
 
         # Continue if hyper diff is not on
         if header_dict["diff_exponent"] == 2:
@@ -181,7 +181,7 @@ def plot_period4_spectrum_ratio(args: dict):
         rel_u_data = u_data / ref_data
 
         axes[2].plot(
-            np.log2(k_vec_temp[:shell_limit]),
+            np.log2(PAR.k_vec_temp[:shell_limit]),
             rel_u_data[0, :shell_limit],
             color=cmap_list[i],
         )
@@ -190,8 +190,8 @@ def plot_period4_spectrum_ratio(args: dict):
         _slice_lower = np.s_[1:shell_limit:step]
         _slice_upper = np.s_[2:shell_limit:step]
 
-        k_vectors_upper = np.log2(k_vec_temp[_slice_upper])
-        k_vectors_lower = np.log2(k_vec_temp[_slice_lower])
+        k_vectors_upper = np.log2(PAR.k_vec_temp[_slice_upper])
+        k_vectors_lower = np.log2(PAR.k_vec_temp[_slice_lower])
         if header_dict["ny_n"] == 13:
             k_vectors_upper += step
             k_vectors_lower += step
@@ -276,7 +276,7 @@ def plot_period4_spectrum_ratio_vs_alpha(args: dict):
         # Fit data
         slope, intercept = sh_analysis.fit_spectrum_slope(u_data, header_dict)
         # Set ref data from slope and intercept
-        ref_data = np.exp(slope * np.log2(k_vec_temp) + intercept)
+        ref_data = np.exp(slope * np.log2(PAR.k_vec_temp) + intercept)
 
         # Continue if hyper diff is not on
         if header_dict["diff_exponent"] == 2:
@@ -337,6 +337,12 @@ if __name__ == "__main__":
     stand_plot_arg_parser.setup_parser()
 
     args = stand_plot_arg_parser.args
+
+    # Initiate variables
+    # initiate_sdim_arrays(args["sdim"])
+    # Initiate and update variables and arrays
+    ut_funcs.update_dependent_params(PAR)
+    ut_funcs.update_arrays(PAR)
 
     g_ui.confirm_run_setup(args)
 

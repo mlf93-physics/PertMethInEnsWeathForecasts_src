@@ -3,32 +3,34 @@ methods [rd, bv, bv-eof, ...]. Used to compare the different perturbation method
 
 Example
 -------
-
+python ../general/comparison_runners/compare_perturbations_runner.py --exp_setup=TestRun0
 
 """
 
 import sys
 
 sys.path.append("..")
-import pathlib as pl
 import copy
-import shell_model_experiments.params as sh_params
-import shell_model_experiments.utils.util_funcs as sh_utils
-import lorentz63_experiments.params.params as l63_params
-import general.utils.experiments.exp_utils as exp_utils
-import general.utils.user_interface as g_ui
-import general.utils.argument_parsers as a_parsers
-import general.utils.runner_utils as r_utils
-from general.runners.breed_vector_runner import main as bv_runner
-import general.runners.perturbation_runner as pt_runner
-from general.params.experiment_licences import Experiments as exp
-import general.utils.util_funcs as g_utils
-from general.params.model_licences import Models
+import pathlib as pl
+
 import config as cfg
+import general.runners.perturbation_runner as pt_runner
+import general.utils.argument_parsers as a_parsers
+import general.utils.experiments.exp_utils as exp_utils
+import general.utils.runner_utils as r_utils
+import general.utils.user_interface as g_ui
+import general.utils.util_funcs as g_utils
+import lorentz63_experiments.params.params as l63_params
+import shell_model_experiments.utils.util_funcs as sh_utils
+from general.params.experiment_licences import Experiments as exp
+from general.params.model_licences import Models
+from general.runners.breed_vector_runner import main as bv_runner
+from shell_model_experiments.params.params import PAR as PAR_SH
+from shell_model_experiments.params.params import ParamsStructType
 
 # Get parameters for model
 if cfg.MODEL == Models.SHELL_MODEL:
-    params = sh_params
+    params = PAR_SH
 elif cfg.MODEL == Models.LORENTZ63:
     params = l63_params
 
@@ -259,8 +261,12 @@ if __name__ == "__main__":
     mult_pert_arg_setup.setup_parser()
     args = mult_pert_arg_setup.args
 
-    # Add ny argument
+    # Shell model specific
     if cfg.MODEL == Models.SHELL_MODEL:
+        # Initiate and update variables and arrays
+        sh_utils.update_dependent_params(params, sdim=int(args["sdim"]))
+        sh_utils.update_arrays(params)
+        # Add ny argument
         args["ny"] = sh_utils.ny_from_ny_n_and_forcing(
             args["forcing"], args["ny_n"], args["diff_exponent"]
         )

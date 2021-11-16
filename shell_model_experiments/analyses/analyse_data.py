@@ -1,8 +1,9 @@
 import sys
 
 sys.path.append("..")
-import config as cfg
 import pathlib as pl
+
+import config as cfg
 import general.utils.argument_parsers as a_parsers
 import general.utils.exceptions as g_exceptions
 import general.utils.importing.import_data_funcs as g_import
@@ -11,8 +12,9 @@ import general.utils.user_interface as g_ui
 import general.utils.util_funcs as g_utils
 import numpy as np
 import scipy.stats as sp_stats
+import shell_model_experiments.utils.util_funcs as ut_funcs
 from general.utils.module_import.type_import import *
-from shell_model_experiments.params.params import *
+from shell_model_experiments.params.params import PAR, ParamsStructType
 
 cfg.GLOBAL_PARAMS.ref_run = False
 
@@ -52,7 +54,7 @@ def get_mean_helicity(u_data: np.ndarray) -> np.ndarray:
         The mean helicity
     """
     mean_energy = get_mean_energy(u_data)
-    mean_helicity = hel_pre_factor * mean_energy
+    mean_helicity = PAR.hel_pre_factor * mean_energy
 
     return mean_helicity
 
@@ -165,8 +167,8 @@ def fit_spectrum_slope(
     """
     # Take only up to ny_n
     shell_limit = int(header_dict["ny_n"])
-    mean_u_data = mean_u_data[0, :(shell_limit)]
-    k_vectors = np.log2(k_vec_temp[:(shell_limit)])
+    mean_u_data = mean_u_data[:(shell_limit)]
+    k_vectors = np.log2(PAR.k_vec_temp[:(shell_limit)])
 
     # Prepare data
     logged_mean_u_data = np.log(mean_u_data.real.ravel())
@@ -198,9 +200,11 @@ def temp_energy_relation(args):
 
         theta_n_2 = np.angle(u_data[0, shellN - 2])
 
-        En_3_factor = lambda_const ** 2 * (
-            1 + (epsilon / (epsilon - 1)) ** 2
-        ) + 2 * lambda_const * epsilon / (epsilon - 1) * np.cos(2 * theta_n_2)
+        En_3_factor = PAR.lambda_const ** 2 * (
+            1 + (PAR.epsilon / (PAR.epsilon - 1)) ** 2
+        ) + 2 * PAR.lambda_const * PAR.epsilon / (PAR.epsilon - 1) * np.cos(
+            2 * theta_n_2
+        )
 
         print("file_path", file_path.name)
         print("$E_{{N-3}}$ factor", En_3_factor)
@@ -221,6 +225,10 @@ if __name__ == "__main__":
     args = stand_plot_arg_parser.args
 
     g_ui.confirm_run_setup(args)
+
+    # Initiate and update variables and arrays
+    ut_funcs.update_dependent_params(PAR, sdim=int(args["sdim"]))
+    ut_funcs.update_arrays(PAR)
 
     # analyse_mean_energy_spectra(args)
     analyse_mean_helicity_spectra(args)
