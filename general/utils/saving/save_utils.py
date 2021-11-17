@@ -43,7 +43,8 @@ def generate_standard_data_name(args):
         file_name = (
             f"ny{adj_args['ny']}_ny_n{args['ny_n']}_t{adj_args['time_to_run']}"
             + f"_n_f{PAR_SH.n_forcing}_f{adj_args['forcing']}"
-            f"_kexp{args['diff_exponent']}"
+            + f"_sdim{PAR_SH.sdim}"
+            + f"_kexp{args['diff_exponent']}"
         )
     elif cfg.MODEL == Models.LORENTZ63:
         file_name = (

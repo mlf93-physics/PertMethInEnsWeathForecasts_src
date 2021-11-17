@@ -251,25 +251,44 @@ def plot_velocity_spectrum(
 
     # React on plot_arg options
     if "calculate" in plot_arg_list:
-        # Calculate mean energy
-        velocity = np.mean(np.abs(u_data), axis=0)
+        # Calculate mean velocity
+        if "triad_mean" in plot_arg_list:
+            # Triad mean
+            velocity = np.mean(
+                np.abs((u_data[:, :-2] * u_data[:, 1:-1] * u_data[:, 2:])) ** (1 / 3),
+                axis=0,
+            )
+        else:
+            # Shell mean
+            velocity = np.mean(
+                np.abs(u_data),
+                axis=0,
+            )
     else:
         velocity = u_data.real.ravel()
 
     # Plot Kolmogorov scaling
     if "kolmogorov" in plot_arg_list:
-        axes.plot(
-            np.log2(PAR.k_vec_temp),
-            np.exp(3) * PAR.k_vec_temp ** (-2 / 3),
-            "k--",
-            label="$k^{{-2/3}}$",
-        )
-        axes.plot(
-            np.log2(PAR.k_vec_temp),
-            np.exp(3) * PAR.k_vec_temp ** (-1 / 3),
-            "k:",
-            label="$k^{{-1/3}}$",
-        )
+        if "triad_mean" in plot_arg_list:
+            axes.plot(
+                np.log2(PAR.k_vec_temp),
+                np.exp(-8) * PAR.k_vec_temp ** (-1 / 2),
+                "k--",
+                label="$k^{{-1/2}}$",
+            )
+        else:
+            axes.plot(
+                np.log2(PAR.k_vec_temp),
+                np.exp(-11) * PAR.k_vec_temp ** (-2 / 3),
+                "k--",
+                label="$k^{{-2/3}}$",
+            )
+            axes.plot(
+                np.log2(PAR.k_vec_temp),
+                np.exp(3) * PAR.k_vec_temp ** (-1 / 3),
+                "k:",
+                label="$k^{{-1/3}}$",
+            )
 
     label: str = (
         plot_kwargs["label"]
@@ -299,16 +318,24 @@ def plot_velocity_spectrum(
 
     # Plot energy spectrum
     axes.plot(
-        k_vectors,
+        k_vectors[1:-1] if "triad_mean" in plot_arg_list else k_vectors,
         velocity,
-        label=label,
+        label=label if "triad_mean" not in plot_arg_list else None,
         color=color,
     )
+
+    # Prepare strings
+    if "triad_mean" in plot_arg_list:
+        ylabel = "$\\langle U_n \\rangle$= $\\langle (u_{{n-1}} u_n u_{{n+1}})^{{1/3}}\\rangle$"
+        title_header = "Mean U spectrum, inf. hyper diff."
+    else:
+        ylabel = "$\\langle u_n \\rangle$"
+        title_header = "Velocity spectrum"
 
     # Axes setup
     axes.set_yscale("log")
     axes.set_xlabel("k")
-    axes.set_ylabel("Energy")
+    axes.set_ylabel(ylabel)
     axes.xaxis.set_major_locator(mpl_ticker.MaxNLocator(integer=True))
 
     # Limit y axis if necessary
@@ -328,10 +355,11 @@ def plot_velocity_spectrum(
         title = g_plt_utils.generate_title(
             args,
             header_dict=header_dict,
-            title_header="Velocity spectrum",
+            title_header=title_header,
             title_suffix=title_suffix,
         )
     axes.set_title(title)
+    plt.legend()
 
 
 def plot_energy_per_shell(
@@ -435,104 +463,6 @@ def plot_energy_per_shell(
 
             if idx + 1 >= args["n_files"]:
                 break
-
-
-def plot_velocity_spectrum(
-    u_data: np.ndarray,
-    header_dict: dict,
-    axes: plt.Axes = None,
-    plot_arg_list: list = ["kolmogorov", "calculate"],
-    plot_kwargs: dict = {},
-    args: dict = {},
-):
-    # Make axes if not present
-    if axes is None:
-        fig = plt.figure()
-        axes = plt.axes()
-
-    # React on plot_arg options
-    if "calculate" in plot_arg_list:
-        # Calculate mean energy
-        velocity = np.mean(np.abs(u_data), axis=0)
-    else:
-        velocity = u_data.real.ravel()
-
-    # Plot Kolmogorov scaling
-    if "kolmogorov" in plot_arg_list:
-        axes.plot(
-            np.log2(k_vec_temp),
-            np.exp(3) * k_vec_temp ** (-2 / 3),
-            "k--",
-            label="$k^{{-2/3}}$",
-        )
-        axes.plot(
-            np.log2(k_vec_temp),
-            np.exp(3) * k_vec_temp ** (-1 / 3),
-            "k:",
-            label="$k^{{-1/3}}$",
-        )
-
-    label: str = (
-        plot_kwargs["label"]
-        if "label" in plot_kwargs
-        else (
-            f"$n_{{\\nu}}$={int(header_dict['ny_n'])}, "
-            + f"$\\alpha$={int(header_dict['diff_exponent'])}"
-        )
-    )
-    title_suffix: str = ""
-    color = plot_kwargs["color"] if "color" in plot_kwargs else None
-
-    # Fit the slope of the spectrum
-    k_vectors = np.log2(k_vec_temp)
-    if "fit_slope" in plot_arg_list or "rel_fit" in plot_arg_list:
-        slope, intercept = sh_analysis.fit_spectrum_slope(velocity, header_dict)
-    if "fit_slope" in plot_arg_list:
-        label += f", slope={slope:.2e}, b={intercept:.2e}"
-        slope_plot = axes.plot(k_vectors, np.exp(slope * k_vectors + intercept), "--")
-        if color is None:
-            color = slope_plot[0].get_color()
-
-    # Normlize energy spectrum to fit
-    if "rel_fit" in plot_arg_list:
-        velocity /= np.exp(slope * np.log2(k_vec_temp) + intercept)
-        title_suffix += "rel. fit, "
-
-    # Plot energy spectrum
-    axes.plot(
-        k_vectors,
-        velocity,
-        label=label,
-        color=color,
-    )
-
-    # Axes setup
-    axes.set_yscale("log")
-    axes.set_xlabel("k")
-    axes.set_ylabel("Energy")
-    axes.xaxis.set_major_locator(mpl_ticker.MaxNLocator(integer=True))
-
-    # Limit y axis if necessary
-    min_velocity = np.min(velocity)
-    if args["ylim"] is not None:
-        axes.set_ylim(args["ylim"][0], args["ylim"][1])
-    elif min_velocity > 0:
-        if np.log(min_velocity) < -6:
-            axes.set_ylim(1e-6, 10)
-    else:
-        axes.set_ylim(1e-6, 10)
-
-    # Title setup
-    if "title" in plot_kwargs:
-        title = plot_kwargs["title"]
-    else:
-        title = g_plt_utils.generate_title(
-            args,
-            header_dict=header_dict,
-            title_header="Velocity spectrum",
-            title_suffix=title_suffix,
-        )
-    axes.set_title(title)
 
 
 def plots_related_to_energy(args=None, axes=None, plot_args=["detailed_title"]):
@@ -1263,17 +1193,6 @@ if __name__ == "__main__":
             plot_arg_list=["kolmogorov", "calculate"],
             args=args,
         )
-    if "vel_spectrum" in args["plot_type"]:
-        # Import reference data
-        _, _temp_u_data, _temp_header_dict = g_import.import_ref_data(args=args)
-
-        plot_velocity_spectrum(
-            _temp_u_data,
-            _temp_header_dict,
-            plot_arg_list=["kolmogorov", "calculate"],
-            args=args,
-        )
-
     if "vel_spectrum" in args["plot_type"]:
         # Import reference data
         _, _temp_u_data, _temp_header_dict = g_import.import_ref_data(args=args)

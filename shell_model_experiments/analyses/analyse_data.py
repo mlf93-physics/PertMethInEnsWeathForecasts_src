@@ -231,5 +231,6 @@ if __name__ == "__main__":
     ut_funcs.update_arrays(PAR)
 
     # analyse_mean_energy_spectra(args)
-    analyse_mean_helicity_spectra(args)
+    # analyse_mean_helicity_spectra(args)
+    analyse_mean_velocity_spectra(args)
     # temp_energy_relation(args)
