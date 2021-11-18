@@ -2,28 +2,32 @@ import sys
 
 sys.path.append("..")
 import itertools as it
-import re
 import json
 import pathlib as pl
-import numpy as np
-from general.utils.module_import.type_import import *
-from shell_model_experiments.params.params import ParamsStructType
-from shell_model_experiments.params.params import PAR as PAR_SH
-import shell_model_experiments.utils.special_params as sh_sparams
-import lorentz63_experiments.params.special_params as l63_sparams
-import lorentz63_experiments.params.params as l63_params
-from general.params.model_licences import Models
-import general.utils.util_funcs as g_utils
-import general.utils.exceptions as g_exceptions
-from general.utils.module_import.type_import import *
-import general.utils.custom_decorators as dec
-import config as cfg
+import re
 
-# Get parameters for model
+import config as cfg
+import general.utils.custom_decorators as dec
+import general.utils.exceptions as g_exceptions
+import general.utils.util_funcs as g_utils
+import numpy as np
+from general.params.model_licences import Models
+from general.utils.module_import.type_import import *
+
 if cfg.MODEL == Models.SHELL_MODEL:
-    params = PAR_SH
+    # Shell model specific imports
+    import shell_model_experiments.utils.special_params as sh_sparams
+    from shell_model_experiments.params.params import PAR, ParamsStructType
+
+    # Get parameters for model
+    params = PAR
     sparams = sh_sparams
 elif cfg.MODEL == Models.LORENTZ63:
+    # Get parameters for model
+    import lorentz63_experiments.params.params as l63_params
+    import lorentz63_experiments.params.special_params as l63_sparams
+
+    # Get parameters for model
     params = l63_params
     sparams = l63_sparams
 

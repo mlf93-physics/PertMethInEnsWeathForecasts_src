@@ -33,30 +33,39 @@ import general.utils.saving.save_data_funcs as g_save
 import general.utils.saving.save_perturbation as pt_save
 import general.utils.user_interface as g_ui
 import general.utils.util_funcs as g_utils
-import lorentz63_experiments.params.params as l63_params
-import lorentz63_experiments.params.special_params as l63_sparams
-import lorentz63_experiments.perturbations.normal_modes as l63_nm_estimator
-import lorentz63_experiments.utils.util_funcs as ut_funcs
 import numpy as np
-import shell_model_experiments.perturbations.normal_modes as sh_nm_estimator
-import shell_model_experiments.utils.special_params as sh_sparams
-import shell_model_experiments.utils.util_funcs as sh_utils
 from general.params.experiment_licences import Experiments as EXP
 from general.params.model_licences import Models
 from general.utils.module_import.type_import import *
-from lorentz63_experiments.lorentz63_model.lorentz63 import run_model as l63_model
-from lorentz63_experiments.lorentz63_model.tl_lorentz63 import run_model as l63_tl_model
 from pyinstrument import Profiler
-from shell_model_experiments.params.params import PAR as PAR_SH
-from shell_model_experiments.params.params import ParamsStructType
-from shell_model_experiments.sabra_model.tl_sabra_model import run_model as sh_tl_model
-from shell_model_experiments.sabra_model.sabra_model import run_model as sh_model
 
-# Get parameters for model
 if cfg.MODEL == Models.SHELL_MODEL:
-    params = PAR_SH
+    # Shell model specific imports
+    import shell_model_experiments.perturbations.normal_modes as sh_nm_estimator
+    import shell_model_experiments.utils.special_params as sh_sparams
+    import shell_model_experiments.utils.util_funcs as sh_utils
+    from shell_model_experiments.params.params import PAR
+    from shell_model_experiments.params.params import ParamsStructType
+    from shell_model_experiments.sabra_model.tl_sabra_model import (
+        run_model as sh_tl_model,
+    )
+    from shell_model_experiments.sabra_model.sabra_model import run_model as sh_model
+
+    # Get parameters for model
+    params = PAR
     sparams = sh_sparams
 elif cfg.MODEL == Models.LORENTZ63:
+    # Lorentz-63 model specific imports
+    import lorentz63_experiments.params.params as l63_params
+    import lorentz63_experiments.params.special_params as l63_sparams
+    import lorentz63_experiments.perturbations.normal_modes as l63_nm_estimator
+    import lorentz63_experiments.utils.util_funcs as ut_funcs
+    from lorentz63_experiments.lorentz63_model.lorentz63 import run_model as l63_model
+    from lorentz63_experiments.lorentz63_model.tl_lorentz63 import (
+        run_model as l63_tl_model,
+    )
+
+    # Get parameters for model
     params = l63_params
     sparams = l63_sparams
 
