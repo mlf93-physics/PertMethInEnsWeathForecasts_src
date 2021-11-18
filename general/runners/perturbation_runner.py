@@ -49,8 +49,8 @@ from lorentz63_experiments.lorentz63_model.tl_lorentz63 import run_model as l63_
 from pyinstrument import Profiler
 from shell_model_experiments.params.params import PAR as PAR_SH
 from shell_model_experiments.params.params import ParamsStructType
-from shell_model_experiments.sabra_model.sabra_model import run_model as sh_model
 from shell_model_experiments.sabra_model.tl_sabra_model import run_model as sh_tl_model
+from shell_model_experiments.sabra_model.sabra_model import run_model as sh_model
 
 # Get parameters for model
 if cfg.MODEL == Models.SHELL_MODEL:
@@ -109,8 +109,15 @@ def perturbation_runner(
         + f" {run_count % args['n_runs_per_profile']}"
     )
     if cfg.MODEL == Models.SHELL_MODEL:
+        # Get diffusion functions
+        if args["diff_type"] == "inf_hyper":
+            diff_function = ut_funcs.infinit_hyper_diffusion
+        else:
+            diff_function = ut_funcs.normal_diffusion
+
         if cfg.MODEL.submodel is None:
             sh_model(
+                diff_function,
                 u_old,
                 data_out,
                 args["Nt"] + args["endpoint"] * 1,
@@ -138,31 +145,28 @@ def perturbation_runner(
     elif cfg.MODEL == Models.LORENTZ63:
         if cfg.MODEL.submodel is None:
             # Model specific setup
-            deriv_matrix = ut_funcs.setup_deriv_matrix(args)
+            lorentz_matrix = ut_funcs.setup_lorentz_matrix(args)
             l63_model(
                 u_old,
                 du_array,
-                deriv_matrix,
+                lorentz_matrix,
                 data_out,
                 args["Nt"] + args["endpoint"] * 1,
             )
         elif cfg.MODEL.submodel == "TL":
-            deriv_matrix = l63_nm_estimator.init_jacobian(args)
+            jacobian_matrix = l63_nm_estimator.init_jacobian(args)
+            lorentz_matrix = ut_funcs.setup_lorentz_matrix(args)
 
             l63_tl_model(
                 u_old,
                 du_array,
-                u_ref,
-                deriv_matrix,
+                np.copy(u_ref[:, run_count]),
+                lorentz_matrix,
+                jacobian_matrix,
                 data_out,
                 args["Nt"] + args["endpoint"] * 1,
                 r_const=args["r_const"],
             )
-
-            # Add reference data to TL model trajectory, since only the perturbation
-            # is integrated in the model
-            data_out[:, 1:] += u_ref
-
         else:
             g_exceptions.ModelError(
                 "Submodel invalid or not implemented yet",

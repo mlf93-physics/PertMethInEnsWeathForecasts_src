@@ -11,7 +11,7 @@ from shell_model_experiments.params.params import ParamsStructType
 from shell_model_experiments.params.params import PAR as PAR_SH
 import shell_model_experiments.utils.special_params as sh_sparams
 import lorentz63_experiments.params.special_params as l63_sparams
-import lorentz63_experiments.params as l63_params
+import lorentz63_experiments.params.params as l63_params
 from general.params.model_licences import Models
 import general.utils.util_funcs as g_utils
 import general.utils.exceptions as g_exceptions

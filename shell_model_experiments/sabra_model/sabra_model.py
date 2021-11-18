@@ -30,7 +30,7 @@ profiler = Profiler()
 cfg.GLOBAL_PARAMS.record_max_time = 30
 
 
-@dec.diffusion_type_decorator
+# @dec.diffusion_type_decorator
 @nb.njit(
     [
         (nb.types.Array(nb.types.complex128, 1, "C", readonly=False))(
@@ -111,6 +111,12 @@ def main(args=None):
     # Write ref info file
     g_save.save_reference_info(args)
 
+    # Get diffusion functions
+    if args["diff_type"] == "inf_hyper":
+        diff_function = ut_funcs.infinit_hyper_diffusion
+    else:
+        diff_function = ut_funcs.normal_diffusion
+
     profiler.start()
     print(
         f'\nRunning sabra model for {args["Nt"]*PAR.dt:.2f}s with a burn-in time'
@@ -126,6 +132,7 @@ def main(args=None):
 
         print(f'running burn-in phase of {args["burn_in_time"]}s\n')
         u_old = run_model(
+            diff_function,
             u_old,
             data_out,
             int(args["burn_in_time"] / PAR.dt),
@@ -133,7 +140,6 @@ def main(args=None):
             args["forcing"],
             args["diff_exponent"],
             PAR,
-            diff_type=args["diff_type"],
         )
 
     for ir in range(args["n_records"]):
@@ -153,6 +159,7 @@ def main(args=None):
         # Run model
         print(f'running record {ir + 1}/{args["n_records"]}')
         u_old = run_model(
+            diff_function,
             u_old,
             data_out,
             int(out_array_size / PAR.sample_rate),
@@ -160,7 +167,6 @@ def main(args=None):
             args["forcing"],
             args["diff_exponent"],
             PAR,
-            diff_type=args["diff_type"],
         )
 
         # Add record_id to datafile header

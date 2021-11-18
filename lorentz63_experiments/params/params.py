@@ -17,4 +17,4 @@ stt = dt / sample_rate
 sdim = 3
 # Arrays
 du_array = np.zeros(sdim, dtype=np.float64)
-deriv_matrix = np.zeros((sdim, sdim))
+lorentz_matrix = np.zeros((sdim, sdim))

@@ -1,4 +1,14 @@
 {
+    "TestRun0": {
+        "folder_name": "pt_vectors/temp_test1",
+        "sub_exp_folder": "perturb_data",
+        "integration_time": 1,
+        "n_vectors": 4,
+        "vector_offset": 1,
+        "eval_times": [
+            1
+        ]
+    },
     "TestRun1": {
         "folder_name": "pt_vectors/lorentz63_lyapunov_vectors_it1.0_eval",
         "sub_exp_folder": "perturb_data",

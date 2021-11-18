@@ -140,8 +140,8 @@ def tl_derivative_evaluator(
         The updated derivative of the lorentz velocities
 
     """
-    # Update the deriv_matrix
-    j_matrix: np.ndarray = sh_nm_estimator.calc_jacobian(
+    # Update the jacobian matrix
+    jacobian_matrix: np.ndarray = sh_nm_estimator.calc_jacobian(
         u_ref,
         diff_exponent,
         local_ny,
@@ -151,7 +151,7 @@ def tl_derivative_evaluator(
 
     # Calculate change in u (du_array)
     PAR.du_array[PAR.bd_size : -PAR.bd_size] = (
-        j_matrix @ u_old[PAR.bd_size : -PAR.bd_size]
+        jacobian_matrix @ u_old[PAR.bd_size : -PAR.bd_size]
     )
 
     return PAR.du_array

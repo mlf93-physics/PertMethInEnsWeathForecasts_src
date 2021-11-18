@@ -218,16 +218,16 @@ def plot_energy_dist(args):
 
     coll2 = Line3DCollection(segments, cmap="coolwarm")
 
-    # Calculate deriv_matrix
-    deriv_matrix = l_utils.setup_deriv_matrix(args)
-    deriv_matrix_array = np.repeat(
-        np.reshape(deriv_matrix, (1, sdim, sdim)), u_data.shape[0], axis=0
+    # Calculate lorentz_matrix
+    lorentz_matrix = l_utils.setup_lorentz_matrix(args)
+    lorentz_matrix_array = np.repeat(
+        np.reshape(lorentz_matrix, (1, sdim, sdim)), u_data.shape[0], axis=0
     )
-    deriv_matrix_array[:, 1, 2] = u_data[:, 0]
-    deriv_matrix_array[:, 2, 0] = u_data[:, 1]
+    lorentz_matrix_array[:, 1, 2] = u_data[:, 0]
+    lorentz_matrix_array[:, 2, 0] = u_data[:, 1]
 
     # Calculate du_array
-    du_data = deriv_matrix_array @ np.reshape(u_data, (*u_data.shape, 1))
+    du_data = lorentz_matrix_array @ np.reshape(u_data, (*u_data.shape, 1))
     du_data = np.squeeze(du_data, axis=2)
 
     # Calculate change in energy

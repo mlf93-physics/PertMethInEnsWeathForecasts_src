@@ -28,7 +28,7 @@ cfg.GLOBAL_PARAMS.record_max_time = 3000
     ),
     cache=cfg.NUMBA_CACHE,
 )
-def run_model(u_old, du_array, deriv_matrix, data_out, Nt_local):
+def run_model(u_old, du_array, lorentz_matrix, data_out, Nt_local):
     """Execute the integration of the Lorentz-63 model.
 
     Parameters
@@ -53,7 +53,9 @@ def run_model(u_old, du_array, deriv_matrix, data_out, Nt_local):
             sample_number += 1
 
         # Update u_old
-        u_old = rk4.runge_kutta4(y0=u_old, h=dt, du=du_array, deriv_matrix=deriv_matrix)
+        u_old = rk4.runge_kutta4(
+            y0=u_old, h=dt, du_array=du_array, lorentz_matrix=lorentz_matrix
+        )
 
     return u_old
 
@@ -61,9 +63,12 @@ def run_model(u_old, du_array, deriv_matrix, data_out, Nt_local):
 def main(args=None):
 
     # Define u_old
-    u_old = np.array([1, 1, 1], dtype=np.float64)
+    u_old = np.array(
+        [1, 1, 1],
+        dtype=np.float64,
+    )
 
-    deriv_matrix = ut_funcs.setup_deriv_matrix(args)
+    lorentz_matrix = ut_funcs.setup_lorentz_matrix(args)
 
     # Get number of records
     args["n_records"] = math.ceil(
@@ -81,7 +86,7 @@ def main(args=None):
     data_out = np.zeros((int(args["burn_in_time"] * tts), sdim + 1), dtype=np.float64)
     print(f'Running burn-in phase of {args["burn_in_time"]}s\n')
     u_old = run_model(
-        u_old, du_array, deriv_matrix, data_out, int(args["burn_in_time"] / dt)
+        u_old, du_array, lorentz_matrix, data_out, int(args["burn_in_time"] / dt)
     )
 
     for ir in range(args["n_records"]):
@@ -104,7 +109,7 @@ def main(args=None):
         u_old = run_model(
             u_old,
             du_array,
-            deriv_matrix,
+            lorentz_matrix,
             data_out,
             int(out_array_size / sample_rate),
         )

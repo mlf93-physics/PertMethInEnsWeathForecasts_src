@@ -6,6 +6,10 @@ python ../general/runners/lyapunov_vector_runner.py --exp_setup=TestRun4 --n_uni
 
 """
 
+from pyinstrument import Profiler
+
+profiler = Profiler()
+profiler.start()
 import sys
 
 sys.path.append("..")
@@ -31,6 +35,7 @@ from shell_model_experiments.params.params import PAR as PAR_SH
 from shell_model_experiments.params.params import ParamsStructType
 
 import perturbation_runner as pt_runner
+
 
 # Get parameters for model
 if cfg.MODEL == Models.SHELL_MODEL:
@@ -87,13 +92,7 @@ def main(args):
         args = g_utils.adjust_start_times_with_offset(args)
 
         # Import reference data
-        if cfg.MODEL == Models.SHELL_MODEL:
-            u_ref, _, ref_header_dict = g_import.import_start_u_profiles(args=args)
-        elif cfg.MODEL == Models.LORENTZ63:
-            # Prepare reference data import
-            args["ref_start_time"] = start_times[i]
-            args["ref_end_time"] = start_times[i] + args["time_to_run"]
-            _, u_ref, ref_header_dict = g_import.import_ref_data(args=args)
+        u_ref, _, ref_header_dict = g_import.import_start_u_profiles(args=args)
 
         # Copy args in order not override in forecast processes
         copy_args = copy.deepcopy(args)
@@ -162,3 +161,6 @@ if __name__ == "__main__":
         )
 
     main(args)
+
+    profiler.stop()
+    print(profiler.output_text(color=True, show_all=True))
