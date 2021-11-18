@@ -26,16 +26,30 @@ cfg.GLOBAL_PARAMS.ref_run = False
 
 
 @njit(
-    (
-        types.Array(types.float64, 1, "C", readonly=False),
-        types.Array(types.float64, 1, "C", readonly=False),
-        types.Array(types.float64, 1, "C", readonly=False),
-        types.Array(types.float64, 2, "C", readonly=False),
-        types.Array(types.float64, 2, "C", readonly=False),
-        types.Array(types.float64, 2, "C", readonly=False),
-        types.int64,
-        types.float64,
-    ),
+    [
+        (
+            types.Array(types.float64, 1, "C", readonly=False),
+            types.Array(types.float64, 1, "C", readonly=False),
+            types.Array(types.float64, 1, "C", readonly=False),
+            types.Array(types.float64, 2, "C", readonly=False),
+            types.Array(types.float64, 2, "C", readonly=False),
+            types.Array(types.float64, 2, "C", readonly=False),
+            types.int64,
+            types.float64,
+            types.boolean,
+        ),
+        (
+            types.Array(types.float64, 1, "C", readonly=False),
+            types.Array(types.float64, 1, "C", readonly=False),
+            types.Array(types.float64, 1, "C", readonly=False),
+            types.Array(types.float64, 2, "C", readonly=False),
+            types.Array(types.float64, 2, "C", readonly=False),
+            types.Array(types.float64, 2, "C", readonly=False),
+            types.int64,
+            types.float64,
+            types.Omitted(False),
+        ),
+    ],
     cache=cfg.NUMBA_CACHE,
 )
 def run_model(
@@ -47,6 +61,7 @@ def run_model(
     data_out,
     Nt_local,
     r_const,
+    raw_perturbation: bool = False,
 ):
     """Execute the integration of the tangent linear Lorentz63 model.
 
@@ -68,9 +83,12 @@ def run_model(
         # Save samples for plotting
         if i % int(1 / sample_rate) == 0:
             data_out[sample_number, 0] = dt * i
-            # Add reference data to TL model trajectory, since only the perturbation
-            # is integrated in the model
-            data_out[sample_number, 1:] = u_ref_old + u_tl_old
+            # Add reference data to TL model trajectory if requested, since only
+            # the perturbation is integrated in the model
+            data_out[sample_number, 1:] = u_tl_old
+            if not raw_perturbation:
+                data_out[sample_number, 1:] += u_ref_old
+
             sample_number += 1
 
         # Update u_tl_old
