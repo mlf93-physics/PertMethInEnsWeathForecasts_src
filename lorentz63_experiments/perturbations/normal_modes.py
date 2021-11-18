@@ -75,7 +75,7 @@ def find_normal_modes(
 
 def init_jacobian(args):
 
-    j_matrix = np.zeros((sdim, sdim), dtype=np.float64)
+    j_matrix = np.matrix(np.zeros((sdim, sdim), dtype=np.float64))
 
     j_matrix[0, 0] = -args["sigma"]
     j_matrix[0, 1] = args["sigma"]
@@ -114,3 +114,37 @@ def calc_jacobian(j_matrix, u_profile, r_const):
     j_matrix[1, 2] = -u_profile[0]
     j_matrix[2, 0] = u_profile[1]
     j_matrix[2, 1] = u_profile[0]
+
+
+# @njit(
+#     (
+#         types.Array(types.float64, 2, "C", readonly=False),
+#         types.Array(types.float64, 1, "C", readonly=True),
+#         types.float64,
+#     ),
+#     cache=cfg.NUMBA_CACHE,
+# )
+def calc_adjoint_jacobian(j_matrix, u_profile, r_const):
+    """Calculate the adjoint jacobian at a given point in time given through
+    the u_profile
+
+    Parameters
+    ----------
+    j_matrix : numpy.ndarray
+        The initialized jacobian matrix
+    u_profile : numpy.ndarray
+        The velocity profile
+    args : dict
+        Run-time arguments
+
+    Returns
+    -------
+    numpy.ndarray
+        The jacobian
+    """
+    j_matrix[1, 0] = r_const - u_profile[2]
+    j_matrix[1, 2] = -u_profile[0]
+    j_matrix[2, 0] = u_profile[1]
+    j_matrix[2, 1] = u_profile[0]
+
+    return j_matrix.getH()

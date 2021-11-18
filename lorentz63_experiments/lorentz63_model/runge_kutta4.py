@@ -264,3 +264,120 @@ def tl_runge_kutta4(
     u_ref_old = u_ref_old + 1 / 6 * (k1 + 2 * (k2 + k3) + k4)
 
     return u_tl_old, u_ref_old
+
+
+# @njit(
+#     (
+#         types.Array(types.float64, 1, "C", readonly=True),
+#         types.Array(types.float64, 1, "C", readonly=False),
+#         types.Array(types.float64, 1, "C", readonly=True),
+#         types.Array(types.float64, 2, "C", readonly=False),
+#         types.float64,
+#     ),
+#     cache=cfg.NUMBA_CACHE,
+# )
+def atl_derivative_evaluator(
+    u_atl_old: np.ndarray = None,
+    du_array: np.ndarray = None,
+    u_ref: np.ndarray = None,
+    jacobian_matrix: np.ndarray = None,
+    r_const: float = None,
+) -> np.ndarray:
+    """Derivative evaluator used in the TL Runge-Kutta method.
+
+    Calculates the increment of the perturbation velocities in the TL lorentz model.
+
+    Parameters
+    ----------
+    u_atl_old : ndarray
+        The previous lorentz velocity array
+    du_array : ndarray
+        A helper array used to store the current derivative of the lorentz
+        velocities. Updated at each call to this function.
+    u_ref : np.ndarray
+        The reference/basis state velocities, by default None
+    jacobian_matrix : np.ndarray
+        The jacobian of the Lorentz63 model, by default None
+    r_const : float
+        The constant r in the Lorentz63 model, by default 28
+
+    Returns
+    -------
+    np.ndarray
+        (
+            du_array : The updated derivative of the lorentz velocities
+        )
+    """
+    # Update the jacobian_matrix
+    adjoint_jac_matrix = l63_nm_estimator.calc_adjoint_jacobian(
+        jacobian_matrix, u_ref, r_const=r_const
+    )
+
+    # Calculate change in u (du_array)
+    du_array = adjoint_jac_matrix @ u_atl_old
+
+    return du_array
+
+
+def atl_runge_kutta4(
+    u_atl_old: np.ndarray = None,
+    dt: float = 1,
+    du_array: np.ndarray = None,
+    u_ref_old: np.ndarray = None,
+    lorentz_matrix: np.ndarray = None,
+    jacobian_matrix: np.ndarray = None,
+    r_const: float = 28,
+) -> Tuple[np.ndarray, np.ndarray]:
+
+    # Calculate the k's of the non-linear model
+    Y1 = u_ref_old
+    k1 = dt * derivative_evaluator(
+        u_old=Y1, du_array=du_array, lorentz_matrix=lorentz_matrix
+    )
+    Y2 = u_ref_old + 1 / 2 * k1
+    k2 = dt * derivative_evaluator(
+        u_old=Y2, du_array=du_array, lorentz_matrix=lorentz_matrix
+    )
+    Y3 = u_ref_old + 1 / 2 * k2
+    k3 = dt * derivative_evaluator(
+        u_old=Y3, du_array=du_array, lorentz_matrix=lorentz_matrix
+    )
+    Y4 = u_ref_old + k3
+    # k4 = dt * derivative_evaluator(
+    #     u_old=Y4, du_array=du_array, lorentz_matrix=lorentz_matrix
+    # )
+
+    # Calculate the l's of the tangent linear model
+    l4 = atl_derivative_evaluator(
+        u_atl_old=u_atl_old,
+        du_array=du_array,
+        u_ref=Y4,
+        jacobian_matrix=jacobian_matrix,
+        r_const=r_const,
+    )
+    l3 = atl_derivative_evaluator(
+        u_atl_old=u_atl_old + 1 / 2 * dt * l4,
+        du_array=du_array,
+        u_ref=Y3,
+        jacobian_matrix=jacobian_matrix,
+        r_const=r_const,
+    )
+    l2 = atl_derivative_evaluator(
+        u_atl_old=u_atl_old + 1 / 2 * dt * l3,
+        du_array=du_array,
+        u_ref=Y2,
+        jacobian_matrix=jacobian_matrix,
+        r_const=r_const,
+    )
+    l1 = atl_derivative_evaluator(
+        u_atl_old=u_atl_old + dt * l2,
+        du_array=du_array,
+        u_ref=Y1,
+        jacobian_matrix=jacobian_matrix,
+        r_const=r_const,
+    )
+
+    # Update u_atl_old
+    u_atl_old = u_atl_old + 1 / 6 * dt * (l1 + 2 * (l2 + l3) + l4)
+
+    return u_atl_old
