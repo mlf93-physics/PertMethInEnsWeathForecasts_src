@@ -38,6 +38,9 @@ def detect_exp_licence() -> Experiment:
     elif "compare" in root_file_name:
         licence = exp.COMPARISON
 
+    elif "veri" in root_file_name:
+        licence = exp.VERIFICATION
+
     elif "plot_data" in root_file_name:
         licence = exp.NORMAL_PERTURBATION
 

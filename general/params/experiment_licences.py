@@ -15,3 +15,4 @@ class Experiments:
     LYAPUNOV_VECTORS = Experiment(id=5, name="LYAPUNOV_VECTORS")
     HYPER_DIFFUSIVITY = Experiment(id=6, name="HYPER_DIFFUSIVITY")
     COMPARISON = Experiment(id=7, name="COMPARISON")
+    VERIFICATION = Experiment(id=10, name="VERIFICATION")

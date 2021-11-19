@@ -13,7 +13,9 @@ import general.utils.saving.save_data_funcs as g_save
 import general.utils.importing.import_data_funcs as g_import
 import lorentz63_experiments.utils.util_funcs as ut_funcs
 import general.utils.util_funcs as g_utils
-import general.utils.perturb_utils as pt_utils
+import general.utils.saving.save_perturbation as pt_save
+import general.runners.perturbation_runner as pt_runner
+import general.utils.exceptions as g_exceptions
 import general.utils.argument_parsers as a_parsers
 from general.params.model_licences import Models
 import config as cfg
@@ -39,6 +41,9 @@ elif cfg.MODEL == Models.LORENTZ63:
     from lorentz63_experiments.lorentz63_model.tl_lorentz63 import (
         run_model as l63_tl_model,
     )
+    from lorentz63_experiments.lorentz63_model.atl_lorentz63 import (
+        run_model as l63_atl_model,
+    )
 
     # Get parameters for model
     params = l63_params
@@ -57,7 +62,6 @@ def run_l63_tl_model_verification(
     nl_model_pert_data_out,
     nl_model_non_pert_data_out,
 ):
-    print(f"\nRunning verification of the Lorentz63 TL model\n")
 
     # Run TL model
     l63_tl_model(
@@ -91,24 +95,86 @@ def run_l63_tl_model_verification(
     )
 
 
-def verify_tlm_model(args):
+def run_l63_atl_model_verification(
+    args, u_ref, u_perturb, jacobian_matrix, lorentz_matrix, data_out, ref_data_out
+):
+    u_perturb_stored = np.copy(u_perturb)
+
+    # Run TL model one time step
+    l63_tl_model(
+        u_perturb,
+        du_array,
+        u_ref,
+        lorentz_matrix,
+        jacobian_matrix,
+        data_out,
+        args["Nt"],
+        r_const=args["r_const"],
+        raw_perturbation=True,
+    )
+
+    u_tl_stored = data_out[-1, 1:].T
+
+    # Run ATL model one time step
+    # print("data_out[-1, 1:].T", data_out[-1, 1:].T.shape)
+    l63_atl_model(
+        np.reshape(data_out[-1, 1:].T, (params.sdim, 1)),
+        du_array,
+        u_ref,
+        lorentz_matrix,
+        jacobian_matrix,
+        data_out,
+        ref_data_out,
+        args["Nt"],
+        r_const=args["r_const"],
+        raw_perturbation=True,
+    )
+
+    rhs_identity = np.dot(u_perturb_stored, data_out[-1, 1:])
+    lhs_identity = (u_tl_stored.T @ u_tl_stored).ravel()
+
+    diff_identity = abs(lhs_identity[0] - rhs_identity)
+
+    return diff_identity
+
+
+def verify_tlm_model(args: dict):
+    """Verify the TLM of the current model, by calculating the error between
+    the TLM solution and the difference between a perturbed full model run and
+    an unperturbed full model run.
+
+    Parameters
+    ----------
+    args : dict
+        The run-time arguments
+
+    Raises
+    ------
+    g_exceptions.ModelError
+        Raised if running on the shell model - verification not implemented yet
+    """
     # Import reference data
     u_ref, _, ref_header_dict = g_import.import_start_u_profiles(args=args)
 
-    if u_ref.size > sdim:
-        raise ValueError(
-            "To many reference u profiles imported for the verification of the TL. Only one is needed"
-        )
-    else:
-        u_ref = u_ref.ravel()
-
     # Prepare random perturbation
-    perturb = pt_utils.generate_rd_perturbations()
+    perturbations, perturb_positions = pt_runner.prepare_perturbations(
+        args, raw_perturbations=True
+    )
     # Normalize perturbation
-    u_perturb = g_utils.normalize_array(perturb, norm_value=seeked_error_norm)
+    # u_perturb = g_utils.normalize_array(perturb, norm_value=seeked_error_norm)
+    error_data_out = np.zeros(
+        (
+            int(args["Nt"] * params.sample_rate),
+            params.sdim + 1,
+        )
+    )
 
+    # Prepare verification
     if cfg.MODEL == Models.SHELL_MODEL:
-        pass
+        raise g_exceptions.ModelError(
+            "Verification algorithm not implemented for the current model yet",
+            model=cfg.MODEL,
+        )
     elif cfg.MODEL == Models.LORENTZ63:
         # Initialise jacobian and deriv matrix
         jacobian_matrix = l63_nm_estimator.init_jacobian(args)
@@ -117,42 +183,107 @@ def verify_tlm_model(args):
         nl_model_pert_data_out = np.zeros((args["Nt"], sdim + 1), dtype=np.float64)
         nl_model_non_pert_data_out = np.zeros((args["Nt"], sdim + 1), dtype=np.float64)
 
-        run_l63_tl_model_verification(
-            args,
-            u_ref,
-            u_perturb,
-            jacobian_matrix,
-            lorentz_matrix,
-            tl_data_out,
-            nl_model_pert_data_out,
-            nl_model_non_pert_data_out,
-        )
+        print(f"\nRunning verification of the Lorentz63 TL model\n")
+        # Run verification multiple times
+        for i in range(int(args["n_profiles"] * args["n_runs_per_profile"])):
 
-        tl_error_norm = np.linalg.norm(tl_data_out[:, 1:], axis=1)
-        nl_error_norm = np.linalg.norm(
-            nl_model_pert_data_out[:, 1:] - nl_model_non_pert_data_out[:, 1:], axis=1
-        )
+            run_l63_tl_model_verification(
+                args,
+                np.copy(u_ref[:, i]),
+                np.copy(perturbations[:, i]),
+                jacobian_matrix,
+                lorentz_matrix,
+                tl_data_out,
+                nl_model_pert_data_out,
+                nl_model_non_pert_data_out,
+            )
 
-        plt.plot(tl_data_out[:, 0], tl_error_norm, label="tl_error_norm")
-        plt.plot(tl_data_out[:, 0], nl_error_norm, label="nl_error_norm")
-        plt.legend()
-        plt.show()
+    error_data_out[:, 1:] = tl_data_out[:, 1:] - (
+        nl_model_pert_data_out[:, 1:] - nl_model_non_pert_data_out[:, 1:]
+    )
+    error_data_out[:, 0] = tl_data_out[:, 0]
+
+    pt_save.save_perturbation_data(
+        error_data_out,
+        perturb_position=perturb_positions[i // args["n_runs_per_profile"]],
+        perturb_count=i,
+        args=args,
+    )
+
+
+def verify_atlm_model(args: dict):
+    # Set number of iterations to a low number, e.g. to investigate one
+    # iteration
+    args["Nt"] = 2
+    # Import reference data
+    u_ref, _, ref_header_dict = g_import.import_start_u_profiles(args=args)
+
+    # Prepare random perturbation
+    # perturb = pt_utils.generate_rd_perturbations()
+    perturbations, _ = pt_runner.prepare_perturbations(args, raw_perturbations=True)
+
+    # Prepare verification
+    if cfg.MODEL == Models.SHELL_MODEL:
+        raise g_exceptions.ModelError(
+            "Verification algorithm not implemented for the current model yet",
+            model=cfg.MODEL,
+        )
+    elif cfg.MODEL == Models.LORENTZ63:
+
+        jacobian_matrix = l63_nm_estimator.init_jacobian(args)
+        lorentz_matrix = ut_funcs.setup_lorentz_matrix(args)
+        data_out = np.zeros((args["Nt"], sdim + 1), dtype=np.float64)
+        ref_data_out = np.zeros((args["Nt"], sdim), dtype=np.float64)
+        nl_model_pert_data_out = np.zeros((args["Nt"], sdim + 1), dtype=np.float64)
+        nl_model_non_pert_data_out = np.zeros((args["Nt"], sdim + 1), dtype=np.float64)
+
+        print(f"\nRunning verification of the Lorentz63 ATL model\n")
+
+        # Run verification multiple times
+
+        diff_identity_list = []
+        for i in range(int(args["n_profiles"] * args["n_runs_per_profile"])):
+
+            diff_identity = run_l63_atl_model_verification(
+                args,
+                np.copy(u_ref[:, i]),
+                np.copy(perturbations[:, i]),
+                jacobian_matrix,
+                lorentz_matrix,
+                data_out,
+                ref_data_out,
+            )
+
+            diff_identity_list.append(diff_identity)
+
+    plt.plot(diff_identity_list)
+    plt.xlabel("Profile index")
+    plt.ylabel("Error on identity")
+    plt.title("Verification of ATLM")
+    plt.show()
 
 
 if __name__ == "__main__":
     cfg.init_licence()
 
     # Get arguments
-    ref_arg_setup = a_parsers.RelReferenceArgSetup()
+    mult_pert_arg_setup = a_parsers.MultiPerturbationArgSetup()
+    mult_pert_arg_setup.setup_parser()
+    ref_arg_setup = a_parsers.ReferenceAnalysisArgParser()
     ref_arg_setup.setup_parser()
-    args = ref_arg_setup.args
+    verif_arg_setup = a_parsers.VerificationArgParser()
+    verif_arg_setup.setup_parser()
+    args = verif_arg_setup.args
 
     # Add/edit arguments
     args["Nt"] = int(args["time_to_run"] / dt)
 
     profiler.start()
 
-    verify_tlm_model(args)
+    # if args["verification_type"] == "verify_tlm":
+    #     verify_tlm_model(args)
+    if args["verification_type"] == "verify_atlm":
+        verify_atlm_model(args)
 
     profiler.stop()
     print(profiler.output_text(color=True))

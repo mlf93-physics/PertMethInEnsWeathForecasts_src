@@ -7,6 +7,7 @@ import lorentz63_experiments.params.params as l63_params
 from general.utils.module_import.type_import import *
 import general.utils.importing.import_data_funcs as g_import
 import general.utils.plot_utils as g_plt_utils
+import general.analyses.analyse_data as g_a_data
 import general.utils.util_funcs as g_utils
 from general.plotting.plot_params import *
 from general.params.experiment_licences import Experiments as EXP
@@ -18,72 +19,6 @@ if cfg.MODEL == Models.SHELL_MODEL:
     params = PAR_SH
 elif cfg.MODEL == Models.LORENTZ63:
     params = l63_params
-
-
-def analyse_error_norm_vs_time(u_stores, args=None):
-
-    if len(u_stores) == 0:
-        raise IndexError("Not enough u_store arrays to compare.")
-
-    if args["combinations"]:
-        combinations = [
-            [j, i] for j in range(len(u_stores)) for i in range(j + 1) if j != i
-        ]
-        error_norm_vs_time = np.zeros((u_stores[0].shape[0], len(combinations)))
-
-        for enum, indices in enumerate(combinations):
-            error_norm_vs_time[:, enum] = np.linalg.norm(
-                u_stores[indices[0]] - u_stores[indices[1]], axis=1
-            ).real
-    else:
-        error_norm_vs_time = np.zeros((u_stores[0].shape[0], len(u_stores)))
-
-        for i in range(len(u_stores)):
-            if len(u_stores[i]) == 1:
-                u_stores[i] = np.reshape(u_stores[i], (u_stores[i].size, 1))
-
-            error_norm_vs_time[:, i] = np.linalg.norm(u_stores[i], axis=1).real
-
-    error_norm_mean_vs_time = np.mean(error_norm_vs_time, axis=1)
-
-    return error_norm_vs_time, error_norm_mean_vs_time
-
-
-def analyse_error_spread_vs_time_norm_of_mean(u_stores, args=None):
-    """Calculates the spread of the error (u' - u) using the 'norm of the mean.'
-
-    Formula: ||\sqrt{<((u' - u) - <u' - u>)²>}||
-
-    """
-
-    u_mean = np.mean(np.array(u_stores), axis=0)
-
-    error_spread = np.array([(u_stores[i] - u_mean) ** 2 for i in range(len(u_stores))])
-
-    error_spread = np.sqrt(np.mean(error_spread, axis=0))
-    error_spread = np.linalg.norm(error_spread, axis=1)
-
-    return error_spread
-
-
-def analyse_error_spread_vs_time_mean_of_norm(u_stores, args=None):
-    """Calculates the spread of the error (u' - u) using the 'mean of the norm'
-
-    Formula: \sqrt{<(||u' - u|| - <||u' - u||>)²>}
-
-    """
-    u_mean_norm = np.mean(np.linalg.norm(np.array(u_stores), axis=2).real, axis=0)
-
-    error_spread = np.array(
-        [
-            (np.linalg.norm(u_stores[i], axis=1).real - u_mean_norm) ** 2
-            for i in range(len(u_stores))
-        ]
-    )
-
-    error_spread = np.sqrt(np.mean(error_spread, axis=0))
-
-    return error_spread
 
 
 def plot_error_norm_vs_time(
@@ -119,11 +54,12 @@ def plot_error_norm_vs_time(
 
     num_perturbations = len(perturb_time_pos_list)
 
-    error_norm_vs_time, error_norm_mean_vs_time = analyse_error_norm_vs_time(
-        u_stores, args=args
-    )
+    (
+        error_norm_vs_time,
+        error_norm_mean_vs_time,
+    ) = g_a_data.analyse_error_norm_vs_time(u_stores, args=args)
     if args["plot_mode"] == "detailed":
-        error_spread_vs_time = analyse_error_spread_vs_time_mean_of_norm(
+        error_spread_vs_time = g_a_data.analyse_error_spread_vs_time_mean_of_norm(
             u_stores, args=args
         )
 

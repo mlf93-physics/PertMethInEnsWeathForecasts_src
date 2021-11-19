@@ -257,10 +257,10 @@ class PerturbationArgSetup:
                 )
 
         # Test if start_times is set when pert_mode in ["rd", "nm"]
-        if self.args["pert_mode"] in ["rd", "nm"] and self.args["start_times"] is None:
-            self._parser.error(
-                "--start_times argument is required when pert_mode is 'rd' or 'nm'"
-            )
+        # if self.args["pert_mode"] in ["rd", "nm"] and self.args["start_times"] is None:
+        #     self._parser.error(
+        #         "--start_times argument is required when pert_mode is 'rd' or 'nm'"
+        #     )
 
 
 class MultiPerturbationArgSetup:
@@ -452,3 +452,31 @@ class StandardPlottingArgParser:
                 + " experiments, where only region of shells below diffusion region"
                 + " is relevant",
             )
+
+
+class VerificationArgParser:
+    def __init__(self):
+        self._parser = parser
+        self._args = None
+
+    @property
+    def args(self):
+        """The vars(parsed arguments.)
+
+        The parsed args are saved to a local attribute if not already present
+        to avoid multiple calls to parse_args()
+
+        Returns
+        -------
+        argparse.Namespace
+            The parsed arguments
+        """
+        if not isinstance(self._args, argparse.Namespace):
+            self._args = vars(self._parser.parse_known_args()[0])
+
+        return self._args
+
+    def setup_parser(self):
+        self._parser.add_argument(
+            "--verification_type", default=None, required=True, type=str
+        )

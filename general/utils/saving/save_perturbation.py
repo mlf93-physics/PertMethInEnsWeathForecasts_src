@@ -40,6 +40,8 @@ def save_perturbation_data(
         prefix = f"lyapunov_perturb{perturb_count}_"
     elif cfg.LICENCE == EXP.HYPER_DIFFUSIVITY:
         prefix = f"hyper_perturb{perturb_count}_"
+    elif cfg.LICENCE == EXP.VERIFICATION:
+        prefix = f"verification_perturb{perturb_count}_"
     else:
         print(f"No saving method present for the current licence ({cfg.LICENCE})")
 
