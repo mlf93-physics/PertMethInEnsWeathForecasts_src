@@ -112,7 +112,9 @@ def calculate_perturbations(
     return perturbations
 
 
-def rescale_perturbations(perturb_data: np.ndarray, args: dict) -> np.ndarray:
+def rescale_perturbations(
+    perturb_data: np.ndarray, args: dict, raw_perturbations: bool
+) -> np.ndarray:
     """Rescale a set of perturbations to the seeked error norm relative to
     the reference data
 
@@ -122,21 +124,19 @@ def rescale_perturbations(perturb_data: np.ndarray, args: dict) -> np.ndarray:
         The perturbations that are rescaled
     args : dict
         Run-time arguments
+    raw_perturbations : bool, optional
+        If the raw perturbations should be returned instead of the perturbations
+        added to the u_init_profiles, by default False
+
 
     Returns
     -------
     np.ndarray
         The rescaled perturbations added to the reference data
+        (if raw_perturbations is True)
     """
 
     num_perturbations = args["n_runs_per_profile"]
-
-    # Import reference data
-    (
-        u_init_profiles,
-        _,
-        _,
-    ) = g_import.import_start_u_profiles(args=args)
 
     # Transform into 2d array
     perturb_data = np.array(perturb_data)
@@ -147,8 +147,19 @@ def rescale_perturbations(perturb_data: np.ndarray, args: dict) -> np.ndarray:
         mode="constant",
     )
 
-    # Diff data
-    diff_data = perturb_data.T - u_init_profiles
+    if not raw_perturbations:
+        # Import reference data
+        (
+            u_init_profiles,
+            _,
+            _,
+        ) = g_import.import_start_u_profiles(args=args)
+
+        # Diff data
+        diff_data = perturb_data.T - u_init_profiles
+    else:
+        diff_data = perturb_data.T
+
     # Rescale data
     rescaled_data = (
         diff_data
@@ -162,8 +173,12 @@ def rescale_perturbations(perturb_data: np.ndarray, args: dict) -> np.ndarray:
             np.linalg.norm(rescaled_data[:, 0] - rescaled_data[:, 1], axis=0),
         )
 
-    # Add rescaled data to u_init_profiles
-    u_init_profiles += rescaled_data
+    if not raw_perturbations:
+        # Add rescaled data to u_init_profiles
+        u_init_profiles += rescaled_data
+    else:
+        # Return raw rescaled perturbations
+        u_init_profiles = rescaled_data
 
     return u_init_profiles
 

@@ -41,7 +41,11 @@ def generate_start_times(exp_setup: dict, args: dict):
 
     if cfg.LICENCE == EXP.LORENTZ_BLOCK:
         offset_var = "block_offset"
-    elif cfg.LICENCE == EXP.BREEDING_VECTORS or cfg.LICENCE == EXP.LYAPUNOV_VECTORS:
+    elif (
+        cfg.LICENCE == EXP.BREEDING_VECTORS
+        or cfg.LICENCE == EXP.LYAPUNOV_VECTORS
+        or cfg.LICENCE == EXP.SINGULAR_VECTORS
+    ):
         offset_var = "vector_offset"
     else:
         raise g_exceptions.LicenceImplementationError(licence=cfg.LICENCE)
@@ -55,10 +59,15 @@ def generate_start_times(exp_setup: dict, args: dict):
                     exp_setup["eval_times"][0]
                     - exp_setup["n_cycles"] * exp_setup["integration_time"]
                 )
-            elif cfg.LICENCE == EXP.LYAPUNOV_VECTORS:
+            elif (
+                cfg.LICENCE == EXP.LYAPUNOV_VECTORS
+                or cfg.LICENCE == EXP.SINGULAR_VECTORS
+            ):
                 _time_offset = (
                     exp_setup["eval_times"][0] - exp_setup["integration_time"]
                 )
+            else:
+                raise g_exceptions.LicenceImplementationError(licence=cfg.LICENCE)
         else:
             _time_offset = 0
 

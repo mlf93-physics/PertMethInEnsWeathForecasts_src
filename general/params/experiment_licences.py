@@ -1,7 +1,7 @@
 class Experiment:
     def __init__(self, id: int = None, name: str = None):
-        self.id = id
-        self.name = name
+        self.id: int = id
+        self.name: str = name
 
     def __repr__(self):
         return self.name

@@ -54,6 +54,9 @@ def save_vector_unit(
     elif cfg.LICENCE == EXP.LYAPUNOV_VECTORS:
         val_pos = int(perturb_position + exp_setup["integration_time"] * params.tts)
 
+    elif cfg.LICENCE == EXP.SINGULAR_VECTORS:
+        val_pos = int(perturb_position)
+
     if perturb_position is not None:
         perturb_header_extra = (
             f"perturb_pos={int(perturb_position)}, unit={unit}"
@@ -70,10 +73,7 @@ def save_vector_unit(
     stand_data_name = g_save_utils.generate_standard_data_name(args)
     out_name = f"_{stand_data_name}"
 
-    if cfg.LICENCE == EXP.BREEDING_VECTORS:
-        prefix = "breed_vectors"
-    elif cfg.LICENCE == EXP.LYAPUNOV_VECTORS:
-        prefix = "lyapunov_vectors"
+    prefix = cfg.LICENCE.name.lower()
 
     suffix = f"_unit{unit}"
     # Save data

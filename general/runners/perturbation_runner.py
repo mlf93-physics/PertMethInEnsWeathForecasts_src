@@ -64,6 +64,9 @@ elif cfg.MODEL == Models.LORENTZ63:
     from lorentz63_experiments.lorentz63_model.tl_lorentz63 import (
         run_model as l63_tl_model,
     )
+    from lorentz63_experiments.lorentz63_model.atl_lorentz63 import (
+        run_model as l63_atl_model,
+    )
 
     # Get parameters for model
     params = l63_params
@@ -176,6 +179,24 @@ def perturbation_runner(
                 args["Nt"] + args["endpoint"] * 1,
                 r_const=args["r_const"],
             )
+        elif cfg.MODEL.submodel == "ATL":
+            jacobian_matrix = l63_nm_estimator.init_jacobian(args)
+            lorentz_matrix = ut_funcs.setup_lorentz_matrix(args)
+            ref_data = np.zeros(
+                (args["Nt"] + args["endpoint"] * 1, params.sdim), dtype=np.float64
+            )
+
+            l63_atl_model(
+                np.reshape(u_old, (params.sdim, 1)),
+                du_array,
+                np.copy(u_ref[:, run_count]),
+                lorentz_matrix,
+                jacobian_matrix,
+                data_out,
+                ref_data,
+                args["Nt"] + args["endpoint"] * 1,
+                r_const=args["r_const"],
+            )
         else:
             g_exceptions.ModelError(
                 "Submodel invalid or not implemented yet",
@@ -190,7 +211,11 @@ def perturbation_runner(
             args=args,
         )
 
-    if cfg.LICENCE == EXP.BREEDING_VECTORS or cfg.LICENCE == EXP.LYAPUNOV_VECTORS:
+    if (
+        cfg.LICENCE == EXP.BREEDING_VECTORS
+        or cfg.LICENCE == EXP.LYAPUNOV_VECTORS
+        or cfg.LICENCE == EXP.SINGULAR_VECTORS
+    ):
         # Save latest state vector to output dir
         data_out_list.append(data_out[-1, 1:])
 
@@ -463,7 +488,7 @@ def main_setup(
 
         raw_perturbations = False
         # Get only raw_perturbations if licence is LYAPUNOV_VECTORS
-        if cfg.LICENCE == EXP.LYAPUNOV_VECTORS:
+        if cfg.LICENCE == EXP.LYAPUNOV_VECTORS or cfg.LICENCE == EXP.SINGULAR_VECTORS:
             raw_perturbations = True
 
         u_profiles_perturbed, perturb_positions = prepare_perturbations(
