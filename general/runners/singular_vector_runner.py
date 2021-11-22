@@ -82,6 +82,11 @@ def main(args):
     args["out_exp_folder"] = pl.Path(
         exp_setup["folder_name"], exp_setup["sub_exp_folder"]
     )
+    # Adjust start times
+    args = g_utils.adjust_start_times_with_offset(args)
+    # Copy args for models
+    copy_args_tl = copy.deepcopy(args)
+    copy_args_atl = copy.deepcopy(args)
 
     # Calculate the desired number of units
     for i in range(
@@ -89,15 +94,14 @@ def main(args):
         min(args["n_units"] + n_existing_units, num_possible_units),
     ):
         # Update start times
-        args["start_times"] = [start_times[i]]
+        copy_args_tl["start_times"] = [start_times[i]]
+        copy_args_atl["start_times"] = [start_times[i] + exp_setup["integration_time"]]
         # Import reference data
-        u_ref, _, ref_header_dict = g_import.import_start_u_profiles(args=args)
+        u_ref, _, ref_header_dict = g_import.import_start_u_profiles(args=copy_args_tl)
+
+        # Update start times for ATL model
 
         for j in range(exp_setup["n_iterations"]):
-            args = g_utils.adjust_start_times_with_offset(args)
-
-            # Copy args in order not override in forecast processes
-            copy_args = copy.deepcopy(args)
 
             ###### TL model run ######
             # Add TL submodel attribute
@@ -106,12 +110,12 @@ def main(args):
                 # In first iteration, the perturbation is created according to
                 # pert_mode
                 processes, data_out_list, _ = pt_runner.main_setup(
-                    copy_args, exp_setup=exp_setup, u_ref=u_ref
+                    copy_args_tl, exp_setup=exp_setup, u_ref=u_ref
                 )
             else:
                 # On all other iterations, the rescaled perturbations are used
                 processes, data_out_list, _ = pt_runner.main_setup(
-                    copy_args,
+                    copy_args_tl,
                     u_profiles_perturbed=rescaled_perturbations,
                     exp_setup=exp_setup,
                     u_ref=u_ref,
@@ -121,12 +125,12 @@ def main(args):
                 # Run specified number of cycles
                 pt_runner.main_run(
                     processes,
-                    args=copy_args,
+                    args=copy_args_tl,
                 )
 
                 # The rescaled data is used to start off the adjoint model
                 rescaled_perturbations = pt_utils.rescale_perturbations(
-                    data_out_list, copy_args, raw_perturbations=True
+                    data_out_list, copy_args_atl, raw_perturbations=True
                 )
 
             else:
@@ -136,7 +140,7 @@ def main(args):
             # Add ATL submodel attribute
             cfg.MODEL.submodel = "ATL"
             processes, data_out_list, _ = pt_runner.main_setup(
-                copy_args,
+                copy_args_atl,
                 u_profiles_perturbed=rescaled_perturbations,
                 exp_setup=exp_setup,
                 u_ref=u_ref,
@@ -146,12 +150,12 @@ def main(args):
                 # Run specified number of iterations
                 pt_runner.main_run(
                     processes,
-                    args=copy_args,
+                    args=copy_args_atl,
                 )
 
                 # The rescaled data is used to start off the next iteration
                 rescaled_perturbations = pt_utils.rescale_perturbations(
-                    data_out_list, copy_args, raw_perturbations=True
+                    data_out_list, copy_args_tl, raw_perturbations=True
                 )
 
             else:

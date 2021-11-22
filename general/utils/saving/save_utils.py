@@ -166,11 +166,13 @@ def generate_header(
             + f"sample_rate={l63_params.sample_rate}, "
         )
 
+    model_append = f"model={cfg.MODEL}, submodel={cfg.MODEL.submodel}, "
+
     optional_append = ""
     if "licence" in append_options:
         optional_append += f"experiment={cfg.LICENCE}, "
 
-    header += optional_append + append_extra
+    header += model_append + optional_append + append_extra
 
     # Strip trailing commas
     header = header.rstrip(",")

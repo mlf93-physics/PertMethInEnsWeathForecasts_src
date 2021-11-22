@@ -113,7 +113,7 @@ def calculate_perturbations(
 
 
 def rescale_perturbations(
-    perturb_data: np.ndarray, args: dict, raw_perturbations: bool
+    perturb_data: np.ndarray, args: dict, raw_perturbations: bool = False
 ) -> np.ndarray:
     """Rescale a set of perturbations to the seeked error norm relative to
     the reference data
@@ -147,18 +147,15 @@ def rescale_perturbations(
         mode="constant",
     )
 
-    if not raw_perturbations:
-        # Import reference data
-        (
-            u_init_profiles,
-            _,
-            _,
-        ) = g_import.import_start_u_profiles(args=args)
+    # Import reference data
+    (
+        u_init_profiles,
+        _,
+        _,
+    ) = g_import.import_start_u_profiles(args=args)
 
-        # Diff data
-        diff_data = perturb_data.T - u_init_profiles
-    else:
-        diff_data = perturb_data.T
+    # Diff data
+    diff_data = perturb_data.T - u_init_profiles
 
     # Rescale data
     rescaled_data = (

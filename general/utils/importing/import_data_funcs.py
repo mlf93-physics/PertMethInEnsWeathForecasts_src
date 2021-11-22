@@ -130,9 +130,27 @@ def imported_sorted_perturbation_info(folder_name, args, search_pattern="*.csv")
         # Import perturbation header info
         perturb_header_dict = import_header(file_name=perturb_file)
 
-        # Save time positions, by taking into account different sample rates
-        perturb_time_pos_list.append(int(perturb_header_dict["perturb_pos"]))
+        # Take submodel into account (if ATL -> time goes backwards)
+        _temp_time_pos = int(round(perturb_header_dict["perturb_pos"]))
+        if "submodel" in perturb_header_dict:
+            if perturb_header_dict["submodel"] is not None:
+                if perturb_header_dict["submodel"] == "ATL":
+                    # Subtract number of datapoints in order to be able to match
+                    # ATL perturbation against reference file import
+                    _temp_time_pos = _temp_time_pos - int(
+                        round(
+                            perturb_header_dict["Nt"]
+                            * perturb_header_dict["sample_rate"]
+                        )
+                    )
+                    if _temp_time_pos < 0:
+                        raise ValueError(
+                            f"Time position becomes negative due to submodel={perturb_header_dict['submodel']}"
+                        )
 
+        perturb_time_pos_list.append(_temp_time_pos)
+
+        # Save time positions, by taking into account different sample rates
         perturb_time_pos_list_legend.append(
             f"Start time: "
             + f'{perturb_header_dict["perturb_pos"]/perturb_header_dict["sample_rate"]*perturb_header_dict["dt"]:.3f}s'
@@ -380,7 +398,9 @@ def import_perturbation_velocities(
         ref_data_in = np.array([], dtype=sparams.dtype).reshape(0, params.sdim + 1)
 
         # Determine offset to work with perturb_pos=0
-        _offset = 1 * (perturb_header_dict["perturb_pos"] == 0)
+        # perturb_time_pos_list is used in order to take into account adjusted
+        # position when import ATL perturbation
+        _offset = 1 * (perturb_time_pos_list[iperturb_file] == 0)
 
         # Keep importing datafiles untill ref_data_in has same size as perturb dataarray
         counter = 0
@@ -398,7 +418,6 @@ def import_perturbation_velocities(
                 if counter == 0
                 else int(perturb_header_dict["N_data"]) - ref_data_in.shape[0]
             )
-
             temp_ref_data_in, ref_header_dict = import_data(
                 ref_record_names_sorted[
                     ref_file_match_keys_array[ref_file_counter] + counter

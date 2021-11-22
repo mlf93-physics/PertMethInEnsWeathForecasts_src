@@ -63,14 +63,14 @@ def run_model(
         An array to store samples of the integrated lorentz_velocities.
 
     """
-
     # Run forward non-linear model
     for i in range(Nt_local):
+        # Save reference data
+        ref_data[i, :] = u_ref_old
         # Update u_ref_old
         u_ref_old = rk4.runge_kutta4(
             y0=u_ref_old, h=dt, du_array=du_array, lorentz_matrix=lorentz_matrix
         )
-        ref_data[i, :] = u_ref_old
 
     # Run backward ATL model
     for i in range(Nt_local - 1, -1, -1):
