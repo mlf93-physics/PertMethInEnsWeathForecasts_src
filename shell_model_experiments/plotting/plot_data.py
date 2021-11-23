@@ -73,6 +73,7 @@ def plot_energy_spectrum(
     )
     title_suffix: str = ""
     color = plot_kwargs["color"] if "color" in plot_kwargs else None
+    linestyle = plot_kwargs["linestyle"] if "linestyle" in plot_kwargs else None
 
     # Fit the slope of the spectrum
     k_vectors = np.log2(PAR.k_vec_temp)
@@ -90,12 +91,7 @@ def plot_energy_spectrum(
         title_suffix += "rel. fit, "
 
     # Plot energy spectrum
-    axes.plot(
-        k_vectors,
-        mean_energy,
-        label=label,
-        color=color,
-    )
+    axes.plot(k_vectors, mean_energy, label=label, color=color, linestyle=linestyle)
 
     # Axes setup
     axes.set_yscale("log")
@@ -1244,7 +1240,7 @@ if __name__ == "__main__":
         plot_howmoller_diagram_u_energy(args=args, plt_args=["rel_mean"])
 
     if "hel_howmoller_rel_mean" in args["plot_type"]:
-        plot_howmoller_diagram_helicity(args=args, plt_args=[])
+        plot_howmoller_diagram_helicity(args=args, plt_args=["rel_mean"])
 
     if "helicity_spectrum" in args["plot_type"]:
         _, u_data, header_dict = g_import.import_ref_data(args=args)

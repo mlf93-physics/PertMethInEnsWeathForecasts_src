@@ -234,8 +234,6 @@ def verify_atlm_model(args: dict):
         lorentz_matrix = ut_funcs.setup_lorentz_matrix(args)
         data_out = np.zeros((args["Nt"], sdim + 1), dtype=np.float64)
         ref_data_out = np.zeros((args["Nt"], sdim), dtype=np.float64)
-        nl_model_pert_data_out = np.zeros((args["Nt"], sdim + 1), dtype=np.float64)
-        nl_model_non_pert_data_out = np.zeros((args["Nt"], sdim + 1), dtype=np.float64)
 
         print(f"\nRunning verification of the Lorentz63 ATL model\n")
 
