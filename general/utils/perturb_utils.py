@@ -71,15 +71,9 @@ def calculate_perturbations(
                     perturb_vectors, perturb_vectors_conj, n_runs_per_profile, i
                 )
 
-            # Apply breed vector perturbation
-            elif args["pert_mode"] == "bv":
-                # Generate random weights of the complex-conjugate eigenvector pair
-                # _weight = np.random.rand() * 2 - 1
+            # Apply bv, bv_eof or sv perturbation
+            elif "bv" in args["pert_mode"] or "sv" in args["pert_mode"]:
                 # Make perturbation vector
-                perturb = perturb_vectors[:, i]
-
-            # Apply breed vector EOF perturbations
-            elif args["pert_mode"] == "bv_eof":
                 perturb = perturb_vectors[:, i]
 
         # Apply single shell perturbation
@@ -147,15 +141,18 @@ def rescale_perturbations(
         mode="constant",
     )
 
-    # Import reference data
-    (
-        u_init_profiles,
-        _,
-        _,
-    ) = g_import.import_start_u_profiles(args=args)
+    if not raw_perturbations:
+        # Import reference data
+        (
+            u_init_profiles,
+            _,
+            _,
+        ) = g_import.import_start_u_profiles(args=args)
 
-    # Diff data
-    diff_data = perturb_data.T - u_init_profiles
+        # Diff data
+        diff_data = perturb_data.T - u_init_profiles
+    else:
+        diff_data = perturb_data.T
 
     # Rescale data
     rescaled_data = (

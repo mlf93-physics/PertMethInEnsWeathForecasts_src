@@ -6,6 +6,7 @@ from lorentz63_experiments.params.params import *
 import general.utils.argument_parsers as a_parsers
 import lorentz63_experiments.lorentz63_model.tl_lorentz63 as l63_tl_model
 import general.utils.user_interface as g_ui
+import general.utils.runner_utils as r_utils
 from general.params.model_licences import Models
 import config as cfg
 
@@ -37,6 +38,7 @@ if __name__ == "__main__":
     args = ref_arg_setup.args
 
     g_ui.confirm_run_setup(args)
+    r_utils.adjust_run_setup(args)
 
     # Add/edit arguments
     args["Nt"] = int(args["time_to_run"] / dt)

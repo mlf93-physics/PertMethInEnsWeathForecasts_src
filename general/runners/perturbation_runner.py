@@ -12,6 +12,16 @@ python ../general/runners/perturbation_runner.py
 --start_times 4 8
 --pert_mode=rd
 
+or
+
+python ../general/runners/perturbation_runner.py
+--out_exp_folder=test2
+--time_to_run=0.1
+--n_runs_per_profile=4
+--pert_mode=bv_eof
+--pert_vector_folder=pt_vectors
+--exp_folder=shell_model_breed_vectors_4cycles
+
 """
 
 import os
@@ -32,6 +42,7 @@ import general.utils.perturb_utils as pt_utils
 import general.utils.saving.save_data_funcs as g_save
 import general.utils.saving.save_perturbation as pt_save
 import general.utils.user_interface as g_ui
+import general.utils.runner_utils as r_utils
 import general.utils.util_funcs as g_utils
 import numpy as np
 from general.params.experiment_licences import Experiments as EXP
@@ -178,6 +189,7 @@ def perturbation_runner(
                 data_out,
                 args["Nt"] + args["endpoint"] * 1,
                 r_const=args["r_const"],
+                raw_perturbation=True,
             )
         elif cfg.MODEL.submodel == "ATL":
             jacobian_matrix = l63_nm_estimator.init_jacobian(args)
@@ -196,6 +208,7 @@ def perturbation_runner(
                 ref_data,
                 args["Nt"] + args["endpoint"] * 1,
                 r_const=args["r_const"],
+                raw_perturbation=True,
             )
         else:
             g_exceptions.ModelError(
@@ -280,10 +293,10 @@ def prepare_perturbations(
     # Adjust parameters to have the correct ny/ny_n for shell model
     g_utils.determine_params_from_header_dict(ref_header_dict, args)
 
-    # Only import start profiles beforehand if not using breed_vector perturbations,
+    # Only import start profiles beforehand if not using bv, bv_eof or sv perturbations,
     # i.e. also when running in singel_shell_perturb mode
 
-    if args["pert_mode"] not in ["bv", "bv_eof"]:
+    if args["pert_mode"] not in ["bv", "bv_eof", "sv"]:
         (
             u_init_profiles,
             perturb_positions,
@@ -325,8 +338,7 @@ def prepare_perturbations(
                     args,
                     n_profiles=args["n_profiles"],
                 )
-        elif args["pert_mode"] == "bv":
-            print("\nRunning with BREED VECTOR perturbations\n")
+        elif "bv" in args["pert_mode"]:
             (
                 perturb_vectors,
                 u_init_profiles,
@@ -334,28 +346,31 @@ def prepare_perturbations(
                 _,
             ) = pt_import.import_perturb_vectors(args)
 
-            # Reshape perturb_vectors
-            perturb_vectors = np.reshape(
-                np.transpose(perturb_vectors, axes=(2, 0, 1)),
-                (params.sdim, args["n_profiles"] * args["n_runs_per_profile"]),
-            )
+            if args["pert_mode"] == "bv_eof":
+                print("\nRunning with BREED VECTOR EOF perturbations\n")
 
-        elif args["pert_mode"] == "bv_eof":
-            print("\nRunning with BREED VECTOR EOF perturbations\n")
+                eof_vectors: np.ndarray = bv_eof_anal.calc_bv_eof_vectors(
+                    perturb_vectors, args["n_runs_per_profile"]
+                )
+                # Reshape and save as perturb_vectors
+                perturb_vectors = np.reshape(
+                    np.transpose(eof_vectors, axes=(1, 0, 2)),
+                    (params.sdim, args["n_profiles"] * args["n_runs_per_profile"]),
+                )
+            else:
+                print("\nRunning with BREED VECTOR perturbations\n")
 
+        elif "sv" in args["pert_mode"]:
+            print("\nRunning with SINGULAR VECTOR perturbations\n")
             (
-                breed_vectors,
+                perturb_vectors,
                 u_init_profiles,
                 perturb_positions,
                 _,
-            ) = pt_import.import_perturb_vectors(args)
-
-            eof_vectors: np.ndarray = bv_eof_anal.calc_bv_eof_vectors(
-                breed_vectors, args["n_runs_per_profile"]
-            )
-            # Reshape and save as perturb_vectors
+            ) = pt_import.import_perturb_vectors(args, raw_perturbations=True)
+            # Reshape perturb_vectors
             perturb_vectors = np.reshape(
-                np.transpose(eof_vectors, axes=(1, 0, 2)),
+                np.transpose(perturb_vectors, axes=(2, 0, 1)),
                 (params.sdim, args["n_profiles"] * args["n_runs_per_profile"]),
             )
 
@@ -599,6 +614,7 @@ if __name__ == "__main__":
     args = g_utils.adjust_start_times_with_offset(args)
 
     g_ui.confirm_run_setup(args)
+    r_utils.adjust_run_setup(args)
 
     # Make profiler
     profiler = Profiler()

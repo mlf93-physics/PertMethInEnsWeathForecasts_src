@@ -80,10 +80,15 @@ def load_interactive_fig(args):
         fig.show()
 
 
-def save_figure(subpath: pl.Path = None, file_name="figure1", fig: plt.Figure = None):
+def save_figure(
+    subpath: pl.Path = None,
+    file_name="figure1",
+    fig: plt.Figure = None,
+    tight_layout_rect: list = None,
+):
     print("\nSaving figure...\n")
     # Prepare layout
-    plt.tight_layout()
+    plt.tight_layout(rect=tight_layout_rect)
 
     if subpath is None:
         full_path = FIG_ROOT
@@ -164,15 +169,13 @@ def generate_title(
     return title
 
 
-def save_or_show_plot(args: dict):
+def save_or_show_plot(args: dict, tight_layout_rect: list = None):
     if args["save_fig"]:
-        subpath = pl.Path(
-            "shell_model_experiments/hyper_diffusivity/helicity_investigations/"
-        )
+        subpath = pl.Path("lorentz63_experiments/singular_vectors/test_orthogonality/")
 
         for i in plt.get_fignums():
             fig = plt.figure(i)
-            file_name = "howmoller_for_helicity_alpha2_ny_n19"
+            file_name = "sv_orthogonality_iterations1"
 
             name = g_ui.get_name_input(
                 "Proposed name of figure: ", proposed_input=file_name
@@ -186,7 +189,12 @@ def save_or_show_plot(args: dict):
 
             answer = g_ui.ask_user(question)
             if answer:
-                save_figure(subpath=subpath, file_name=name, fig=fig)
+                save_figure(
+                    subpath=subpath,
+                    file_name=name,
+                    fig=fig,
+                    tight_layout_rect=tight_layout_rect,
+                )
             else:
                 print("\nSaving the figure was aborted\n")
 

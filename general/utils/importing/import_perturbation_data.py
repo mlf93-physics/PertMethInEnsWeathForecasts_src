@@ -209,7 +209,7 @@ def import_profiles_for_nm_analysis(args: dict = None) -> Tuple[np.ndarray, dict
 
 
 def import_perturb_vectors(
-    args: dict,
+    args: dict, raw_perturbations: bool = False
 ) -> Tuple[np.ndarray, np.ndarray, List[int], List[dict]]:
     """Import units of perturbation vectors, e.g. BVs or SVs
 
@@ -302,11 +302,13 @@ def import_perturb_vectors(
             break
 
     vector_units = np.array(vector_units)
-    # u_init_profiles is reshaped to fit shape (n_units, n_runs_per_profile, sdim)
-    # of vector_units array
-    vector_units = vector_units - np.reshape(
-        u_init_profiles[sparams.u_slice, :].T,
-        (args["n_files"], args["n_runs_per_profile"], params.sdim),
-    )
+
+    if not raw_perturbations:
+        # u_init_profiles is reshaped to fit shape (n_units, n_runs_per_profile, sdim)
+        # of vector_units array
+        vector_units = vector_units - np.reshape(
+            u_init_profiles[sparams.u_slice, :].T,
+            (args["n_files"], args["n_runs_per_profile"], params.sdim),
+        )
 
     return vector_units, u_init_profiles, eval_pos, perturb_header_dicts

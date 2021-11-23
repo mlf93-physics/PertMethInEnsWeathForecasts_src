@@ -193,6 +193,7 @@ if __name__ == "__main__":
     args = stand_arg_setup.args
 
     g_ui.confirm_run_setup(args)
+    r_utils.adjust_run_setup(args)
 
     # Initiate and update variables and arrays
     ut_funcs.update_dependent_params(PAR, sdim=int(args["sdim"]))

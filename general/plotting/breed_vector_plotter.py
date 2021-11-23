@@ -48,19 +48,32 @@ elif cfg.MODEL == Models.LORENTZ63:
 def plot_breed_vectors(args):
 
     # Import breed vectors
-    breed_vector_units, _ = pt_import.import_perturb_vectors(args)
+    breed_vector_units, _, _, _ = pt_import.import_perturb_vectors(
+        args, raw_perturbations=True
+    )
 
     # Import info file
     pert_info_dict = g_import.import_info_file(
-        pl.Path(args["datapath"], args["exp_folder"])
+        pl.Path(
+            args["datapath"],
+            args["pert_vector_folder"],
+            args["exp_folder"],
+            "perturb_data",
+        )
     )
     # Set number of vectors/profiles
     args["n_profiles"] = min(args["n_units"], breed_vector_units.shape[0])
 
     # Average and norm vectors
     mean_breed_vector_units = np.mean(breed_vector_units, axis=1)
-    normed_mean_breed_vector_units = mean_breed_vector_units / np.reshape(
-        np.linalg.norm(mean_breed_vector_units, axis=0), (1, args["n_profiles"])
+
+    normed_mean_breed_vector_units = mean_breed_vector_units / np.repeat(
+        np.reshape(
+            np.linalg.norm(mean_breed_vector_units, axis=1),
+            (args["n_profiles"], 1),
+        ),
+        repeats=params.sdim,
+        axis=1,
     )
 
     # Calculate orthonormality
@@ -91,7 +104,7 @@ def plot_breed_vectors(args):
     )
 
     plt.figure()
-    plt.plot(normed_mean_breed_vector_units, "k")
+    plt.plot(normed_mean_breed_vector_units.T, "k")
     plt.xlabel("BV component index")
     plt.ylabel("BV component")
     plt.title(bv_2d_title)
@@ -106,9 +119,9 @@ def plot_breed_vectors(args):
             origin,
             origin,
             origin,
-            normed_mean_breed_vector_units[0, :],
-            normed_mean_breed_vector_units[1, :],
-            normed_mean_breed_vector_units[2, :],
+            normed_mean_breed_vector_units[:, 0],
+            normed_mean_breed_vector_units[:, 1],
+            normed_mean_breed_vector_units[:, 2],
             # normalize=True,
             # length=0.5,
         )
@@ -280,7 +293,7 @@ if __name__ == "__main__":
     profiler = Profiler()
     profiler.start()
 
-    if "pert_vector_folder" in args["plot_type"]:
+    if "pert_vectors" in args["plot_type"]:
         plot_breed_vectors(args)
     elif "nm_compare" in args["plot_type"]:
         plot_breed_comparison_to_nm(args)

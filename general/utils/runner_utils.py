@@ -1,3 +1,4 @@
+import os
 import sys
 
 sys.path.append("..")
@@ -124,3 +125,9 @@ def run_pert_processes(args: dict, local_exp_setup: dict, processes: list):
             g_save_utils.compress_dir(path)
     else:
         print("No processes to run - check if blocks already exists")
+
+
+def adjust_run_setup(args: dict):
+    # Disable stdout
+    if args["noprint"]:
+        sys.stdout = open(os.devnull, "w")

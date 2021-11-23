@@ -133,6 +133,7 @@ if __name__ == "__main__":
     mult_pert_arg_setup.setup_parser()
     args = mult_pert_arg_setup.args
     g_ui.confirm_run_setup(args)
+    r_utils.adjust_run_setup(args)
 
     if cfg.MODEL == Models.SHELL_MODEL:
         # Initiate and update variables and arrays

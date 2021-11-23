@@ -25,5 +25,3 @@ GLOBAL_PARAMS = GlobalParams()
 # Other general configurations
 NUMBA_CACHE = True
 NUMBA_ON = True
-# Disable stdout
-# sys.stdout = open(os.devnull, "w")

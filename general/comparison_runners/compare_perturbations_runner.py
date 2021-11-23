@@ -272,5 +272,6 @@ if __name__ == "__main__":
         )
 
     g_ui.confirm_run_setup(args)
+    r_utils.adjust_run_setup(args)
 
     main(args)

@@ -1,13 +1,13 @@
 {
     "TestRun0": {
-        "folder_name": "pt_vectors/sv_test1",
+        "folder_name": "pt_vectors/sv_iterations128_n_vectors8_st10_it0.1",
         "sub_exp_folder": "perturb_data",
-        "integration_time": 1,
-        "n_iterations": 1,
-        "n_vectors": 1,
-        "vector_offset": 1,
-        "eval_times": [
-            1
+        "integration_time": 0.1,
+        "n_iterations": 128,
+        "n_vectors": 16,
+        "vector_offset": 0.1,
+        "start_times": [
+            10
         ]
     }
 }

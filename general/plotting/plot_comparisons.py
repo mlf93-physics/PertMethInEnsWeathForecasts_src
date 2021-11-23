@@ -56,7 +56,7 @@ def plt_vector_comparison(args):
     args["exp_folder"] = args["exp_folders"][0]
 
     breed_vector_units, _, _, breed_vec_header_dicts = pt_import.import_perturb_vectors(
-        args
+        args, raw_perturbations=True
     )
     # breed_vector_units = np.squeeze(breed_vector_units, axis=0)
     # Normalize vectors
@@ -71,7 +71,7 @@ def plt_vector_comparison(args):
         _,
         _,
         lyapunov_vec_header_dicts,
-    ) = pt_import.import_perturb_vectors(args)
+    ) = pt_import.import_perturb_vectors(args, raw_perturbations=True)
 
     # lyapunov_vector_units = np.squeeze(lyapunov_vector_units, axis=0)
     # Normalize vectors
@@ -81,8 +81,12 @@ def plt_vector_comparison(args):
 
     n_vectors = args["n_runs_per_profile"]
 
-    num_subplot_cols = math.floor(args["n_profiles"] / 2)
-    num_subplot_rows = math.ceil(args["n_profiles"] / num_subplot_cols)
+    if args["n_profiles"] > 1:
+        num_subplot_cols = math.floor(args["n_profiles"] / 2)
+        num_subplot_rows = math.ceil(args["n_profiles"] / num_subplot_cols)
+    else:
+        num_subplot_cols = 1
+        num_subplot_rows = 1
 
     fig1, axes1 = plt.subplots(
         num_subplot_rows, num_subplot_cols, sharex=True, sharey=True
@@ -90,6 +94,11 @@ def plt_vector_comparison(args):
     fig2, axes2 = plt.subplots(
         num_subplot_rows, num_subplot_cols, sharex=True, sharey=True
     )
+
+    if args["n_profiles"] == 1:
+        axes1 = np.array(axes1)
+        axes2 = np.array(axes2)
+
     axes1 = axes1.ravel()
     axes2 = axes2.ravel()
 
@@ -109,6 +118,13 @@ def plt_vector_comparison(args):
         orthogonality_matrix = np.abs(
             breed_vector_units[i, :, :].conj() @ lyapunov_vector_units[i, :, :].T
         )
+
+        # print(
+        #     "orthogonality_matrix mean",
+        #     np.mean(
+        #         orthogonality_matrix[~np.eye(orthogonality_matrix.shape[0], dtype=bool)]
+        #     ),
+        # )
 
         sb.heatmap(
             orthogonality_matrix,
@@ -160,7 +176,7 @@ def plot_error_norm_comparison(args: dict):
             args["exp_folders"] = [
                 str(pl.Path(_dirs[i].parent.name, _dirs[i].name))
                 for i in range(len_folders)
-                if "bv" in _dirs[i].name
+                if "sv" in _dirs[i].name
                 # if "rd" in _dirs[i].name or "nm" in _dirs[i].name
             ]
 
@@ -245,4 +261,4 @@ if __name__ == "__main__":
     else:
         raise ValueError("No valid plot type given as input argument")
 
-    g_plt_utils.save_or_show_plot(args)
+    g_plt_utils.save_or_show_plot(args, tight_layout_rect=[0, 0, 0.9, 1])

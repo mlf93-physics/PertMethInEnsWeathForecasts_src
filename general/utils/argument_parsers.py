@@ -123,6 +123,7 @@ class StandardRunnerArgSetup:
         # Add general arguments
         self._parser.add_argument("--erda_run", action="store_true")
         self._parser.add_argument("--skip_save_data", action="store_true")
+        self._parser.add_argument("--noprint", action="store_true")
 
 
 class RelReferenceArgSetup:
@@ -236,7 +237,7 @@ class PerturbationArgSetup:
             ]
         )
         pert_mode_group.add_argument(
-            "--pert_mode", choices=["rd", "nm", "bv", "bv_eof"], type=str
+            "--pert_mode", choices=["rd", "nm", "bv", "bv_eof", "sv"], type=str
         )
 
         # Add model specific arguments

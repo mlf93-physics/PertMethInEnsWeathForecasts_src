@@ -25,6 +25,7 @@ import general.utils.experiments.exp_utils as exp_utils
 import general.utils.exceptions as g_exceptions
 import general.utils.argument_parsers as a_parsers
 import general.utils.user_interface as g_ui
+import general.utils.runner_utils as r_utils
 import config as cfg
 
 # Get parameters for model
@@ -92,5 +93,6 @@ if __name__ == "__main__":
     sh_utils.update_arrays(params)
 
     g_ui.confirm_run_setup(args)
+    r_utils.adjust_run_setup(args)
 
     main(args)
