@@ -533,7 +533,7 @@ def main_setup(
     if not args["skip_save_data"]:
         g_save.save_perturb_info(args=args, exp_setup=exp_setup)
 
-    return processes, data_out_list, perturb_positions
+    return processes, data_out_list, perturb_positions, u_profiles_perturbed
 
 
 def main_run(processes, args=None, n_units=None):
@@ -621,7 +621,7 @@ if __name__ == "__main__":
     # Start profiler
     profiler.start()
 
-    processes, _, _ = main_setup(args=args)
+    processes, _, _, _ = main_setup(args=args)
     main_run(processes, args=args)
 
     profiler.stop()

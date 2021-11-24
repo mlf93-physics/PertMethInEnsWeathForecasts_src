@@ -9,5 +9,16 @@
         "start_times": [
             10
         ]
+    },
+    "TestRun1": {
+        "folder_name": "pt_vectors/sv_lanczos_test",
+        "sub_exp_folder": "perturb_data",
+        "integration_time": 0.1,
+        "n_iterations": 2,
+        "n_vectors": 1,
+        "vector_offset": 0.1,
+        "start_times": [
+            10
+        ]
     }
 }

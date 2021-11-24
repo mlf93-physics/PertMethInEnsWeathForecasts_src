@@ -32,7 +32,7 @@ def detect_exp_licence() -> Experiment:
     elif "lyapunov_vector_runner" == root_file_name:
         licence = exp.LYAPUNOV_VECTORS
 
-    elif "singular_vector_runner" == root_file_name:
+    elif "singular_vector" in root_file_name:
         licence = exp.SINGULAR_VECTORS
 
     elif "compare" in root_file_name:

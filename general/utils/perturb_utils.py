@@ -249,3 +249,107 @@ def generate_nm_perturbations(
         ).real
 
     return perturb
+
+
+def lanczos_vector_algorithm(
+    propagated_vector: np.ndarray((params.sdim, 1)) = None,
+    input_vector_j: np.ndarray((params.sdim, 1)) = None,
+    n_iterations: int = 0,
+):
+    """Execute the Lanczos algorithm to find eigenvectors and -values of the
+    L*L matrix, i.e. the singular vectors and values.
+
+    Calculates the tri-diagonal matrix and Lanczos vectors, which can be
+    diagonalised to get eigenvalues and eigenvectors. These vectors can be
+    projected onto the Lanczos vectors to get the singular vectors of L*L.
+    See pt_utils.calculate_svs function for details of the projection.
+
+    Parameters
+    ----------
+    propagated_vector : np.ndarray, optional
+        The propagated vector w defined as w = L*L v, by default None
+    input_vector_j : np.ndarray, optional
+        The input vector, v, which is propagated into w, by default None
+    n_iterations : int, optional
+        The number of iterations of the Lanczos algorithm, by default 0.
+        Corresponds to the number of singular vectors calculated.
+
+    Returns
+    -------
+    [type]
+        [description]
+
+    Yields
+    -------
+    [type]
+        [description]
+    """
+    beta_j = None
+    tridiag_matrix = np.zeros((n_iterations, n_iterations))
+    input_vector_matrix = np.zeros((params.sdim, n_iterations))
+    iteration = 0
+
+    def iterator(
+        beta_j: float = 0,
+        iteration: int = 0,
+    ):
+        omega_j_temp = np.reshape(propagated_vector, (params.sdim, 1))
+        alpha_j = omega_j_temp.T.conj() @ input_vector_j
+
+        # Save alpha_j to tridiag_matrix
+        tridiag_matrix[iteration, iteration] = alpha_j
+
+        # Calculate omega_j
+        if iteration == 0:
+            omega_j = omega_j_temp - alpha_j * input_vector_j
+        else:
+            omega_j = (
+                omega_j_temp
+                - alpha_j * input_vector_j
+                - beta_j * input_vector_matrix[:, iteration - 1]
+            )
+
+        # Update beta_j
+        beta_j = np.linalg.norm(omega_j)
+
+        if iteration > 0:
+            # Save beta_j to matrix
+            tridiag_matrix[iteration - 1, iteration] = tridiag_matrix[
+                iteration, iteration - 1
+            ] = beta_j
+
+        if beta_j != 0:
+            output_vector = omega_j / beta_j
+        else:
+            print("hello1, implementation lacking")
+
+        return output_vector, beta_j, iteration
+
+    while True:
+        output_vector, beta_j, iteration = iterator(beta_j, iteration)
+        input_vector_matrix[:, iteration] = input_vector_j.ravel()
+
+        # Update iteration
+        iteration += 1
+
+        yield output_vector, tridiag_matrix, input_vector_matrix
+
+
+def calculate_svs(tridiag_matrix: np.ndarray, vector_matrix: np.ndarray) -> np.ndarray:
+
+    # Get eigenvectors from tridiag_matrix
+    e_values, e_vectors = np.linalg.eig(tridiag_matrix)
+    sort_index = np.argsort(e_values)[::-1]
+    e_vectors = e_vectors[:, sort_index]
+    # Get SVs
+    sv_matrix = vector_matrix @ e_vectors
+    # Sort e values and vectors
+
+    # Normalize
+    sv_matrix = g_utils.normalize_array(
+        sv_matrix.T, norm_value=params.seeked_error_norm, axis=1
+    )
+    # print("sv_matrix", sv_matrix)
+    # input()
+
+    return sv_matrix

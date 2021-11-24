@@ -94,9 +94,7 @@ def plot_energy(args, axes=None):
 
 def plot_error_norm_vs_time(args):
 
-    g_plt_data.plot_error_norm_vs_time(
-        args, normalize_start_time=False, legend_on=False
-    )
+    g_plt_data.plot_error_norm_vs_time(args, normalize_start_time=False, legend_on=True)
 
 
 def plot_normal_mode_dist(args):

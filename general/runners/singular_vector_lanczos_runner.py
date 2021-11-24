@@ -95,9 +95,6 @@ def main(args):
     copy_args_tl = copy.deepcopy(args)
     copy_args_atl = copy.deepcopy(args)
 
-    # Initiate rescaled_perturbations
-    rescaled_perturbations = None
-    
     # Calculate the desired number of units
     for i in range(
         n_existing_units,
@@ -109,23 +106,27 @@ def main(args):
         # Import reference data
         u_ref, _, ref_header_dict = g_import.import_start_u_profiles(args=copy_args_tl)
 
-        # Skip save data except last iteration
-        if args["save_last_pert"]:
+        # Initiate rescaled_perturbations
+        lanczos_outarray = None
 
-        for j in range(exp_setup["n_iterations"]):
+        # Initiate the Lanczos arrays and algorithm
+        propagated_vector: np.ndarray((params.sdim, 1)) = np.zeros((params.sdim, 1))
+        input_vector: np.ndarray((params.sdim, 1)) = np.zeros((params.sdim, 1))
+        lanczos_iterator = pt_utils.lanczos_vector_algorithm(
+            propagated_vector=propagated_vector,
+            input_vector_j=input_vector,
+            n_iterations=exp_setup["n_iterations"],
+        )
 
-            if copy_args_tl["save_last_pert"] and (j + 1) == exp_setup["n_iterations"]:
-                copy_args_tl["skip_save_data"] = False
-                copy_args_atl["skip_save_data"] = False
-
+        for _ in range(exp_setup["n_iterations"]):
             ###### TL model run ######
             # Add TL submodel attribute
             cfg.MODEL.submodel = "TL"
             # On all other iterations except the first, the rescaled
             # perturbations are used and are not None
-            processes, data_out_list, _ = pt_runner.main_setup(
+            processes, data_out_list, _, u_profiles_perturbed = pt_runner.main_setup(
                 copy_args_tl,
-                u_profiles_perturbed=rescaled_perturbations,
+                u_profiles_perturbed=lanczos_outarray,
                 exp_setup=exp_setup,
                 u_ref=u_ref,
             )
@@ -136,21 +137,15 @@ def main(args):
                     processes,
                     args=copy_args_tl,
                 )
-
-                # The rescaled data is used to start off the adjoint model
-                rescaled_perturbations = pt_utils.rescale_perturbations(
-                    data_out_list, copy_args_atl, raw_perturbations=True
-                )
-
             else:
                 print("No processes to run - check if units already exists")
 
             ###### Adjoint model run ######
             # Add ATL submodel attribute
             cfg.MODEL.submodel = "ATL"
-            processes, data_out_list, _ = pt_runner.main_setup(
+            processes, data_out_list, _, _ = pt_runner.main_setup(
                 copy_args_atl,
-                u_profiles_perturbed=rescaled_perturbations,
+                u_profiles_perturbed=np.array(data_out_list).T,
                 exp_setup=exp_setup,
                 u_ref=u_ref,
             )
@@ -162,13 +157,19 @@ def main(args):
                     args=copy_args_atl,
                 )
 
-                # The rescaled data is used to start off the next iteration
-                rescaled_perturbations = pt_utils.rescale_perturbations(
-                    data_out_list, copy_args_tl, raw_perturbations=True
-                )
-
             else:
                 print("No processes to run - check if units already exists")
+
+            # Update arrays for the lanczos algorithm
+            propagated_vector[:, :] = u_profiles_perturbed
+            input_vector[:, :] = np.reshape(data_out_list[0], (params.sdim, 1))
+            # Iterate the Lanczos algorithm one step
+            lanczos_outarray, tridiag_matrix, input_vector_matrix = next(
+                lanczos_iterator
+            )
+
+        # Calculate SVs from eigen vectors of tridiag_matrix
+        sv_matrix = pt_utils.calculate_svs(tridiag_matrix, input_vector_matrix)
 
         # Set out folder
         args["out_exp_folder"] = pl.Path(exp_setup["folder_name"])
@@ -177,7 +178,7 @@ def main(args):
 
         # Save singular vectors
         v_save.save_vector_unit(
-            rescaled_perturbations[sparams.u_slice, :].T,
+            sv_matrix,
             perturb_position=int(round(start_times[i] * params.tts)),
             unit=i,
             args=args,
