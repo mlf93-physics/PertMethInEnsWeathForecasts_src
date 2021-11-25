@@ -93,7 +93,7 @@ def plot_error_norm_vs_time(
 
     # Prepare axes
     if axes is None:
-        axes = plt.gca()
+        axes = plt.axes()
 
     # Get non-repeating colorcycle
     if cfg.LICENCE == EXP.BREEDING_VECTORS or cfg.LICENCE == EXP.LYAPUNOV_VECTORS:
@@ -124,9 +124,10 @@ def plot_error_norm_vs_time(
         linewidth=linewidth,
         zorder=zorder,
     )
-    # if header_dicts[0]["pert_mode"] == "bv_eof":
-    #     for i, line in enumerate(lines):
-    #         line.set_linestyle(LINESTYLES[i % 3])
+
+    if "unique_linestyle" in plot_args:
+        for i, line in enumerate(lines):
+            line.set_linestyle(LINESTYLES[i % 3])
 
     if args["plot_mode"] == "detailed":
         # Plot perturbation error norms

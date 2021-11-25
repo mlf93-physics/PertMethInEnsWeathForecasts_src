@@ -6,18 +6,23 @@ import lorentz63_experiments.params.params as l63_params
 import numpy as np
 from shell_model_experiments.params.params import ParamsStructType
 from shell_model_experiments.params.params import PAR as PAR_SH
+import shell_model_experiments.utils.special_params as sh_sparams
+import lorentz63_experiments.params.special_params as l63_sparams
 from general.params.experiment_licences import Experiments as EXP
 from general.params.model_licences import Models
 
 # Get parameters for model
 if cfg.MODEL == Models.SHELL_MODEL:
     params = PAR_SH
+    sparams = sh_sparams
 elif cfg.MODEL == Models.LORENTZ63:
     params = l63_params
+    sparams = l63_sparams
 
 
 def save_vector_unit(
-    data: np.ndarray,
+    vectors: np.ndarray,
+    characteristic_values: np.ndarray,
     perturb_position: int = None,
     unit: int = 0,
     args: dict = None,
@@ -27,8 +32,11 @@ def save_vector_unit(
 
     Parameters
     ----------
-    data : np.ndarray((n_vectors, sdim))
+    vectors : np.ndarray((n_vectors, sdim))
         The vector data to be saved
+    characteristic_values : np.ndarray((n_vectors))
+        The characteristic values of the vectors, i.e. singular values for singular
+        vectors, or variances for BV-EOF vectors.
     perturb_position : int, optional
         The index position of the vector, by default None
     unit : int, optional
@@ -39,7 +47,7 @@ def save_vector_unit(
         Experiment setup, by default None
     """
     # Prepare variables to be used when saving
-    n_data = data.shape[0]
+    n_data = vectors.shape[0]
 
     # Generate path if not existing
     expected_path = g_save_utils.generate_dir(
@@ -76,10 +84,15 @@ def save_vector_unit(
     prefix = cfg.LICENCE.name.lower()
 
     suffix = f"_unit{unit}"
-    # Save data
+
+    concatenated_data_out = np.concatenate(
+        [characteristic_values[:, np.newaxis], vectors], axis=1
+    )
+
+    # Save vectors
     np.savetxt(
         pl.Path(expected_path, f"{prefix}{out_name}{suffix}.csv"),
-        data,
+        concatenated_data_out,
         delimiter=",",
         header=header,
     )

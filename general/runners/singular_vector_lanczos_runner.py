@@ -80,8 +80,6 @@ def main(args):
         exp_setup["vector_offset"] if "vector_offset" in exp_setup else None
     )
     args["endpoint"] = True
-    args["n_profiles"] = 1
-    args["n_runs_per_profile"] = exp_setup["n_vectors"]
     # Set exp folder (folder is reset before save of exp info)
     args["out_exp_folder"] = pl.Path(
         exp_setup["folder_name"], exp_setup["sub_exp_folder"]
@@ -103,82 +101,107 @@ def main(args):
         # Update start times
         copy_args_tl["start_times"] = [start_times[i]]
         copy_args_atl["start_times"] = [start_times[i] + exp_setup["integration_time"]]
-        # Import reference data
-        u_ref, _, ref_header_dict = g_import.import_start_u_profiles(args=copy_args_tl)
 
-        # Initiate rescaled_perturbations
-        lanczos_outarray = None
-
-        # Initiate the Lanczos arrays and algorithm
-        propagated_vector: np.ndarray((params.sdim, 1)) = np.zeros((params.sdim, 1))
-        input_vector: np.ndarray((params.sdim, 1)) = np.zeros((params.sdim, 1))
-        lanczos_iterator = pt_utils.lanczos_vector_algorithm(
-            propagated_vector=propagated_vector,
-            input_vector_j=input_vector,
-            n_iterations=exp_setup["n_iterations"],
+        # Prepare storage of sv vectors and -values
+        sv_matrix_store = np.empty(
+            (exp_setup["n_iterations"], params.sdim, exp_setup["n_vectors"])
         )
+        s_values_store = np.empty((exp_setup["n_iterations"], exp_setup["n_vectors"]))
 
-        for _ in range(exp_setup["n_iterations"]):
-            ###### TL model run ######
-            # Add TL submodel attribute
-            cfg.MODEL.submodel = "TL"
-            # On all other iterations except the first, the rescaled
-            # perturbations are used and are not None
-            processes, data_out_list, _, u_profiles_perturbed = pt_runner.main_setup(
-                copy_args_tl,
-                u_profiles_perturbed=lanczos_outarray,
-                exp_setup=exp_setup,
-                u_ref=u_ref,
+        for j in range(exp_setup["n_iterations"]):
+            # Import reference data
+            u_ref, _, ref_header_dict = g_import.import_start_u_profiles(
+                args=copy_args_tl
             )
 
-            if len(processes) > 0:
-                # Run specified number of cycles
-                pt_runner.main_run(
-                    processes,
-                    args=copy_args_tl,
-                )
-            else:
-                print("No processes to run - check if units already exists")
+            # Initiate rescaled_perturbations
+            lanczos_outarray = None
 
-            ###### Adjoint model run ######
-            # Add ATL submodel attribute
-            cfg.MODEL.submodel = "ATL"
-            processes, data_out_list, _, _ = pt_runner.main_setup(
-                copy_args_atl,
-                u_profiles_perturbed=np.array(data_out_list).T,
-                exp_setup=exp_setup,
-                u_ref=u_ref,
+            # Initiate the Lanczos arrays and algorithm
+            propagated_vector: np.ndarray((params.sdim, 1)) = np.zeros((params.sdim, 1))
+            input_vector: np.ndarray((params.sdim, 1)) = np.zeros((params.sdim, 1))
+            lanczos_iterator = pt_utils.lanczos_vector_algorithm(
+                propagated_vector=propagated_vector,
+                input_vector_j=input_vector,
+                n_iterations=exp_setup["n_vectors"],
             )
 
-            if len(processes) > 0:
-                # Run specified number of iterations
-                pt_runner.main_run(
+            for _ in range(exp_setup["n_vectors"]):
+                ###### TL model run ######
+                # Add TL submodel attribute
+                cfg.MODEL.submodel = "TL"
+                # On all other iterations except the first, the rescaled
+                # perturbations are used and are not None
+                (
                     processes,
-                    args=copy_args_atl,
+                    data_out_list,
+                    _,
+                    u_profiles_perturbed,
+                ) = pt_runner.main_setup(
+                    copy_args_tl,
+                    u_profiles_perturbed=lanczos_outarray,
+                    exp_setup=exp_setup,
+                    u_ref=u_ref,
                 )
 
-            else:
-                print("No processes to run - check if units already exists")
+                if len(processes) > 0:
+                    # Run specified number of cycles
+                    pt_runner.main_run(
+                        processes,
+                        args=copy_args_tl,
+                    )
+                else:
+                    print("No processes to run - check if units already exists")
 
-            # Update arrays for the lanczos algorithm
-            propagated_vector[:, :] = u_profiles_perturbed
-            input_vector[:, :] = np.reshape(data_out_list[0], (params.sdim, 1))
-            # Iterate the Lanczos algorithm one step
-            lanczos_outarray, tridiag_matrix, input_vector_matrix = next(
-                lanczos_iterator
+                ###### Adjoint model run ######
+                # Add ATL submodel attribute
+                cfg.MODEL.submodel = "ATL"
+                processes, data_out_list, _, _ = pt_runner.main_setup(
+                    copy_args_atl,
+                    u_profiles_perturbed=np.array(data_out_list).T,
+                    exp_setup=exp_setup,
+                    u_ref=u_ref,
+                )
+
+                if len(processes) > 0:
+                    # Run specified number of iterations
+                    pt_runner.main_run(
+                        processes,
+                        args=copy_args_atl,
+                    )
+
+                else:
+                    print("No processes to run - check if units already exists")
+
+                # Update arrays for the lanczos algorithm
+                propagated_vector[:, :] = u_profiles_perturbed
+                input_vector[:, :] = np.reshape(data_out_list[0], (params.sdim, 1))
+                # Iterate the Lanczos algorithm one step
+                lanczos_outarray, tridiag_matrix, input_vector_matrix = next(
+                    lanczos_iterator
+                )
+
+            # Calculate SVs from eigen vectors of tridiag_matrix
+            sv_matrix, s_values = pt_utils.calculate_svs(
+                tridiag_matrix, input_vector_matrix
             )
 
-        # Calculate SVs from eigen vectors of tridiag_matrix
-        sv_matrix = pt_utils.calculate_svs(tridiag_matrix, input_vector_matrix)
+            sv_matrix_store[j, :, :] = sv_matrix
+            s_values_store[j, :] = s_values
 
         # Set out folder
         args["out_exp_folder"] = pl.Path(exp_setup["folder_name"])
         # Reset submodel
         cfg.MODEL.submodel = None
 
+        # Do averaging
+        sv_matrix_average = np.mean(sv_matrix_store, axis=0)
+        s_values_average = np.mean(s_values_store, axis=0)
+
         # Save singular vectors
         v_save.save_vector_unit(
-            sv_matrix,
+            sv_matrix_average.T,
+            characteristic_values=s_values_average,
             perturb_position=int(round(start_times[i] * params.tts)),
             unit=i,
             args=args,

@@ -289,7 +289,8 @@ def import_perturb_vectors(
         _,
     ) = g_import.import_start_u_profiles(args=args)
 
-    vector_units = []
+    vector_units = np.empty((args["n_files"], args["n_runs_per_profile"], params.sdim))
+    characteristic_values = np.empty((args["n_files"], args["n_runs_per_profile"]))
 
     for i, file_name in enumerate(perturb_file_names):
         vector_unit, _ = g_import.import_data(
@@ -297,11 +298,15 @@ def import_perturb_vectors(
             max_lines=args["n_runs_per_profile"] + 1,
         )
 
-        vector_units.append(vector_unit)
+        # Skip characteristic value if present
+        if vector_unit.shape[1] == params.sdim + 1:
+            characteristic_values[i, :] = vector_unit[:, 0]
+            vector_units[i, :, :] = vector_unit[:, 1:]
+        else:
+            vector_units[i, :, :] = vector_unit
+
         if i + 1 >= args["n_files"]:
             break
-
-    vector_units = np.array(vector_units)
 
     if not raw_perturbations:
         # u_init_profiles is reshaped to fit shape (n_units, n_runs_per_profile, sdim)
@@ -311,4 +316,4 @@ def import_perturb_vectors(
             (args["n_files"], args["n_runs_per_profile"], params.sdim),
         )
 
-    return vector_units, u_init_profiles, eval_pos, perturb_header_dicts
+    return (vector_units, u_init_profiles, eval_pos, perturb_header_dicts)

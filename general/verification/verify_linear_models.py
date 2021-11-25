@@ -6,13 +6,10 @@ import matplotlib.pyplot as plt
 from pyinstrument import Profiler
 import numpy as np
 from numba import njit, types
-import lorentz63_experiments.lorentz63_model.runge_kutta4 as rk4
 from lorentz63_experiments.params.params import *
 import lorentz63_experiments.perturbations.normal_modes as l63_nm_estimator
-import general.utils.saving.save_data_funcs as g_save
 import general.utils.importing.import_data_funcs as g_import
 import lorentz63_experiments.utils.util_funcs as ut_funcs
-import general.utils.util_funcs as g_utils
 import general.utils.saving.save_perturbation as pt_save
 import general.runners.perturbation_runner as pt_runner
 import general.utils.exceptions as g_exceptions
