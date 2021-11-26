@@ -92,7 +92,7 @@ def main(args):
         # Copy args in order not override in forecast processes
         copy_args = copy.deepcopy(args)
 
-        temp_processes, _, _ = pt_runner.main_setup(copy_args)
+        temp_processes, _, _, _ = pt_runner.main_setup(copy_args)
         processes.extend(temp_processes)
 
         # Make forecasts
@@ -104,7 +104,7 @@ def main(args):
         args["out_exp_folder"] = f"{parent_perturb_folder}/forecasts"
 
         copy_args = copy.deepcopy(args)
-        temp_processes, _, _ = pt_runner.main_setup(copy_args)
+        temp_processes, _, _, _ = pt_runner.main_setup(copy_args)
         processes.extend(temp_processes)
 
     if len(processes) > 0:

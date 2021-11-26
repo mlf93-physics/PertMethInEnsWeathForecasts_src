@@ -102,7 +102,7 @@ def rd_pert_experiment(args: dict, local_exp_setup: dict):
     # Copy args in order not override in forecast processes
     copy_args = copy.deepcopy(args)
 
-    temp_processes, _, _ = pt_runner.main_setup(copy_args)
+    temp_processes, _, _, _ = pt_runner.main_setup(copy_args)
     processes.extend(temp_processes)
 
     r_utils.run_pert_processes(copy_args, local_exp_setup, processes)
@@ -135,7 +135,7 @@ def nm_pert_experiment(args: dict, local_exp_setup: dict):
     # Copy args in order not override in forecast processes
     copy_args = copy.deepcopy(args)
 
-    temp_processes, _, _ = pt_runner.main_setup(copy_args)
+    temp_processes, _, _, _ = pt_runner.main_setup(copy_args)
     processes.extend(temp_processes)
 
     r_utils.run_pert_processes(copy_args, local_exp_setup, processes)
@@ -164,7 +164,7 @@ def bv_pert_experiment(args: dict, local_exp_setup: dict):
     # Copy args in order not override in forecast processes
     copy_args = copy.deepcopy(args)
 
-    temp_processes, _, _ = pt_runner.main_setup(copy_args)
+    temp_processes, _, _, _ = pt_runner.main_setup(copy_args)
     processes.extend(temp_processes)
 
     r_utils.run_pert_processes(copy_args, local_exp_setup, processes)
@@ -193,7 +193,7 @@ def bv_eof_pert_experiment(args: dict, local_exp_setup: dict):
     # Copy args in order not override in forecast processes
     copy_args = copy.deepcopy(args)
 
-    temp_processes, _, _ = pt_runner.main_setup(copy_args)
+    temp_processes, _, _, _ = pt_runner.main_setup(copy_args)
     processes.extend(temp_processes)
 
     r_utils.run_pert_processes(copy_args, local_exp_setup, processes)

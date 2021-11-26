@@ -122,7 +122,7 @@ def main(args):
             cfg.MODEL.submodel = "TL"
             # On all other iterations except the first, the rescaled
             # perturbations are used and are not None
-            processes, data_out_list, _ = pt_runner.main_setup(
+            processes, data_out_list, _, _ = pt_runner.main_setup(
                 copy_args_tl,
                 u_profiles_perturbed=rescaled_perturbations,
                 exp_setup=exp_setup,
@@ -147,7 +147,7 @@ def main(args):
             ###### Adjoint model run ######
             # Add ATL submodel attribute
             cfg.MODEL.submodel = "ATL"
-            processes, data_out_list, _ = pt_runner.main_setup(
+            processes, data_out_list, _, _ = pt_runner.main_setup(
                 copy_args_atl,
                 u_profiles_perturbed=rescaled_perturbations,
                 exp_setup=exp_setup,

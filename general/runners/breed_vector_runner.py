@@ -99,7 +99,7 @@ def main(args: dict, exp_setup: dict = None):
             if copy_args["save_last_pert"] and (j + 1) == exp_setup["n_cycles"]:
                 copy_args["skip_save_data"] = False
 
-            processes, data_out_list, perturb_positions = pt_runner.main_setup(
+            processes, data_out_list, perturb_positions, _, _ = pt_runner.main_setup(
                 copy_args,
                 u_profiles_perturbed=rescaled_data,
                 perturb_positions=perturb_positions,

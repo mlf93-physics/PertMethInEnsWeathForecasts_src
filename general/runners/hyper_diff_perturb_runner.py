@@ -58,7 +58,7 @@ def main(args):
     )
 
     copy_args = copy.deepcopy(args)
-    temp_processes, _, _ = pt_runner.main_setup(copy_args)
+    temp_processes, _, _, _ = pt_runner.main_setup(copy_args)
     processes.extend(temp_processes)
 
     if len(processes) > 0:

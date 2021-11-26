@@ -1,21 +1,21 @@
 {
     "TestRun0": {
-        "folder_name": "pt_vectors/sv_iterations128_n_vectors8_st10_it0.1",
+        "folder_name": "pt_vectors/sv_iterations32_n_vectors1_st15_it0.1",
         "sub_exp_folder": "perturb_data",
         "integration_time": 0.1,
-        "n_iterations": 128,
-        "n_vectors": 16,
+        "n_iterations": 32,
+        "n_vectors": 1,
         "vector_offset": 0.1,
         "start_times": [
-            10
+            15
         ]
     },
     "TestRun1": {
-        "folder_name": "pt_vectors/sv_lanczos_test3",
+        "folder_name": "pt_vectors/sv_lanczos_test1",
         "sub_exp_folder": "perturb_data",
         "integration_time": 0.1,
-        "n_vectors": 3,
-        "n_iterations": 1,
+        "n_vectors": 9,
+        "n_iterations": 10,
         "vector_offset": 0.1,
         "start_times": [
             15

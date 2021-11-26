@@ -75,6 +75,9 @@ def main(args=None):
         args["Nt"] / int(cfg.GLOBAL_PARAMS.record_max_time / dt)
     )
 
+    # Write ref info file
+    g_save.save_reference_info(args)
+
     profiler.start()
     print(
         f'\nRunning Lorentz63 model for {args["Nt"]*dt:.2f}s with a burn-in time'

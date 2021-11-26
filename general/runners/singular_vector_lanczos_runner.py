@@ -5,7 +5,8 @@ Example
 python ../general/runners/singular_vector_runner.py --exp_setup=TestRun0 --n_units=1
 
 """
-
+import matplotlib.pyplot as plt
+import seaborn as sb
 from pyinstrument import Profiler
 
 profiler = Profiler()
@@ -93,6 +94,9 @@ def main(args):
     copy_args_tl = copy.deepcopy(args)
     copy_args_atl = copy.deepcopy(args)
 
+    # Set error norm to 1
+    params.seeked_error_norm = 1
+
     # Calculate the desired number of units
     for i in range(
         n_existing_units,
@@ -106,7 +110,9 @@ def main(args):
         sv_matrix_store = np.empty(
             (exp_setup["n_iterations"], params.sdim, exp_setup["n_vectors"])
         )
-        s_values_store = np.empty((exp_setup["n_iterations"], exp_setup["n_vectors"]))
+        s_values_store = np.empty(
+            (exp_setup["n_iterations"], exp_setup["n_vectors"]), dtype=np.complex128
+        )
 
         for j in range(exp_setup["n_iterations"]):
             # Import reference data
@@ -207,6 +213,10 @@ def main(args):
             args=args,
             exp_setup=exp_setup,
         )
+        fig, axes = plt.subplots(nrows=2, ncols=1)
+        sb.heatmap(sv_matrix_store[:, :, 0].T, ax=axes[0])
+        axes[1].plot(s_values_store)
+        plt.show()
 
     # Reset exp_folder
     args["out_exp_folder"] = exp_setup["folder_name"]

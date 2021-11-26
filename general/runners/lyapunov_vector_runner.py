@@ -97,7 +97,7 @@ def main(args):
         # Copy args in order not override in forecast processes
         copy_args = copy.deepcopy(args)
 
-        processes, data_out_list, _ = pt_runner.main_setup(
+        processes, data_out_list, _, _ = pt_runner.main_setup(
             copy_args, exp_setup=exp_setup, u_ref=u_ref
         )
 

@@ -381,9 +381,11 @@ def calculate_svs(
 
     # Get eigenvectors from tridiag_matrix.
     e_values, e_vectors = np.linalg.eig(tridiag_matrix)
+    # Take sqrt to get singular values of L
+    s_values = np.sqrt(e_values.astype(np.complex128))
     # Sort e_values and e_vectors
-    sort_index = np.argsort(e_values)[::-1]
-    e_values = e_values[sort_index]
+    sort_index = np.argsort(s_values)[::-1]
+    s_values = s_values[sort_index]
     e_vectors = e_vectors[:, sort_index]
     # Get SVs
     sv_matrix = vector_matrix @ e_vectors
@@ -392,4 +394,4 @@ def calculate_svs(
         sv_matrix, norm_value=params.seeked_error_norm, axis=1
     )
 
-    return sv_matrix, e_values
+    return sv_matrix, s_values

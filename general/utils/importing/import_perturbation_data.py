@@ -301,7 +301,7 @@ def import_perturb_vectors(
         # Skip characteristic value if present
         if vector_unit.shape[1] == params.sdim + 1:
             characteristic_values[i, :] = vector_unit[:, 0]
-            vector_units[i, :, :] = vector_unit[:, 1:]
+            vector_units[i, :, :] = vector_unit[:, 1:].real
         else:
             vector_units[i, :, :] = vector_unit
 

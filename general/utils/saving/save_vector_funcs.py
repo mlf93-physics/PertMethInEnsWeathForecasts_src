@@ -22,11 +22,11 @@ elif cfg.MODEL == Models.LORENTZ63:
 
 def save_vector_unit(
     vectors: np.ndarray,
-    characteristic_values: np.ndarray,
     perturb_position: int = None,
     unit: int = 0,
     args: dict = None,
     exp_setup: dict = None,
+    characteristic_values: np.ndarray = None,
 ) -> None:
     """Save a vector unit to disk (e.g. BV or Lyapunov unit)
 
@@ -85,9 +85,12 @@ def save_vector_unit(
 
     suffix = f"_unit{unit}"
 
-    concatenated_data_out = np.concatenate(
-        [characteristic_values[:, np.newaxis], vectors], axis=1
-    )
+    if characteristic_values is not None:
+        concatenated_data_out = np.concatenate(
+            [characteristic_values[:, np.newaxis], vectors], axis=1
+        )
+    else:
+        concatenated_data_out = vectors
 
     # Save vectors
     np.savetxt(

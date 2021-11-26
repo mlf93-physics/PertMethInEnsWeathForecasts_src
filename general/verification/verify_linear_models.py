@@ -130,7 +130,9 @@ def run_l63_atl_model_verification(
     rhs_identity = np.dot(u_perturb_stored, data_out[-1, 1:])
     lhs_identity = (u_tl_stored.T @ u_tl_stored).ravel()
 
-    diff_identity = abs(lhs_identity[0] - rhs_identity)
+    diff_identity = abs(lhs_identity[0] - rhs_identity) / np.mean(
+        [lhs_identity[0], rhs_identity]
+    )
 
     return diff_identity
 
@@ -235,9 +237,9 @@ def verify_atlm_model(args: dict):
         print(f"\nRunning verification of the Lorentz63 ATL model\n")
 
         # Run verification multiple times
-
-        diff_identity_list = []
-        for i in range(int(args["n_profiles"] * args["n_runs_per_profile"])):
+        n_runs = int(args["n_profiles"] * args["n_runs_per_profile"])
+        diff_identity_array = np.empty(n_runs, dtype=np.float64)
+        for i in range(n_runs):
 
             diff_identity = run_l63_atl_model_verification(
                 args,
@@ -249,9 +251,11 @@ def verify_atlm_model(args: dict):
                 ref_data_out,
             )
 
-            diff_identity_list.append(diff_identity)
+            diff_identity_array[i] = diff_identity
 
-    plt.plot(diff_identity_list)
+    mean_diff_identity = np.mean(diff_identity_array)
+    plt.plot(diff_identity_array)
+    plt.plot([0, n_runs], [mean_diff_identity, mean_diff_identity], "k--")
     plt.xlabel("Profile index")
     plt.ylabel("Error on identity")
     plt.title("Verification of ATLM")
@@ -275,8 +279,8 @@ if __name__ == "__main__":
 
     profiler.start()
 
-    # if args["verification_type"] == "verify_tlm":
-    #     verify_tlm_model(args)
+    if args["verification_type"] == "verify_tlm":
+        verify_tlm_model(args)
     if args["verification_type"] == "verify_atlm":
         verify_atlm_model(args)
 

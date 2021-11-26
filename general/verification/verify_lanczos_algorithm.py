@@ -38,8 +38,8 @@ def verify_lanczos_algorithm():
     # Define parameters
     params.sdim = 10
     params.seeked_error_norm = 1
-    n_vectors = 10
-    n_runs = 100
+    n_vectors = 30
+    n_runs = 3
     # Define base matrix
     base_matrix = np.eye(params.sdim)
     base_matrix = base_matrix * np.arange(1, params.sdim + 1)[:, np.newaxis]
