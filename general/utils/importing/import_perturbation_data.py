@@ -209,7 +209,7 @@ def import_profiles_for_nm_analysis(args: dict = None) -> Tuple[np.ndarray, dict
 
 
 def import_perturb_vectors(
-    args: dict, raw_perturbations: bool = False
+    args: dict, raw_perturbations: bool = False, dtype=None
 ) -> Tuple[np.ndarray, np.ndarray, List[int], List[dict]]:
     """Import units of perturbation vectors, e.g. BVs or SVs
 
@@ -289,13 +289,14 @@ def import_perturb_vectors(
         _,
     ) = g_import.import_start_u_profiles(args=args)
 
-    vector_units = np.empty((args["n_files"], args["n_runs_per_profile"], params.sdim))
+    vector_units = np.empty(
+        (args["n_files"], args["n_runs_per_profile"], params.sdim), dtype=np.float64
+    )
     characteristic_values = np.empty((args["n_files"], args["n_runs_per_profile"]))
 
     for i, file_name in enumerate(perturb_file_names):
         vector_unit, _ = g_import.import_data(
-            file_name,
-            max_lines=args["n_runs_per_profile"] + 1,
+            file_name, max_lines=args["n_runs_per_profile"] + 1, dtype=dtype
         )
 
         # Skip characteristic value if present
@@ -303,7 +304,7 @@ def import_perturb_vectors(
             characteristic_values[i, :] = vector_unit[:, 0]
             vector_units[i, :, :] = vector_unit[:, 1:].real
         else:
-            vector_units[i, :, :] = vector_unit
+            vector_units[i, :, :] = vector_unit.real
 
         if i + 1 >= args["n_files"]:
             break

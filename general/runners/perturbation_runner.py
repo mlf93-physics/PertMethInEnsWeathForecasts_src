@@ -367,7 +367,9 @@ def prepare_perturbations(
                 u_init_profiles,
                 perturb_positions,
                 _,
-            ) = pt_import.import_perturb_vectors(args, raw_perturbations=True)
+            ) = pt_import.import_perturb_vectors(
+                args, raw_perturbations=True, dtype=np.complex128
+            )
             # Reshape perturb_vectors
             perturb_vectors = np.reshape(
                 np.transpose(perturb_vectors, axes=(2, 0, 1)),

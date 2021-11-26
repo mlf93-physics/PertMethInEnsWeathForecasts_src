@@ -266,11 +266,13 @@ def lanczos_vector_algorithm(
 
     Parameters
     ----------
-    propagated_vector : np.ndarray, optional The propagated vector w defined as
-        w = L*L v, by default None input_vector_j : np.ndarray, optional The
-        input vector, v, which is propagated into w, by default None
-        n_iterations : int, optional The number of iterations of the Lanczos
-        algorithm, by default 0. Corresponds to the number of singular vectors
+    propagated_vector : np.ndarray, optional
+        The propagated vector w defined as w = L*L v, by default None
+    input_vector_j : np.ndarray, optional
+        The input vector, v, which is propagated into w, by default None
+    n_iterations : int, optional
+        The number of iterations of the Lanczos algorithm, by default 0.
+        Corresponds to the number of singular vectors
         calculated.
 
     Yields

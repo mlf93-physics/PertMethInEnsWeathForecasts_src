@@ -196,7 +196,11 @@ def imported_sorted_perturbation_info(folder_name, args, search_pattern="*.csv")
 
 
 def import_data(
-    file_name: pl.Path, start_line: int = 0, max_lines: int = None, step: int = 1
+    file_name: pl.Path,
+    start_line: int = 0,
+    max_lines: int = None,
+    step: int = 1,
+    dtype=None,
 ) -> Tuple[np.ndarray, dict]:
 
     # Import header
@@ -211,6 +215,10 @@ def import_data(
     # if len_file == 0:
     #     raise ImportError(f"File is empty; file_name = {file_name}")
 
+    # Set dtype if not given as argument
+    if dtype is None:
+        dtype = sparams.dtype
+
     stop_line = None if max_lines is None else start_line + max_lines
     # Import data
     with open(file_name) as file:
@@ -221,8 +229,8 @@ def import_data(
             stop_line,
             step,
         )
-        data_in: np.ndarray(dtype=sparams.dtype) = np.genfromtxt(
-            line_iterator, dtype=sparams.dtype, delimiter=","
+        data_in: np.ndarray(dtype=dtype) = np.genfromtxt(
+            line_iterator, dtype=dtype, delimiter=","
         )
 
     if data_in.size == 0:

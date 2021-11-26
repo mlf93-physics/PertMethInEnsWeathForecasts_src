@@ -180,8 +180,8 @@ def main(args):
                     print("No processes to run - check if units already exists")
 
                 # Update arrays for the lanczos algorithm
-                propagated_vector[:, :] = u_profiles_perturbed
-                input_vector[:, :] = np.reshape(data_out_list[0], (params.sdim, 1))
+                propagated_vector[:, :] = np.reshape(data_out_list[0], (params.sdim, 1))
+                input_vector[:, :] = u_profiles_perturbed
                 # Iterate the Lanczos algorithm one step
                 lanczos_outarray, tridiag_matrix, input_vector_matrix = next(
                     lanczos_iterator
@@ -213,10 +213,10 @@ def main(args):
             args=args,
             exp_setup=exp_setup,
         )
-        fig, axes = plt.subplots(nrows=2, ncols=1)
-        sb.heatmap(sv_matrix_store[:, :, 0].T, ax=axes[0])
-        axes[1].plot(s_values_store)
-        plt.show()
+        # fig, axes = plt.subplots(nrows=2, ncols=1)
+        # sb.heatmap(sv_matrix_store[:, :, 0].T, ax=axes[0])
+        # axes[1].plot(s_values_store)
+        # plt.show()
 
     # Reset exp_folder
     args["out_exp_folder"] = exp_setup["folder_name"]
