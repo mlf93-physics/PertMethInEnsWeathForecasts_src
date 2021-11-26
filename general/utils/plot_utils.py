@@ -171,11 +171,11 @@ def generate_title(
 
 def save_or_show_plot(args: dict, tight_layout_rect: list = None):
     if args["save_fig"]:
-        subpath = pl.Path("lorentz63_experiments/singular_vectors/test_orthogonality/")
+        subpath = pl.Path("lorentz63_experiments/singular_vectors/test_perturbations2/")
 
         for i in plt.get_fignums():
             fig = plt.figure(i)
-            file_name = "sv_orthogonality_iterations1"
+            file_name = "sv_perturbations_sv1"
 
             name = g_ui.get_name_input(
                 "Proposed name of figure: ", proposed_input=file_name

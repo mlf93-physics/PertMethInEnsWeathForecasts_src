@@ -99,6 +99,7 @@ def plot_error_norm_vs_time(args):
         normalize_start_time=False,
         legend_on=False,
         cmap_list=["blue"],
+        plot_args=["unique_linestyle"],
     )
 
 
@@ -288,6 +289,4 @@ if __name__ == "__main__":
     elif "energy_dist" in args["plot_type"]:
         plot_energy_dist(args)
 
-    if not args["noplot"]:
-        plt.tight_layout()
-        plt.show()
+    g_plt_utils.save_or_show_plot(args)

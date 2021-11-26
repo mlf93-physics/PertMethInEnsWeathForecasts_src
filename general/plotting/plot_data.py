@@ -125,9 +125,15 @@ def plot_error_norm_vs_time(
         zorder=zorder,
     )
 
+    # Set unique linestyle
     if "unique_linestyle" in plot_args:
-        for i, line in enumerate(lines):
-            line.set_linestyle(LINESTYLES[i % 3])
+        for i, header_dict in enumerate(header_dicts):
+            if "run_in_profile" in header_dict:
+                lines[i].set_linestyle(LINESTYLES[int(header_dict["run_in_profile"])])
+            else:
+                raise KeyError(
+                    "run_in_profile not found in header_dict. Unique linestyles cannot be made."
+                )
 
     if args["plot_mode"] == "detailed":
         # Plot perturbation error norms

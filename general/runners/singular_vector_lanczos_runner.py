@@ -114,7 +114,7 @@ def main(args):
             (exp_setup["n_iterations"], exp_setup["n_vectors"]), dtype=np.complex128
         )
 
-        for j in range(exp_setup["n_iterations"]):
+        for j in range(exp_setup["n_lanczos_iterations"]):
             # Import reference data
             u_ref, _, ref_header_dict = g_import.import_start_u_profiles(
                 args=copy_args_tl
@@ -133,55 +133,64 @@ def main(args):
             )
 
             for _ in range(exp_setup["n_vectors"]):
-                ###### TL model run ######
-                # Add TL submodel attribute
-                cfg.MODEL.submodel = "TL"
-                # On all other iterations except the first, the rescaled
-                # perturbations are used and are not None
-                (
-                    processes,
-                    data_out_list,
-                    _,
-                    u_profiles_perturbed,
-                ) = pt_runner.main_setup(
-                    copy_args_tl,
-                    u_profiles_perturbed=lanczos_outarray,
-                    exp_setup=exp_setup,
-                    u_ref=u_ref,
-                )
 
-                if len(processes) > 0:
-                    # Run specified number of cycles
-                    pt_runner.main_run(
+                for k in range(exp_setup["n_model_iterations"]):
+                    ###### TL model run ######
+                    # Add TL submodel attribute
+                    cfg.MODEL.submodel = "TL"
+                    # On all other iterations except the first, the rescaled
+                    # perturbations are used and are not None
+                    (
                         processes,
-                        args=copy_args_tl,
-                    )
-                else:
-                    print("No processes to run - check if units already exists")
-
-                ###### Adjoint model run ######
-                # Add ATL submodel attribute
-                cfg.MODEL.submodel = "ATL"
-                processes, data_out_list, _, _ = pt_runner.main_setup(
-                    copy_args_atl,
-                    u_profiles_perturbed=np.array(data_out_list).T,
-                    exp_setup=exp_setup,
-                    u_ref=u_ref,
-                )
-
-                if len(processes) > 0:
-                    # Run specified number of iterations
-                    pt_runner.main_run(
-                        processes,
-                        args=copy_args_atl,
+                        data_out_list,
+                        _,
+                        u_profiles_perturbed,
+                    ) = pt_runner.main_setup(
+                        copy_args_tl,
+                        u_profiles_perturbed=lanczos_outarray,
+                        exp_setup=exp_setup,
+                        u_ref=u_ref,
                     )
 
-                else:
-                    print("No processes to run - check if units already exists")
+                    if k == 0:
+                        store_u_profiles_perturbed = np.copy(u_profiles_perturbed)
+
+                    if len(processes) > 0:
+                        # Run specified number of cycles
+                        pt_runner.main_run(
+                            processes,
+                            args=copy_args_tl,
+                        )
+                    else:
+                        print("No processes to run - check if units already exists")
+
+                    ###### Adjoint model run ######
+                    # Add ATL submodel attribute
+                    cfg.MODEL.submodel = "ATL"
+                    processes, data_out_list, _, _ = pt_runner.main_setup(
+                        copy_args_atl,
+                        u_profiles_perturbed=np.array(data_out_list).T,
+                        exp_setup=exp_setup,
+                        u_ref=u_ref,
+                    )
+
+                    if len(processes) > 0:
+                        # Run specified number of iterations
+                        pt_runner.main_run(
+                            processes,
+                            args=copy_args_atl,
+                        )
+
+                        lanczos_outarray = pt_utils.rescale_perturbations(
+                            data_out_list, copy_args_atl, raw_perturbations=True
+                        )
+
+                    else:
+                        print("No processes to run - check if units already exists")
 
                 # Update arrays for the lanczos algorithm
                 propagated_vector[:, :] = np.reshape(data_out_list[0], (params.sdim, 1))
-                input_vector[:, :] = u_profiles_perturbed
+                input_vector[:, :] = store_u_profiles_perturbed
                 # Iterate the Lanczos algorithm one step
                 lanczos_outarray, tridiag_matrix, input_vector_matrix = next(
                     lanczos_iterator

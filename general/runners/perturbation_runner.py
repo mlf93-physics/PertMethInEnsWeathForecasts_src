@@ -221,6 +221,7 @@ def perturbation_runner(
             data_out,
             perturb_position=perturb_positions[run_count // args["n_runs_per_profile"]],
             perturb_count=perturb_count,
+            run_count=run_count,
             args=args,
         )
 

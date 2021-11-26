@@ -296,7 +296,7 @@ def import_perturb_vectors(
 
     for i, file_name in enumerate(perturb_file_names):
         vector_unit, _ = g_import.import_data(
-            file_name, max_lines=args["n_runs_per_profile"] + 1, dtype=dtype
+            file_name, max_lines=args["n_runs_per_profile"], dtype=dtype, start_line=1
         )
 
         # Skip characteristic value if present

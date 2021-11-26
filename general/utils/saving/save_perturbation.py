@@ -9,6 +9,7 @@ def save_perturbation_data(
     data_out: np.ndarray,
     perturb_position: int = None,
     perturb_count: int = None,
+    run_count: int = None,
     args: dict = None,
 ):
     """Save the perturbation data depending on the LICENCE
@@ -51,5 +52,6 @@ def save_perturbation_data(
         data_out,
         prefix=prefix,
         perturb_position=perturb_position,
+        run_count=run_count,
         args=args,
     )

@@ -15,7 +15,8 @@
         "sub_exp_folder": "perturb_data",
         "integration_time": 0.1,
         "n_vectors": 9,
-        "n_iterations": 10,
+        "n_lanczos_iterations": 1,
+        "n_model_iterations": 30,
         "vector_offset": 0.1,
         "start_times": [
             15

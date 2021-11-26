@@ -25,6 +25,7 @@ def save_data(
     subsubfolder: str = "",
     prefix: str = "",
     perturb_position: int = None,
+    run_count: int = None,
     args: dict = None,
 ) -> pl.Path:
     """Save the data to disc.
@@ -75,7 +76,11 @@ def save_data(
         # Prepare extra header items
         perturb_header_extra = ""
         if perturb_position is not None:
-            perturb_header_extra = f"perturb_pos={perturb_position}, "
+            perturb_header_extra = (
+                f"perturb_pos={perturb_position}, "
+                + f"profile={run_count // args['n_runs_per_profile']}, "
+                + f"run_in_profile={run_count % args['n_runs_per_profile']}, "
+            )
 
         header = g_save_utils.generate_header(
             args,
