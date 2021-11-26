@@ -164,7 +164,7 @@ def generate_title(
     title = title.rstrip(", ")
 
     # Wrap title
-    title = "\n".join(textwrap.wrap(title, 80))
+    title = "\n".join(textwrap.wrap(title, 60))
 
     return title
 

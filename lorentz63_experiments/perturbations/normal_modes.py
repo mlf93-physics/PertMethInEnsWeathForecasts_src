@@ -67,8 +67,8 @@ def find_normal_modes(
         # positive_e_values_indices = np.argwhere(e_values.real > 0)
         chosen_e_value_index = np.argmax(e_values.real)
 
-        e_vector_matrix[:, i] = e_vectors[:, chosen_e_value_index]
-        e_values_max[i] = e_values[chosen_e_value_index]
+        e_vector_matrix[:, i] = e_vectors[:, chosen_e_value_index].ravel()
+        e_values_max[i] = e_values[chosen_e_value_index].ravel()
 
     return e_vector_matrix, e_values_max, e_vector_collection, e_value_collection
 

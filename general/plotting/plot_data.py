@@ -21,6 +21,86 @@ elif cfg.MODEL == Models.LORENTZ63:
     params = l63_params
 
 
+def plot_exp_growth_rate_vs_time(
+    args=None,
+    normalize_start_time=True,
+    axes=None,
+    exp_setup=None,
+    linestyle: str = "-",
+    linewidth: float = 2,
+    alpha: float = 1.0,
+    zorder: float = 0.0,
+    cmap_list: Union[None, list] = None,
+    legend_on: bool = True,
+    plot_args: list = ["detailed_title"],
+):
+
+    if exp_setup is None:
+        try:
+            exp_setup = g_import.import_exp_info_file(args)
+        except ImportError:
+            print(
+                "\nThe .json config file was not found, so this plot doesnt work "
+                + "if the file is needed\n"
+            )
+
+    (
+        u_stores,
+        perturb_time_pos_list,
+        perturb_time_pos_list_legend,
+        header_dicts,
+        u_ref_stores,
+    ) = g_import.import_perturbation_velocities(args, search_pattern="*perturb*.csv")
+
+    # Define time array
+    time_array = np.linspace(
+        0,
+        header_dicts[0]["time_to_run"],
+        int(header_dicts[0]["time_to_run"] * params.tts) + args["endpoint"] * 1,
+        dtype=np.float64,
+        endpoint=args["endpoint"],
+    )
+
+    num_perturbations = len(perturb_time_pos_list)
+
+    # Analyse error norm and mean exponential growth rate
+    (
+        error_norm_vs_time,
+        error_norm_mean_vs_time,
+    ) = g_a_data.analyse_error_norm_vs_time(u_stores, args=args)
+
+    mean_growth_rate = g_a_data.analyse_mean_exp_growth_rate_vs_time(
+        error_norm_vs_time, args=args
+    )
+
+    # Prepare axes
+    if axes is None:
+        axes = plt.axes()
+
+    axes.plot(
+        time_array,
+        mean_growth_rate,
+        linestyle=linestyle,
+        alpha=alpha,
+        linewidth=linewidth,
+        zorder=zorder,
+        label=args["exp_folder"],
+    )
+
+    if legend_on:
+        axes.legend()
+
+    title = g_plt_utils.generate_title(
+        args,
+        header_dict=header_dicts[0],
+        title_header="Exponential growth rate vs time",
+        detailed="detailed_title" in plot_args,
+    )
+    axes.set_title(title)
+    axes.set_xlabel("Time")
+    axes.set_ylabel("Exp. growth rate, $\\lambda$")
+
+
 def plot_error_norm_vs_time(
     args=None,
     normalize_start_time=True,

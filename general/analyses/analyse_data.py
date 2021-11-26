@@ -1,4 +1,15 @@
+import config as cfg
+import lorentz63_experiments.params.params as l63_params
 import numpy as np
+from general.params.model_licences import Models
+from shell_model_experiments.params.params import PAR as PAR_SH
+from shell_model_experiments.params.params import ParamsStructType
+
+# Get parameters for model
+if cfg.MODEL == Models.SHELL_MODEL:
+    params = PAR_SH
+elif cfg.MODEL == Models.LORENTZ63:
+    params = l63_params
 
 
 def analyse_error_norm_vs_time(u_stores, args=None):
@@ -67,3 +78,33 @@ def analyse_error_spread_vs_time_mean_of_norm(u_stores, args=None):
     error_spread = np.sqrt(np.mean(error_spread, axis=0))
 
     return error_spread
+
+
+def analyse_mean_exp_growth_rate_vs_time(
+    error_norm_vs_time: np.ndarray, args: dict = None
+) -> np.ndarray:
+    """Analyse the mean exponential growth rate vs time of one or more error norm vs
+    time dataseries
+
+    Parameters
+    ----------
+    error_norm_vs_time : np.ndarray(
+            (number of datapoints per perturbations, number of perturbations)
+        )
+        An array consisting of one or more error norm vs time dataseries
+    args : dict, optional
+        Run-time arguments, by default None
+    """
+    n_datapoints, n_perturbations = error_norm_vs_time.shape
+    growth_rates = np.empty((n_datapoints - 1, n_perturbations))
+
+    for i in range(1, n_datapoints):
+        growth_rates[i - 1, :] = (
+            1
+            / (i * params.stt)
+            * np.log(error_norm_vs_time[i, :] / error_norm_vs_time[0, :])
+        )
+
+    mean_growth_rate = np.mean(growth_rates, axis=1)
+
+    return mean_growth_rate

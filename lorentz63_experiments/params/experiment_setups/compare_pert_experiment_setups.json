@@ -1,17 +1,17 @@
 {
     "TestRun0": {
         "general": {
-            "folder_name": "compare_pert_test3",
+            "folder_name": "compare_pert_ttr1.0_run2",
             "eval_times": [
                 10
             ],
-            "n_units": 6,
+            "n_units": 50,
             "unit_offset": 1.0
         },
         "bv_gen_setup": {
             "sub_exp_folder": "perturb_data",
-            "integration_time": 1.0,
-            "n_cycles": 4,
+            "integration_time": 0.1,
+            "n_cycles": 8,
             "n_vectors": 8
         },
         "pert_setup": {

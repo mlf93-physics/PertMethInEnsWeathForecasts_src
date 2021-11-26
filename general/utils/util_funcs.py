@@ -224,17 +224,31 @@ def determine_params_from_header_dict(header_dict: dict, args: dict):
         print("Nothing specific to do with args in lorentz63 model yet")
 
 
-def normalize_array(array, norm_value=1e-2, axis=0):
+def normalize_array(
+    array: np.ndarray, norm_value: float = 1e-2, axis: int = 0
+) -> np.ndarray:
+    """Normalize an array of arbitrary dimension to a given value along a given
+    axis
+
+    Parameters
+    ----------
+    array : np.ndarray
+        The array to be normalized
+    norm_value : float, optional
+        The specified norm of the array after normalization, by default 1e-2
+    axis : int, optional
+        The axis along which the normalization should be performed, by default 0
+
+    Returns
+    -------
+    np.ndarray
+        The normalized array
+    """
     # Find scaling factor in order to have the seeked norm of the vector
     lambda_factor = norm_value / np.linalg.norm(array, axis=axis)
 
-    # If array is 2D, reshape lambda_factor
-    if array.ndim == 2:
-        lambda_factor = np.reshape(lambda_factor, (array.shape[-2], 1))
-    elif array.ndim == 3:
-        lambda_factor = np.reshape(lambda_factor, (array.shape[-3], array.shape[-2], 1))
-    elif array.ndim > 3:
-        raise ValueError(f"Normalization of {array.ndim} is currently not supported")
+    # Add missing axis to make multiplication with array possible
+    lambda_factor = np.expand_dims(lambda_factor, axis=axis)
 
     # Scale down the vector
     array = lambda_factor * array

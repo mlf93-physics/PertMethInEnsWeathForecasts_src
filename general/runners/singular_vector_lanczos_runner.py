@@ -108,10 +108,11 @@ def main(args):
 
         # Prepare storage of sv vectors and -values
         sv_matrix_store = np.empty(
-            (exp_setup["n_iterations"], params.sdim, exp_setup["n_vectors"])
+            (exp_setup["n_lanczos_iterations"], params.sdim, exp_setup["n_vectors"])
         )
         s_values_store = np.empty(
-            (exp_setup["n_iterations"], exp_setup["n_vectors"]), dtype=np.complex128
+            (exp_setup["n_lanczos_iterations"], exp_setup["n_vectors"]),
+            dtype=np.complex128,
         )
 
         for j in range(exp_setup["n_lanczos_iterations"]):

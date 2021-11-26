@@ -360,6 +360,11 @@ def prepare_perturbations(
                 )
             else:
                 print("\nRunning with BREED VECTOR perturbations\n")
+                # Reshape perturb_vectors
+                perturb_vectors = np.reshape(
+                    np.transpose(perturb_vectors, axes=(2, 0, 1)),
+                    (params.sdim, args["n_profiles"] * args["n_runs_per_profile"]),
+                )
 
         elif "sv" in args["pert_mode"]:
             print("\nRunning with SINGULAR VECTOR perturbations\n")

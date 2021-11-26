@@ -234,6 +234,50 @@ def plot_error_norm_comparison(args: dict):
         l63_plot.plot_energy(args, axes=axes[1])
 
 
+def plot_exp_growth_rate_comparison(args: dict):
+    """Plots a comparison of the exponential growth rates vs time for the different
+    perturbation methods
+
+    Parameters
+    ----------
+    args : dict
+        Run-time arguments
+    """
+
+    # args["endpoint"] = True
+
+    if args["exp_folders"] is not None:
+        len_folders = len(args["exp_folders"])
+    elif args["exp_folder"] is not None:
+        # Get dirs in path
+        _path = pl.Path(args["datapath"], args["exp_folder"])
+        _dirs = g_utils.get_dirs_in_path(_path)
+        len_folders = len(_dirs)
+
+        if len_folders == 0:
+            args["exp_folders"] = [args["exp_folder"]]
+        else:
+            # Sort out dirs not named *_perturbations
+            args["exp_folders"] = [
+                str(pl.Path(_dirs[i].parent.name, _dirs[i].name))
+                for i in range(len_folders)
+                # if "sv" in _dirs[i].name
+                if "perturbations" in _dirs[i].name  # or "nm" in _dirs[i].name
+            ]
+
+        # Update number of folders after filtering
+        len_folders = len(args["exp_folders"])
+
+    cmap_list = plt.rcParams["axes.prop_cycle"].by_key()["color"]
+    axes = plt.axes()
+
+    for i, folder in enumerate(args["exp_folders"]):
+        # Set exp_folder
+        args["exp_folder"] = folder
+
+        g_plt_data.plot_exp_growth_rate_vs_time(args=args, axes=axes, plot_args=[])
+
+
 if __name__ == "__main__":
     cfg.init_licence()
 
@@ -258,6 +302,8 @@ if __name__ == "__main__":
         plt_vector_comparison(args)
     elif "error_norm_compare" in args["plot_type"]:
         plot_error_norm_comparison(args)
+    elif "exp_growth_rate_compare" in args["plot_type"]:
+        plot_exp_growth_rate_comparison(args)
     else:
         raise ValueError("No valid plot type given as input argument")
 
