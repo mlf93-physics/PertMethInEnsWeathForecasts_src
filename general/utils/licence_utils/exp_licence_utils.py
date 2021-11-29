@@ -20,6 +20,9 @@ def detect_exp_licence() -> Experiment:
     if "perturbation_runner" == root_file_name:
         licence = exp.NORMAL_PERTURBATION
 
+    elif "breed_vector_eof" in root_file_name:
+        licence = exp.BREEDING_EOF_VECTORS
+
     elif "breed_vector" in root_file_name:
         licence = exp.BREEDING_VECTORS
 

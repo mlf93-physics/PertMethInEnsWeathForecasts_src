@@ -249,7 +249,7 @@ def plot_breed_eof_vectors_3D(args: dict):
 
     perturb_vectors, perturb_header_dicts = pt_import.import_perturb_vectors(args)
 
-    eof_vectors = bv_analysis.calc_bv_eof_vectors(perturb_vectors)
+    eof_vectors, variances = bv_analysis.calc_bv_eof_vectors(perturb_vectors)
     n_vectors: int = eof_vectors.shape[2]
 
     origin: np.ndarray = np.zeros(n_vectors)

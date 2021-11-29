@@ -2,6 +2,8 @@
     "TestRun0": {
         "general": {
             "folder_name": "compare_pert_ttr1.0_run2",
+            "vector_folder": "vectors",
+            "perturbation_folder": "perturbations",
             "eval_times": [
                 10
             ],
@@ -11,7 +13,7 @@
         "bv_gen_setup": {
             "sub_exp_folder": "perturb_data",
             "integration_time": 0.1,
-            "n_cycles": 8,
+            "n_cycles": 16,
             "n_vectors": 8
         },
         "pert_setup": {

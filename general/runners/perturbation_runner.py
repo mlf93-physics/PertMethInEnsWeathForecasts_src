@@ -340,31 +340,26 @@ def prepare_perturbations(
                     n_profiles=args["n_profiles"],
                 )
         elif "bv" in args["pert_mode"]:
+            if args["pert_mode"] == "bv":
+                print("\nRunning with BREED VECTOR perturbations\n")
+                _raw_perturbations = False
+            elif args["pert_mode"] == "bv_eof":
+                print("\nRunning with BREED EOF VECTOR perturbations\n")
+                _raw_perturbations = True
             (
                 perturb_vectors,
                 u_init_profiles,
                 perturb_positions,
                 _,
-            ) = pt_import.import_perturb_vectors(args)
+            ) = pt_import.import_perturb_vectors(
+                args, raw_perturbations=_raw_perturbations
+            )
 
-            if args["pert_mode"] == "bv_eof":
-                print("\nRunning with BREED VECTOR EOF perturbations\n")
-
-                eof_vectors: np.ndarray = bv_eof_anal.calc_bv_eof_vectors(
-                    perturb_vectors, args["n_runs_per_profile"]
-                )
-                # Reshape and save as perturb_vectors
-                perturb_vectors = np.reshape(
-                    np.transpose(eof_vectors, axes=(1, 0, 2)),
-                    (params.sdim, args["n_profiles"] * args["n_runs_per_profile"]),
-                )
-            else:
-                print("\nRunning with BREED VECTOR perturbations\n")
-                # Reshape perturb_vectors
-                perturb_vectors = np.reshape(
-                    np.transpose(perturb_vectors, axes=(2, 0, 1)),
-                    (params.sdim, args["n_profiles"] * args["n_runs_per_profile"]),
-                )
+            # Reshape perturb_vectors
+            perturb_vectors = np.reshape(
+                np.transpose(perturb_vectors, axes=(2, 0, 1)),
+                (params.sdim, args["n_profiles"] * args["n_runs_per_profile"]),
+            )
 
         elif "sv" in args["pert_mode"]:
             print("\nRunning with SINGULAR VECTOR perturbations\n")
