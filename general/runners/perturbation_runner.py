@@ -89,7 +89,6 @@ cfg.GLOBAL_PARAMS.ref_run = False
 def perturbation_runner(
     u_old: np.ndarray,
     perturb_positions: List[int],
-    du_array: np.ndarray,
     data_out_list: List[np.ndarray],
     args: dict,
     run_count: int,
@@ -104,8 +103,6 @@ def perturbation_runner(
         The previous velocity vector (i.e. the initial vel. vector)
     perturb_positions : List[int]
         List of perturbation index positions
-    du_array : np.ndarray
-        Array to store the du vector
     data_out_list : List[np.ndarray]
         List to store output data from processes (i.e. when LICENCE = BREEDING_VECTORS)
     args : dict
@@ -181,7 +178,6 @@ def perturbation_runner(
             jacobian_matrix = l63_nm_estimator.init_jacobian(args)
 
             if cfg.MODEL.submodel == "TL":
-
                 l63_tl_model(
                     u_old,
                     np.copy(u_ref[:, run_count]),
@@ -193,8 +189,6 @@ def perturbation_runner(
                     raw_perturbation=True,
                 )
             elif cfg.MODEL.submodel == "ATL":
-                jacobian_matrix = l63_nm_estimator.init_jacobian(args)
-
                 l63_atl_model(
                     np.reshape(u_old, (params.sdim, 1)),
                     np.copy(u_ref[:, run_count]),
@@ -225,8 +219,13 @@ def perturbation_runner(
         or cfg.LICENCE == EXP.LYAPUNOV_VECTORS
         or cfg.LICENCE == EXP.SINGULAR_VECTORS
     ):
-        # Save latest state vector to output dir
-        data_out_list.append(data_out[-1, 1:])
+        # For the ATL model, time goes backwards, i.e. first datapoint in data_out
+        # stores the result of the last integration.
+        if cfg.MODEL.submodel == "ATL":
+            data_out_list.append(data_out[0, 1:])
+        else:
+            # Save latest state vector to output dir
+            data_out_list.append(data_out[-1, 1:])
 
 
 def prepare_run_times(
@@ -444,7 +443,6 @@ def prepare_processes(
                     args=(
                         np.copy(u_profiles_perturbed[:, count]),
                         perturb_positions,
-                        params.du_array,
                         data_out_list,
                         copy_args,
                         count,
@@ -471,7 +469,6 @@ def prepare_processes(
                 args=(
                     np.copy(u_profiles_perturbed[:, count]),
                     perturb_positions,
-                    params.du_array,
                     data_out_list,
                     copy_args,
                     count,
@@ -497,7 +494,7 @@ def main_setup(
     times_to_run, Nt_array = prepare_run_times(args)
 
     # If in 2. or higher breed cycle, the perturbation is given as input
-    if u_profiles_perturbed is None or perturb_positions is None:
+    if u_profiles_perturbed is None:  # or perturb_positions is None:
 
         raw_perturbations = False
         # Get only raw_perturbations if licence is LYAPUNOV_VECTORS

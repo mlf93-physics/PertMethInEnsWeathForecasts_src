@@ -319,8 +319,8 @@ def lanczos_vector_algorithm(
                     The new value for the Beta variable
             )
         """
-        omega_j_temp = np.matrix(propagated_vector)
-        alpha_j = (omega_j_temp.getH() @ input_vector_j)[0, 0]
+        omega_j_temp = np.array(propagated_vector)
+        alpha_j = (omega_j_temp.T.conj() @ input_vector_j)[0, 0]
 
         # Save alpha_j to tridiag_matrix
         tridiag_matrix[iteration, iteration] = alpha_j
