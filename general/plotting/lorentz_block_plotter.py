@@ -18,11 +18,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from pyinstrument import Profiler
 import general.plotting.plot_config as g_plt_config
-from shell_model_experiments.params.params import ParamsStructType
-from shell_model_experiments.params.params import PAR as PAR_SH
-import shell_model_experiments.utils.util_funcs as sh_utils
-import lorentz63_experiments.params.params as l63_params
-import shell_model_experiments.plotting.plot_data as pl_data
 import general.analyses.lorentz_block_analysis as lr_analysis
 import general.utils.importing.import_data_funcs as g_import
 import general.utils.plot_utils as g_plt_utils
@@ -34,8 +29,15 @@ import config as cfg
 
 # Get parameters for model
 if cfg.MODEL == Models.SHELL_MODEL:
+    from shell_model_experiments.params.params import ParamsStructType
+    from shell_model_experiments.params.params import PAR as PAR_SH
+    import shell_model_experiments.utils.util_funcs as sh_utils
+    import shell_model_experiments.plotting.plot_data as pl_data
+
     params = PAR_SH
 elif cfg.MODEL == Models.LORENTZ63:
+    import lorentz63_experiments.params.params as l63_params
+
     params = l63_params
 
 # Setup plotting defaults

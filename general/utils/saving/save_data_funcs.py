@@ -5,9 +5,6 @@ sys.path.append("..")
 import json
 import pathlib as pl
 import numpy as np
-from shell_model_experiments.params.params import PAR as PAR_SH
-from shell_model_experiments.params.params import ParamsStructType
-import lorentz63_experiments.params.params as l63_params
 import general.utils.saving.save_data_funcs as g_save
 import general.utils.saving.save_utils as g_save_utils
 from general.params.model_licences import Models
@@ -15,8 +12,13 @@ import config as cfg
 
 # Get parameters for model
 if cfg.MODEL == Models.SHELL_MODEL:
+    from shell_model_experiments.params.params import ParamsStructType
+    from shell_model_experiments.params.params import PAR as PAR_SH
+
     PAR = PAR_SH
 elif cfg.MODEL == Models.LORENTZ63:
+    import lorentz63_experiments.params.params as l63_params
+
     PAR = l63_params
 
 

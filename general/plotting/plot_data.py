@@ -1,9 +1,6 @@
 import pathlib as pl
 import numpy as np
 import matplotlib.pyplot as plt
-from shell_model_experiments.params.params import ParamsStructType
-from shell_model_experiments.params.params import PAR as PAR_SH
-import lorentz63_experiments.params.params as l63_params
 from general.utils.module_import.type_import import *
 import general.utils.importing.import_data_funcs as g_import
 import general.utils.plot_utils as g_plt_utils
@@ -16,8 +13,13 @@ import config as cfg
 
 # Get parameters for model
 if cfg.MODEL == Models.SHELL_MODEL:
+    from shell_model_experiments.params.params import ParamsStructType
+    from shell_model_experiments.params.params import PAR as PAR_SH
+
     params = PAR_SH
 elif cfg.MODEL == Models.LORENTZ63:
+    import lorentz63_experiments.params.params as l63_params
+
     params = l63_params
 
 

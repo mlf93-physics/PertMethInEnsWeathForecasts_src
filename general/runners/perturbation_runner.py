@@ -33,7 +33,6 @@ import multiprocessing
 import pathlib as pl
 
 import config as cfg
-import general.analyses.breed_vector_eof_analysis as bv_eof_anal
 import general.utils.argument_parsers as a_parsers
 import general.utils.exceptions as g_exceptions
 import general.utils.importing.import_data_funcs as g_import

@@ -8,20 +8,22 @@ import general.utils.dev_plots as g_dev_plots
 import general.utils.importing.import_data_funcs as g_import
 import general.utils.importing.import_perturbation_data as pt_import
 import general.utils.util_funcs as g_utils
-import lorentz63_experiments.params.params as l63_params
-import lorentz63_experiments.params.special_params as l63_sparams
 import numpy as np
-import shell_model_experiments.utils.special_params as sh_sparams
 from general.params.model_licences import Models
 from general.utils.module_import.type_import import *
-from shell_model_experiments.params.params import PAR as PAR_SH
-from shell_model_experiments.params.params import ParamsStructType
 
 # Get parameters for model
 if cfg.MODEL == Models.SHELL_MODEL:
+    import shell_model_experiments.utils.special_params as sh_sparams
+    from shell_model_experiments.params.params import PAR as PAR_SH
+    from shell_model_experiments.params.params import ParamsStructType
+
     params = PAR_SH
     sparams = sh_sparams
 elif cfg.MODEL == Models.LORENTZ63:
+    import lorentz63_experiments.params.params as l63_params
+    import lorentz63_experiments.params.special_params as l63_sparams
+
     params = l63_params
     sparams = l63_sparams
 

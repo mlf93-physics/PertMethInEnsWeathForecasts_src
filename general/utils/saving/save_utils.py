@@ -1,12 +1,15 @@
 import os
 import pathlib as pl
 import subprocess as sp
-from shell_model_experiments.params.params import PAR as PAR_SH
-from shell_model_experiments.params.params import ParamsStructType
-import shell_model_experiments.utils.util_funcs as sh_utils
-import lorentz63_experiments.params.params as l63_params
 from general.params.model_licences import Models
 import config as cfg
+
+if cfg.MODEL == Models.SHELL_MODEL:
+    from shell_model_experiments.params.params import PAR as PAR_SH
+    from shell_model_experiments.params.params import ParamsStructType
+    import shell_model_experiments.utils.util_funcs as sh_utils
+elif cfg.MODEL == Models.LORENTZ63:
+    import lorentz63_experiments.params.params as l63_params
 
 
 def convert_arguments_to_string(args):

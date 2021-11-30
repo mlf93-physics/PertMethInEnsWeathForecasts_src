@@ -22,19 +22,21 @@ import general.utils.saving.save_data_funcs as g_save
 import general.utils.saving.save_utils as g_save_utils
 import general.utils.user_interface as g_ui
 import general.utils.util_funcs as g_utils
-import lorentz63_experiments.params.params as l63_params
-import shell_model_experiments.utils.util_funcs as sh_utils
 from general.params.env_params import *
 from general.params.model_licences import Models
-from shell_model_experiments.params.params import PAR as PAR_SH
-from shell_model_experiments.params.params import ParamsStructType
 
 import perturbation_runner as pt_runner
 
 # Get parameters for model
 if cfg.MODEL == Models.SHELL_MODEL:
+    import shell_model_experiments.utils.util_funcs as sh_utils
+    from shell_model_experiments.params.params import PAR as PAR_SH
+    from shell_model_experiments.params.params import ParamsStructType
+
     params = PAR_SH
 elif cfg.MODEL == Models.LORENTZ63:
+    import lorentz63_experiments.params.params as l63_params
+
     params = l63_params
 
 # Set global params

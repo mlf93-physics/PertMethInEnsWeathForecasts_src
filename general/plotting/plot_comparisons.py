@@ -23,21 +23,23 @@ import general.utils.importing.import_utils as g_imp_utils
 import general.utils.plot_utils as g_plt_utils
 import general.utils.user_interface as g_ui
 import general.utils.util_funcs as g_utils
-import lorentz63_experiments.params.params as l63_params
-import lorentz63_experiments.plotting.plot_data as l63_plot
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sb
-import shell_model_experiments.plotting.plot_data as sh_plot
-import shell_model_experiments.utils.util_funcs as sh_utils
 from general.params.model_licences import Models
-from shell_model_experiments.params.params import PAR as PAR_SH
-from shell_model_experiments.params.params import ParamsStructType
 
 # Get parameters for model
 if cfg.MODEL == Models.SHELL_MODEL:
+    import shell_model_experiments.plotting.plot_data as sh_plot
+    import shell_model_experiments.utils.util_funcs as sh_utils
+    from shell_model_experiments.params.params import PAR as PAR_SH
+    from shell_model_experiments.params.params import ParamsStructType
+
     params = PAR_SH
 elif cfg.MODEL == Models.LORENTZ63:
+    import lorentz63_experiments.params.params as l63_params
+    import lorentz63_experiments.plotting.plot_data as l63_plot
+
     params = l63_params
 
 

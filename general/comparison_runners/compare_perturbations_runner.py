@@ -20,19 +20,21 @@ import general.utils.experiments.exp_utils as exp_utils
 import general.utils.runner_utils as r_utils
 import general.utils.user_interface as g_ui
 import general.utils.util_funcs as g_utils
-import lorentz63_experiments.params.params as l63_params
-import shell_model_experiments.utils.util_funcs as sh_utils
 from general.params.experiment_licences import Experiments as exp
 from general.params.model_licences import Models
 from general.runners.breed_vector_runner import main as bv_runner
 from general.analyses.breed_vector_eof_analysis import main as bv_eof_analyser
-from shell_model_experiments.params.params import PAR as PAR_SH
-from shell_model_experiments.params.params import ParamsStructType
 
 # Get parameters for model
 if cfg.MODEL == Models.SHELL_MODEL:
+    import shell_model_experiments.utils.util_funcs as sh_utils
+    from shell_model_experiments.params.params import PAR as PAR_SH
+    from shell_model_experiments.params.params import ParamsStructType
+
     params = PAR_SH
 elif cfg.MODEL == Models.LORENTZ63:
+    import lorentz63_experiments.params.params as l63_params
+
     params = l63_params
 
 # Set global params

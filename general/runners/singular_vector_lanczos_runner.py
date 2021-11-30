@@ -22,30 +22,31 @@ import general.utils.argument_parsers as a_parsers
 import general.utils.experiments.exp_utils as exp_utils
 import general.utils.experiments.validate_exp_setups as ut_exp_val
 import general.utils.importing.import_data_funcs as g_import
+import general.utils.perturb_utils as pt_utils
 import general.utils.runner_utils as r_utils
 import general.utils.saving.save_data_funcs as g_save
 import general.utils.saving.save_utils as g_save_utils
 import general.utils.saving.save_vector_funcs as v_save
 import general.utils.user_interface as g_ui
 import general.utils.util_funcs as g_utils
-import general.utils.perturb_utils as pt_utils
-import lorentz63_experiments.params.params as l63_params
 import numpy as np
-import shell_model_experiments.utils.util_funcs as sh_utils
 from general.params.model_licences import Models
-import shell_model_experiments.utils.special_params as sh_sparams
-import lorentz63_experiments.params.special_params as l63_sparams
-from shell_model_experiments.params.params import PAR as PAR_SH
-from shell_model_experiments.params.params import ParamsStructType
 
 import perturbation_runner as pt_runner
 
-
 # Get parameters for model
 if cfg.MODEL == Models.SHELL_MODEL:
+    import shell_model_experiments.utils.special_params as sh_sparams
+    import shell_model_experiments.utils.util_funcs as sh_utils
+    from shell_model_experiments.params.params import PAR as PAR_SH
+    from shell_model_experiments.params.params import ParamsStructType
+
     params = PAR_SH
     sparams = sh_sparams
 elif cfg.MODEL == Models.LORENTZ63:
+    import lorentz63_experiments.params.params as l63_params
+    import lorentz63_experiments.params.special_params as l63_sparams
+
     params = l63_params
     sparams = l63_sparams
 

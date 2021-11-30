@@ -3,11 +3,6 @@ import pathlib as pl
 import random
 import itertools as it
 import numpy as np
-from shell_model_experiments.params.params import ParamsStructType
-from shell_model_experiments.params.params import PAR as PAR_SH
-import lorentz63_experiments.params.params as l63_params
-import shell_model_experiments.utils.special_params as sh_sparams
-import lorentz63_experiments.params.special_params as l63_sparams
 import general.utils.util_funcs as g_utils
 import general.utils.importing.import_data_funcs as g_import
 import general.utils.exceptions as g_exceptions
@@ -17,9 +12,16 @@ import config as cfg
 
 # Get parameters for model
 if cfg.MODEL == Models.SHELL_MODEL:
+    from shell_model_experiments.params.params import ParamsStructType
+    from shell_model_experiments.params.params import PAR as PAR_SH
+    import shell_model_experiments.utils.special_params as sh_sparams
+
     params = PAR_SH
     sparams = sh_sparams
 elif cfg.MODEL == Models.LORENTZ63:
+    import lorentz63_experiments.params.params as l63_params
+    import lorentz63_experiments.params.special_params as l63_sparams
+
     params = l63_params
     sparams = l63_sparams
 

@@ -1,15 +1,10 @@
 import sys
 
 sys.path.append("..")
-import math
 import matplotlib.pyplot as plt
 from pyinstrument import Profiler
 import numpy as np
-from numba import njit, types
-from lorentz63_experiments.params.params import *
-import lorentz63_experiments.perturbations.normal_modes as l63_nm_estimator
 import general.utils.importing.import_data_funcs as g_import
-import lorentz63_experiments.utils.util_funcs as ut_funcs
 import general.utils.saving.save_perturbation as pt_save
 import general.runners.perturbation_runner as pt_runner
 import general.utils.exceptions as g_exceptions
@@ -34,6 +29,8 @@ if cfg.MODEL == Models.SHELL_MODEL:
 elif cfg.MODEL == Models.LORENTZ63:
     import lorentz63_experiments.params.params as l63_params
     import lorentz63_experiments.params.special_params as l63_sparams
+    import lorentz63_experiments.perturbations.normal_modes as l63_nm_estimator
+    import lorentz63_experiments.utils.util_funcs as ut_funcs
     from lorentz63_experiments.lorentz63_model.lorentz63 import run_model as l63_model
     from lorentz63_experiments.lorentz63_model.tl_lorentz63 import (
         run_model as l63_tl_model,
@@ -63,7 +60,6 @@ def run_l63_tl_model_verification(
     # Run TL model
     l63_tl_model(
         u_perturb,
-        du_array,
         u_ref,
         lorentz_matrix,
         jacobian_matrix,
@@ -76,7 +72,6 @@ def run_l63_tl_model_verification(
     # Run non-linear model on perturbed start velocity
     l63_model(
         u_ref + u_perturb,
-        du_array,
         lorentz_matrix,
         nl_model_pert_data_out,
         args["Nt"],
@@ -85,7 +80,6 @@ def run_l63_tl_model_verification(
     # Run non-linear model on non-perturbed start velocity
     l63_model(
         u_ref,
-        du_array,
         lorentz_matrix,
         nl_model_non_pert_data_out,
         args["Nt"],
@@ -93,14 +87,13 @@ def run_l63_tl_model_verification(
 
 
 def run_l63_atl_model_verification(
-    args, u_ref, u_perturb, jacobian_matrix, lorentz_matrix, data_out, ref_data_out
+    args, u_ref, u_perturb, jacobian_matrix, lorentz_matrix, data_out
 ):
     u_perturb_stored = np.copy(u_perturb)
 
     # Run TL model one time step
     l63_tl_model(
         u_perturb,
-        du_array,
         u_ref,
         lorentz_matrix,
         jacobian_matrix,
@@ -116,12 +109,10 @@ def run_l63_atl_model_verification(
     # print("data_out[-1, 1:].T", data_out[-1, 1:].T.shape)
     l63_atl_model(
         np.reshape(data_out[-1, 1:].T, (params.sdim, 1)),
-        du_array,
         u_ref,
         lorentz_matrix,
         jacobian_matrix,
         data_out,
-        ref_data_out,
         args["Nt"],
         r_const=args["r_const"],
         raw_perturbation=True,
@@ -178,9 +169,13 @@ def verify_tlm_model(args: dict):
         # Initialise jacobian and deriv matrix
         jacobian_matrix = l63_nm_estimator.init_jacobian(args)
         lorentz_matrix = ut_funcs.setup_lorentz_matrix(args)
-        tl_data_out = np.zeros((args["Nt"], sdim + 1), dtype=np.float64)
-        nl_model_pert_data_out = np.zeros((args["Nt"], sdim + 1), dtype=np.float64)
-        nl_model_non_pert_data_out = np.zeros((args["Nt"], sdim + 1), dtype=np.float64)
+        tl_data_out = np.zeros((args["Nt"], params.sdim + 1), dtype=np.float64)
+        nl_model_pert_data_out = np.zeros(
+            (args["Nt"], params.sdim + 1), dtype=np.float64
+        )
+        nl_model_non_pert_data_out = np.zeros(
+            (args["Nt"], params.sdim + 1), dtype=np.float64
+        )
 
         print(f"\nRunning verification of the Lorentz63 TL model\n")
         # Run verification multiple times
@@ -197,17 +192,18 @@ def verify_tlm_model(args: dict):
                 nl_model_non_pert_data_out,
             )
 
-    error_data_out[:, 1:] = tl_data_out[:, 1:] - (
-        nl_model_pert_data_out[:, 1:] - nl_model_non_pert_data_out[:, 1:]
-    )
-    error_data_out[:, 0] = tl_data_out[:, 0]
+            error_data_out[:, 1:] = tl_data_out[:, 1:] - (
+                nl_model_pert_data_out[:, 1:] - nl_model_non_pert_data_out[:, 1:]
+            )
+            error_data_out[:, 0] = tl_data_out[:, 0]
 
-    pt_save.save_perturbation_data(
-        error_data_out,
-        perturb_position=perturb_positions[i // args["n_runs_per_profile"]],
-        perturb_count=i,
-        args=args,
-    )
+            pt_save.save_perturbation_data(
+                error_data_out,
+                perturb_position=perturb_positions[i // args["n_runs_per_profile"]],
+                perturb_count=i,
+                run_count=0,
+                args=args,
+            )
 
 
 def verify_atlm_model(args: dict):
@@ -231,8 +227,7 @@ def verify_atlm_model(args: dict):
 
         jacobian_matrix = l63_nm_estimator.init_jacobian(args)
         lorentz_matrix = ut_funcs.setup_lorentz_matrix(args)
-        data_out = np.zeros((args["Nt"], sdim + 1), dtype=np.float64)
-        ref_data_out = np.zeros((args["Nt"], sdim), dtype=np.float64)
+        data_out = np.zeros((args["Nt"], params.sdim + 1), dtype=np.float64)
 
         print(f"\nRunning verification of the Lorentz63 ATL model\n")
 
@@ -248,7 +243,6 @@ def verify_atlm_model(args: dict):
                 jacobian_matrix,
                 lorentz_matrix,
                 data_out,
-                ref_data_out,
             )
 
             diff_identity_array[i] = diff_identity
@@ -275,7 +269,7 @@ if __name__ == "__main__":
     args = verif_arg_setup.args
 
     # Add/edit arguments
-    args["Nt"] = int(args["time_to_run"] / dt)
+    args["Nt"] = int(args["time_to_run"] / params.dt)
 
     profiler.start()
 

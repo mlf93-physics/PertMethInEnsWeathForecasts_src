@@ -1,12 +1,10 @@
 import sys
 
 sys.path.append("..")
-import math
 import matplotlib.pyplot as plt
 import seaborn as sb
 from pyinstrument import Profiler
 import numpy as np
-from lorentz63_experiments.params.params import *
 import general.utils.perturb_utils as pt_utils
 import general.utils.util_funcs as g_utils
 import general.utils.argument_parsers as a_parsers
