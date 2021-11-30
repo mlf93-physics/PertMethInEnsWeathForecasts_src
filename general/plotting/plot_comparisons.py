@@ -21,6 +21,7 @@ import general.utils.importing.import_data_funcs as g_import
 import general.utils.importing.import_perturbation_data as pt_import
 import general.utils.importing.import_utils as g_imp_utils
 import general.utils.plot_utils as g_plt_utils
+from general.plotting.plot_params import *
 import general.utils.user_interface as g_ui
 import general.utils.util_funcs as g_utils
 import matplotlib.pyplot as plt
@@ -178,7 +179,7 @@ def plot_error_norm_comparison(args: dict):
             args["exp_folders"] = [
                 str(pl.Path(_dirs[i].parent.name, _dirs[i].name))
                 for i in range(len_folders)
-                if "bv_eof" in _dirs[i].name
+                if "sv" in _dirs[i].name
                 # if "rd" in _dirs[i].name or "nm" in _dirs[i].name
             ]
 
@@ -273,11 +274,39 @@ def plot_exp_growth_rate_comparison(args: dict):
     cmap_list = plt.rcParams["axes.prop_cycle"].by_key()["color"]
     axes = plt.axes()
 
+    perturb_type_old = ""
     for i, folder in enumerate(args["exp_folders"]):
+        folder_path = pl.Path(folder)
+
+        digits_in_name = g_utils.get_digits_from_string(folder_path.name)
+        if digits_in_name is not None:
+            if isinstance(digits_in_name, int):
+                perturb_type = folder_path.name.split(str(digits_in_name))[0]
+
+                if not perturb_type == perturb_type_old:
+                    color = cmap_list[i]
+                    _save_color = color
+                    perturb_type_old = perturb_type
+                else:
+                    color = _save_color
+
+                linestyle = LINESTYLES[digits_in_name]
+
+        else:
+            color = cmap_list[i]
+            linestyle = None
+
         # Set exp_folder
         args["exp_folder"] = folder
 
-        g_plt_data.plot_exp_growth_rate_vs_time(args=args, axes=axes, plot_args=[])
+        g_plt_data.plot_exp_growth_rate_vs_time(
+            args=args,
+            axes=axes,
+            color=color,
+            linestyle=linestyle,
+            plot_args=[],
+            title_suffix=str(folder_path.parent),
+        )
 
 
 if __name__ == "__main__":

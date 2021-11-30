@@ -4,6 +4,7 @@
             "folder_name": "compare_pert_ttr1.0_run2",
             "vector_folder": "vectors",
             "perturbation_folder": "perturbations",
+            "sub_exp_folder": "perturb_data",
             "eval_times": [
                 10
             ],
@@ -11,10 +12,15 @@
             "unit_offset": 1.0
         },
         "bv_gen_setup": {
-            "sub_exp_folder": "perturb_data",
             "integration_time": 0.1,
             "n_cycles": 16,
             "n_vectors": 8
+        },
+        "sv_gen_setup": {
+            "integration_time": 0.1,
+            "n_vectors": 3,
+            "n_lanczos_iterations": 1,
+            "n_model_iterations": 1
         },
         "pert_setup": {
             "time_to_run": 1.0

@@ -5,19 +5,18 @@ Example
 python ../general/runners/singular_vector_runner.py --exp_setup=TestRun0 --n_units=1
 
 """
+import sys
+
 import matplotlib.pyplot as plt
 import seaborn as sb
 from pyinstrument import Profiler
-
-profiler = Profiler()
-profiler.start()
-import sys
 
 sys.path.append("..")
 import copy
 import pathlib as pl
 
 import config as cfg
+import general.runners.perturbation_runner as pt_runner
 import general.utils.argument_parsers as a_parsers
 import general.utils.experiments.exp_utils as exp_utils
 import general.utils.experiments.validate_exp_setups as ut_exp_val
@@ -31,8 +30,6 @@ import general.utils.user_interface as g_ui
 import general.utils.util_funcs as g_utils
 import numpy as np
 from general.params.model_licences import Models
-
-import perturbation_runner as pt_runner
 
 # Get parameters for model
 if cfg.MODEL == Models.SHELL_MODEL:
@@ -54,13 +51,14 @@ elif cfg.MODEL == Models.LORENTZ63:
 cfg.GLOBAL_PARAMS.ref_run = False
 
 
-def main(args):
-    # Set exp_setup path
-    exp_file_path = pl.Path(
-        "./params/experiment_setups/singular_vector_experiment_setups.json"
-    )
-    # Get the current experiment setup
-    exp_setup = exp_utils.get_exp_setup(exp_file_path, args)
+def main(args: dict, exp_setup: dict = None):
+    if exp_setup is None:
+        # Set exp_setup path
+        exp_file_path = pl.Path(
+            "./params/experiment_setups/singular_vector_experiment_setups.json"
+        )
+        # Get the current experiment setup
+        exp_setup = exp_utils.get_exp_setup(exp_file_path, args)
 
     # Get number of existing blocks
     n_existing_units = g_utils.count_existing_files_or_dirs(
@@ -243,6 +241,7 @@ def main(args):
 
 if __name__ == "__main__":
     cfg.init_licence()
+    profiler = Profiler()
 
     # Get arguments
     mult_pert_arg_setup = a_parsers.MultiPerturbationArgSetup()
@@ -250,6 +249,8 @@ if __name__ == "__main__":
     ref_arg_setup = a_parsers.ReferenceAnalysisArgParser()
     ref_arg_setup.setup_parser()
     args = ref_arg_setup.args
+
+    profiler.start()
 
     g_ui.confirm_run_setup(args)
     r_utils.adjust_run_setup(args)

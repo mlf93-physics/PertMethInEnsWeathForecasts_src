@@ -1,4 +1,5 @@
 import os
+import re
 import pathlib as pl
 from collections import OrderedDict
 from pathlib import Path
@@ -304,3 +305,27 @@ def sort_paths_according_to_header_dicts(
     paths = [path for _, _, path in sorted(zip(*value_lists, paths))]
 
     return paths
+
+
+def get_digits_from_string(string: str) -> Union[None, int, list]:
+    """Get digit(s) embeded in a string
+
+    Parameters
+    ----------
+    string : str
+        The string to find digits in
+
+    Returns
+    -------
+    Union[int, list]
+        The digit(s) found in the string
+    """
+
+    digits = list(int(s) for s in re.findall(r"\d+", string))
+
+    if len(digits) == 0:
+        return None
+    elif len(digits) == 1:
+        return digits[0]
+    else:
+        return digits

@@ -24,6 +24,7 @@ from general.params.experiment_licences import Experiments as exp
 from general.params.model_licences import Models
 from general.runners.breed_vector_runner import main as bv_runner
 from general.analyses.breed_vector_eof_analysis import main as bv_eof_analyser
+from general.runners.singular_vector_lanczos_runner import main as sv_runner
 
 # Get parameters for model
 if cfg.MODEL == Models.SHELL_MODEL:
@@ -101,6 +102,34 @@ def generate_bv_eofs(args: dict, exp_setup: dict):
     bv_eof_analyser(args, exp_setup=local_exp_setup)
 
 
+def generate_svs(args: dict, exp_setup: dict):
+    """Generate the SVs according to the exp setup
+
+    Parameters
+    ----------
+    args : dict
+        Run-time arguments
+    exp_setup : dict
+        Experiment setup
+    """
+
+    # Update licence
+    cfg.LICENCE = exp.SINGULAR_VECTORS
+
+    # Get subset of experiment setup
+    local_exp_setup = exp_setup["general"] | exp_setup["sv_gen_setup"]
+    # Set local exp values
+    local_exp_setup["folder_name"] = str(
+        pl.Path(
+            local_exp_setup["folder_name"],
+            local_exp_setup["vector_folder"],
+            "singular_vectors",
+        )
+    )
+
+    sv_runner(args, exp_setup=local_exp_setup)
+
+
 def generate_vectors(args: dict, exp_setup: dict):
     """Generate all perturbation vectors (i.e. BVs and SVs)
 
@@ -113,8 +142,9 @@ def generate_vectors(args: dict, exp_setup: dict):
     """
     args["save_last_pert"] = True
 
-    generate_bvs(copy.deepcopy(args), exp_setup)
-    generate_bv_eofs(copy.deepcopy(args), exp_setup)
+    # generate_bvs(copy.deepcopy(args), exp_setup)
+    # generate_bv_eofs(copy.deepcopy(args), exp_setup)
+    generate_svs(copy.deepcopy(args), exp_setup)
 
 
 def rd_pert_experiment(args: dict, local_exp_setup: dict):
@@ -257,6 +287,41 @@ def bv_eof_pert_experiment(args: dict, local_exp_setup: dict):
         r_utils.run_pert_processes(copy_args, local_exp_setup, processes)
 
 
+def sv_pert_experiment(args: dict, local_exp_setup: dict):
+    """Run perturbations with SV as pert_mode
+
+    Parameters
+    ----------
+    args : dict
+        Local run-time arguments
+    local_exp_setup : dict
+        Local experiment setup
+    """
+    # The number of vectors to perturb from, i.e. BV-EOF1, BV-EOF2, ...
+    n_vectors = 3
+
+    # Prepare arguments for perturbation run
+    args["n_runs_per_profile"] = 1
+    args["pert_mode"] = "sv"
+    args["pert_vector_folder"] = pl.Path(
+        local_exp_setup["folder_name"], local_exp_setup["vector_folder"]
+    )
+    args["exp_folder"] = "singular_vectors"
+
+    for i in range(n_vectors):
+        args["specific_start_vector"] = i
+        args["out_exp_folder"] = pl.Path(
+            local_exp_setup["folder_name"],
+            f"sv{i}_perturbations",
+        )
+        # Copy args in order not override in forecast processes
+        copy_args = copy.deepcopy(args)
+
+        processes, _, _, _ = pt_runner.main_setup(copy_args)
+
+        r_utils.run_pert_processes(copy_args, local_exp_setup, processes)
+
+
 def execute_pert_experiments(args: dict, exp_setup: dict):
     """Execute all perturbation experiments, i.e. run perturbations with different
     perturbation modes
@@ -280,10 +345,11 @@ def execute_pert_experiments(args: dict, exp_setup: dict):
     args["n_profiles"] = local_exp_setup["n_units"]
 
     # Execute experiments
-    bv_pert_experiment(copy.deepcopy(args), local_exp_setup)
-    bv_eof_pert_experiment(copy.deepcopy(args), local_exp_setup)
+    # bv_pert_experiment(copy.deepcopy(args), local_exp_setup)
+    # bv_eof_pert_experiment(copy.deepcopy(args), local_exp_setup)
     # rd_pert_experiment(copy.deepcopy(args), local_exp_setup)
     # nm_pert_experiment(copy.deepcopy(args), local_exp_setup)
+    sv_pert_experiment(copy.deepcopy(args), local_exp_setup)
 
 
 def main(args: dict):

@@ -158,6 +158,8 @@ def generate_title(
     if detailed:
         # Add suffixes
         title += exp_suffix + file_suffix + title_suffix
+    else:
+        title += title_suffix
 
     # Strip trailing commas
     title = title.rstrip(",")

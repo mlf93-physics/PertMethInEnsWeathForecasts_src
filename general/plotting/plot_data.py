@@ -32,8 +32,9 @@ def plot_exp_growth_rate_vs_time(
     linewidth: float = 2,
     alpha: float = 1.0,
     zorder: float = 0.0,
-    cmap_list: Union[None, list] = None,
+    color=None,
     legend_on: bool = True,
+    title_suffix: str = "",
     plot_args: list = ["detailed_title"],
 ):
 
@@ -79,6 +80,11 @@ def plot_exp_growth_rate_vs_time(
     if axes is None:
         axes = plt.axes()
 
+    if "detailed_label" in plot_args:
+        label = args["exp_folder"]
+    else:
+        label = str(pl.Path(args["exp_folder"]).name)
+
     axes.plot(
         time_array,
         mean_growth_rate,
@@ -86,7 +92,8 @@ def plot_exp_growth_rate_vs_time(
         alpha=alpha,
         linewidth=linewidth,
         zorder=zorder,
-        label=args["exp_folder"],
+        label=label,
+        color=color,
     )
 
     if legend_on:
@@ -96,6 +103,7 @@ def plot_exp_growth_rate_vs_time(
         args,
         header_dict=header_dicts[0],
         title_header="Exponential growth rate vs time",
+        title_suffix=title_suffix,
         detailed="detailed_title" in plot_args,
     )
     axes.set_title(title)
