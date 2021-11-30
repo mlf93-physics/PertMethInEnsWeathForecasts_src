@@ -21,14 +21,13 @@ cfg.GLOBAL_PARAMS.record_max_time = 3000
 @njit(
     (
         types.Array(types.float64, 1, "C", readonly=False),
-        types.Array(types.float64, 1, "C", readonly=False),
         types.Array(types.float64, 2, "C", readonly=False),
         types.Array(types.float64, 2, "C", readonly=False),
         types.int64,
     ),
     cache=cfg.NUMBA_CACHE,
 )
-def run_model(u_old, du_array, lorentz_matrix, data_out, Nt_local):
+def run_model(u_old, lorentz_matrix, data_out, Nt_local):
     """Execute the integration of the Lorentz-63 model.
 
     Parameters
@@ -53,9 +52,7 @@ def run_model(u_old, du_array, lorentz_matrix, data_out, Nt_local):
             sample_number += 1
 
         # Update u_old
-        u_old = rk4.runge_kutta4(
-            y0=u_old, h=dt, du_array=du_array, lorentz_matrix=lorentz_matrix
-        )
+        u_old = rk4.runge_kutta4(y0=u_old, lorentz_matrix=lorentz_matrix, h=dt)
 
     return u_old
 
@@ -88,16 +85,14 @@ def main(args=None):
     # Burn in the model for the desired burn in time
     data_out = np.zeros((int(args["burn_in_time"] * tts), sdim + 1), dtype=np.float64)
     print(f'Running burn-in phase of {args["burn_in_time"]}s\n')
-    u_old = run_model(
-        u_old, du_array, lorentz_matrix, data_out, int(args["burn_in_time"] / dt)
-    )
+    u_old = run_model(u_old, lorentz_matrix, data_out, int(args["burn_in_time"] / dt))
 
     for ir in range(args["n_records"]):
         # Calculate data out size
         if ir == (args["n_records"] - 1):
             if args["Nt"] % int(cfg.GLOBAL_PARAMS.record_max_time / dt) > 0:
                 out_array_size = int(
-                    (args["Nt"] / dt % int(cfg.GLOBAL_PARAMS.record_max_time / dt))
+                    (args["Nt"] % int(cfg.GLOBAL_PARAMS.record_max_time / dt))
                     * sample_rate
                 )
             else:
@@ -111,7 +106,6 @@ def main(args=None):
         print(f'running record {ir + 1}/{args["n_records"]}')
         u_old = run_model(
             u_old,
-            du_array,
             lorentz_matrix,
             data_out,
             int(out_array_size / sample_rate),

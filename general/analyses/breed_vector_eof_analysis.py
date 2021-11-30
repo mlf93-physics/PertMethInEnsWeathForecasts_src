@@ -124,12 +124,15 @@ def main(args: dict, exp_setup: dict = None):
         perturb_header_dicts,
     ) = pt_import.import_perturb_vectors(args)
 
+    # Calculate the orthogonal complement to the BVs
     eof_vectors, variances = calc_bv_eof_vectors(
         vector_units, n_eof_vectors=vector_units.shape[1]
     )
+
+    # Add underlying velocity profiles to the vectors
     # u_init_profiles = np.reshape(
-    #     u_init_profiles[sparams.u_slice, :].T,
-    #     (args["n_files"], args["n_runs_per_profile"], params.sdim),
+    #     u_init_profiles[sparams.u_slice, :],
+    #     (args["n_profiles"], params.sdim, args["n_runs_per_profile"]),
     # )
 
     # eof_vectors += u_init_profiles

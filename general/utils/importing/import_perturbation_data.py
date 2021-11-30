@@ -292,7 +292,10 @@ def import_perturb_vectors(
     vector_units = np.empty(
         (args["n_files"], args["n_runs_per_profile"], params.sdim), dtype=np.float64
     )
-    characteristic_values = np.empty((args["n_files"], args["n_runs_per_profile"]))
+
+    characteristic_values = np.empty(
+        (args["n_files"], args["n_runs_per_profile"]), dtype=np.complex128
+    )
 
     for i, file_name in enumerate(perturb_file_names):
         vector_unit, _ = g_import.import_data(

@@ -4,6 +4,7 @@ sys.path.append("..")
 import numpy as np
 from numba import njit, types
 import lorentz63_experiments.perturbations.normal_modes as l63_nm_estimator
+from lorentz63_experiments.params.params import *
 from general.utils.module_import.type_import import *
 import config as cfg
 
@@ -11,14 +12,12 @@ import config as cfg
 @njit(
     types.Array(types.float64, 1, "C", readonly=False)(
         types.Array(types.float64, 1, "C", readonly=True),
-        types.Array(types.float64, 1, "C", readonly=False),
         types.Array(types.float64, 2, "C", readonly=False),
     ),
     cache=cfg.NUMBA_CACHE,
 )
 def derivative_evaluator(
     u_old: np.ndarray = None,
-    du_array: np.ndarray = None,
     lorentz_matrix: np.ndarray = None,
 ):
     """Derivative evaluator used in the Runge-Kutta method.
@@ -29,9 +28,6 @@ def derivative_evaluator(
     ----------
     u_old : np.ndarray
         The previous lorentz velocitie array
-    du_array : np.ndarray
-        A helper array used to store the current derivative of the lorentz
-        velocities. Updated at each call to this function.
     lorentz_matrix : np.ndarray
         The lorentz matrix, which enables direct calculation of dot(u) from
         matrix multiplication with u, by default None
@@ -55,17 +51,15 @@ def derivative_evaluator(
 @njit(
     types.Array(types.float64, 1, "C", readonly=False)(
         types.Array(types.float64, 1, "C", readonly=False),
-        types.float64,
-        types.Array(types.float64, 1, "C", readonly=False),
         types.Array(types.float64, 2, "C", readonly=False),
+        types.float64,
     ),
     cache=cfg.NUMBA_CACHE,
 )
 def runge_kutta4(
     y0: np.ndarray = 0,
-    h: float = 1,
-    du_array: np.ndarray = None,
     lorentz_matrix: np.ndarray = None,
+    h: float = 1,
 ):
     """Performs the Runge-Kutta-4 integration of the lorentz model.
 
@@ -75,9 +69,6 @@ def runge_kutta4(
         The y array
     h : float
         The x step to integrate over.
-    du_array : np.ndarray
-        A helper array used to store the current derivative of the shell
-        velocities.
     lorentz_matrix : np.ndarray
         The lorentz matrix, which enables direct calculation of dot(u) from
         matrix multiplication with u, by default None
@@ -89,18 +80,10 @@ def runge_kutta4(
 
     """
     # Calculate the k's
-    k1 = h * derivative_evaluator(
-        u_old=y0, du_array=du_array, lorentz_matrix=lorentz_matrix
-    )
-    k2 = h * derivative_evaluator(
-        u_old=y0 + 1 / 2 * k1, du_array=du_array, lorentz_matrix=lorentz_matrix
-    )
-    k3 = h * derivative_evaluator(
-        u_old=y0 + 1 / 2 * k2, du_array=du_array, lorentz_matrix=lorentz_matrix
-    )
-    k4 = h * derivative_evaluator(
-        u_old=y0 + k3, du_array=du_array, lorentz_matrix=lorentz_matrix
-    )
+    k1 = h * derivative_evaluator(u_old=y0, lorentz_matrix=lorentz_matrix)
+    k2 = h * derivative_evaluator(u_old=y0 + 1 / 2 * k1, lorentz_matrix=lorentz_matrix)
+    k3 = h * derivative_evaluator(u_old=y0 + 1 / 2 * k2, lorentz_matrix=lorentz_matrix)
+    k4 = h * derivative_evaluator(u_old=y0 + k3, lorentz_matrix=lorentz_matrix)
 
     # Update y
     y0 = y0 + 1 / 6 * k1 + 1 / 3 * k2 + 1 / 3 * k3 + 1 / 6 * k4
@@ -109,9 +92,8 @@ def runge_kutta4(
 
 
 @njit(
-    (
+    (types.Array(types.float64, 1, "C", readonly=True))(
         types.Array(types.float64, 1, "C", readonly=True),
-        types.Array(types.float64, 1, "C", readonly=False),
         types.Array(types.float64, 1, "C", readonly=True),
         types.Array(types.float64, 2, "C", readonly=False),
         types.float64,
@@ -120,7 +102,6 @@ def runge_kutta4(
 )
 def tl_derivative_evaluator(
     u_tl_old: np.ndarray = None,
-    du_array: np.ndarray = None,
     u_ref: np.ndarray = None,
     jacobian_matrix: np.ndarray = None,
     r_const: float = None,
@@ -133,9 +114,6 @@ def tl_derivative_evaluator(
     ----------
     u_tl_old : ndarray
         The previous lorentz velocity array
-    du_array : ndarray
-        A helper array used to store the current derivative of the lorentz
-        velocities. Updated at each call to this function.
     u_ref : np.ndarray
         The reference/basis state velocities, by default None
     jacobian_matrix : np.ndarray
@@ -162,22 +140,20 @@ def tl_derivative_evaluator(
 @njit(
     types.UniTuple(types.Array(types.float64, 1, "C", readonly=False), 2,)(
         types.Array(types.float64, 1, "C", readonly=False),
+        types.Array(types.float64, 1, "C", readonly=False),
+        types.Array(types.float64, 2, "C", readonly=False),
+        types.Array(types.float64, 2, "C", readonly=False),
         types.float64,
-        types.Array(types.float64, 1, "C", readonly=False),
-        types.Array(types.float64, 1, "C", readonly=False),
-        types.Array(types.float64, 2, "C", readonly=False),
-        types.Array(types.float64, 2, "C", readonly=False),
         types.float64,
     ),
     cache=cfg.NUMBA_CACHE,
 )
 def tl_runge_kutta4(
     u_tl_old: np.ndarray = None,
-    dt: float = 1,
-    du_array: np.ndarray = None,
     u_ref_old: np.ndarray = None,
     lorentz_matrix: np.ndarray = None,
     jacobian_matrix: np.ndarray = None,
+    dt: float = 1,
     r_const: float = 28,
 ) -> Tuple[np.ndarray, np.ndarray]:
     """Performs the Runge-Kutta-4 integration of the tangent linear Lorentz-63
@@ -189,8 +165,6 @@ def tl_runge_kutta4(
         The previous perturbation velocities, by default None
     dt : float
         The time step, by default 1
-    du_array : np.ndarray
-        Array to store the u increment, by default None
     u_ref_old : np.ndarray
         The previous reference/basis flow velocity vector, by default None
     lorentz_matrix : np.ndarray
@@ -212,47 +186,35 @@ def tl_runge_kutta4(
 
     # Calculate the k's of the non-linear model
     Y1 = u_ref_old
-    k1 = dt * derivative_evaluator(
-        u_old=Y1, du_array=du_array, lorentz_matrix=lorentz_matrix
-    )
+    k1 = dt * derivative_evaluator(u_old=Y1, lorentz_matrix=lorentz_matrix)
     Y2 = u_ref_old + 1 / 2 * k1
-    k2 = dt * derivative_evaluator(
-        u_old=Y2, du_array=du_array, lorentz_matrix=lorentz_matrix
-    )
+    k2 = dt * derivative_evaluator(u_old=Y2, lorentz_matrix=lorentz_matrix)
     Y3 = u_ref_old + 1 / 2 * k2
-    k3 = dt * derivative_evaluator(
-        u_old=Y3, du_array=du_array, lorentz_matrix=lorentz_matrix
-    )
+    k3 = dt * derivative_evaluator(u_old=Y3, lorentz_matrix=lorentz_matrix)
     Y4 = u_ref_old + k3
-    k4 = dt * derivative_evaluator(
-        u_old=Y4, du_array=du_array, lorentz_matrix=lorentz_matrix
-    )
+    k4 = dt * derivative_evaluator(u_old=Y4, lorentz_matrix=lorentz_matrix)
 
     # Calculate the k's of the tangent linear model
     l1 = tl_derivative_evaluator(
         u_tl_old=u_tl_old,
-        du_array=du_array,
         u_ref=Y1,
         jacobian_matrix=jacobian_matrix,
         r_const=r_const,
     )
     l2 = tl_derivative_evaluator(
         u_tl_old=u_tl_old + 1 / 2 * dt * l1,
-        du_array=du_array,
         u_ref=Y2,
         jacobian_matrix=jacobian_matrix,
         r_const=r_const,
     )
     l3 = tl_derivative_evaluator(
         u_tl_old=u_tl_old + 1 / 2 * dt * l2,
-        du_array=du_array,
         u_ref=Y3,
         jacobian_matrix=jacobian_matrix,
         r_const=r_const,
     )
     l4 = tl_derivative_evaluator(
         u_tl_old=u_tl_old + dt * l3,
-        du_array=du_array,
         u_ref=Y4,
         jacobian_matrix=jacobian_matrix,
         r_const=r_const,
@@ -266,19 +228,17 @@ def tl_runge_kutta4(
     return u_tl_old, u_ref_old
 
 
-# @njit(
-#     (
-#         types.Array(types.float64, 1, "C", readonly=True),
-#         types.Array(types.float64, 1, "C", readonly=False),
-#         types.Array(types.float64, 1, "C", readonly=True),
-#         types.Array(types.float64, 2, "C", readonly=False),
-#         types.float64,
-#     ),
-#     cache=cfg.NUMBA_CACHE,
-# )
+@njit(
+    (
+        types.Array(types.float64, 2, "C", readonly=True),
+        types.Array(types.float64, 1, "C", readonly=True),
+        types.Array(types.float64, 2, "C", readonly=False),
+        types.float64,
+    ),
+    cache=cfg.NUMBA_CACHE,
+)
 def atl_derivative_evaluator(
-    u_atl_old: np.ndarray = None,
-    du_array: np.ndarray = None,
+    u_atl_old: np.ndarray((sdim, 1)) = None,
     u_ref: np.ndarray = None,
     jacobian_matrix: np.ndarray = None,
     r_const: float = None,
@@ -291,9 +251,6 @@ def atl_derivative_evaluator(
     ----------
     u_atl_old : ndarray
         The previous lorentz velocity array
-    du_array : ndarray
-        A helper array used to store the current derivative of the lorentz
-        velocities. Updated at each call to this function.
     u_ref : np.ndarray
         The reference/basis state velocities, by default None
     jacobian_matrix : np.ndarray
@@ -319,59 +276,59 @@ def atl_derivative_evaluator(
     return du_array
 
 
+@njit(
+    (types.Array(types.float64, 2, "C", readonly=False))(
+        types.Array(types.float64, 2, "C", readonly=False),
+        types.Array(types.float64, 1, "C", readonly=True),
+        types.Array(types.float64, 2, "C", readonly=False),
+        types.Array(types.float64, 2, "C", readonly=False),
+        types.float64,
+        types.float64,
+    ),
+    cache=cfg.NUMBA_CACHE,
+)
 def atl_runge_kutta4(
-    u_atl_old: np.ndarray = None,
-    dt: float = 1,
-    du_array: np.ndarray = None,
+    u_atl_old: np.ndarray((sdim, 1)) = None,
     u_ref_old: np.ndarray = None,
     lorentz_matrix: np.ndarray = None,
     jacobian_matrix: np.ndarray = None,
+    dt: float = 1,
     r_const: float = 28,
 ) -> Tuple[np.ndarray, np.ndarray]:
 
     # Calculate the k's of the non-linear model
     Y1 = u_ref_old
-    k1 = dt * derivative_evaluator(
-        u_old=Y1, du_array=du_array, lorentz_matrix=lorentz_matrix
-    )
+    k1 = dt * derivative_evaluator(u_old=Y1, lorentz_matrix=lorentz_matrix)
     Y2 = u_ref_old + 1 / 2 * k1
-    k2 = dt * derivative_evaluator(
-        u_old=Y2, du_array=du_array, lorentz_matrix=lorentz_matrix
-    )
+    k2 = dt * derivative_evaluator(u_old=Y2, lorentz_matrix=lorentz_matrix)
     Y3 = u_ref_old + 1 / 2 * k2
-    k3 = dt * derivative_evaluator(
-        u_old=Y3, du_array=du_array, lorentz_matrix=lorentz_matrix
-    )
+    k3 = dt * derivative_evaluator(u_old=Y3, lorentz_matrix=lorentz_matrix)
     Y4 = u_ref_old + k3
     # k4 = dt * derivative_evaluator(
-    #     u_old=Y4, du_array=du_array, lorentz_matrix=lorentz_matrix
+    #     u_old=Y4, lorentz_matrix=lorentz_matrix
     # )
 
     # Calculate the l's of the tangent linear model
     l4 = atl_derivative_evaluator(
         u_atl_old=u_atl_old,
-        du_array=du_array,
         u_ref=Y4,
         jacobian_matrix=jacobian_matrix,
         r_const=r_const,
     )
     l3 = atl_derivative_evaluator(
         u_atl_old=u_atl_old + 1 / 2 * dt * l4,
-        du_array=du_array,
         u_ref=Y3,
         jacobian_matrix=jacobian_matrix,
         r_const=r_const,
     )
     l2 = atl_derivative_evaluator(
         u_atl_old=u_atl_old + 1 / 2 * dt * l3,
-        du_array=du_array,
         u_ref=Y2,
         jacobian_matrix=jacobian_matrix,
         r_const=r_const,
     )
     l1 = atl_derivative_evaluator(
         u_atl_old=u_atl_old + dt * l2,
-        du_array=du_array,
         u_ref=Y1,
         jacobian_matrix=jacobian_matrix,
         r_const=r_const,

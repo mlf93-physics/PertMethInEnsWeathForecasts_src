@@ -30,7 +30,6 @@ cfg.GLOBAL_PARAMS.ref_run = False
         (
             types.Array(types.float64, 1, "C", readonly=False),
             types.Array(types.float64, 1, "C", readonly=False),
-            types.Array(types.float64, 1, "C", readonly=False),
             types.Array(types.float64, 2, "C", readonly=False),
             types.Array(types.float64, 2, "C", readonly=False),
             types.Array(types.float64, 2, "C", readonly=False),
@@ -39,7 +38,6 @@ cfg.GLOBAL_PARAMS.ref_run = False
             types.boolean,
         ),
         (
-            types.Array(types.float64, 1, "C", readonly=False),
             types.Array(types.float64, 1, "C", readonly=False),
             types.Array(types.float64, 1, "C", readonly=False),
             types.Array(types.float64, 2, "C", readonly=False),
@@ -54,7 +52,6 @@ cfg.GLOBAL_PARAMS.ref_run = False
 )
 def run_model(
     u_tl_old,
-    du_array,
     u_ref_old,
     lorentz_matrix,
     jacobian_matrix,
@@ -94,11 +91,10 @@ def run_model(
         # Update u_tl_old
         u_tl_old, u_ref_old = rk4.tl_runge_kutta4(
             u_tl_old=u_tl_old,
-            dt=dt,
-            du_array=du_array,
             u_ref_old=u_ref_old,
             lorentz_matrix=lorentz_matrix,
             jacobian_matrix=jacobian_matrix,
+            dt=dt,
             r_const=r_const,
         )
 
@@ -132,7 +128,6 @@ def main(args=None):
     # Run model
     run_model(
         u_tl_old,
-        du_array,
         u_ref,
         lorentz_matrix,
         jacobian_matrix,

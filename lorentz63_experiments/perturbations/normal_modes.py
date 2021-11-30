@@ -116,14 +116,14 @@ def calc_jacobian(j_matrix, u_profile, r_const):
     j_matrix[2, 1] = u_profile[0]
 
 
-# @njit(
-#     (
-#         types.Array(types.float64, 2, "C", readonly=False),
-#         types.Array(types.float64, 1, "C", readonly=True),
-#         types.float64,
-#     ),
-#     cache=cfg.NUMBA_CACHE,
-# )
+@njit(
+    (types.Array(types.float64, 2, "F", readonly=True))(
+        types.Array(types.float64, 2, "C", readonly=False),
+        types.Array(types.float64, 1, "C", readonly=True),
+        types.float64,
+    ),
+    cache=cfg.NUMBA_CACHE,
+)
 def calc_adjoint_jacobian(j_matrix, u_profile, r_const):
     """Calculate the adjoint jacobian at a given point in time given through
     the u_profile
@@ -147,4 +147,4 @@ def calc_adjoint_jacobian(j_matrix, u_profile, r_const):
     j_matrix[2, 0] = u_profile[1]
     j_matrix[2, 1] = u_profile[0]
 
-    return j_matrix.getH()
+    return j_matrix.T.conj()

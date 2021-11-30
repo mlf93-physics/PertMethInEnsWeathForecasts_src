@@ -133,8 +133,10 @@ def main(args):
                 n_iterations=exp_setup["n_vectors"],
             )
 
+            # Calculate the desired number of SVs
             for _ in range(exp_setup["n_vectors"]):
 
+                # Run specified number of model iterations
                 for k in range(exp_setup["n_model_iterations"]):
                     ###### TL model run ######
                     # Add TL submodel attribute
@@ -153,11 +155,11 @@ def main(args):
                         u_ref=u_ref,
                     )
 
+                    # Store the initial perturbation vector
                     if k == 0:
                         store_u_profiles_perturbed = np.copy(u_profiles_perturbed)
 
                     if len(processes) > 0:
-                        # Run specified number of cycles
                         pt_runner.main_run(
                             processes,
                             args=copy_args_tl,

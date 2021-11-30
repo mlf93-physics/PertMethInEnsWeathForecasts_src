@@ -7,6 +7,7 @@ import numpy as np
 from numba import njit, types
 import lorentz63_experiments.lorentz63_model.runge_kutta4 as rk4
 from lorentz63_experiments.params.params import *
+import lorentz63_experiments.params.special_params as sparams
 import lorentz63_experiments.perturbations.normal_modes as l63_nm_estimator
 import general.utils.saving.save_data_funcs as g_save
 import general.utils.importing.import_data_funcs as g_import
@@ -25,27 +26,37 @@ cfg.GLOBAL_PARAMS.record_max_time = 3000
 cfg.GLOBAL_PARAMS.ref_run = False
 
 
-# @njit(
-#     (
-#         types.Array(types.float64, 1, "C", readonly=False),
-#         types.Array(types.float64, 1, "C", readonly=False),
-#         types.Array(types.float64, 1, "C", readonly=False),
-#         types.Array(types.float64, 2, "C", readonly=False),
-#         types.Array(types.float64, 2, "C", readonly=False),
-#         types.Array(types.float64, 2, "C", readonly=False),
-#         types.int64,
-#         types.float64,
-#     ),
-#     cache=cfg.NUMBA_CACHE,
-# )
+@njit(
+    [
+        (
+            types.Array(types.float64, 2, "C", readonly=False),
+            types.Array(types.float64, 1, "C", readonly=False),
+            types.Array(types.float64, 2, "C", readonly=False),
+            types.Array(types.float64, 2, "C", readonly=False),
+            types.Array(types.float64, 2, "C", readonly=False),
+            types.int64,
+            types.float64,
+            types.boolean,
+        ),
+        (
+            types.Array(types.float64, 2, "C", readonly=False),
+            types.Array(types.float64, 1, "C", readonly=False),
+            types.Array(types.float64, 2, "C", readonly=False),
+            types.Array(types.float64, 2, "C", readonly=False),
+            types.Array(types.float64, 2, "C", readonly=False),
+            types.int64,
+            types.float64,
+            types.Omitted(False),
+        ),
+    ],
+    cache=cfg.NUMBA_CACHE,
+)
 def run_model(
     u_atl_old,
-    du_array,
     u_ref_old,
     lorentz_matrix,
     jacobian_matrix,
     data_out,
-    ref_data,
     Nt_local,
     r_const,
     raw_perturbation=False,
@@ -63,14 +74,14 @@ def run_model(
         An array to store samples of the integrated lorentz_velocities.
 
     """
+    ref_data = np.zeros((Nt_local, sdim), dtype=sparams.dtype)
+
     # Run forward non-linear model
     for i in range(Nt_local):
         # Save reference data
         ref_data[i, :] = u_ref_old
         # Update u_ref_old
-        u_ref_old = rk4.runge_kutta4(
-            y0=u_ref_old, h=dt, du_array=du_array, lorentz_matrix=lorentz_matrix
-        )
+        u_ref_old = rk4.runge_kutta4(y0=u_ref_old, lorentz_matrix=lorentz_matrix, h=dt)
 
     # Run backward ATL model
     for i in range(Nt_local - 1, -1, -1):
@@ -85,11 +96,10 @@ def run_model(
         # Update u_atl_old
         u_atl_old = rk4.atl_runge_kutta4(
             u_atl_old=u_atl_old,
-            dt=dt,
-            du_array=du_array,
             u_ref_old=ref_data[i - 1, :],
             lorentz_matrix=lorentz_matrix,
             jacobian_matrix=jacobian_matrix,
+            dt=dt,
             r_const=r_const,
         )
 
@@ -120,17 +130,14 @@ def main(args=None):
     print(f'\nRunning Lorentz63 ATL model for {args["Nt"]*dt:.2f}s\n')
 
     data_out = np.zeros((args["Nt"], sdim + 1), dtype=np.float64)
-    ref_data = np.zeros((args["Nt"], sdim), dtype=np.float64)
 
     # Run model
     run_model(
         u_atl_old,
-        du_array,
         u_ref,
         lorentz_matrix,
         jacobian_matrix,
         data_out,
-        ref_data,
         args["Nt"],
         r_const=args["r_const"],
     )

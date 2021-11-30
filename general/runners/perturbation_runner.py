@@ -166,55 +166,51 @@ def perturbation_runner(
                 model=f"{cfg.MODEL.submodel} {cfg.MODEL}",
             )
     elif cfg.MODEL == Models.LORENTZ63:
+        # General model setup
+        lorentz_matrix = ut_funcs.setup_lorentz_matrix(args)
+
+        # Submodel specific setup
         if cfg.MODEL.submodel is None:
-            # Model specific setup
-            lorentz_matrix = ut_funcs.setup_lorentz_matrix(args)
             l63_model(
                 u_old,
-                du_array,
                 lorentz_matrix,
                 data_out,
                 args["Nt"] + args["endpoint"] * 1,
-            )
-        elif cfg.MODEL.submodel == "TL":
-            jacobian_matrix = l63_nm_estimator.init_jacobian(args)
-            lorentz_matrix = ut_funcs.setup_lorentz_matrix(args)
-
-            l63_tl_model(
-                u_old,
-                du_array,
-                np.copy(u_ref[:, run_count]),
-                lorentz_matrix,
-                jacobian_matrix,
-                data_out,
-                args["Nt"] + args["endpoint"] * 1,
-                r_const=args["r_const"],
-                raw_perturbation=True,
-            )
-        elif cfg.MODEL.submodel == "ATL":
-            jacobian_matrix = l63_nm_estimator.init_jacobian(args)
-            lorentz_matrix = ut_funcs.setup_lorentz_matrix(args)
-            ref_data = np.zeros(
-                (args["Nt"] + args["endpoint"] * 1, params.sdim), dtype=np.float64
-            )
-
-            l63_atl_model(
-                np.reshape(u_old, (params.sdim, 1)),
-                du_array,
-                np.copy(u_ref[:, run_count]),
-                lorentz_matrix,
-                jacobian_matrix,
-                data_out,
-                ref_data,
-                args["Nt"] + args["endpoint"] * 1,
-                r_const=args["r_const"],
-                raw_perturbation=True,
             )
         else:
-            g_exceptions.ModelError(
-                "Submodel invalid or not implemented yet",
-                model=f"{cfg.MODEL.submodel} {cfg.MODEL}",
-            )
+            # Common to all submodels
+            jacobian_matrix = l63_nm_estimator.init_jacobian(args)
+
+            if cfg.MODEL.submodel == "TL":
+
+                l63_tl_model(
+                    u_old,
+                    np.copy(u_ref[:, run_count]),
+                    lorentz_matrix,
+                    jacobian_matrix,
+                    data_out,
+                    args["Nt"] + args["endpoint"] * 1,
+                    r_const=args["r_const"],
+                    raw_perturbation=True,
+                )
+            elif cfg.MODEL.submodel == "ATL":
+                jacobian_matrix = l63_nm_estimator.init_jacobian(args)
+
+                l63_atl_model(
+                    np.reshape(u_old, (params.sdim, 1)),
+                    np.copy(u_ref[:, run_count]),
+                    lorentz_matrix,
+                    jacobian_matrix,
+                    data_out,
+                    args["Nt"] + args["endpoint"] * 1,
+                    r_const=args["r_const"],
+                    raw_perturbation=True,
+                )
+            else:
+                g_exceptions.ModelError(
+                    "Submodel invalid or not implemented yet",
+                    model=f"{cfg.MODEL.submodel} {cfg.MODEL}",
+                )
 
     if not args["skip_save_data"]:
         pt_save.save_perturbation_data(
