@@ -11,25 +11,37 @@
         ]
     },
     "TestRun1": {
-        "folder_name": "pt_vectors/sv_lanczos_it1.0_n_vectors9_n_model_iterations20",
+        "folder_name": "pt_vectors/sv_lanczos_it1.0_n_vectors3_n_model_iterations1",
         "sub_exp_folder": "perturb_data",
         "integration_time": 1.0,
-        "n_vectors": 9,
+        "n_vectors": 3,
         "n_lanczos_iterations": 1,
-        "n_model_iterations": 30,
+        "n_model_iterations": 1,
         "vector_offset": 1.0,
         "start_times": [
             10
         ]
     },
     "TestRun2": {
-        "folder_name": "pt_vectors/sv_lanczos_test",
+        "folder_name": "pt_vectors/sv_lanczos_it0.1_n_vectors3_n_model_iterations1",
         "sub_exp_folder": "perturb_data",
-        "integration_time": 1.0,
-        "n_vectors": 9,
+        "integration_time": 0.1,
+        "n_vectors": 3,
         "n_lanczos_iterations": 1,
-        "n_model_iterations": 30,
-        "vector_offset": 1.0,
+        "n_model_iterations": 1,
+        "vector_offset": 0.1,
+        "start_times": [
+            10
+        ]
+    },
+    "TestRun3": {
+        "folder_name": "pt_vectors/test_sv1",
+        "sub_exp_folder": "perturb_data",
+        "integration_time": 0.1,
+        "n_vectors": 3,
+        "n_lanczos_iterations": 1,
+        "n_model_iterations": 1,
+        "vector_offset": 0.1,
         "start_times": [
             10
         ]

@@ -2,7 +2,7 @@ __all__ = ["LINESTYLES", "FIG_ROOT", "MARKERS"]
 
 import pathlib as pl
 
-LINESTYLES = ["-", "--", "-.", ":"]
+LINESTYLES = ["-", "--", "-.", ":", "-", "--", "-.", ":", "-", "--", "-.", ":"]
 
 MARKERS = [".", "v", "s", "+", "x", "^", "*", "p", "d"]
 
