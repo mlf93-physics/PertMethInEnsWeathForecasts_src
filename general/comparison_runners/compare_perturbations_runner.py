@@ -372,7 +372,7 @@ def main(args: dict):
     args["n_units"] = exp_setup["general"]["n_units"]
 
     # Generate perturbation vectors
-    generate_vectors(copy.deepcopy(args), exp_setup)
+    # generate_vectors(copy.deepcopy(args), exp_setup)
 
     # Perform perturbation experiments
     execute_pert_experiments(copy.deepcopy(args), exp_setup)

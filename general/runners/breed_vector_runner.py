@@ -45,6 +45,16 @@ cfg.GLOBAL_PARAMS.ref_run = False
 
 
 def main(args: dict, exp_setup: dict = None):
+    """Run the BREED VECTOR experiment to generate breed vectors based on the
+    reference records
+
+    Parameters
+    ----------
+    args : dict
+        Run-time arguments
+    exp_setup : dict, optional
+        The experiment setup, by default None
+    """
     if exp_setup is None:
         # Set exp_setup path
         exp_file_path = pl.Path(

@@ -94,6 +94,7 @@ def main(args: dict, exp_setup: dict = None):
     copy_args_atl = copy.deepcopy(args)
 
     # Set error norm to 1
+    _temp_seeked_error_norm = copy.deepcopy(params.seeked_error_norm)
     params.seeked_error_norm = 1
 
     # Calculate the desired number of units
@@ -233,6 +234,9 @@ def main(args: dict, exp_setup: dict = None):
     args["out_exp_folder"] = exp_setup["folder_name"]
     # Save exp setup to exp folder
     g_save.save_exp_info(exp_setup, args)
+
+    # Reset seeked error norm
+    params.seeked_error_norm = _temp_seeked_error_norm
 
     if args["erda_run"]:
         path = pl.Path(args["datapath"], exp_setup["folder_name"])
