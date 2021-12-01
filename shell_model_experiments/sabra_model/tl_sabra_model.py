@@ -44,7 +44,7 @@ cfg.GLOBAL_PARAMS.ref_run = False
 )
 def run_model(
     u_tl_old: np.ndarray,
-    u_ref: np.ndarray,
+    u_ref_old: np.ndarray,
     data_out: np.ndarray,
     Nt_local: int,
     ny: float,
@@ -74,27 +74,26 @@ def run_model(
         if i % int(1 / PAR.sample_rate) == 0:
             data_out[sample_number, 0] = PAR.dt * i + 0j
             data_out[sample_number, 1:] = (
-                u_ref[PAR.bd_size : -PAR.bd_size] + u_tl_old[PAR.bd_size : -PAR.bd_size]
+                u_ref_old[PAR.bd_size : -PAR.bd_size]
+                + u_tl_old[PAR.bd_size : -PAR.bd_size]
             )
             sample_number += 1
 
-        # Solve the TL model
-        u_tl_old: np.ndarray = rk4.tl_runge_kutta4(
-            y0=u_tl_old,
-            u_ref=u_ref,
+        # Solve the TL model (and non-linear model)
+        u_tl_old, u_ref_old = rk4.tl_runge_kutta4(
+            u_tl_old=u_tl_old,
+            u_ref_old=u_ref_old,
             diff_exponent=diff_exponent,
             local_ny=ny,
+            forcing=forcing,
             pre_factor_reshaped=pre_factor_reshaped,
             PAR=PAR,
         )
 
-        # Solve nonlinear equation to get reference velocity
-        u_ref = rk4.runge_kutta4(y0=u_ref, forcing=forcing, PAR=PAR)
-
         # Solve linear diffusive term explicitly
-        u_ref[PAR.bd_size : -PAR.bd_size] = u_ref[PAR.bd_size : -PAR.bd_size] * np.exp(
-            -ny * PAR.k_vec_temp ** diff_exponent * PAR.dt
-        )
+        u_ref_old[PAR.bd_size : -PAR.bd_size] = u_ref_old[
+            PAR.bd_size : -PAR.bd_size
+        ] * np.exp(-ny * PAR.k_vec_temp ** diff_exponent * PAR.dt)
 
     return u_tl_old
 

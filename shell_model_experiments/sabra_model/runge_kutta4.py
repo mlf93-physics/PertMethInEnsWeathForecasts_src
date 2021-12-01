@@ -32,9 +32,6 @@ def derivative_evaluator(
     ----------
     u_old : ndarray
         The previous shell velocity array
-    du : ndarray
-        A helper array used to store the current derivative of the shell
-        velocities. Updated at each call to this function.
 
     Returns
     -------
@@ -130,9 +127,6 @@ def tl_derivative_evaluator(
     ----------
     u_old : ndarray
         The previous lorentz velocity array
-    du_array : ndarray
-        A helper array used to store the current derivative of the lorentz
-        velocities. Updated at each call to this function.
 
     Returns
     -------
@@ -158,9 +152,10 @@ def tl_derivative_evaluator(
 
 
 @njit(
-    types.Array(types.complex128, 1, "C", readonly=False)(
+    types.UniTuple(types.Array(types.complex128, 1, "C", readonly=False), 2,)(
         types.Array(types.complex128, 1, "C", readonly=False),
         types.Array(types.complex128, 1, "C", readonly=True),
+        types.float64,
         types.float64,
         types.float64,
         types.Array(types.complex128, 2, "C", readonly=True),
@@ -169,68 +164,91 @@ def tl_derivative_evaluator(
     cache=cfg.NUMBA_CACHE,
 )
 def tl_runge_kutta4(
-    y0=0,
-    u_ref=None,
-    diff_exponent=None,
-    local_ny=None,
-    pre_factor_reshaped=None,
-    PAR=None,
-):
-    """Performs the Runge-Kutta-4 integration of the lorentz model.
+    u_tl_old: np.ndarray = 0,
+    u_ref_old: np.ndarray = None,
+    diff_exponent: float = None,
+    local_ny: float = None,
+    forcing: float = None,
+    pre_factor_reshaped: np.ndarray = None,
+    PAR: ParamsStructType = None,
+) -> Tuple[np.ndarray, np.ndarray]:
+    """Performs the Runge-Kutta-4 integration of the tangent linear Sabra shell
+    model.
 
     Parameters
     ----------
-    x0 : ndarray
-        The x array
-    y0 : ndarray
-        The y array
-    h : float
-        The x step to integrate over.
-    du_array : ndarray
-        A helper array used to store the current derivative of the shell
-        velocities.
+    u_tl_old : np.ndarray
+        The previous perturbation velocities, by default None
+    u_ref_old : np.ndarray
+        The previous reference/basis flow velocity vector, by default None
+    diff_exponent : float, optional
+        The exponent of the diffusion term, by default None
+    local_ny : float, optional
+        The local viscosity, by default None
+    forcing : float, optional
+        The forcing of the flow, by default None
+    pre_factor_reshaped : np.ndarray, optional
+        Helper array to carry out multiplication of the prefactor in the sabra
+        shell model, by default None
+    PAR : ParamsStructType, optional
+        Parameters for the shell model, by default None
 
     Returns
     -------
-    y0 : ndarray
-        The y array at x + h.
-
+    Tuple[np.ndarray, np.ndarray]
+        (
+            u_tl_old : The integrated perturbation velocities
+            u_ref_old : The integrated reference/basis velocities
+        )
     """
+
+    # Calculate the k's of the non-linear model
+    Y1 = u_ref_old
+    k1 = PAR.dt * derivative_evaluator(u_old=Y1, forcing=forcing, PAR=PAR)
+    Y2 = u_ref_old + 1 / 2 * k1
+    k2 = PAR.dt * derivative_evaluator(u_old=Y2, forcing=forcing, PAR=PAR)
+    Y3 = u_ref_old + 1 / 2 * k2
+    k3 = PAR.dt * derivative_evaluator(u_old=Y3, forcing=forcing, PAR=PAR)
+    Y4 = u_ref_old + k3
+    k4 = PAR.dt * derivative_evaluator(u_old=Y4, forcing=forcing, PAR=PAR)
+
     # Calculate the k's
-    k1 = PAR.dt * tl_derivative_evaluator(
-        u_old=y0,
-        u_ref=u_ref,
+    l1 = PAR.dt * tl_derivative_evaluator(
+        u_old=u_tl_old,
+        u_ref=Y1,
         diff_exponent=diff_exponent,
         local_ny=local_ny,
         pre_factor_reshaped=pre_factor_reshaped,
         PAR=PAR,
     )
-    k2 = PAR.dt * tl_derivative_evaluator(
-        u_old=y0 + 1 / 2 * k1,
-        u_ref=u_ref,
+    l2 = PAR.dt * tl_derivative_evaluator(
+        u_old=u_tl_old + 1 / 2 * l1,
+        u_ref=Y2,
         diff_exponent=diff_exponent,
         local_ny=local_ny,
         pre_factor_reshaped=pre_factor_reshaped,
         PAR=PAR,
     )
-    k3 = PAR.dt * tl_derivative_evaluator(
-        u_old=y0 + 1 / 2 * k2,
-        u_ref=u_ref,
+    l3 = PAR.dt * tl_derivative_evaluator(
+        u_old=u_tl_old + 1 / 2 * l2,
+        u_ref=Y3,
         diff_exponent=diff_exponent,
         local_ny=local_ny,
         pre_factor_reshaped=pre_factor_reshaped,
         PAR=PAR,
     )
-    k4 = PAR.dt * tl_derivative_evaluator(
-        u_old=y0 + k3,
-        u_ref=u_ref,
+    l4 = PAR.dt * tl_derivative_evaluator(
+        u_old=u_tl_old + l3,
+        u_ref=Y4,
         diff_exponent=diff_exponent,
         local_ny=local_ny,
         pre_factor_reshaped=pre_factor_reshaped,
         PAR=PAR,
     )
 
-    # Update y
-    y0 = y0 + 1 / 6 * k1 + 1 / 3 * k2 + 1 / 3 * k3 + 1 / 6 * k4
+    # Update u_tl_old
+    u_tl_old = u_tl_old + 1 / 6 * (l1 + 2 * (l2 + l3) + l4)
+    # Update u_ref_old
+    u_ref_old = u_ref_old + 1 / 6 * (k1 + 2 * (k2 + k3) + k4)
 
-    return y0
+    return u_tl_old, u_ref_old
