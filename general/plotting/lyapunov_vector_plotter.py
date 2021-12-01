@@ -60,6 +60,7 @@ def plot_tlm_solution(args, axes=None):
     )
 
     args["exp_folder"] = pl.Path(exp_setup["folder_name"], exp_setup["sub_exp_folder"])
+
     g_plt_data.plot_error_norm_vs_time(
         args=args,
         normalize_start_time=False,

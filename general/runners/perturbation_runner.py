@@ -53,7 +53,7 @@ if cfg.MODEL == Models.SHELL_MODEL:
     # Shell model specific imports
     import shell_model_experiments.perturbations.normal_modes as sh_nm_estimator
     import shell_model_experiments.utils.special_params as sh_sparams
-    import shell_model_experiments.utils.util_funcs as sh_utils
+    import shell_model_experiments.utils.util_funcs as ut_funcs
     from shell_model_experiments.params.params import PAR
     from shell_model_experiments.params.params import ParamsStructType
     from shell_model_experiments.sabra_model.tl_sabra_model import (
