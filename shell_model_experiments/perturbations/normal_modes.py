@@ -89,16 +89,92 @@ def find_normal_modes(
     return e_vector_matrix, e_vector_collection, e_value_collection
 
 
-@nb.njit(
-    (nb.types.Array(nb.types.complex128, 2, "C", readonly=False))(
-        nb.types.Array(nb.types.complex128, 1, "C", readonly=True),
-        nb.types.float64,
-        nb.types.float64,
-        nb.types.Array(nb.types.complex128, 2, "C", readonly=True),
-        nb.typeof(PAR),
-    ),
-    cache=cfg.NUMBA_CACHE,
-)
+# @nb.njit(
+#     (nb.types.Array(nb.types.complex128, 2, "C", readonly=False))(
+#         nb.types.Array(nb.types.complex128, 1, "C", readonly=True),
+#         nb.types.float64,
+#         nb.types.float64,
+#         nb.types.Array(nb.types.complex128, 2, "C", readonly=True),
+#         nb.typeof(PAR),
+#     ),
+#     cache=cfg.NUMBA_CACHE,
+# )
+# def calc_jacobian(
+#     ref_u_vector: np.ndarray,
+#     diff_exponent,
+#     local_ny,
+#     pre_factor_reshaped,
+#     PAR,
+# ):
+#     # Perform the conjugation
+#     ref_u_vector_conj: np.ndarray = ref_u_vector.conj()
+#     # Initialise the Jacobian
+#     J_matrix = np.zeros((PAR.sdim, PAR.sdim), dtype=sparams.dtype)
+
+#     # Add k=2 diagonal
+#     J_matrix += np.diag(ref_u_vector_conj[PAR.bd_size + 1 : -PAR.bd_size - 1], k=2)
+#     # Add k=1 diagonal
+#     J_matrix += PAR.factor2 * np.diag(
+#         np.concatenate(
+#             (np.array([0 + 0j]), ref_u_vector_conj[PAR.bd_size : -PAR.bd_size - 2])
+#         ),
+#         k=1,
+#     )
+#     # Add k=-1 diagonal
+#     J_matrix += PAR.factor3 * np.diag(
+#         np.concatenate(
+#             (np.array([0 + 0j]), ref_u_vector[PAR.bd_size : -PAR.bd_size - 2])
+#         ),
+#         k=-1,
+#     )
+#     # Add k=-2 diagonal
+#     J_matrix += PAR.factor3 * np.diag(
+#         ref_u_vector[PAR.bd_size + 1 : -PAR.bd_size - 1], k=-2
+#     )
+
+#     # Add contribution from derivatives of the complex conjugates:
+#     J_matrix += np.diag(
+#         np.concatenate(
+#             (ref_u_vector[PAR.bd_size + 2 : -PAR.bd_size], np.array([0 + 0j]))
+#         ),
+#         k=1,
+#     )
+#     J_matrix += PAR.factor2 * np.diag(
+#         np.concatenate(
+#             (ref_u_vector[PAR.bd_size + 2 : -PAR.bd_size], np.array([0 + 0j]))
+#         ),
+#         k=-1,
+#     )
+
+#     J_matrix = J_matrix * pre_factor_reshaped
+
+#     # Add the k=0 diagonal
+#     J_matrix -= np.diag(local_ny * PAR.k_vec_temp ** diff_exponent, k=0)
+
+#     return J_matrix
+
+# Initialise the Jacobian
+J_matrix = np.zeros((PAR.sdim, PAR.sdim), dtype=sparams.dtype)
+diagonals = []
+diagonals.append(np.diagonal(J_matrix, 0))
+diagonals.append(np.diagonal(J_matrix, 1))
+diagonals.append(np.diagonal(J_matrix, 2))
+diagonals.append(np.diagonal(J_matrix, -1))
+diagonals.append(np.diagonal(J_matrix, -2))
+
+for diagonal in diagonals:
+    diagonal.setflags(write=True)
+
+# @nb.njit(
+#     (nb.types.Array(nb.types.complex128, 2, "C", readonly=False))(
+#         nb.types.Array(nb.types.complex128, 1, "C", readonly=True),
+#         nb.types.float64,
+#         nb.types.float64,
+#         nb.types.Array(nb.types.complex128, 2, "C", readonly=True),
+#         nb.typeof(PAR),
+#     ),
+#     cache=cfg.NUMBA_CACHE,
+# )
 def calc_jacobian(
     ref_u_vector: np.ndarray,
     diff_exponent,
@@ -108,8 +184,6 @@ def calc_jacobian(
 ):
     # Perform the conjugation
     ref_u_vector_conj: np.ndarray = ref_u_vector.conj()
-    # Initialise the Jacobian
-    J_matrix = np.zeros((PAR.sdim, PAR.sdim), dtype=sparams.dtype)
 
     # Add k=2 diagonal
     J_matrix += np.diag(ref_u_vector_conj[PAR.bd_size + 1 : -PAR.bd_size - 1], k=2)
@@ -150,5 +224,3 @@ def calc_jacobian(
 
     # Add the k=0 diagonal
     J_matrix -= np.diag(local_ny * PAR.k_vec_temp ** diff_exponent, k=0)
-
-    return J_matrix
