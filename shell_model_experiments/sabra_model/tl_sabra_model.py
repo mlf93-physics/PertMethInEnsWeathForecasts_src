@@ -19,6 +19,7 @@ import shell_model_experiments.utils.special_params as sparams
 import shell_model_experiments.utils.util_funcs as ut_funcs
 from numba import njit, types, typeof
 from pyinstrument import Profiler
+import shell_model_experiments.perturbations.normal_modes as sh_nm_estimator
 from shell_model_experiments.params.params import PAR
 from shell_model_experiments.params.params import ParamsStructType
 
@@ -39,6 +40,12 @@ cfg.GLOBAL_PARAMS.ref_run = False
         types.float64,
         types.float64,
         typeof(PAR),
+        types.Array(types.complex128, 2, "C", readonly=False),
+        types.Array(types.complex128, 1, "A", readonly=False),
+        types.Array(types.complex128, 1, "A", readonly=False),
+        types.Array(types.complex128, 1, "A", readonly=False),
+        types.Array(types.complex128, 1, "A", readonly=False),
+        types.Array(types.complex128, 1, "A", readonly=False),
     ),
     cache=cfg.NUMBA_CACHE,
 )
@@ -51,6 +58,12 @@ def run_model(
     diff_exponent: int,
     forcing: float,
     PAR: ParamsStructType,
+    J_matrix: np.ndarray,
+    diagonal0: np.ndarray,
+    diagonal1: np.ndarray,
+    diagonal2: np.ndarray,
+    diagonal_1: np.ndarray,
+    diagonal_2: np.ndarray,
 ):
     """Execute the integration of the sabra shell model.
 
@@ -65,8 +78,6 @@ def run_model(
         An array to store samples of the integrated shell velocities.
 
     """
-    # Prepare prefactor
-    pre_factor_reshaped: np.ndarray = np.reshape(PAR.pre_factor, (-1, 1))
     sample_number = 0
     # Perform calculations
     for i in range(Nt_local):
@@ -86,8 +97,13 @@ def run_model(
             diff_exponent=diff_exponent,
             local_ny=ny,
             forcing=forcing,
-            pre_factor_reshaped=pre_factor_reshaped,
             PAR=PAR,
+            J_matrix=J_matrix,
+            diagonal0=diagonal0,
+            diagonal1=diagonal1,
+            diagonal2=diagonal2,
+            diagonal_1=diagonal_1,
+            diagonal_2=diagonal_2,
         )
 
         # Solve linear diffusive term explicitly
@@ -101,6 +117,7 @@ def run_model(
 def main(args=None):
 
     # Import reference data
+    profiler.start()
     u_ref, _, ref_header_dict = g_import.import_start_u_profiles(args=args)
 
     if u_ref.size > PAR.sdim + 2 * PAR.bd_size:
@@ -121,7 +138,16 @@ def main(args=None):
         mode="constant",
     )
 
-    profiler.start()
+    # Initialise the Jacobian and diagonal arrays
+    (
+        J_matrix,
+        diagonal0,
+        diagonal1,
+        diagonal2,
+        diagonal_1,
+        diagonal_2,
+    ) = sh_nm_estimator.init_jacobian()
+
     print(f'\nRunning TL sabra model for {args["Nt"]*PAR.dt:.2f}s')
 
     # Prepare data out array and prefactor
@@ -139,6 +165,12 @@ def main(args=None):
         args["diff_exponent"],
         args["forcing"],
         PAR,
+        J_matrix,
+        diagonal0,
+        diagonal1,
+        diagonal2,
+        diagonal_1,
+        diagonal_2,
     )
 
     if not args["skip_save_data"]:
@@ -146,7 +178,7 @@ def main(args=None):
         save_path = g_save.save_data(data_out, args=args, prefix="tl_")
 
     profiler.stop()
-    print(profiler.output_text(color=True))
+    print(profiler.output_text(color=True, show_all=False))
 
 
 if __name__ == "__main__":

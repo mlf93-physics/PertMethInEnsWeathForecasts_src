@@ -145,22 +145,39 @@ def perturbation_runner(
                 args["diff_exponent"],
                 params,
             )
-        elif cfg.MODEL.submodel == "TL":
-            sh_tl_model(
-                u_old,
-                np.copy(u_ref[:, run_count]),
-                data_out,
-                args["Nt"] + args["endpoint"] * 1,
-                args["ny"],
-                args["diff_exponent"],
-                args["forcing"],
-                params,
-            )
         else:
-            g_exceptions.ModelError(
-                "Submodel invalid or not implemented yet",
-                model=f"{cfg.MODEL.submodel} {cfg.MODEL}",
-            )
+            # Initialise the Jacobian and diagonal arrays
+            (
+                J_matrix,
+                diagonal0,
+                diagonal1,
+                diagonal2,
+                diagonal_1,
+                diagonal_2,
+            ) = sh_nm_estimator.init_jacobian()
+
+            if cfg.MODEL.submodel == "TL":
+                sh_tl_model(
+                    u_old,
+                    np.copy(u_ref[:, run_count]),
+                    data_out,
+                    args["Nt"] + args["endpoint"] * 1,
+                    args["ny"],
+                    args["diff_exponent"],
+                    args["forcing"],
+                    params,
+                    J_matrix,
+                    diagonal0,
+                    diagonal1,
+                    diagonal2,
+                    diagonal_1,
+                    diagonal_2,
+                )
+            else:
+                g_exceptions.ModelError(
+                    "Submodel invalid or not implemented yet",
+                    model=f"{cfg.MODEL.submodel} {cfg.MODEL}",
+                )
     elif cfg.MODEL == Models.LORENTZ63:
         # General model setup
         lorentz_matrix = ut_funcs.setup_lorentz_matrix(args)

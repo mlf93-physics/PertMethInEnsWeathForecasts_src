@@ -67,7 +67,6 @@ def run_model(
 
     """
     # Prepare prefactor and ref_data array
-    pre_factor_reshaped: np.ndarray = np.reshape(PAR.pre_factor, (-1, 1))
     ref_data = np.zeros((Nt_local, PAR.sdim), dtype=sparams.dtype)
 
     # Run forward non-linear model
@@ -104,7 +103,6 @@ def run_model(
             u_ref=u_ref,
             diff_exponent=diff_exponent,
             local_ny=ny,
-            pre_factor_reshaped=pre_factor_reshaped,
             PAR=PAR,
         )
 

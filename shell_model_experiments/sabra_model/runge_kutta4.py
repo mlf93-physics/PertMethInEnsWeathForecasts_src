@@ -22,7 +22,7 @@ import config as cfg
 def derivative_evaluator(
     u_old: np.ndarray = None,
     forcing: float = None,
-    PAR=None,
+    PAR: ParamsStructType = None,
 ):
     """Derivative evaluator used in the Runge-Kutta method.
 
@@ -66,7 +66,7 @@ def derivative_evaluator(
 def runge_kutta4(
     y0: np.ndarray = 0,
     forcing: float = None,
-    PAR=None,
+    PAR: ParamsStructType = None,
 ):
     """Performs the Runge-Kutta-4 integration of non-linear part of the shell velocities.
 
@@ -106,18 +106,28 @@ def runge_kutta4(
         types.Array(types.complex128, 1, "C", readonly=True),
         types.float64,
         types.float64,
-        types.Array(types.complex128, 2, "C", readonly=True),
         typeof(PAR),
+        types.Array(types.complex128, 2, "C", readonly=False),
+        types.Array(types.complex128, 1, "A", readonly=False),
+        types.Array(types.complex128, 1, "A", readonly=False),
+        types.Array(types.complex128, 1, "A", readonly=False),
+        types.Array(types.complex128, 1, "A", readonly=False),
+        types.Array(types.complex128, 1, "A", readonly=False),
     ),
     cache=cfg.NUMBA_CACHE,
 )
 def tl_derivative_evaluator(
-    u_old=None,
-    u_ref=None,
-    diff_exponent=None,
-    local_ny=None,
-    pre_factor_reshaped=None,
-    PAR=None,
+    u_old: np.ndarray = None,
+    u_ref: np.ndarray = None,
+    diff_exponent: float = None,
+    local_ny: float = None,
+    PAR: ParamsStructType = None,
+    J_matrix: np.ndarray = None,
+    diagonal0: np.ndarray = None,
+    diagonal1: np.ndarray = None,
+    diagonal2: np.ndarray = None,
+    diagonal_1: np.ndarray = None,
+    diagonal_2: np.ndarray = None,
 ):
     """Derivative evaluator used in the TL Runge-Kutta method.
 
@@ -135,17 +145,22 @@ def tl_derivative_evaluator(
 
     """
     # Update the jacobian matrix
-    jacobian_matrix: np.ndarray = sh_nm_estimator.calc_jacobian(
+    sh_nm_estimator.calc_jacobian(
         u_ref,
         diff_exponent,
         local_ny,
-        pre_factor_reshaped,
         PAR,
+        J_matrix,
+        diagonal0,
+        diagonal1,
+        diagonal2,
+        diagonal_1,
+        diagonal_2,
     )
 
     # Calculate change in u (du_array)
     PAR.du_array[PAR.bd_size : -PAR.bd_size] = (
-        jacobian_matrix @ u_old[PAR.bd_size : -PAR.bd_size]
+        J_matrix @ u_old[PAR.bd_size : -PAR.bd_size]
     )
 
     return PAR.du_array
@@ -158,8 +173,13 @@ def tl_derivative_evaluator(
         types.float64,
         types.float64,
         types.float64,
-        types.Array(types.complex128, 2, "C", readonly=True),
         typeof(PAR),
+        types.Array(types.complex128, 2, "C", readonly=False),
+        types.Array(types.complex128, 1, "A", readonly=False),
+        types.Array(types.complex128, 1, "A", readonly=False),
+        types.Array(types.complex128, 1, "A", readonly=False),
+        types.Array(types.complex128, 1, "A", readonly=False),
+        types.Array(types.complex128, 1, "A", readonly=False),
     ),
     cache=cfg.NUMBA_CACHE,
 )
@@ -169,8 +189,13 @@ def tl_runge_kutta4(
     diff_exponent: float = None,
     local_ny: float = None,
     forcing: float = None,
-    pre_factor_reshaped: np.ndarray = None,
     PAR: ParamsStructType = None,
+    J_matrix: np.ndarray = None,
+    diagonal0: np.ndarray = None,
+    diagonal1: np.ndarray = None,
+    diagonal2: np.ndarray = None,
+    diagonal_1: np.ndarray = None,
+    diagonal_2: np.ndarray = None,
 ) -> Tuple[np.ndarray, np.ndarray]:
     """Performs the Runge-Kutta-4 integration of the tangent linear Sabra shell
     model.
@@ -187,9 +212,6 @@ def tl_runge_kutta4(
         The local viscosity, by default None
     forcing : float, optional
         The forcing of the flow, by default None
-    pre_factor_reshaped : np.ndarray, optional
-        Helper array to carry out multiplication of the prefactor in the sabra
-        shell model, by default None
     PAR : ParamsStructType, optional
         Parameters for the shell model, by default None
 
@@ -218,32 +240,52 @@ def tl_runge_kutta4(
         u_ref=Y1,
         diff_exponent=diff_exponent,
         local_ny=local_ny,
-        pre_factor_reshaped=pre_factor_reshaped,
         PAR=PAR,
+        J_matrix=J_matrix,
+        diagonal0=diagonal0,
+        diagonal1=diagonal1,
+        diagonal2=diagonal2,
+        diagonal_1=diagonal_1,
+        diagonal_2=diagonal_2,
     )
     l2 = PAR.dt * tl_derivative_evaluator(
         u_old=u_tl_old + 1 / 2 * l1,
         u_ref=Y2,
         diff_exponent=diff_exponent,
         local_ny=local_ny,
-        pre_factor_reshaped=pre_factor_reshaped,
         PAR=PAR,
+        J_matrix=J_matrix,
+        diagonal0=diagonal0,
+        diagonal1=diagonal1,
+        diagonal2=diagonal2,
+        diagonal_1=diagonal_1,
+        diagonal_2=diagonal_2,
     )
     l3 = PAR.dt * tl_derivative_evaluator(
         u_old=u_tl_old + 1 / 2 * l2,
         u_ref=Y3,
         diff_exponent=diff_exponent,
         local_ny=local_ny,
-        pre_factor_reshaped=pre_factor_reshaped,
         PAR=PAR,
+        J_matrix=J_matrix,
+        diagonal0=diagonal0,
+        diagonal1=diagonal1,
+        diagonal2=diagonal2,
+        diagonal_1=diagonal_1,
+        diagonal_2=diagonal_2,
     )
     l4 = PAR.dt * tl_derivative_evaluator(
         u_old=u_tl_old + l3,
         u_ref=Y4,
         diff_exponent=diff_exponent,
         local_ny=local_ny,
-        pre_factor_reshaped=pre_factor_reshaped,
         PAR=PAR,
+        J_matrix=J_matrix,
+        diagonal0=diagonal0,
+        diagonal1=diagonal1,
+        diagonal2=diagonal2,
+        diagonal_1=diagonal_1,
+        diagonal_2=diagonal_2,
     )
 
     # Update u_tl_old
