@@ -1207,7 +1207,13 @@ if __name__ == "__main__":
         if args["datapath"] is None:
             print("No path specified to analyse error norms.")
         else:
-            g_plt_data.plot_error_norm_vs_time(args=args)
+            g_plt_data.plot_error_norm_vs_time(
+                args=args,
+                legend_on=True,
+                cmap_list=["blue"],
+                plot_args=["unique_linestyle"],
+                normalize_start_time=False,
+            )
 
     if "error_spectrum_vs_time" in args["plot_type"]:
         plot_error_energy_spectrum_vs_time_2D(args=args)

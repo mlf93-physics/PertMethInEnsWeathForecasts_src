@@ -162,7 +162,9 @@ def main(args: dict, exp_setup: dict = None):
 
                     # Store the initial perturbation vector
                     if k == 0:
-                        store_u_profiles_perturbed = np.copy(u_profiles_perturbed)
+                        store_u_profiles_perturbed = np.copy(
+                            u_profiles_perturbed[sparams.u_slice]
+                        )
 
                     if len(processes) > 0:
                         pt_runner.main_run(
@@ -177,7 +179,11 @@ def main(args: dict, exp_setup: dict = None):
                     cfg.MODEL.submodel = "ATL"
                     processes, data_out_list, _, _ = pt_runner.main_setup(
                         copy_args_atl,
-                        u_profiles_perturbed=np.array(data_out_list).T,
+                        u_profiles_perturbed=np.pad(
+                            np.array(data_out_list).T,
+                            pad_width=((params.bd_size, params.bd_size), (0, 0)),
+                            mode="constant",
+                        ),
                         exp_setup=exp_setup,
                         u_ref=u_ref,
                     )
@@ -203,7 +209,13 @@ def main(args: dict, exp_setup: dict = None):
                 lanczos_outarray, tridiag_matrix, input_vector_matrix = next(
                     lanczos_iterator
                 )
-
+                lanczos_outarray = np.pad(
+                    lanczos_outarray,
+                    pad_width=((params.bd_size, params.bd_size), (0, 0)),
+                    mode="constant",
+                )
+            print("tridiag_matrix", tridiag_matrix)
+            input()
             # Calculate SVs from eigen vectors of tridiag_matrix
             sv_matrix, s_values = pt_utils.calculate_svs(
                 tridiag_matrix, input_vector_matrix

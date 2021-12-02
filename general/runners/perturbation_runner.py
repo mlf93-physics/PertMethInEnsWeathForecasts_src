@@ -529,7 +529,6 @@ def main_setup(
     # params.initiate_sdim_arrays(args["sdim"])
 
     times_to_run, Nt_array = prepare_run_times(args)
-    print("Nt_array", Nt_array)
 
     # If in 2. or higher breed cycle, the perturbation is given as input
     if u_profiles_perturbed is None:  # or perturb_positions is None:
@@ -628,8 +627,6 @@ if __name__ == "__main__":
 
     g_ui.confirm_run_setup(args)
     r_utils.adjust_run_setup(args)
-
-    # cfg.MODEL.submodel = "ATL"
 
     # Make profiler
     profiler = Profiler()

@@ -7,7 +7,6 @@ from shell_model_experiments.params.params import PAR, ParamsStructType
 import shell_model_experiments.perturbations.normal_modes as sh_nm_estimator
 import general.utils.custom_decorators as c_dec
 
-# from shell_model_experiments.params.params import Params
 import config as cfg
 
 
@@ -64,40 +63,40 @@ def derivative_evaluator(
     cache=cfg.NUMBA_CACHE,
 )
 def runge_kutta4(
-    y0: np.ndarray = 0,
+    u_old: np.ndarray = 0,
     forcing: float = None,
     PAR: ParamsStructType = None,
-):
+) -> np.ndarray:
     """Performs the Runge-Kutta-4 integration of non-linear part of the shell velocities.
 
     Parameters
     ----------
-    x0 : ndarray
-        The x array
-    y0 : ndarray
-        The y array
-    h : float
-        The x step to integrate over.
-    du_array : ndarray
-        A helper array used to store the current derivative of the shell
-        velocities.
+    u_old : np.ndarray, optional
+        The previous shell velocities, by default 0
+    forcing : float, optional
+        The forcing, by default None
+    PAR : ParamsStructType, optional
+        The parameter struct, by default None
 
     Returns
     -------
-    y0 : ndarray
-        The y array at x + h.
-
+    np.ndarray
+        The integrated shell velocities
     """
     # Calculate the k's
-    k1 = PAR.dt * derivative_evaluator(u_old=y0, forcing=forcing, PAR=PAR)
-    k2 = PAR.dt * derivative_evaluator(u_old=y0 + 1 / 2 * k1, forcing=forcing, PAR=PAR)
-    k3 = PAR.dt * derivative_evaluator(u_old=y0 + 1 / 2 * k2, forcing=forcing, PAR=PAR)
-    k4 = PAR.dt * derivative_evaluator(u_old=y0 + k3, forcing=forcing, PAR=PAR)
+    k1 = PAR.dt * derivative_evaluator(u_old=u_old, forcing=forcing, PAR=PAR)
+    k2 = PAR.dt * derivative_evaluator(
+        u_old=u_old + 1 / 2 * k1, forcing=forcing, PAR=PAR
+    )
+    k3 = PAR.dt * derivative_evaluator(
+        u_old=u_old + 1 / 2 * k2, forcing=forcing, PAR=PAR
+    )
+    k4 = PAR.dt * derivative_evaluator(u_old=u_old + k3, forcing=forcing, PAR=PAR)
 
     # Update y
-    y0 = y0 + 1 / 6 * k1 + 1 / 3 * k2 + 1 / 3 * k3 + 1 / 6 * k4
+    u_old = u_old + 1 / 6 * k1 + 1 / 3 * k2 + 1 / 3 * k3 + 1 / 6 * k4
 
-    return y0
+    return u_old
 
 
 @njit(
@@ -128,22 +127,42 @@ def tl_derivative_evaluator(
     diagonal2: np.ndarray = None,
     diagonal_1: np.ndarray = None,
     diagonal_2: np.ndarray = None,
-):
+) -> np.ndarray:
     """Derivative evaluator used in the TL Runge-Kutta method.
 
     Calculates the derivatives in the lorentz model.
 
     Parameters
     ----------
-    u_old : ndarray
-        The previous lorentz velocity array
+    u_old : np.ndarray, optional
+        The previous TL shell velocities, by default None
+    u_ref : np.ndarray, optional
+        The reference velocities, by default None
+    diff_exponent : float, optional
+        The diffusion exponent needed for hyper-diffusion, by default None
+    local_ny : float, optional
+        The local viscosity, by default None
+    PAR : ParamsStructType, optional
+        The parameter struct, by default None
+    J_matrix : np.ndarray, optional
+        The jacobian matrix array, by default None
+    diagonal0 : np.ndarray, optional
+        The diagonal of the jacobian at position k=0, by default None
+    diagonal1 : np.ndarray, optional
+        The diagonal of the jacobian at position k=1, by default None
+    diagonal2 : np.ndarray, optional
+        The diagonal of the jacobian at position k=2, by default None
+    diagonal_1 : np.ndarray, optional
+        The diagonal of the jacobian at position k=-1, by default None
+    diagonal_2 : np.ndarray, optional
+        The diagonal of the jacobian at position k=-2, by default None
 
     Returns
     -------
-    du_array : ndarray
-        The updated derivative of the lorentz velocities
-
+    np.ndarray
+        The derivative of the TL shell model
     """
+
     # Update the jacobian matrix
     sh_nm_estimator.calc_jacobian(
         u_ref,
@@ -213,6 +232,18 @@ def tl_runge_kutta4(
         The forcing of the flow, by default None
     PAR : ParamsStructType, optional
         Parameters for the shell model, by default None
+    J_matrix : np.ndarray, optional
+        The jacobian matrix array, by default None
+    diagonal0 : np.ndarray, optional
+        The diagonal of the jacobian at position k=0, by default None
+    diagonal1 : np.ndarray, optional
+        The diagonal of the jacobian at position k=1, by default None
+    diagonal2 : np.ndarray, optional
+        The diagonal of the jacobian at position k=2, by default None
+    diagonal_1 : np.ndarray, optional
+        The diagonal of the jacobian at position k=-1, by default None
+    diagonal_2 : np.ndarray, optional
+        The diagonal of the jacobian at position k=-2, by default None
 
     Returns
     -------
@@ -323,21 +354,42 @@ def atl_derivative_evaluator(
     diagonal2: np.ndarray = None,
     diagonal_1: np.ndarray = None,
     diagonal_2: np.ndarray = None,
-):
+) -> np.ndarray:
     """Derivative evaluator used in the ATL Runge-Kutta method.
 
     Calculates the derivatives in the ATL shell model.
 
     Parameters
     ----------
-    u_atl_old : ndarray
-        The previous adjoint shell velocity array
+    u_atl_old : np.ndarray, optional
+        The previous adjoint of the TL shell velocities, by default None
+    u_ref : np.ndarray, optional
+        The reference velocities, by default None
+    diff_exponent : float, optional
+        The exponent of the diffusion term, by default None
+    local_ny : float, optional
+        The local viscosity, by default None
+    forcing : float, optional
+        The forcing of the flow, by default None
+    PAR : ParamsStructType, optional
+        Parameters for the shell model, by default None
+    J_matrix : np.ndarray, optional
+        The jacobian matrix array, by default None
+    diagonal0 : np.ndarray, optional
+        The diagonal of the jacobian at position k=0, by default None
+    diagonal1 : np.ndarray, optional
+        The diagonal of the jacobian at position k=1, by default None
+    diagonal2 : np.ndarray, optional
+        The diagonal of the jacobian at position k=2, by default None
+    diagonal_1 : np.ndarray, optional
+        The diagonal of the jacobian at position k=-1, by default None
+    diagonal_2 : np.ndarray, optional
+        The diagonal of the jacobian at position k=-2, by default None
 
     Returns
     -------
-    du_array : ndarray
+    ndarray
         The updated adjoint derivative of the shell velocities
-
     """
     # Update the adjoint jacobian matrix
     adjoint_jac_matrix = sh_nm_estimator.calc_adjoint_jacobian(
@@ -409,6 +461,18 @@ def atl_runge_kutta4(
         The forcing of the flow, by default None
     PAR : ParamsStructType, optional
         Parameters for the shell model, by default None
+    J_matrix : np.ndarray, optional
+        The jacobian matrix array, by default None
+    diagonal0 : np.ndarray, optional
+        The diagonal of the jacobian at position k=0, by default None
+    diagonal1 : np.ndarray, optional
+        The diagonal of the jacobian at position k=1, by default None
+    diagonal2 : np.ndarray, optional
+        The diagonal of the jacobian at position k=2, by default None
+    diagonal_1 : np.ndarray, optional
+        The diagonal of the jacobian at position k=-1, by default None
+    diagonal_2 : np.ndarray, optional
+        The diagonal of the jacobian at position k=-2, by default None
 
     Returns
     -------

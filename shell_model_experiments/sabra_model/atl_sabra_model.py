@@ -107,7 +107,7 @@ def run_model(
         # Save reference data
         ref_data[i, :] = u_ref_old[PAR.bd_size : -PAR.bd_size]
         # Solve nonlinear equation to get reference velocity
-        u_ref_old = rk4.runge_kutta4(y0=u_ref_old, forcing=forcing, PAR=PAR)
+        u_ref_old = rk4.runge_kutta4(u_old=u_ref_old, forcing=forcing, PAR=PAR)
 
         # Solve linear diffusive term explicitly
         u_ref_old[PAR.bd_size : -PAR.bd_size] = u_ref_old[

@@ -90,7 +90,7 @@ def run_model(
             sample_number += 1
 
         # Solve nonlinear terms + forcing
-        u_old = runge_kutta4(y0=u_old, forcing=forcing, PAR=PAR)
+        u_old = runge_kutta4(u_old=u_old, forcing=forcing, PAR=PAR)
 
         # Solve diffusion depending on method
         u_old = diffusion_func(u_old, PAR, ny, diff_exponent)
