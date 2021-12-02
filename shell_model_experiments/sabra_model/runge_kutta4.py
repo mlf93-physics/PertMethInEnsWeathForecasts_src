@@ -150,7 +150,6 @@ def tl_derivative_evaluator(
         diff_exponent,
         local_ny,
         PAR,
-        J_matrix,
         diagonal0,
         diagonal1,
         diagonal2,
@@ -294,3 +293,196 @@ def tl_runge_kutta4(
     u_ref_old = u_ref_old + 1 / 6 * (k1 + 2 * (k2 + k3) + k4)
 
     return u_tl_old, u_ref_old
+
+
+@njit(
+    types.Array(types.complex128, 1, "C", readonly=False)(
+        types.Array(types.complex128, 1, "C", readonly=True),
+        types.Array(types.complex128, 1, "C", readonly=True),
+        types.float64,
+        types.float64,
+        typeof(PAR),
+        types.Array(types.complex128, 2, "C", readonly=False),
+        types.Array(types.complex128, 1, "A", readonly=False),
+        types.Array(types.complex128, 1, "A", readonly=False),
+        types.Array(types.complex128, 1, "A", readonly=False),
+        types.Array(types.complex128, 1, "A", readonly=False),
+        types.Array(types.complex128, 1, "A", readonly=False),
+    ),
+    cache=cfg.NUMBA_CACHE,
+)
+def atl_derivative_evaluator(
+    u_atl_old: np.ndarray = None,
+    u_ref: np.ndarray = None,
+    diff_exponent: float = None,
+    local_ny: float = None,
+    PAR: ParamsStructType = None,
+    J_matrix: np.ndarray = None,
+    diagonal0: np.ndarray = None,
+    diagonal1: np.ndarray = None,
+    diagonal2: np.ndarray = None,
+    diagonal_1: np.ndarray = None,
+    diagonal_2: np.ndarray = None,
+):
+    """Derivative evaluator used in the ATL Runge-Kutta method.
+
+    Calculates the derivatives in the ATL shell model.
+
+    Parameters
+    ----------
+    u_atl_old : ndarray
+        The previous adjoint shell velocity array
+
+    Returns
+    -------
+    du_array : ndarray
+        The updated adjoint derivative of the shell velocities
+
+    """
+    # Update the adjoint jacobian matrix
+    adjoint_jac_matrix = sh_nm_estimator.calc_adjoint_jacobian(
+        u_ref,
+        diff_exponent,
+        local_ny,
+        PAR,
+        J_matrix,
+        diagonal0,
+        diagonal1,
+        diagonal2,
+        diagonal_1,
+        diagonal_2,
+    )
+
+    # Calculate change in u (du_array)
+    PAR.du_array[PAR.bd_size : -PAR.bd_size] = (
+        adjoint_jac_matrix @ u_atl_old[PAR.bd_size : -PAR.bd_size]
+    )
+
+    return PAR.du_array
+
+
+@njit(
+    types.Array(types.complex128, 1, "C", readonly=False)(
+        types.Array(types.complex128, 1, "C", readonly=False),
+        types.Array(types.complex128, 1, "C", readonly=True),
+        types.float64,
+        types.float64,
+        types.float64,
+        typeof(PAR),
+        types.Array(types.complex128, 2, "C", readonly=False),
+        types.Array(types.complex128, 1, "A", readonly=False),
+        types.Array(types.complex128, 1, "A", readonly=False),
+        types.Array(types.complex128, 1, "A", readonly=False),
+        types.Array(types.complex128, 1, "A", readonly=False),
+        types.Array(types.complex128, 1, "A", readonly=False),
+    ),
+    cache=cfg.NUMBA_CACHE,
+)
+def atl_runge_kutta4(
+    u_atl_old: np.ndarray = 0,
+    u_ref_old: np.ndarray = None,
+    diff_exponent: float = None,
+    local_ny: float = None,
+    forcing: float = None,
+    PAR: ParamsStructType = None,
+    J_matrix: np.ndarray = None,
+    diagonal0: np.ndarray = None,
+    diagonal1: np.ndarray = None,
+    diagonal2: np.ndarray = None,
+    diagonal_1: np.ndarray = None,
+    diagonal_2: np.ndarray = None,
+) -> Tuple[np.ndarray, np.ndarray]:
+    """Performs the Runge-Kutta-4 integration of the adjoint tangent linear Sabra shell
+    model.
+
+    Parameters
+    ----------
+    u_atl_old : np.ndarray
+        The previous perturbation velocities, by default None
+    u_ref_old : np.ndarray
+        The previous reference/basis flow velocity vector, by default None
+    diff_exponent : float, optional
+        The exponent of the diffusion term, by default None
+    local_ny : float, optional
+        The local viscosity, by default None
+    forcing : float, optional
+        The forcing of the flow, by default None
+    PAR : ParamsStructType, optional
+        Parameters for the shell model, by default None
+
+    Returns
+    -------
+    np.ndarray
+        u_atl_old : The integrated adjoint perturbation velocities
+    """
+
+    # Calculate the k's of the non-linear model
+    Y1 = u_ref_old
+    k1 = PAR.dt * derivative_evaluator(u_old=Y1, forcing=forcing, PAR=PAR)
+    Y2 = u_ref_old + 1 / 2 * k1
+    k2 = PAR.dt * derivative_evaluator(u_old=Y2, forcing=forcing, PAR=PAR)
+    Y3 = u_ref_old + 1 / 2 * k2
+    k3 = PAR.dt * derivative_evaluator(u_old=Y3, forcing=forcing, PAR=PAR)
+    Y4 = u_ref_old + k3
+
+    # Calculate the l's of the adjoint tangent linear model
+    l4 = atl_derivative_evaluator(
+        u_atl_old=u_atl_old,
+        u_ref=Y4,
+        diff_exponent=diff_exponent,
+        local_ny=local_ny,
+        PAR=PAR,
+        J_matrix=J_matrix,
+        diagonal0=diagonal0,
+        diagonal1=diagonal1,
+        diagonal2=diagonal2,
+        diagonal_1=diagonal_1,
+        diagonal_2=diagonal_2,
+    )
+
+    l3 = atl_derivative_evaluator(
+        u_atl_old=u_atl_old + 1 / 2 * PAR.dt * l4,
+        u_ref=Y3,
+        diff_exponent=diff_exponent,
+        local_ny=local_ny,
+        PAR=PAR,
+        J_matrix=J_matrix,
+        diagonal0=diagonal0,
+        diagonal1=diagonal1,
+        diagonal2=diagonal2,
+        diagonal_1=diagonal_1,
+        diagonal_2=diagonal_2,
+    )
+
+    l2 = atl_derivative_evaluator(
+        u_atl_old=u_atl_old + 1 / 2 * PAR.dt * l3,
+        u_ref=Y2,
+        diff_exponent=diff_exponent,
+        local_ny=local_ny,
+        PAR=PAR,
+        J_matrix=J_matrix,
+        diagonal0=diagonal0,
+        diagonal1=diagonal1,
+        diagonal2=diagonal2,
+        diagonal_1=diagonal_1,
+        diagonal_2=diagonal_2,
+    )
+
+    l1 = atl_derivative_evaluator(
+        u_atl_old=u_atl_old + PAR.dt * l2,
+        u_ref=Y1,
+        diff_exponent=diff_exponent,
+        local_ny=local_ny,
+        PAR=PAR,
+        J_matrix=J_matrix,
+        diagonal0=diagonal0,
+        diagonal1=diagonal1,
+        diagonal2=diagonal2,
+        diagonal_1=diagonal_1,
+        diagonal_2=diagonal_2,
+    )
+
+    # Update u_atl_old
+    u_atl_old = u_atl_old + 1 / 6 * PAR.dt * (l1 + 2 * (l2 + l3) + l4)
+
+    return u_atl_old

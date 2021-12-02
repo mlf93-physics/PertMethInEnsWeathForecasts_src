@@ -17,6 +17,7 @@ import numpy as np
 import shell_model_experiments.sabra_model.runge_kutta4 as rk4
 import shell_model_experiments.utils.special_params as sparams
 import shell_model_experiments.utils.util_funcs as ut_funcs
+import shell_model_experiments.perturbations.normal_modes as sh_nm_estimator
 from numba import njit, types, typeof
 from pyinstrument import Profiler
 from shell_model_experiments.params.params import PAR
@@ -29,19 +30,45 @@ cfg.GLOBAL_PARAMS.record_max_time = 30
 cfg.GLOBAL_PARAMS.ref_run = False
 
 
-# @njit(
-#     (types.Array(types.complex128, 1, "C", readonly=False))(
-#         types.Array(types.complex128, 1, "C", readonly=False),
-#         types.Array(types.complex128, 1, "C", readonly=False),
-#         types.Array(types.complex128, 2, "C", readonly=False),
-#         types.int64,
-#         types.float64,
-#         types.float64,
-#         types.float64,
-#         typeof(PAR),
-#     ),
-#     cache=cfg.NUMBA_CACHE,
-# )
+@njit(
+    [
+        (types.Array(types.complex128, 1, "C", readonly=False))(
+            types.Array(types.complex128, 1, "C", readonly=False),
+            types.Array(types.complex128, 1, "C", readonly=False),
+            types.Array(types.complex128, 2, "C", readonly=False),
+            types.int64,
+            types.float64,
+            types.float64,
+            types.float64,
+            typeof(PAR),
+            types.Array(types.complex128, 2, "C", readonly=False),
+            types.Array(types.complex128, 1, "A", readonly=False),
+            types.Array(types.complex128, 1, "A", readonly=False),
+            types.Array(types.complex128, 1, "A", readonly=False),
+            types.Array(types.complex128, 1, "A", readonly=False),
+            types.Array(types.complex128, 1, "A", readonly=False),
+            types.boolean,
+        ),
+        (types.Array(types.complex128, 1, "C", readonly=False))(
+            types.Array(types.complex128, 1, "C", readonly=False),
+            types.Array(types.complex128, 1, "C", readonly=False),
+            types.Array(types.complex128, 2, "C", readonly=False),
+            types.int64,
+            types.float64,
+            types.float64,
+            types.float64,
+            typeof(PAR),
+            types.Array(types.complex128, 2, "C", readonly=False),
+            types.Array(types.complex128, 1, "A", readonly=False),
+            types.Array(types.complex128, 1, "A", readonly=False),
+            types.Array(types.complex128, 1, "A", readonly=False),
+            types.Array(types.complex128, 1, "A", readonly=False),
+            types.Array(types.complex128, 1, "A", readonly=False),
+            types.Omitted(False),
+        ),
+    ],
+    cache=cfg.NUMBA_CACHE,
+)
 def run_model(
     u_atl_old: np.ndarray,
     u_ref_old: np.ndarray,
@@ -51,6 +78,12 @@ def run_model(
     diff_exponent: int,
     forcing: float,
     PAR: ParamsStructType,
+    J_matrix: np.ndarray,
+    diagonal0: np.ndarray,
+    diagonal1: np.ndarray,
+    diagonal2: np.ndarray,
+    diagonal_1: np.ndarray,
+    diagonal_2: np.ndarray,
     raw_perturbation: bool = False,
 ):
     """Execute the integration of the adjoint of the TL sabra shell model.
@@ -72,7 +105,7 @@ def run_model(
     # Run forward non-linear model
     for i in range(Nt_local):
         # Save reference data
-        ref_data[i, :] = u_ref_old
+        ref_data[i, :] = u_ref_old[PAR.bd_size : -PAR.bd_size]
         # Solve nonlinear equation to get reference velocity
         u_ref_old = rk4.runge_kutta4(y0=u_ref_old, forcing=forcing, PAR=PAR)
 
@@ -99,11 +132,18 @@ def run_model(
 
         # Solve the ATL model
         u_atl_old: np.ndarray = rk4.atl_runge_kutta4(
-            y0=u_atl_old,
-            u_ref=u_ref,
-            diff_exponent=diff_exponent,
-            local_ny=ny,
-            PAR=PAR,
+            u_atl_old,
+            u_ref_old,
+            diff_exponent,
+            ny,
+            forcing,
+            PAR,
+            J_matrix,
+            diagonal0,
+            diagonal1,
+            diagonal2,
+            diagonal_1,
+            diagonal_2,
         )
 
     return u_atl_old
@@ -124,16 +164,27 @@ def main(args=None):
     # Prepare random perturbation
     perturb = pt_utils.generate_rd_perturbations()
     # Normalize perturbation
-    u_tl_old = g_utils.normalize_array(perturb, norm_value=PAR.seeked_error_norm)
+    u_atl_old = g_utils.normalize_array(perturb, norm_value=PAR.seeked_error_norm)
     # Pad array
-    u_tl_old = np.pad(
-        u_tl_old,
+    u_atl_old = np.pad(
+        u_atl_old,
         pad_width=((PAR.bd_size, PAR.bd_size)),
         mode="constant",
     )
+    # u_atl_old = np.expand_dims(u_atl_old, axis=1)
+
+    # Initialise the Jacobian and diagonal arrays
+    (
+        J_matrix,
+        diagonal0,
+        diagonal1,
+        diagonal2,
+        diagonal_1,
+        diagonal_2,
+    ) = sh_nm_estimator.init_jacobian()
 
     profiler.start()
-    print(f'\nRunning TL sabra model for {args["Nt"]*PAR.dt:.2f}s')
+    print(f'\nRunning ATL sabra model for {args["Nt"]*PAR.dt:.2f}s')
 
     # Prepare data out array and prefactor
     data_out = np.zeros(
@@ -142,7 +193,7 @@ def main(args=None):
 
     # Run model
     run_model(
-        u_tl_old,
+        u_atl_old,
         u_ref,
         data_out,
         args["Nt"],
@@ -150,11 +201,17 @@ def main(args=None):
         args["diff_exponent"],
         args["forcing"],
         PAR,
+        J_matrix,
+        diagonal0,
+        diagonal1,
+        diagonal2,
+        diagonal_1,
+        diagonal_2,
     )
 
     if not args["skip_save_data"]:
         print(f"saving record\n")
-        save_path = g_save.save_data(data_out, args=args, prefix="tl_")
+        save_path = g_save.save_data(data_out, args=args, prefix="atl_")
 
     profiler.stop()
     print(profiler.output_text(color=True))

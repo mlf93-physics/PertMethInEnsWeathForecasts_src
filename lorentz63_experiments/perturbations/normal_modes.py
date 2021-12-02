@@ -142,9 +142,6 @@ def calc_adjoint_jacobian(j_matrix, u_profile, r_const):
     numpy.ndarray
         The jacobian
     """
-    j_matrix[1, 0] = r_const - u_profile[2]
-    j_matrix[1, 2] = -u_profile[0]
-    j_matrix[2, 0] = u_profile[1]
-    j_matrix[2, 1] = u_profile[0]
+    calc_jacobian(j_matrix, u_profile, r_const)
 
     return j_matrix.T.conj()
