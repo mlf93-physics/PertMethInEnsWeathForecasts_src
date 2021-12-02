@@ -94,8 +94,8 @@ def main(args: dict, exp_setup: dict = None):
     copy_args_atl = copy.deepcopy(args)
 
     # Set error norm to 1
-    _temp_seeked_error_norm = copy.deepcopy(params.seeked_error_norm)
-    params.seeked_error_norm = 1
+    # _temp_seeked_error_norm = copy.deepcopy(params.seeked_error_norm)
+    # params.seeked_error_norm = 1
 
     # Calculate the desired number of units
     for i in range(
@@ -108,7 +108,8 @@ def main(args: dict, exp_setup: dict = None):
 
         # Prepare storage of sv vectors and -values
         sv_matrix_store = np.empty(
-            (exp_setup["n_lanczos_iterations"], params.sdim, exp_setup["n_vectors"])
+            (exp_setup["n_lanczos_iterations"], params.sdim, exp_setup["n_vectors"]),
+            dtype=sparams.dtype,
         )
         s_values_store = np.empty(
             (exp_setup["n_lanczos_iterations"], exp_setup["n_vectors"]),
@@ -125,8 +126,12 @@ def main(args: dict, exp_setup: dict = None):
             lanczos_outarray = None
 
             # Initiate the Lanczos arrays and algorithm
-            propagated_vector: np.ndarray((params.sdim, 1)) = np.zeros((params.sdim, 1))
-            input_vector: np.ndarray((params.sdim, 1)) = np.zeros((params.sdim, 1))
+            propagated_vector: np.ndarray((params.sdim, 1)) = np.empty(
+                (params.sdim, 1), dtype=sparams.dtype
+            )
+            input_vector: np.ndarray((params.sdim, 1)) = np.empty(
+                (params.sdim, 1), dtype=sparams.dtype
+            )
             lanczos_iterator = pt_utils.lanczos_vector_algorithm(
                 propagated_vector=propagated_vector,
                 input_vector_j=input_vector,
@@ -236,7 +241,7 @@ def main(args: dict, exp_setup: dict = None):
     g_save.save_exp_info(exp_setup, args)
 
     # Reset seeked error norm
-    params.seeked_error_norm = _temp_seeked_error_norm
+    # params.seeked_error_norm = _temp_seeked_error_norm
 
     if args["erda_run"]:
         path = pl.Path(args["datapath"], exp_setup["folder_name"])

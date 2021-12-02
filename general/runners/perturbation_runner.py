@@ -59,6 +59,9 @@ if cfg.MODEL == Models.SHELL_MODEL:
     from shell_model_experiments.sabra_model.tl_sabra_model import (
         run_model as sh_tl_model,
     )
+    from shell_model_experiments.sabra_model.atl_sabra_model import (
+        run_model as sh_atl_model,
+    )
     from shell_model_experiments.sabra_model.sabra_model import run_model as sh_model
 
     # Get parameters for model
@@ -158,6 +161,23 @@ def perturbation_runner(
 
             if cfg.MODEL.submodel == "TL":
                 sh_tl_model(
+                    u_old,
+                    np.copy(u_ref[:, run_count]),
+                    data_out,
+                    args["Nt"] + args["endpoint"] * 1,
+                    args["ny"],
+                    args["diff_exponent"],
+                    args["forcing"],
+                    params,
+                    J_matrix,
+                    diagonal0,
+                    diagonal1,
+                    diagonal2,
+                    diagonal_1,
+                    diagonal_2,
+                )
+            elif cfg.MODEL.submodel == "ATL":
+                sh_atl_model(
                     u_old,
                     np.copy(u_ref[:, run_count]),
                     data_out,
@@ -509,6 +529,7 @@ def main_setup(
     # params.initiate_sdim_arrays(args["sdim"])
 
     times_to_run, Nt_array = prepare_run_times(args)
+    print("Nt_array", Nt_array)
 
     # If in 2. or higher breed cycle, the perturbation is given as input
     if u_profiles_perturbed is None:  # or perturb_positions is None:
@@ -566,18 +587,7 @@ def main_run(processes, args=None, n_units=None):
     cpu_count = multiprocessing.cpu_count()
     num_processes = len(processes)
 
-    # if n_units is not None:
-    #     if cfg.LICENCE == EXP.NORMAL_PERTURBATION or cfg.LICENCE == EXP.BREEDING_VECTORS:
-    #         num_processes_per_unit = args["n_profiles"] * args["n_runs_per_profile"]
-    #     elif cfg.LICENCE == EXP.LORENTZ_BLOCK:
-    #         num_processes_per_unit = 2 * args["n_profiles"] * args["n_runs_per_profile"]
-
     for j in range(num_processes // cpu_count):
-        # if n_units is not None:
-        #     print(
-        #         f"Unit {int(j*cpu_count // num_processes_per_unit)}-"
-        #         + f"{int(((j + 1)*cpu_count // num_processes_per_unit))}"
-        #     )
 
         for i in range(cpu_count):
             count = j * cpu_count + i
@@ -588,15 +598,6 @@ def main_run(processes, args=None, n_units=None):
             processes[count].join()
             processes[count].close()
 
-    # if n_units is not None:
-    #     _dummy_done_count = (j + 1) * cpu_count // num_processes_per_unit
-    #     _dummy_remain_count = math.ceil(
-    #         num_processes % cpu_count / num_processes_per_unit
-    #     )
-    #     print(
-    #         f"Unit {int(_dummy_done_count)}-"
-    #         + f"{int(_dummy_done_count + _dummy_remain_count)}"
-    #     )
     for i in range(num_processes % cpu_count):
 
         count = (num_processes // cpu_count) * cpu_count + i
@@ -619,14 +620,16 @@ if __name__ == "__main__":
 
     if cfg.MODEL == Models.SHELL_MODEL:
         # Initiate and update variables and arrays
-        sh_utils.update_dependent_params(params, sdim=int(args["sdim"]))
-        sh_utils.update_arrays(params)
+        ut_funcs.update_dependent_params(params, sdim=int(args["sdim"]))
+        ut_funcs.update_arrays(params)
     # Initiate arrays
     # params.initiate_sdim_arrays(args["sdim"])
     args = g_utils.adjust_start_times_with_offset(args)
 
     g_ui.confirm_run_setup(args)
     r_utils.adjust_run_setup(args)
+
+    # cfg.MODEL.submodel = "ATL"
 
     # Make profiler
     profiler = Profiler()

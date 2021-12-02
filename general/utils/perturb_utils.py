@@ -254,8 +254,8 @@ def generate_nm_perturbations(
 
 
 def lanczos_vector_algorithm(
-    propagated_vector: np.ndarray((params.sdim, 1)) = None,
-    input_vector_j: np.ndarray((params.sdim, 1)) = None,
+    propagated_vector: np.ndarray((params.sdim, 1), dtype=sparams.dtype) = None,
+    input_vector_j: np.ndarray((params.sdim, 1), dtype=sparams.dtype) = None,
     n_iterations: int = 0,
 ):
     """Execute the Lanczos algorithm to find eigenvectors and -values of the L*L
@@ -292,8 +292,8 @@ def lanczos_vector_algorithm(
         )
     """
     beta_j = 0
-    tridiag_matrix = np.zeros((n_iterations, n_iterations))
-    input_vector_matrix = np.zeros((params.sdim, n_iterations))
+    tridiag_matrix = np.zeros((n_iterations, n_iterations), dtype=sparams.dtype)
+    input_vector_matrix = np.empty((params.sdim, n_iterations), dtype=sparams.dtype)
     iteration = 0
 
     def iterator(
@@ -319,7 +319,8 @@ def lanczos_vector_algorithm(
                     The new value for the Beta variable
             )
         """
-        omega_j_temp = np.array(propagated_vector)
+        # NOTE - Is the following line really necessary
+        omega_j_temp = np.array(propagated_vector, dtype=sparams.dtype)
         alpha_j = (omega_j_temp.T.conj() @ input_vector_j)[0, 0]
 
         # Save alpha_j to tridiag_matrix
