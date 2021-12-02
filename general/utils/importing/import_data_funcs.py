@@ -522,17 +522,20 @@ def import_start_u_profiles(args: dict = None) -> Tuple[np.ndarray, List[int], d
             + "in reference datafile(s)\n"
         )
         if "time" in ref_header_dict:
-            time_to_run = ref_header_dict["time"]
+            ref_time_to_run = ref_header_dict["time"]
         elif "time_to_run" in ref_header_dict:
-            time_to_run = ref_header_dict["time_to_run"]
+            ref_time_to_run = ref_header_dict["time_to_run"]
         else:
             raise KeyError("No valid key with time to run information")
 
-        n_data = int((time_to_run) * params.tts)
+        n_data = int(ref_time_to_run * params.tts)
 
         # Generate random start positions
         # division = total #datapoints - burn_in #datapoints - #datapoints per perturbation
         division_size = int(n_data // n_profiles - args["Nt"] * params.sample_rate)
+        if division_size < 0:
+            raise ValueError("division_size is negative")
+
         rand_division_start = np.random.randint(
             low=0, high=division_size, size=n_profiles
         )

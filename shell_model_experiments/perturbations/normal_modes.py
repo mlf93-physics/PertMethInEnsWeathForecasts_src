@@ -148,8 +148,12 @@ def calc_jacobian(
     diagonal_1: np.ndarray,
     diagonal_2: np.ndarray,
 ):
-    # Start by resetting the Jacobian
-    J_matrix.fill(0 + 0j)
+    # Start by resetting the diagonals
+    diagonal0.fill(0 + 0j)
+    diagonal1.fill(0 + 0j)
+    diagonal2.fill(0 + 0j)
+    diagonal_1.fill(0 + 0j)
+    diagonal_2.fill(0 + 0j)
 
     # Perform the conjugation
     ref_u_vector_conj: np.ndarray = ref_u_vector.conj()

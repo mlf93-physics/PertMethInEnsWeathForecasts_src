@@ -31,22 +31,42 @@ cfg.GLOBAL_PARAMS.ref_run = False
 
 
 @njit(
-    (types.Array(types.complex128, 1, "C", readonly=False))(
-        types.Array(types.complex128, 1, "C", readonly=False),
-        types.Array(types.complex128, 1, "C", readonly=False),
-        types.Array(types.complex128, 2, "C", readonly=False),
-        types.int64,
-        types.float64,
-        types.float64,
-        types.float64,
-        typeof(PAR),
-        types.Array(types.complex128, 2, "C", readonly=False),
-        types.Array(types.complex128, 1, "A", readonly=False),
-        types.Array(types.complex128, 1, "A", readonly=False),
-        types.Array(types.complex128, 1, "A", readonly=False),
-        types.Array(types.complex128, 1, "A", readonly=False),
-        types.Array(types.complex128, 1, "A", readonly=False),
-    ),
+    [
+        (types.Array(types.complex128, 1, "C", readonly=False))(
+            types.Array(types.complex128, 1, "C", readonly=False),
+            types.Array(types.complex128, 1, "C", readonly=False),
+            types.Array(types.complex128, 2, "C", readonly=False),
+            types.int64,
+            types.float64,
+            types.float64,
+            types.float64,
+            typeof(PAR),
+            types.Array(types.complex128, 2, "C", readonly=False),
+            types.Array(types.complex128, 1, "A", readonly=False),
+            types.Array(types.complex128, 1, "A", readonly=False),
+            types.Array(types.complex128, 1, "A", readonly=False),
+            types.Array(types.complex128, 1, "A", readonly=False),
+            types.Array(types.complex128, 1, "A", readonly=False),
+            types.boolean,
+        ),
+        (types.Array(types.complex128, 1, "C", readonly=False))(
+            types.Array(types.complex128, 1, "C", readonly=False),
+            types.Array(types.complex128, 1, "C", readonly=False),
+            types.Array(types.complex128, 2, "C", readonly=False),
+            types.int64,
+            types.float64,
+            types.float64,
+            types.float64,
+            typeof(PAR),
+            types.Array(types.complex128, 2, "C", readonly=False),
+            types.Array(types.complex128, 1, "A", readonly=False),
+            types.Array(types.complex128, 1, "A", readonly=False),
+            types.Array(types.complex128, 1, "A", readonly=False),
+            types.Array(types.complex128, 1, "A", readonly=False),
+            types.Array(types.complex128, 1, "A", readonly=False),
+            types.Omitted(False),
+        ),
+    ],
     cache=cfg.NUMBA_CACHE,
 )
 def run_model(
@@ -64,6 +84,7 @@ def run_model(
     diagonal2: np.ndarray,
     diagonal_1: np.ndarray,
     diagonal_2: np.ndarray,
+    raw_perturbation: bool = False,
 ):
     """Execute the integration of the sabra shell model.
 
@@ -84,10 +105,12 @@ def run_model(
         # Save samples for plotting
         if i % int(1 / PAR.sample_rate) == 0:
             data_out[sample_number, 0] = PAR.dt * i + 0j
-            data_out[sample_number, 1:] = (
-                u_ref_old[PAR.bd_size : -PAR.bd_size]
-                + u_tl_old[PAR.bd_size : -PAR.bd_size]
-            )
+            # Add reference data to TL model trajectory if requested, since only
+            # the perturbation is integrated in the model
+            data_out[sample_number, 1:] = u_tl_old[PAR.bd_size : -PAR.bd_size]
+            if not raw_perturbation:
+                data_out[sample_number, 1:] += u_ref_old[PAR.bd_size : -PAR.bd_size]
+
             sample_number += 1
 
         # Solve the TL model (and non-linear model)

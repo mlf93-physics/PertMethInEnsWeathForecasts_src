@@ -64,7 +64,7 @@ def plot_tl_error_verification(args, axes=None):
     std_error_norm = np.std(error_norms, axis=1)
 
     # Get time
-    time_array = verification_data[:, 0]
+    time_array = verification_data[:, 0].real
 
     # Fit data
     popt, pcov = sp_optim.curve_fit(

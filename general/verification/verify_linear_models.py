@@ -18,6 +18,8 @@ if cfg.MODEL == Models.SHELL_MODEL:
     import shell_model_experiments.utils.special_params as sh_sparams
     from shell_model_experiments.params.params import PAR
     from shell_model_experiments.params.params import ParamsStructType
+    import shell_model_experiments.perturbations.normal_modes as sh_nm_estimator
+    import shell_model_experiments.utils.util_funcs as ut_funcs
     from shell_model_experiments.sabra_model.sabra_model import run_model as sh_model
     from shell_model_experiments.sabra_model.tl_sabra_model import (
         run_model as sh_tl_model,
@@ -44,6 +46,73 @@ elif cfg.MODEL == Models.LORENTZ63:
     sparams = l63_sparams
 
 profiler = Profiler()
+
+
+def run_tl_shell_model_verification(
+    args,
+    u_ref,
+    u_perturb,
+    tl_data_out,
+    nl_model_pert_data_out,
+    nl_model_non_pert_data_out,
+):
+    # Initialise the Jacobian and diagonal arrays
+    (
+        J_matrix,
+        diagonal0,
+        diagonal1,
+        diagonal2,
+        diagonal_1,
+        diagonal_2,
+    ) = sh_nm_estimator.init_jacobian()
+
+    # Run TL model
+    sh_tl_model(
+        u_perturb,
+        u_ref,
+        tl_data_out,
+        args["Nt"],
+        args["ny"],
+        args["diff_exponent"],
+        args["forcing"],
+        PAR,
+        J_matrix,
+        diagonal0,
+        diagonal1,
+        diagonal2,
+        diagonal_1,
+        diagonal_2,
+        raw_perturbation=True,
+    )
+
+    # Get diffusion functions
+    if args["diff_type"] == "inf_hyper":
+        diff_function = ut_funcs.infinit_hyper_diffusion
+    else:
+        diff_function = ut_funcs.normal_diffusion
+
+    # Run non-linear model on perturbed start velocity
+    sh_model(
+        diff_function,
+        u_ref + u_perturb,
+        nl_model_non_pert_data_out,
+        args["Nt"],
+        args["ny"],
+        args["forcing"],
+        args["diff_exponent"],
+        PAR,
+    )
+    # Run non-linear model on non-perturbed start velocity
+    sh_model(
+        diff_function,
+        u_ref,
+        nl_model_pert_data_out,
+        args["Nt"],
+        args["ny"],
+        args["forcing"],
+        args["diff_exponent"],
+        PAR,
+    )
 
 
 def run_l63_tl_model_verification(
@@ -106,7 +175,6 @@ def run_l63_atl_model_verification(
     u_tl_stored = data_out[-1, 1:].T
 
     # Run ATL model one time step
-    # print("data_out[-1, 1:].T", data_out[-1, 1:].T.shape)
     l63_atl_model(
         np.reshape(data_out[-1, 1:].T, (params.sdim, 1)),
         u_ref,
@@ -152,30 +220,62 @@ def verify_tlm_model(args: dict):
     )
     # Normalize perturbation
     # u_perturb = g_utils.normalize_array(perturb, norm_value=seeked_error_norm)
-    error_data_out = np.zeros(
+    error_data_out = np.empty(
         (
             int(args["Nt"] * params.sample_rate),
             params.sdim + 1,
-        )
+        ),
+        dtype=sparams.dtype,
+    )
+    tl_data_out = np.empty(
+        (int(round(args["Nt"] * params.sample_rate)), params.sdim + 1),
+        dtype=sparams.dtype,
+    )
+    nl_model_pert_data_out = np.empty(
+        (int(round(args["Nt"] * params.sample_rate)), params.sdim + 1),
+        dtype=sparams.dtype,
+    )
+    nl_model_non_pert_data_out = np.empty(
+        (int(round(args["Nt"] * params.sample_rate)), params.sdim + 1),
+        dtype=sparams.dtype,
     )
 
-    # Prepare verification
     if cfg.MODEL == Models.SHELL_MODEL:
-        raise g_exceptions.ModelError(
-            "Verification algorithm not implemented for the current model yet",
-            model=cfg.MODEL,
-        )
+        print(f"\nRunning verification of the Sabra TL model\n")
+        # Run verification multiple times
+        for i in range(int(args["n_profiles"] * args["n_runs_per_profile"])):
+            run_tl_shell_model_verification(
+                args,
+                np.copy(u_ref[:, i]),
+                np.copy(perturbations[:, i]),
+                tl_data_out,
+                nl_model_pert_data_out,
+                nl_model_non_pert_data_out,
+            )
+
+            error_data_out[:, 1:] = tl_data_out[:, 1:] - (
+                nl_model_pert_data_out[:, 1:] - nl_model_non_pert_data_out[:, 1:]
+            )
+            error_data_out[:, 0] = tl_data_out[:, 0]
+
+            pt_save.save_perturbation_data(
+                error_data_out,
+                perturb_position=perturb_positions[i // args["n_runs_per_profile"]],
+                perturb_count=i,
+                run_count=0,
+                args=args,
+            )
     elif cfg.MODEL == Models.LORENTZ63:
         # Initialise jacobian and deriv matrix
         jacobian_matrix = l63_nm_estimator.init_jacobian(args)
         lorentz_matrix = ut_funcs.setup_lorentz_matrix(args)
-        tl_data_out = np.zeros((args["Nt"], params.sdim + 1), dtype=np.float64)
-        nl_model_pert_data_out = np.zeros(
-            (args["Nt"], params.sdim + 1), dtype=np.float64
-        )
-        nl_model_non_pert_data_out = np.zeros(
-            (args["Nt"], params.sdim + 1), dtype=np.float64
-        )
+        # tl_data_out = np.zeros((args["Nt"], params.sdim + 1), dtype=np.float64)
+        # nl_model_pert_data_out = np.zeros(
+        #     (args["Nt"], params.sdim + 1), dtype=np.float64
+        # )
+        # nl_model_non_pert_data_out = np.zeros(
+        #     (args["Nt"], params.sdim + 1), dtype=np.float64
+        # )
 
         print(f"\nRunning verification of the Lorentz63 TL model\n")
         # Run verification multiple times
@@ -267,6 +367,14 @@ if __name__ == "__main__":
     verif_arg_setup = a_parsers.VerificationArgParser()
     verif_arg_setup.setup_parser()
     args = verif_arg_setup.args
+
+    if cfg.MODEL == Models.SHELL_MODEL:
+        # Initiate and update variables and arrays
+        ut_funcs.update_dependent_params(PAR, sdim=int(args["sdim"]))
+        ut_funcs.update_arrays(PAR)
+        args["ny"] = ut_funcs.ny_from_ny_n_and_forcing(
+            args["forcing"], args["ny_n"], args["diff_exponent"]
+        )
 
     # Add/edit arguments
     args["Nt"] = int(args["time_to_run"] / params.dt)
