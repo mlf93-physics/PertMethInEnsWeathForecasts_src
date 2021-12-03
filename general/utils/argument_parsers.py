@@ -262,9 +262,10 @@ class PerturbationArgSetup:
 
         # Test if start_times is set when pert_mode in ["rd", "nm"]
         if self.args["pert_mode"] in ["rd", "nm"] and self.args["start_times"] is None:
-            self._parser.error(
-                "--start_times argument is required when pert_mode is 'rd' or 'nm'"
-            )
+            if cfg.LICENCE not in [EXP.VERIFICATION]:
+                self._parser.error(
+                    "--start_times argument is required when pert_mode is 'rd' or 'nm'"
+                )
 
 
 class MultiPerturbationArgSetup:

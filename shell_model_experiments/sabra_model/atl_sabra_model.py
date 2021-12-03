@@ -100,12 +100,12 @@ def run_model(
 
     """
     # Prepare prefactor and ref_data array
-    ref_data = np.zeros((Nt_local, PAR.sdim), dtype=sparams.dtype)
+    ref_data = np.zeros((Nt_local, PAR.sdim + 2 * PAR.bd_size), dtype=sparams.dtype)
 
     # Run forward non-linear model
     for i in range(Nt_local):
         # Save reference data
-        ref_data[i, :] = u_ref_old[PAR.bd_size : -PAR.bd_size]
+        ref_data[i, PAR.bd_size : -PAR.bd_size] = u_ref_old[PAR.bd_size : -PAR.bd_size]
         # Solve nonlinear equation to get reference velocity
         u_ref_old = rk4.runge_kutta4(u_old=u_ref_old, forcing=forcing, PAR=PAR)
 
@@ -118,7 +118,7 @@ def run_model(
     # Run backward ATL model
     for i in range(Nt_local - 1, -1, -1):
         # Save samples for plotting
-        if i % int(1 / PAR.sample_rate) == 0:
+        if i % int(1 / 1) == 0:
             data_out[sample_number, 0] = PAR.dt * i + 0j
             data_out[sample_number, 1:] = u_atl_old[PAR.bd_size : -PAR.bd_size]
             # Add reference data if requested
@@ -133,7 +133,7 @@ def run_model(
         # Solve the ATL model
         u_atl_old: np.ndarray = rk4.atl_runge_kutta4(
             u_atl_old,
-            u_ref_old,
+            ref_data[i - 1, :],
             diff_exponent,
             ny,
             forcing,

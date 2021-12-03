@@ -24,6 +24,9 @@ if cfg.MODEL == Models.SHELL_MODEL:
     from shell_model_experiments.sabra_model.tl_sabra_model import (
         run_model as sh_tl_model,
     )
+    from shell_model_experiments.sabra_model.atl_sabra_model import (
+        run_model as sh_atl_model,
+    )
 
     # Get parameters for model
     params = PAR
@@ -155,6 +158,74 @@ def run_l63_tl_model_verification(
     )
 
 
+def run_sh_atl_model_verification(
+    args: dict,
+    u_ref: np.ndarray,
+    u_perturb: np.ndarray,
+    data_out: np.ndarray,
+    J_matrix: np.ndarray,
+    diagonal0: np.ndarray,
+    diagonal1: np.ndarray,
+    diagonal2: np.ndarray,
+    diagonal_1: np.ndarray,
+    diagonal_2: np.ndarray,
+):
+    u_perturb_stored = np.copy(u_perturb)
+
+    # Run TL model one time step
+    sh_tl_model(
+        u_perturb,
+        u_ref,
+        data_out,
+        args["Nt"] + args["endpoint"] * 1,
+        args["ny"],
+        args["diff_exponent"],
+        args["forcing"],
+        params,
+        J_matrix,
+        diagonal0,
+        diagonal1,
+        diagonal2,
+        diagonal_1,
+        diagonal_2,
+        raw_perturbation=True,
+    )
+
+    u_tl_stored = data_out[-1, 1:]
+
+    # Run ATL model one time step
+    sh_atl_model(
+        np.pad(
+            data_out[-1, 1:].T.conj(),
+            pad_width=(params.bd_size, params.bd_size),
+            mode="constant",
+        ),
+        u_ref,
+        data_out,
+        args["Nt"] + args["endpoint"] * 1,
+        args["ny"],
+        args["diff_exponent"],
+        args["forcing"],
+        params,
+        J_matrix,
+        diagonal0,
+        diagonal1,
+        diagonal2,
+        diagonal_1,
+        diagonal_2,
+        raw_perturbation=True,
+    )
+
+    rhs_identity = np.dot(u_perturb_stored[sparams.u_slice].conj(), data_out[0, 1:])
+    lhs_identity = np.dot(u_tl_stored.conj(), u_tl_stored)
+    print("lhs_identity, rhs_identity", lhs_identity, rhs_identity)
+    diff_identity = np.abs(lhs_identity - rhs_identity) / np.mean(
+        [np.abs(lhs_identity), np.abs(rhs_identity)]
+    )
+
+    return diff_identity
+
+
 def run_l63_atl_model_verification(
     args, u_ref, u_perturb, jacobian_matrix, lorentz_matrix, data_out
 ):
@@ -186,11 +257,11 @@ def run_l63_atl_model_verification(
         raw_perturbation=True,
     )
 
-    rhs_identity = np.dot(u_perturb_stored, data_out[-1, 1:])
-    lhs_identity = (u_tl_stored.T @ u_tl_stored).ravel()
+    rhs_identity = np.dot(u_perturb_stored, data_out[0, 1:])
+    lhs_identity = np.dot(u_tl_stored, u_tl_stored)
 
-    diff_identity = abs(lhs_identity[0] - rhs_identity) / np.mean(
-        [lhs_identity[0], rhs_identity]
+    diff_identity = abs(lhs_identity - rhs_identity) / np.mean(
+        [lhs_identity, rhs_identity]
     )
 
     return diff_identity
@@ -269,13 +340,6 @@ def verify_tlm_model(args: dict):
         # Initialise jacobian and deriv matrix
         jacobian_matrix = l63_nm_estimator.init_jacobian(args)
         lorentz_matrix = ut_funcs.setup_lorentz_matrix(args)
-        # tl_data_out = np.zeros((args["Nt"], params.sdim + 1), dtype=np.float64)
-        # nl_model_pert_data_out = np.zeros(
-        #     (args["Nt"], params.sdim + 1), dtype=np.float64
-        # )
-        # nl_model_non_pert_data_out = np.zeros(
-        #     (args["Nt"], params.sdim + 1), dtype=np.float64
-        # )
 
         print(f"\nRunning verification of the Lorentz63 TL model\n")
         # Run verification multiple times
@@ -316,24 +380,48 @@ def verify_atlm_model(args: dict):
     # Prepare random perturbation
     # perturb = pt_utils.generate_rd_perturbations()
     perturbations, _ = pt_runner.prepare_perturbations(args, raw_perturbations=True)
+    # Prepare arrays
+    data_out = np.zeros((args["Nt"], params.sdim + 1), dtype=sparams.dtype)
+    # Run verification multiple times
+    n_runs = int(args["n_profiles"] * args["n_runs_per_profile"])
+    diff_identity_array = np.empty(n_runs, dtype=np.float64)
 
-    # Prepare verification
     if cfg.MODEL == Models.SHELL_MODEL:
-        raise g_exceptions.ModelError(
-            "Verification algorithm not implemented for the current model yet",
-            model=cfg.MODEL,
-        )
+        # Initialise the Jacobian and diagonal arrays
+        (
+            J_matrix,
+            diagonal0,
+            diagonal1,
+            diagonal2,
+            diagonal_1,
+            diagonal_2,
+        ) = sh_nm_estimator.init_jacobian()
+
+        print(f"\nRunning verification of the ATL Sabra shell model\n")
+
+        for i in range(n_runs):
+            diff_identity = run_sh_atl_model_verification(
+                args,
+                np.copy(u_ref[:, i]),
+                np.copy(perturbations[:, i]),
+                data_out,
+                J_matrix,
+                diagonal0,
+                diagonal1,
+                diagonal2,
+                diagonal_1,
+                diagonal_2,
+            )
+
+            diff_identity_array[i] = diff_identity
+
     elif cfg.MODEL == Models.LORENTZ63:
 
         jacobian_matrix = l63_nm_estimator.init_jacobian(args)
         lorentz_matrix = ut_funcs.setup_lorentz_matrix(args)
-        data_out = np.zeros((args["Nt"], params.sdim + 1), dtype=np.float64)
 
         print(f"\nRunning verification of the Lorentz63 ATL model\n")
 
-        # Run verification multiple times
-        n_runs = int(args["n_profiles"] * args["n_runs_per_profile"])
-        diff_identity_array = np.empty(n_runs, dtype=np.float64)
         for i in range(n_runs):
 
             diff_identity = run_l63_atl_model_verification(
@@ -347,12 +435,15 @@ def verify_atlm_model(args: dict):
 
             diff_identity_array[i] = diff_identity
 
-    mean_diff_identity = np.mean(diff_identity_array)
-    plt.plot(diff_identity_array)
+    logged_diff_identity_array = np.log(diff_identity_array)
+    print("logged_diff_identity_array", logged_diff_identity_array)
+    mean_diff_identity = np.mean(logged_diff_identity_array)
+
+    plt.plot(logged_diff_identity_array)
     plt.plot([0, n_runs], [mean_diff_identity, mean_diff_identity], "k--")
     plt.xlabel("Profile index")
-    plt.ylabel("Error on identity")
-    plt.title("Verification of ATLM")
+    plt.ylabel("Logged error rel. mean of identity")
+    plt.title(f"Verification of ATLM | $N_{{iterations}}$={int(args['Nt'])}")
     plt.show()
 
 
