@@ -7,6 +7,7 @@ from pyinstrument import Profiler
 import numpy as np
 import general.utils.perturb_utils as pt_utils
 import general.utils.util_funcs as g_utils
+import shell_model_experiments.utils.util_funcs as sh_utils
 import general.utils.argument_parsers as a_parsers
 from general.params.model_licences import Models
 import config as cfg
@@ -34,14 +35,16 @@ profiler = Profiler()
 
 def verify_lanczos_algorithm():
     # Define parameters
-    params.sdim = 10
-    params.seeked_error_norm = 1
-    n_vectors = 30
-    n_runs = 3
+    # params.sdim = 10
+    # params.seeked_error_norm = 1
+    n_vectors = params.sdim
+    n_runs = 100
     # Define base matrix
     base_matrix = np.eye(params.sdim)
-    base_matrix = base_matrix * np.arange(1, params.sdim + 1)[:, np.newaxis]
-    symmetric_matrix = base_matrix.T @ base_matrix
+    base_matrix = (
+        base_matrix * np.arange(1, params.sdim + 1, dtype=sparams.dtype)[:, np.newaxis]
+    )
+    symmetric_matrix = base_matrix.T.conj() @ base_matrix
 
     # Numpy's eigenvalues
     np_e_values, np_e_vectors = np.linalg.eig(symmetric_matrix)
@@ -50,19 +53,23 @@ def verify_lanczos_algorithm():
     np_e_vectors = np_e_vectors[sort_index]
 
     # Prepare storage of sv vectors and -values
-    sv_matrix_store = np.zeros((n_runs, params.sdim, n_vectors))
-    s_values_store = np.zeros((n_runs, n_vectors))
+    sv_matrix_store = np.zeros((n_runs, params.sdim, n_vectors), dtype=sparams.dtype)
+    s_values_store = np.zeros((n_runs, n_vectors), dtype=np.complex128)
 
     for i in range(n_runs):
         # Initiate the Lanczos arrays and algorithm
-        propagated_vector: np.ndarray((params.sdim, 1)) = np.zeros((params.sdim, 1))
-        input_vector: np.ndarray((params.sdim, 1)) = np.zeros((params.sdim, 1))
+        propagated_vector: np.ndarray((params.sdim, 1)) = np.zeros(
+            (params.sdim, 1), dtype=sparams.dtype
+        )
+        input_vector: np.ndarray((params.sdim, 1)) = np.zeros(
+            (params.sdim, 1), dtype=sparams.dtype
+        )
         lanczos_iterator = pt_utils.lanczos_vector_algorithm(
             propagated_vector=propagated_vector,
             input_vector_j=input_vector,
             n_iterations=n_vectors,
         )
-        out_vector = np.random.rand(params.sdim)
+        out_vector = np.random.rand(params.sdim).astype(sparams.dtype)
         out_vector = np.reshape(
             g_utils.normalize_array(out_vector, norm_value=1), (params.sdim, 1)
         )
@@ -79,7 +86,7 @@ def verify_lanczos_algorithm():
         )
 
         sv_matrix_store[i, :, :] = sv_matrix
-        s_values_store[i, :] = s_values
+        s_values_store[i, :] = s_values ** 2
 
     # Prepare plotting
     fig, axes = plt.subplots(nrows=2, ncols=2)
@@ -118,6 +125,11 @@ if __name__ == "__main__":
     # verif_arg_setup = a_parsers.VerificationArgParser()
     # verif_arg_setup.setup_parser()
     # args = verif_arg_setup.args
+
+    if cfg.MODEL == Models.SHELL_MODEL:
+        # Initiate and update variables and arrays
+        sh_utils.update_dependent_params(params)
+        sh_utils.update_arrays(params)
 
     profiler.start()
 
