@@ -58,9 +58,13 @@ def plt_vector_comparison(args):
     # First folder: breed vectors
     args["exp_folder"] = args["exp_folders"][0]
 
-    breed_vector_units, _, _, breed_vec_header_dicts = pt_import.import_perturb_vectors(
-        args, raw_perturbations=True
-    )
+    (
+        breed_vector_units,
+        _,
+        _,
+        _,
+        breed_vec_header_dicts,
+    ) = pt_import.import_perturb_vectors(args, raw_perturbations=True)
     # breed_vector_units = np.squeeze(breed_vector_units, axis=0)
     # Normalize vectors
     breed_vector_units = g_utils.normalize_array(
@@ -71,6 +75,7 @@ def plt_vector_comparison(args):
     args["exp_folder"] = args["exp_folders"][1]
     (
         lyapunov_vector_units,
+        _,
         _,
         _,
         lyapunov_vec_header_dicts,

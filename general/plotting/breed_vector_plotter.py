@@ -50,7 +50,7 @@ elif cfg.MODEL == Models.LORENTZ63:
 def plot_breed_vectors(args):
 
     # Import breed vectors
-    breed_vector_units, _, _, _ = pt_import.import_perturb_vectors(
+    breed_vector_units, _, _, _, _ = pt_import.import_perturb_vectors(
         args, raw_perturbations=True
     )
 
@@ -146,7 +146,13 @@ def plot_breed_vectors(args):
 
 def plot_breed_comparison_to_nm(args):
     # Import breed vectors
-    breed_vector_units, breed_vec_header_dicts = pt_import.import_perturb_vectors(args)
+    (
+        breed_vector_units,
+        _,
+        _,
+        _,
+        breed_vec_header_dicts,
+    ) = pt_import.import_perturb_vectors(args)
 
     # Import perturbation info file
     pert_info_dict = g_import.import_info_file(
@@ -249,7 +255,9 @@ def plot_breed_eof_vectors_3D(args: dict):
         Run-time arguments
     """
 
-    perturb_vectors, perturb_header_dicts = pt_import.import_perturb_vectors(args)
+    perturb_vectors, _, _, _, perturb_header_dicts = pt_import.import_perturb_vectors(
+        args
+    )
 
     eof_vectors, variances = bv_analysis.calc_bv_eof_vectors(perturb_vectors)
     n_vectors: int = eof_vectors.shape[2]

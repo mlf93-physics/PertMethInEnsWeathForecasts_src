@@ -119,6 +119,7 @@ def main(args: dict, exp_setup: dict = None):
     # Get BVs
     (
         vector_units,
+        _,
         u_init_profiles,
         eval_pos,
         perturb_header_dicts,

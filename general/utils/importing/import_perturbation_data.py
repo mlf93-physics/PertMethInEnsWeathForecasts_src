@@ -70,7 +70,9 @@ def import_lorentz_block_perturbations(args=None, raw_perturbations=True):
     )
 
     # Get sorted file paths
-    ref_record_names_sorted = g_utils.get_sorted_ref_record_names(args=args)
+    ref_record_files_sorted = g_utils.get_files_in_path(
+        pl.Path(args["datapath"], "ref_data")
+    )
 
     ref_file_counter = 0
     perturb_index = 0
@@ -108,7 +110,7 @@ def import_lorentz_block_perturbations(args=None, raw_perturbations=True):
 
         # Import reference u vectors
         ref_data_in, ref_header_dict = g_import.import_data(
-            ref_record_names_sorted[ref_file_match_keys_array[ref_file_counter]],
+            ref_record_files_sorted[ref_file_match_keys_array[ref_file_counter]],
             start_line=start_index,
             max_lines=perturb_offset * (num_blocks),
             step=perturb_offset,
@@ -177,14 +179,16 @@ def import_profiles_for_nm_analysis(args: dict = None) -> Tuple[np.ndarray, dict
     num_profiles = n_profiles * n_runs_per_profile
 
     # Get sorted file paths
-    ref_record_names_sorted = g_utils.get_sorted_ref_record_names(args=args)
+    ref_record_files_sorted = g_utils.get_files_in_path(
+        pl.Path(args["datapath"], "ref_data")
+    )
 
     ref_header_dict = g_import.import_info_file(pl.Path(args["datapath"], "ref_data"))
 
-    num_ref_records = len(ref_record_names_sorted)
+    num_ref_records = len(ref_record_files_sorted)
     profiles = []
 
-    for ifile, ref_file in enumerate(ref_record_names_sorted):
+    for ifile, ref_file in enumerate(ref_record_files_sorted):
         with open(ref_file) as file:
             lines = random.sample(
                 list(it.chain(file)),
@@ -295,7 +299,7 @@ def import_perturb_vectors(
         (args["n_files"], args["n_runs_per_profile"], params.sdim), dtype=np.float64
     )
 
-    characteristic_values = np.empty(
+    characteristic_values = np.zeros(
         (args["n_files"], args["n_runs_per_profile"]), dtype=np.complex128
     )
 
@@ -325,4 +329,10 @@ def import_perturb_vectors(
             (args["n_files"], args["n_runs_per_profile"], params.sdim),
         )
 
-    return (vector_units, u_init_profiles, eval_pos, perturb_header_dicts)
+    return (
+        vector_units,
+        characteristic_values,
+        u_init_profiles,
+        eval_pos,
+        perturb_header_dicts,
+    )

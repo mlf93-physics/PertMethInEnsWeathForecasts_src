@@ -263,14 +263,15 @@ def plot_error_norm_vs_time(
 
 
 def plot_energy(
-    time=None,
-    u_data=None,
-    header_dict=None,
+    args,
     axes=None,
-    args=None,
     zero_time_ref=None,
     plot_args=["detailed_title"],
+    plot_kwargs={"exp_file_type": "perturbations"},
 ):
+    # Import reference data
+    time, u_data, header_dict = g_import.import_ref_data(args=args)
+
     # If data is not present, import it
     if time is None or u_data is None or header_dict is None:
         # Import reference data
@@ -298,13 +299,13 @@ def plot_energy(
 
     if "exp_folder" in args:
         if args["exp_folder"] is not None:
-            perturb_file_names = list(
-                pl.Path(args["datapath"], args["exp_folder"]).glob("*.csv")
+            _, perturb_files = g_utils.get_exp_files_and_names(
+                args, type=plot_kwargs["exp_file_type"]
             )
 
             # Import headers to get perturb positions
             index = []
-            for ifile, file_name in enumerate(perturb_file_names):
+            for ifile, file_name in enumerate(perturb_files):
                 header_dict = g_import.import_header(file_name=file_name)
 
                 if zero_time_ref:

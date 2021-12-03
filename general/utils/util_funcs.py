@@ -50,17 +50,6 @@ def match_start_positions_to_ref_file(
     return ref_file_match
 
 
-def get_sorted_ref_record_names(args=None):
-    # Get file paths
-    ref_record_names = list(Path(args["datapath"], "ref_data").glob("*.csv"))
-    ref_files_sort_index = np.argsort(
-        [str(ref_record_name) for ref_record_name in ref_record_names]
-    )
-    ref_record_names_sorted = [ref_record_names[i] for i in ref_files_sort_index]
-
-    return ref_record_names_sorted
-
-
 def adjust_start_times_with_offset(args):
 
     if args["start_times"] is not None:
@@ -157,6 +146,61 @@ def get_files_in_path(path: pl.Path, search_pattern: str = "*.csv") -> list:
     files = [files[i] for i in np.argsort(files)]
 
     return files
+
+
+def get_file_names_in_path(
+    args: dict, path: pl.Path, search_pattern: str = "*.csv"
+) -> list:
+    """Get the names of the files in a path
+
+    Parameters
+    ----------
+    args : dict
+        Run-time arguments
+    path : pl.Path
+        The path to search for files
+    search_pattern : str, optional
+        The search pattern, by default "*.csv"
+
+    Returns
+    -------
+    list
+        The names of the files in the path
+    """
+
+    # Try finding files from exp_folder only
+    files = get_files_in_path(path, search_pattern=search_pattern)
+    names = [file.name for file in files]
+
+    return names
+
+
+def get_exp_files_and_names(args, type: str = "perturbations") -> list:
+    """Get the experiment data file names
+
+    Parameters
+    ----------
+    args : dict
+        Run-time arguments
+    type : str, optional
+        The type of the experiment files, by default "perturbations"
+        Possible types: perturbations, vectors
+
+    Returns
+    -------
+    list
+        The names of the experiment files
+    """
+
+    if type == "perturbations":
+        path = pl.Path(args["datapath"], args["exp_folder"])
+    elif type == "vectors":
+        path = pl.Path(args["datapath"], args["pert_vector_folder"], args["exp_folder"])
+
+    names = get_file_names_in_path(args, path)
+    files = get_files_in_path(path)
+
+    return names, files
 
 
 def get_header_dicts_from_paths(file_paths: List[pl.Path]) -> List[dict]:

@@ -255,7 +255,7 @@ def import_ref_data(args=None):
     ref_files_sort_index = np.argsort(
         [str(ref_record_name) for ref_record_name in ref_record_names]
     )
-    ref_record_names_sorted = [ref_record_names[i] for i in ref_files_sort_index]
+    ref_record_files_sorted = [ref_record_names[i] for i in ref_files_sort_index]
 
     time_concat = []
     u_data_concat = []
@@ -268,7 +268,7 @@ def import_ref_data(args=None):
         print("\n Importing listed reference data records: ", records_to_import, "\n")
 
     for i, record in enumerate(records_to_import):
-        file_name = ref_record_names_sorted[record]
+        file_name = ref_record_files_sorted[record]
 
         endpoint = args["endpoint"] if "endpoint" in args else False
 
@@ -375,7 +375,9 @@ def import_perturbation_velocities(
     ref_file_match_keys_array = np.array(list(ref_file_match.keys()))
 
     # Get sorted file paths
-    ref_record_names_sorted = g_utils.get_sorted_ref_record_names(args=args)
+    ref_record_files_sorted = g_utils.get_files_in_path(
+        pl.Path(args["datapath"], "ref_data")
+    )
 
     ref_file_counter = 0
     perturb_index = 0
@@ -427,7 +429,7 @@ def import_perturbation_velocities(
                 else int(perturb_header_dict["N_data"]) - ref_data_in.shape[0]
             )
             temp_ref_data_in, ref_header_dict = import_data(
-                ref_record_names_sorted[
+                ref_record_files_sorted[
                     ref_file_match_keys_array[ref_file_counter] + counter
                 ],
                 start_line=skip_lines,
@@ -569,7 +571,9 @@ def import_start_u_profiles(args: dict = None) -> Tuple[np.ndarray, List[int], d
     )
 
     # Get sorted file paths
-    ref_record_names_sorted = g_utils.get_sorted_ref_record_names(args=args)
+    ref_record_files_sorted = g_utils.get_files_in_path(
+        pl.Path(args["datapath"], "ref_data")
+    )
 
     # Prepare u_init_profiles matrix
     u_init_profiles = np.zeros(
@@ -583,7 +587,7 @@ def import_start_u_profiles(args: dict = None) -> Tuple[np.ndarray, List[int], d
     for file_id in ref_file_match.keys():
         for position in ref_file_match[int(file_id)]:
             temp_u_init_profile = np.genfromtxt(
-                ref_record_names_sorted[int(file_id)],
+                ref_record_files_sorted[int(file_id)],
                 dtype=sparams.dtype,
                 delimiter=",",
                 skip_header=np.int64(round(position, 0)),

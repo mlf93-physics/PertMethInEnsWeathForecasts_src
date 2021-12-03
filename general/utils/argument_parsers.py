@@ -191,7 +191,9 @@ class PerturbationVectorArgSetup:
 
     def setup_parser(self):
         # Add arguments
-        self._parser.add_argument("--pert_vector_folder", default=None, type=str)
+        self._parser.add_argument(
+            "--pert_vector_folder", default="pt_vectors", type=str
+        )
         self._parser.add_argument("--specific_start_vector", default=0, type=int)
 
 

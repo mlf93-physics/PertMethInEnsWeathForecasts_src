@@ -380,6 +380,7 @@ def prepare_perturbations(
                 _raw_perturbations = True
             (
                 perturb_vectors,
+                _,
                 u_init_profiles,
                 perturb_positions,
                 _,
@@ -397,6 +398,7 @@ def prepare_perturbations(
             print("\nRunning with SINGULAR VECTOR perturbations\n")
             (
                 perturb_vectors,
+                _,
                 u_init_profiles,
                 perturb_positions,
                 _,
