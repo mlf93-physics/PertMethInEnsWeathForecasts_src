@@ -7,6 +7,8 @@ python sabra_model/sabra_model.py --time_to_run=1
 import sys
 
 sys.path.append("..")
+from pyinstrument import Profiler
+
 from math import ceil
 
 import config as cfg
@@ -17,7 +19,6 @@ import general.utils.user_interface as g_ui
 import numba as nb
 import numpy as np
 import shell_model_experiments.utils.util_funcs as ut_funcs
-from pyinstrument import Profiler
 from shell_model_experiments.params.params import PAR, ParamsStructType
 import shell_model_experiments.utils.special_params as sparams
 from shell_model_experiments.sabra_model.runge_kutta4 import runge_kutta4
@@ -25,11 +26,10 @@ import shell_model_experiments.utils.custom_decorators as dec
 import general.utils.runner_utils as r_utils
 
 
-profiler = Profiler()
-
 # Set global params
 cfg.GLOBAL_PARAMS.record_max_time = 30
 
+profiler = Profiler()
 
 # @dec.diffusion_type_decorator
 @nb.njit(
@@ -180,9 +180,6 @@ def main(args=None):
         stand_data_name = g_save_utils.generate_standard_data_name(args)
         compress_out_name = f"ref_data_{stand_data_name}"
         g_save_utils.compress_dir(save_path, compress_out_name)
-
-    profiler.stop()
-    print(profiler.output_text(color=True))
 
 
 if __name__ == "__main__":

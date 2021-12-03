@@ -293,7 +293,7 @@ def lanczos_vector_algorithm(
     """
     beta_j = 0
     tridiag_matrix = np.zeros((n_iterations, n_iterations), dtype=sparams.dtype)
-    input_vector_matrix = np.empty((params.sdim, n_iterations), dtype=sparams.dtype)
+    input_vector_matrix = np.zeros((params.sdim, n_iterations), dtype=sparams.dtype)
     iteration = 0
 
     def iterator(
@@ -319,9 +319,7 @@ def lanczos_vector_algorithm(
                     The new value for the Beta variable
             )
         """
-        omega_j_temp = (
-            propagated_vector  # np.array(propagated_vector, dtype=sparams.dtype)
-        )
+        omega_j_temp = propagated_vector
         alpha_j = (omega_j_temp.T.conj() @ input_vector_j)[0, 0]
 
         # Save alpha_j to tridiag_matrix
@@ -343,7 +341,6 @@ def lanczos_vector_algorithm(
             tridiag_matrix[iteration - 1, iteration] = tridiag_matrix[
                 iteration, iteration - 1
             ] = beta_j
-
         if beta_j != 0:
             output_vector = omega_j / beta_j
         else:

@@ -1209,7 +1209,7 @@ if __name__ == "__main__":
         else:
             g_plt_data.plot_error_norm_vs_time(
                 args=args,
-                legend_on=True,
+                legend_on=False,
                 cmap_list=["blue"],
                 plot_args=["unique_linestyle"],
                 normalize_start_time=False,

@@ -7,11 +7,12 @@ python ../general/runners/singular_vector_runner.py --exp_setup=TestRun0 --n_uni
 """
 import sys
 
-import matplotlib.pyplot as plt
-import seaborn as sb
+sys.path.append("..")
 from pyinstrument import Profiler
 
-sys.path.append("..")
+profiler = Profiler()
+profiler.start()
+
 import copy
 import pathlib as pl
 
@@ -180,7 +181,7 @@ def main(args: dict, exp_setup: dict = None):
                     processes, data_out_list, _, _ = pt_runner.main_setup(
                         copy_args_atl,
                         u_profiles_perturbed=np.pad(
-                            np.array(data_out_list).T,
+                            np.array(data_out_list).T.conj(),
                             pad_width=((params.bd_size, params.bd_size), (0, 0)),
                             mode="constant",
                         ),
@@ -214,8 +215,6 @@ def main(args: dict, exp_setup: dict = None):
                     pad_width=((params.bd_size, params.bd_size), (0, 0)),
                     mode="constant",
                 )
-            print("tridiag_matrix", tridiag_matrix)
-            input()
             # Calculate SVs from eigen vectors of tridiag_matrix
             sv_matrix, s_values = pt_utils.calculate_svs(
                 tridiag_matrix, input_vector_matrix
@@ -262,7 +261,6 @@ def main(args: dict, exp_setup: dict = None):
 
 if __name__ == "__main__":
     cfg.init_licence()
-    profiler = Profiler()
 
     # Get arguments
     mult_pert_arg_setup = a_parsers.MultiPerturbationArgSetup()
@@ -270,8 +268,6 @@ if __name__ == "__main__":
     ref_arg_setup = a_parsers.ReferenceAnalysisArgParser()
     ref_arg_setup.setup_parser()
     args = ref_arg_setup.args
-
-    profiler.start()
 
     g_ui.confirm_run_setup(args)
     r_utils.adjust_run_setup(args)
@@ -289,4 +285,4 @@ if __name__ == "__main__":
     main(args)
 
     profiler.stop()
-    # print(profiler.output_text(color=True))
+    print(profiler.output_text(color=True))

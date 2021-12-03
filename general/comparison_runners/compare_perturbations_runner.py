@@ -17,7 +17,7 @@ import config as cfg
 import general.runners.perturbation_runner as pt_runner
 import general.utils.argument_parsers as a_parsers
 import general.utils.experiments.exp_utils as exp_utils
-import general.utils.runner_utils as r_utils
+import general.utils.process_utils as pr_utils
 import general.utils.user_interface as g_ui
 import general.utils.util_funcs as g_utils
 from general.params.experiment_licences import Experiments as exp
@@ -179,7 +179,7 @@ def rd_pert_experiment(args: dict, local_exp_setup: dict):
     temp_processes, _, _, _ = pt_runner.main_setup(copy_args)
     processes.extend(temp_processes)
 
-    r_utils.run_pert_processes(copy_args, local_exp_setup, processes)
+    pr_utils.run_pert_processes(copy_args, local_exp_setup, processes)
 
 
 def nm_pert_experiment(args: dict, local_exp_setup: dict):
@@ -215,7 +215,7 @@ def nm_pert_experiment(args: dict, local_exp_setup: dict):
     temp_processes, _, _, _ = pt_runner.main_setup(copy_args)
     processes.extend(temp_processes)
 
-    r_utils.run_pert_processes(copy_args, local_exp_setup, processes)
+    pr_utils.run_pert_processes(copy_args, local_exp_setup, processes)
 
 
 def bv_pert_experiment(args: dict, local_exp_setup: dict):
@@ -249,7 +249,7 @@ def bv_pert_experiment(args: dict, local_exp_setup: dict):
     temp_processes, _, _, _ = pt_runner.main_setup(copy_args)
     processes.extend(temp_processes)
 
-    r_utils.run_pert_processes(copy_args, local_exp_setup, processes)
+    pr_utils.run_pert_processes(copy_args, local_exp_setup, processes)
 
 
 def bv_eof_pert_experiment(args: dict, local_exp_setup: dict):
@@ -284,7 +284,7 @@ def bv_eof_pert_experiment(args: dict, local_exp_setup: dict):
 
         processes, _, _, _ = pt_runner.main_setup(copy_args)
 
-        r_utils.run_pert_processes(copy_args, local_exp_setup, processes)
+        pr_utils.run_pert_processes(copy_args, local_exp_setup, processes)
 
 
 def sv_pert_experiment(args: dict, local_exp_setup: dict):
@@ -319,7 +319,7 @@ def sv_pert_experiment(args: dict, local_exp_setup: dict):
 
         processes, _, _, _ = pt_runner.main_setup(copy_args)
 
-        r_utils.run_pert_processes(copy_args, local_exp_setup, processes)
+        pr_utils.run_pert_processes(copy_args, local_exp_setup, processes)
 
 
 def execute_pert_experiments(args: dict, exp_setup: dict):
@@ -396,6 +396,6 @@ if __name__ == "__main__":
         )
 
     g_ui.confirm_run_setup(args)
-    r_utils.adjust_run_setup(args)
+    pr_utils.adjust_run_setup(args)
 
     main(args)

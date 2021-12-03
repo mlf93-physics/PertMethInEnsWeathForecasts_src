@@ -62,6 +62,7 @@ if cfg.MODEL == Models.SHELL_MODEL:
     from shell_model_experiments.sabra_model.atl_sabra_model import (
         run_model as sh_atl_model,
     )
+
     from shell_model_experiments.sabra_model.sabra_model import run_model as sh_model
 
     # Get parameters for model

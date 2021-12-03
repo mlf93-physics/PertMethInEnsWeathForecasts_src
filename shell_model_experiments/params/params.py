@@ -34,7 +34,7 @@ class ParamsStructType(types.StructRef):
 class ParamsStruct(structref.StructRefProxy):
     def __new__(
         cls,
-        ny,
+        # ny,
         epsilon,
         lambda_const,
         dt,
@@ -62,7 +62,7 @@ class ParamsStruct(structref.StructRefProxy):
         # IMPORTANT: Users should not override __init__.
         return structref.StructRefProxy.__new__(
             cls,
-            ny,
+            # ny,
             epsilon,
             lambda_const,
             dt,
@@ -88,10 +88,10 @@ class ParamsStruct(structref.StructRefProxy):
     # methods to the Python side. It is up to users to define
     # these. (This may be automated in the future.)
 
-    @property
-    def ny(self):
-        # The definition of lambda_const is shown later.
-        return struct_get_ny(self)
+    # @property
+    # def ny(self):
+    #     # The definition of lambda_const is shown later.
+    #     return struct_get_ny(self)
 
     @property
     def epsilon(self):
@@ -194,9 +194,9 @@ class ParamsStruct(structref.StructRefProxy):
 # Define python wrappers for the struct
 # In jit-code, the StructRef's attribute is exposed via
 # structref.register
-@njit(cache=cfg.NUMBA_CACHE)
-def struct_get_ny(self):
-    return self.ny
+# @njit(cache=cfg.NUMBA_CACHE)
+# def struct_get_ny(self):
+#     return self.ny
 
 
 @njit(cache=cfg.NUMBA_CACHE)
@@ -301,7 +301,7 @@ structref.define_proxy(
     ParamsStruct,
     ParamsStructType,
     [
-        "ny",
+        # "ny",
         "epsilon",
         "lambda_const",
         "dt",
@@ -328,7 +328,7 @@ structref.define_proxy(
 # Remember to indicate variable type through default value, e.g. 0.0 for float
 # instead of 0 (if set to 0 -> variable will be integer)
 PAR = ParamsStruct(
-    ny=1e-8,
+    # ny=1e-8,
     epsilon=0.5,
     lambda_const=2.0,
     dt=1e-7,

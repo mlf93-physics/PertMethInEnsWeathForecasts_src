@@ -1,9 +1,9 @@
 {
     "TestRun1": {
-        "folder_name": "pt_vectors/sv_lanczos_it0.01_n_vectors3",
+        "folder_name": "pt_vectors/sv_lanczos_it0.01_n_vectors3_test2",
         "sub_exp_folder": "perturb_data",
         "integration_time": 0.01,
-        "n_vectors": 3,
+        "n_vectors": 9,
         "n_lanczos_iterations": 1,
         "n_model_iterations": 1,
         "vector_offset": 0.01,
