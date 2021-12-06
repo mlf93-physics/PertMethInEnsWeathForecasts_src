@@ -87,11 +87,15 @@ def run_model(
     for i in range(Nt_local - 1, -1, -1):
         # Save samples for plotting
         data_out[i, 0] = dt * i
+        data_out[i, 1:] = u_atl_old.ravel()
         # Add reference data to TL model trajectory, since only the perturbation
         # is integrated in the model
-        data_out[i, 1:] = u_atl_old.ravel()
         if not raw_perturbation:
             data_out[i, 1:] += ref_data[i, :]
+
+        # Break if last datapoint has been saved
+        if i == 0:
+            break
 
         # Update u_atl_old
         u_atl_old = rk4.atl_runge_kutta4(

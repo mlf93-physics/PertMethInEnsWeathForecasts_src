@@ -196,7 +196,7 @@ def run_sh_atl_model_verification(
     # Run ATL model one time step
     sh_atl_model(
         np.pad(
-            data_out[-1, 1:].T.conj(),
+            data_out[-1, 1:].T,
             pad_width=(params.bd_size, params.bd_size),
             mode="constant",
         ),
@@ -387,6 +387,8 @@ def verify_atlm_model(args: dict):
     diff_identity_array = np.empty(n_runs, dtype=np.float64)
 
     if cfg.MODEL == Models.SHELL_MODEL:
+        # Set samplerate
+        ut_funcs.set_params(PAR, parameter="sample_rate", value=1.0)
         # Initialise the Jacobian and diagonal arrays
         (
             J_matrix,
@@ -461,7 +463,8 @@ if __name__ == "__main__":
 
     if cfg.MODEL == Models.SHELL_MODEL:
         # Initiate and update variables and arrays
-        ut_funcs.update_dependent_params(PAR, sdim=int(args["sdim"]))
+        ut_funcs.update_dependent_params(PAR)
+        ut_funcs.set_params(PAR, parameter="sdim", value=args["sdim"])
         ut_funcs.update_arrays(PAR)
         args["ny"] = ut_funcs.ny_from_ny_n_and_forcing(
             args["forcing"], args["ny_n"], args["diff_exponent"]

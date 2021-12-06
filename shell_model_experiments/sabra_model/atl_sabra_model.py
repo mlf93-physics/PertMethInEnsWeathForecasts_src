@@ -114,11 +114,11 @@ def run_model(
             PAR.bd_size : -PAR.bd_size
         ] * np.exp(-ny * PAR.k_vec_temp ** diff_exponent * PAR.dt)
 
-    sample_number = 0
+    sample_number = -1
     # Run backward ATL model
     for i in range(Nt_local - 1, -1, -1):
-        # Save samples for plotting
-        if i % int(1 / 1) == 0:
+        if i % int(1 / PAR.sample_rate) == 0:
+            # Save samples of calculation
             data_out[sample_number, 0] = PAR.dt * i + 0j
             data_out[sample_number, 1:] = u_atl_old[PAR.bd_size : -PAR.bd_size]
             # Add reference data if requested
@@ -127,8 +127,11 @@ def run_model(
                 # is integrated in the model
                 data_out[sample_number, 1:] += ref_data[i, :]
 
-            # Sample number increment
-            sample_number += 1
+            sample_number -= 1
+
+        # Break if last datapoint has been saved
+        if i == 0:
+            break
 
         # Solve the ATL model
         u_atl_old: np.ndarray = rk4.atl_runge_kutta4(
@@ -226,8 +229,8 @@ if __name__ == "__main__":
     args = ref_arg_setup.args
 
     # Initiate and update variables and arrays
-    # initiate_sdim_arrays(args["sdim"])
-    ut_funcs.update_dependent_params(PAR, sdim=int(args["sdim"]))
+    ut_funcs.update_dependent_params(PAR)
+    ut_funcs.set_params(PAR, parameter="sdim", value=args["sdim"])
     ut_funcs.update_arrays(PAR)
     args["ny"] = ut_funcs.ny_from_ny_n_and_forcing(
         args["forcing"], args["ny_n"], args["diff_exponent"]

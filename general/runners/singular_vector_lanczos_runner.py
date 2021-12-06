@@ -181,7 +181,7 @@ def main(args: dict, exp_setup: dict = None):
                     processes, data_out_list, _, _ = pt_runner.main_setup(
                         copy_args_atl,
                         u_profiles_perturbed=np.pad(
-                            np.array(data_out_list).T.conj(),
+                            np.array(data_out_list).T,
                             pad_width=((params.bd_size, params.bd_size), (0, 0)),
                             mode="constant",
                         ),

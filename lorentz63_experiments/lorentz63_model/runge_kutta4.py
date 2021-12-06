@@ -304,9 +304,6 @@ def atl_runge_kutta4(
     Y3 = u_ref_old + 1 / 2 * k2
     k3 = dt * derivative_evaluator(u_old=Y3, lorentz_matrix=lorentz_matrix)
     Y4 = u_ref_old + k3
-    # k4 = dt * derivative_evaluator(
-    #     u_old=Y4, lorentz_matrix=lorentz_matrix
-    # )
 
     # Calculate the l's of the tangent linear model
     l4 = atl_derivative_evaluator(

@@ -102,8 +102,8 @@ def run_model(
     sample_number = 0
     # Perform calculations
     for i in range(Nt_local):
-        # Save samples for plotting
-        if i % int(1 / 1) == 0:
+        # Save samples of calculation
+        if i % int(1 / PAR.sample_rate) == 0:
             data_out[sample_number, 0] = PAR.dt * i + 0j
             # Add reference data to TL model trajectory if requested, since only
             # the perturbation is integrated in the model
@@ -214,7 +214,8 @@ if __name__ == "__main__":
 
     # Initiate and update variables and arrays
     # initiate_sdim_arrays(args["sdim"])
-    ut_funcs.update_dependent_params(PAR, sdim=int(args["sdim"]))
+    ut_funcs.update_dependent_params(PAR)
+    ut_funcs.set_params(PAR, parameter="sdim", value=args["sdim"])
     ut_funcs.update_arrays(PAR)
     args["ny"] = ut_funcs.ny_from_ny_n_and_forcing(
         args["forcing"], args["ny_n"], args["diff_exponent"]

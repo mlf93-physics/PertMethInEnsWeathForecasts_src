@@ -175,7 +175,8 @@ if __name__ == "__main__":
     g_ui.confirm_run_setup(args)
 
     # Initiate and update variables and arrays
-    ut_funcs.update_dependent_params(PAR, sdim=int(args["sdim"]))
+    ut_funcs.update_dependent_params(PAR)
+    ut_funcs.set_params(PAR, parameter="sdim", value=args["sdim"])
     ut_funcs.update_arrays(PAR)
 
     main(args)
