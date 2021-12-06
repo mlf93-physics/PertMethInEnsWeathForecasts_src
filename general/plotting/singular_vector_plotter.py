@@ -219,6 +219,7 @@ if __name__ == "__main__":
     if cfg.MODEL == Models.SHELL_MODEL:
         # Initiate and update variables and arrays
         sh_utils.update_dependent_params(params)
+        sh_utils.set_params(params, parameter="sdim", value=args["sdim"])
         sh_utils.update_arrays(params)
 
     # Make profiler

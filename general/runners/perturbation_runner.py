@@ -622,7 +622,7 @@ if __name__ == "__main__":
 
     if cfg.MODEL == Models.SHELL_MODEL:
         # Initiate and update variables and arrays
-        ut_funcs.update_dependent_params(params, sdim=int(args["sdim"]))
+        ut_funcs.update_dependent_params(params)
         ut_funcs.update_arrays(params)
     # Initiate arrays
     # params.initiate_sdim_arrays(args["sdim"])

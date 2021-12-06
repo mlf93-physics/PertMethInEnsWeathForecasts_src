@@ -31,7 +31,7 @@ def check_dimension(header_func: callable) -> callable:
                 # Check if dimension in header dict matches dimension in params
                 try:
                     if header_dict["sdim"] != PAR_SH.sdim:
-                        sh_utils.set_params(PAR_SH, sdim=header_dict["sdim"])
+                        sh_utils.set_params(params_SH, sdim=header_dict["sdim"])
                         print(
                             f"{col.Fore.GREEN}INFO: sdim param updated to match header_dict{col.Fore.RESET}\n"
                         )

@@ -168,7 +168,8 @@ if __name__ == "__main__":
     # Shell model specific
     if cfg.MODEL == Models.SHELL_MODEL:
         # Initiate and update variables and arrays
-        sh_utils.update_dependent_params(params, sdim=int(args["sdim"]))
+        sh_utils.update_dependent_params(params)
+        sh_utils.set_params(params, parameter="sdim", value=args["sdim"])
         sh_utils.update_arrays(params)
         # Add ny argument
         args["ny"] = sh_utils.ny_from_ny_n_and_forcing(

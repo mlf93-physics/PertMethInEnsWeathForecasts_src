@@ -89,7 +89,8 @@ if __name__ == "__main__":
     args = pert_arg_setup.args
 
     # Initiate and update variables and arrays
-    sh_utils.update_dependent_params(params, sdim=int(args["sdim"]))
+    sh_utils.update_dependent_params(params)
+    sh_utils.set_params(params, parameter="sdim", value=args["sdim"])
     sh_utils.update_arrays(params)
 
     g_ui.confirm_run_setup(args)
