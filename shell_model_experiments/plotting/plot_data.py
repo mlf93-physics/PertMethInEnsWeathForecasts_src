@@ -466,7 +466,7 @@ def plots_related_to_energy(args=None, axes=None, plot_args=["detailed_title"]):
     # Conserning ny
     # plot_energy_spectrum(u_data, header_dict, args=args)
     g_plt_data.plot_energy(
-        header_dict, axes=axes, args=args, plot_args=plot_args
+        args, axes=axes, plot_args=plot_args
     )
     # plot_energy_per_shell(time, u_data, header_dict, path=args["datapath"], args=args)
 

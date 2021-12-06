@@ -185,8 +185,10 @@ def plot_error_norm_comparison(args: dict):
                 str(pl.Path(_dirs[i].parent.name, _dirs[i].name))
                 for i in range(len_folders)
                 # if "sv" in _dirs[i].name
-                # if "rd" in _dirs[i].name or "nm" in _dirs[i].name
-                if "perturbations" in _dirs[i].name  # or "nm" in _dirs[i].name
+                if "sv" in _dirs[i].name
+                or "bv" in _dirs[i].name
+                or "bv_eof" in _dirs[i].name
+                # if "perturbations" in _dirs[i].name  # or "nm" in _dirs[i].name
             ]
 
         # Update number of folders after filtering
@@ -208,15 +210,10 @@ def plot_error_norm_comparison(args: dict):
             plot_args=[],
         )
         lines: list = list(axes[0].get_lines())
-        lines[line_counter].set_label(folder)
+        lines[line_counter].set_label(str(pl.Path(folder).name))
 
         len_lines = len(lines)
         line_counter += len_lines - line_counter
-
-        # for j in range(0, len_lines, 3):
-        #     lines[j].set_linestyle("-")
-        #     lines[(j + 1) % len_lines].set_linestyle("--")
-        #     lines[(j + 2) % len_lines].set_linestyle("-.")
 
     axes[0].legend()
 
