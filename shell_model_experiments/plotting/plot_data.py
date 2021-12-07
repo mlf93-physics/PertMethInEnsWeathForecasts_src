@@ -465,9 +465,7 @@ def plots_related_to_energy(args=None, axes=None, plot_args=["detailed_title"]):
 
     # Conserning ny
     # plot_energy_spectrum(u_data, header_dict, args=args)
-    g_plt_data.plot_energy(
-        args, axes=axes, plot_args=plot_args
-    )
+    g_plt_data.plot_energy(args, axes=axes, plot_args=plot_args)
     # plot_energy_per_shell(time, u_data, header_dict, path=args["datapath"], args=args)
 
 
@@ -1207,8 +1205,8 @@ if __name__ == "__main__":
             g_plt_data.plot_error_norm_vs_time(
                 args=args,
                 legend_on=False,
-                cmap_list=["blue"],
-                plot_args=["unique_linestyle"],
+                # cmap_list=["blue"],
+                plot_args=[],
                 normalize_start_time=False,
             )
 

@@ -423,6 +423,7 @@ class StandardPlottingArgParser:
             + " detailed : plot extra details in plots",
         )
         self._parser.add_argument("-np", "--noplot", action="store_true")
+        self._parser.add_argument("-nt", "--notight", action="store_true")
         self._parser.add_argument("-s", "--save_fig", action="store_true")
         self._parser.add_argument(
             "--datapaths",

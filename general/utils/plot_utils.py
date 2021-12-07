@@ -201,7 +201,8 @@ def save_or_show_plot(args: dict, tight_layout_rect: list = None):
                 print("\nSaving the figure was aborted\n")
 
     elif not args["noplot"]:
-        plt.tight_layout()
+        if not args["notight"]:
+            plt.tight_layout()
         plt.show()
 
 

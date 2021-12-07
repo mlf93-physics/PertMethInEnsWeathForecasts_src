@@ -17,6 +17,7 @@ import math
 import config as cfg
 import general.analyses.breed_vector_eof_analysis as bv_analysis
 import general.analyses.plot_analyses as g_plt_anal
+import general.analyses.analyse_data as g_anal
 import general.plotting.plot_data as g_plt_data
 import general.utils.argument_parsers as a_parsers
 import general.utils.importing.import_data_funcs as g_import
@@ -205,6 +206,80 @@ def plot_s_vectors_average(args, axes: plt.Axes = None, plot_args: list = []):
     axes.set_title(s_vector_title)
 
 
+def plot_s_vector_orthogonality(args, axes=None):
+
+    # Import breed vectors
+    (
+        singular_vector_units,
+        singular_values,
+        _,
+        _,
+        header_dicts,
+    ) = pt_import.import_perturb_vectors(
+        args, raw_perturbations=True, dtype=sparams.dtype
+    )
+
+    # Normalize
+    singular_vector_units = g_utils.normalize_array(
+        singular_vector_units, norm_value=1, axis=2
+    )
+
+    # Prepare axes
+    if axes is None:
+        num_subplot_cols = math.floor(args["n_profiles"] / 2)
+        num_subplot_rows = math.ceil(args["n_profiles"] / num_subplot_cols)
+        fig, axes = plt.subplots(
+            ncols=num_subplot_cols, nrows=num_subplot_rows, sharey=True, sharex=True
+        )
+
+    try:
+        axes.size
+    except AttributeError:
+        axes = [axes]
+    else:
+        axes = axes.ravel()
+
+    cbar_ax = fig.add_axes([0.91, 0.3, 0.03, 0.4])
+
+    for i in range(args["n_profiles"]):
+        orthogonality_matrix = g_plt_anal.orthogonality_of_vectors(
+            singular_vector_units[i, :, :]
+        )
+
+        sb.heatmap(
+            orthogonality_matrix,
+            ax=axes[i],
+            cmap="Reds",
+            vmin=0,
+            vmax=1,
+            # annot=True,
+            fmt=".1f",
+            annot_kws={"fontsize": 8},
+            cbar=i == 0,
+            cbar_ax=None if i else cbar_ax,
+            cbar_kws=dict(use_gridspec=True, label="Orthogonality"),
+        )
+
+        axes[i].set_title(f'Val. pos. {header_dicts[i]["val_pos"]*params.stt:.2f}')
+
+    fig.supxlabel("SV index")
+    fig.supylabel("SV index")
+    fig.tight_layout(rect=[0, 0, 0.9, 1])
+
+
+def plot_sv_error_norm(args):
+
+    axes = plt.axes()
+
+    g_plt_data.plot_error_norm_vs_time(
+        args=args,
+        legend_on=True,
+        axes=axes,
+        plot_args=[],
+        normalize_start_time=False,
+    )
+
+
 if __name__ == "__main__":
     cfg.init_licence()
 
@@ -232,6 +307,10 @@ if __name__ == "__main__":
         plot_s_vectors_units(args)
     elif "s_vectors_average" in args["plot_type"]:
         plot_s_vectors_average(args)
+    elif "s_vector_orthogonality" in args["plot_type"]:
+        plot_s_vector_orthogonality(args)
+    elif "sv_error_norm" in args["plot_type"]:
+        plot_sv_error_norm(args)
     else:
         raise ValueError("No valid plot type given as input argument")
 

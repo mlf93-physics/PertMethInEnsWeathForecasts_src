@@ -64,7 +64,7 @@ def plot_exp_growth_rate_vs_time(
         endpoint=args["endpoint"],
     )
 
-    num_perturbations = len(perturb_time_pos_list)
+    n_runs_per_profile = len(perturb_time_pos_list)
 
     # Analyse error norm and mean exponential growth rate
     (
@@ -142,7 +142,10 @@ def plot_error_norm_vs_time(
         u_ref_stores,
     ) = g_import.import_perturbation_velocities(args, search_pattern="*perturb*.csv")
 
-    num_perturbations = len(perturb_time_pos_list)
+    # Get number of runs per profile and n_profiles
+    n_runs_per_profile = int(header_dicts[0]["n_runs_per_profile"])
+    n_profiles = int(header_dicts[0]["n_profiles"])
+    n_perturbations = n_profiles * n_runs_per_profile
 
     (
         error_norm_vs_time,
@@ -162,11 +165,11 @@ def plot_error_norm_vs_time(
     )
     if not normalize_start_time:
         time_array = np.repeat(
-            np.reshape(time_array, (time_array.size, 1)), num_perturbations, axis=1
+            np.reshape(time_array, (time_array.size, 1)), n_perturbations, axis=1
         )
 
         time_array += np.reshape(
-            np.array(perturb_time_pos_list) * params.stt, (1, num_perturbations)
+            np.array(perturb_time_pos_list) * params.stt, (1, n_perturbations)
         )
 
     # Pick out specified runs
@@ -186,11 +189,13 @@ def plot_error_norm_vs_time(
         axes = plt.axes()
 
     # Get non-repeating colorcycle
-    if cfg.LICENCE == EXP.BREEDING_VECTORS or cfg.LICENCE == EXP.LYAPUNOV_VECTORS:
+    if cfg.LICENCE in [
+        EXP.LYAPUNOV_VECTORS,
+        EXP.BREEDING_VECTORS,
+    ]:
         n_colors = exp_setup["n_vectors"]
     else:
-        n_colors = num_perturbations
-
+        n_colors = n_runs_per_profile
     # Set colors
     if cmap_list is None:
         cmap_list = g_plt_utils.get_non_repeating_colors(n_colors=n_colors)
@@ -237,8 +242,21 @@ def plot_error_norm_vs_time(
     axes.set_yscale("log")
 
     if legend_on:
-        if cfg.LICENCE not in [EXP.BREEDING_VECTORS, EXP.LYAPUNOV_VECTORS]:
+        if cfg.LICENCE not in [
+            EXP.BREEDING_VECTORS,
+            EXP.LYAPUNOV_VECTORS,
+            EXP.SINGULAR_VECTORS,
+        ]:
             axes.legend(perturb_time_pos_list_legend)
+        elif cfg.LICENCE == EXP.SINGULAR_VECTORS:
+            lines: list = list(axes.get_lines())
+            for i, header_dict in enumerate(header_dicts):
+                if "run_in_profile" in header_dict:
+                    lines[i].set_label(f"sv{int(header_dict['run_in_profile'])}")
+                    # lines[i].set_color(cmap_list[int(header_dict["run_in_profile"])])
+                    if i + 1 == n_runs_per_profile:
+                        break
+            axes.legend()
 
     if args["xlim"] is not None:
         axes.set_xlim(args["xlim"][0], args["xlim"][1])

@@ -299,7 +299,7 @@ def sv_pert_experiment(args: dict, local_exp_setup: dict):
         Local experiment setup
     """
     # The number of vectors to perturb from, i.e. BV-EOF1, BV-EOF2, ...
-    n_vectors = 3
+    n_vectors = 20
 
     # Prepare arguments for perturbation run
     args["n_runs_per_profile"] = 1
@@ -373,7 +373,7 @@ def main(args: dict):
     args["n_units"] = exp_setup["general"]["n_units"]
 
     # Generate perturbation vectors
-    generate_vectors(copy.deepcopy(args), exp_setup)
+    # generate_vectors(copy.deepcopy(args), exp_setup)
 
     # Perform perturbation experiments
     execute_pert_experiments(copy.deepcopy(args), exp_setup)

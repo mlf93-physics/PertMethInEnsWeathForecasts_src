@@ -267,14 +267,16 @@ def plot_exp_growth_rate_comparison(args: dict):
             args["exp_folders"] = [
                 str(pl.Path(_dirs[i].parent.name, _dirs[i].name))
                 for i in range(len_folders)
-                # if "sv" in _dirs[i].name
-                if "perturbations" in _dirs[i].name  # or "nm" in _dirs[i].name
+                if "sv" in _dirs[i].name
+                # if "perturbations" in _dirs[i].name  # or "nm" in _dirs[i].name
             ]
 
         # Update number of folders after filtering
         len_folders = len(args["exp_folders"])
 
     cmap_list = plt.rcParams["axes.prop_cycle"].by_key()["color"]
+    cmap_list = g_plt_utils.get_non_repeating_colors(n_colors=len_folders)
+    cmap_list[0] = "k"
     axes = plt.axes()
 
     perturb_type_old = ""
@@ -305,8 +307,8 @@ def plot_exp_growth_rate_comparison(args: dict):
         g_plt_data.plot_exp_growth_rate_vs_time(
             args=args,
             axes=axes,
-            color=color,
-            linestyle=linestyle,
+            color=cmap_list[i],
+            # linestyle=linestyle,
             plot_args=[],
             title_suffix=str(folder_path.parent),
         )

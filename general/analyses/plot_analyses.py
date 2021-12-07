@@ -4,7 +4,7 @@ import numpy as np
 
 
 def orthogonality_of_vectors(matrix_of_vectors):
-    """Calculate a matrix with the orthogonality of all combinations of the
+    """Calculate a matrix with the abs orthogonality of all combinations of the
     vectors in the incomming matrix. Pair of vectors are orthogonal if the value
     is close/equal to zero.
 
