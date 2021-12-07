@@ -145,7 +145,7 @@ def plot_error_norm_vs_time(
     # Get number of runs per profile and n_profiles
     n_runs_per_profile = int(header_dicts[0]["n_runs_per_profile"])
     n_profiles = int(header_dicts[0]["n_profiles"])
-    n_perturbations = n_profiles * n_runs_per_profile
+    n_perturbations = len(perturb_time_pos_list)
 
     (
         error_norm_vs_time,

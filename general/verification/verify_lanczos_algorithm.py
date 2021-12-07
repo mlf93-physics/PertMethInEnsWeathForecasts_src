@@ -37,7 +37,7 @@ def verify_lanczos_algorithm():
     # Define parameters
     # params.sdim = 10
     # params.seeked_error_norm = 1
-    n_vectors = params.sdim
+    n_vectors = 30  # params.sdim
     n_runs = 100
     # Define base matrix
     base_matrix = np.eye(params.sdim)
@@ -97,9 +97,13 @@ def verify_lanczos_algorithm():
 
     sb.heatmap(np.abs(sv_matrix_average.T), ax=axes[0, 0])
     axes[0, 0].set_title("Lanczos singular vectors")
+    axes[0, 0].set_ylabel("SV index")
+    axes[0, 0].set_xlabel("Vector component index")
 
     sb.heatmap(np.abs(np_e_vectors.T), ax=axes[0, 1])
     axes[0, 1].set_title("Numpy singular vectors")
+    axes[0, 1].set_ylabel("SV index")
+    axes[0, 1].set_xlabel("Vector component index")
 
     gs = axes[1, 0].get_gridspec()
 
@@ -112,9 +116,10 @@ def verify_lanczos_algorithm():
     axbig.legend()
 
     plt.suptitle(
-        f"Compare Lanczos algorithm with np.linalg.eig\n on diagonal matrix | $n_runs$={n_runs}"
+        f"Compare Lanczos algorithm with np.linalg.eig\n on diagonal matrix | $n_{{runs}}$={n_runs}"
     )
 
+    plt.tight_layout()
     plt.show()
 
 

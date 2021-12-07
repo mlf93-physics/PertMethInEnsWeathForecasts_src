@@ -1,7 +1,7 @@
 {
     "TestRun0": {
         "general": {
-            "folder_name": "compare_pert_test_seeked_error1e-4-high_pred",
+            "folder_name": "compare_pert_test_seeked_error1e-2-high_pred",
             "vector_folder": "vectors",
             "perturbation_folder": "perturbations",
             "sub_exp_folder": "perturb_data",
@@ -18,7 +18,7 @@
         },
         "sv_gen_setup": {
             "integration_time": 0.01,
-            "n_vectors": 9,
+            "n_vectors": 20,
             "n_lanczos_iterations": 1,
             "n_model_iterations": 1
         },
@@ -28,7 +28,7 @@
     },
     "TestRun1": {
         "general": {
-            "folder_name": "compare_pert_test_seeked_error1e-2-low_pred_20svs",
+            "folder_name": "compare_pert_test_seeked_error1e-2-low_pred",
             "vector_folder": "vectors",
             "perturbation_folder": "perturbations",
             "sub_exp_folder": "perturb_data",
@@ -45,7 +45,7 @@
         },
         "sv_gen_setup": {
             "integration_time": 0.01,
-            "n_vectors": 3,
+            "n_vectors": 20,
             "n_lanczos_iterations": 1,
             "n_model_iterations": 1
         },

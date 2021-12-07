@@ -99,10 +99,13 @@ def analyse_mean_exp_growth_rate_vs_time(
     growth_rates = np.empty((n_datapoints - 1, n_perturbations))
 
     for i in range(1, n_datapoints):
-        growth_rates[i - 1, :] = (
-            1
-            / (i * params.stt)
-            * np.log(error_norm_vs_time[i, :] / error_norm_vs_time[0, :])
+        # Instantaneous exponential growth rate
+        # growth_rates[i - 1, :] = (1 / (params.stt)) * np.log(
+        #     error_norm_vs_time[i, :] / error_norm_vs_time[i - 1, :]
+        # )
+        # 'Averaged' (i.e. over some interval i*dt)
+        growth_rates[i - 1, :] = (1 / (i * params.stt)) * np.log(
+            error_norm_vs_time[i, :] / error_norm_vs_time[0, :]
         )
 
     mean_growth_rate = np.mean(growth_rates, axis=1)

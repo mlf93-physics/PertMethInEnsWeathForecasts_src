@@ -11,7 +11,6 @@ sys.path.append("..")
 from pyinstrument import Profiler
 
 profiler = Profiler()
-profiler.start()
 
 import copy
 import pathlib as pl
@@ -260,6 +259,7 @@ def main(args: dict, exp_setup: dict = None):
 
 
 if __name__ == "__main__":
+    profiler.start()
     cfg.init_licence()
 
     # Get arguments

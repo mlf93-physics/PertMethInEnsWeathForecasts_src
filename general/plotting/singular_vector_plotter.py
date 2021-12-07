@@ -149,19 +149,15 @@ def plot_s_vectors_units(args, axes: plt.Axes = None, plot_args: list = []):
         )
         axes[unit].invert_yaxis()
 
-    # add a big axis, hide frame
-    fig.add_subplot(111, frameon=False)
-    # hide tick and tick label of the big axis
-    plt.tick_params(
-        labelcolor="none",
-        which="both",
-        top=False,
-        bottom=False,
-        left=False,
-        right=False,
+    # Generate title
+    s_vector_title = g_plt_utils.generate_title(
+        args,
+        header_dict=header_dicts[0],
+        title_header="Normalized SV units | shell model \n",
     )
-    plt.xlabel("SV index")
-    plt.ylabel("Shell index")
+    fig.suptitle(s_vector_title)
+    fig.supxlabel("SV index")
+    fig.supylabel("Shell index")
 
 
 def plot_s_vectors_average(args, axes: plt.Axes = None, plot_args: list = []):
@@ -262,6 +258,13 @@ def plot_s_vector_orthogonality(args, axes=None):
 
         axes[i].set_title(f'Val. pos. {header_dicts[i]["val_pos"]*params.stt:.2f}')
 
+    # Generate title
+    s_vector_title = g_plt_utils.generate_title(
+        args,
+        header_dict=header_dicts[0],
+        title_header="Orthogonality between SVs | shell model \n",
+    )
+    fig.suptitle(s_vector_title)
     fig.supxlabel("SV index")
     fig.supylabel("SV index")
     fig.tight_layout(rect=[0, 0, 0.9, 1])
@@ -302,7 +305,7 @@ if __name__ == "__main__":
     profiler.start()
 
     if "s_values" in args["plot_type"]:
-        plot_s_values(args, plot_args=["normalize"])
+        plot_s_values(args, plot_args=[])
     elif "s_vectors" in args["plot_type"]:
         plot_s_vectors_units(args)
     elif "s_vectors_average" in args["plot_type"]:

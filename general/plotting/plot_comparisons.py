@@ -185,10 +185,9 @@ def plot_error_norm_comparison(args: dict):
                 str(pl.Path(_dirs[i].parent.name, _dirs[i].name))
                 for i in range(len_folders)
                 # if "sv" in _dirs[i].name
-                if "sv" in _dirs[i].name
-                or "bv" in _dirs[i].name
-                or "bv_eof" in _dirs[i].name
-                # if "perturbations" in _dirs[i].name  # or "nm" in _dirs[i].name
+                # if "bv" in _dirs[i].name
+                # or "bv_eof" in _dirs[i].name
+                if "perturbations" in _dirs[i].name  # or "nm" in _dirs[i].name
             ]
 
         # Update number of folders after filtering
@@ -197,14 +196,37 @@ def plot_error_norm_comparison(args: dict):
     cmap_list = plt.rcParams["axes.prop_cycle"].by_key()["color"]
 
     line_counter = 0
+    perturb_type_old = ""
     for i, folder in enumerate(args["exp_folders"]):
+        folder_path = pl.Path(folder)
         # Set exp_folder
         args["exp_folder"] = folder
+
+        digits_in_name = g_utils.get_digits_from_string(folder_path.name)
+        if digits_in_name is not None:
+            if isinstance(digits_in_name, int):
+                perturb_type = folder_path.name.split(str(digits_in_name))[0]
+
+                if not perturb_type == perturb_type_old:
+                    color = cmap_list[i]
+                    _save_color = color
+                    perturb_type_old = perturb_type
+                else:
+                    color = _save_color
+                    if digits_in_name >= args["n_runs_per_profile"]:
+                        continue
+
+                linestyle = LINESTYLES[digits_in_name]
+
+        else:
+            color = cmap_list[i]
+            linestyle = None
 
         g_plt_data.plot_error_norm_vs_time(
             args,
             axes=axes[0],
-            cmap_list=[cmap_list[i]],
+            cmap_list=[color],
+            linestyle=linestyle,
             legend_on=False,
             normalize_start_time=False,
             plot_args=[],
@@ -294,6 +316,8 @@ def plot_exp_growth_rate_comparison(args: dict):
                     perturb_type_old = perturb_type
                 else:
                     color = _save_color
+                    if digits_in_name >= args["n_runs_per_profile"]:
+                        continue
 
                 linestyle = LINESTYLES[digits_in_name]
 
