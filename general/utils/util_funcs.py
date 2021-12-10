@@ -334,7 +334,27 @@ def get_values_from_dicts(dicts: list, key: str) -> list:
 
 def sort_paths_according_to_header_dicts(
     paths: List[pl.Path], keys: List[str]
-) -> List[pl.Path]:
+) -> Tuple[List[pl.Path], List[int]]:
+    """Sort a list of paths according to the specified keys in the header_dict
+    of the file at the path
+
+    Parameters
+    ----------
+    paths : List[pl.Path]
+        The list of paths to sort
+    keys : List[str]
+        A list of keys in the header_dicts to sort according to
+
+    Returns
+    -------
+    Tuple[List[pl.Path], List[int]]
+        (
+            list:
+                List of sorted paths
+            list:
+                List of the index to sort another array in the same way as the paths.
+        )
+    """
 
     # Get headers
     header_dicts: list = []
@@ -346,9 +366,14 @@ def sort_paths_according_to_header_dicts(
         value_lists.append(get_values_from_dicts(header_dicts, key))
 
     # Sort paths
-    paths = [path for _, _, path in sorted(zip(*value_lists, paths))]
+    sorted_parths = []
+    sort_index = []
 
-    return paths
+    for _, _, enum_path in sorted(zip(*value_lists, enumerate(paths))):
+        sorted_parths.append(enum_path[1])
+        sort_index.append(enum_path[0])
+
+    return sorted_parths, sort_index
 
 
 def get_digits_from_string(string: str) -> Union[None, int, list]:

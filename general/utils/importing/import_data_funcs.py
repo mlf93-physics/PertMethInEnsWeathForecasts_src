@@ -158,34 +158,35 @@ def imported_sorted_perturbation_info(folder_name, args, search_pattern="*.csv")
 
         perturb_header_dicts.append(perturb_header_dict)
 
-    # Get sort index
-    ascending_perturb_pos_index = np.argsort(perturb_time_pos_list)
+    # Sort according to profile and run_in_profile if the keys are present
+    if "profile" in perturb_header_dicts[0]:
+        (
+            perturb_file_names,
+            ascending_sort_index,
+        ) = g_utils.sort_paths_according_to_header_dicts(
+            perturb_file_names, ["profile", "run_in_profile"]
+        )
+    else:
+        # Get sort index
+        ascending_sort_index = np.argsort(perturb_time_pos_list)
+        # Sort perturb file names
+        perturb_file_names = [perturb_file_names[i] for i in ascending_sort_index]
 
     # Sort arrays/lists
     perturb_time_pos_list = np.array(
-        [
-            perturb_time_pos_list[i]
-            for i in ascending_perturb_pos_index
-            if (i + 1) <= args["n_files"]
-        ]
+        [perturb_time_pos_list[i] for i in ascending_sort_index]
     )
     perturb_time_pos_list_legend = np.array(
-        [
-            perturb_time_pos_list_legend[i]
-            for i in ascending_perturb_pos_index
-            if (i + 1) <= args["n_files"]
-        ]
+        [perturb_time_pos_list_legend[i] for i in ascending_sort_index]
     )
-    perturb_header_dicts = [
-        perturb_header_dicts[i]
-        for i in ascending_perturb_pos_index
-        if (i + 1) <= args["n_files"]
-    ]
-    perturb_file_names = [
-        perturb_file_names[i]
-        for i in ascending_perturb_pos_index
-        if (i + 1) <= args["n_files"]
-    ]
+    perturb_header_dicts = [perturb_header_dicts[i] for i in ascending_sort_index]
+
+    # Truncate at n_files
+    if args["n_files"] < np.inf:
+        perturb_file_names = perturb_file_names[: args["n_files"]]
+        perturb_time_pos_list = perturb_time_pos_list[: args["n_files"]]
+        perturb_time_pos_list_legend = perturb_time_pos_list_legend[: args["n_files"]]
+        perturb_header_dicts = perturb_header_dicts[: args["n_files"]]
 
     return (
         perturb_time_pos_list,

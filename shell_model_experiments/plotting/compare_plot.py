@@ -32,7 +32,7 @@ def plot_energy_spectrum_comparison(args: dict):
     if len(file_paths) == 0:
         raise ImportError("No files to import")
 
-    file_paths = g_utils.sort_paths_according_to_header_dicts(
+    file_paths, _ = g_utils.sort_paths_according_to_header_dicts(
         file_paths, ["ny_n", "diff_exponent"]
     )
 
@@ -91,7 +91,7 @@ def plot_helicity_spectrum_comparison(args: dict):
     # Find csv files
     file_paths = g_utils.get_files_in_path(pl.Path(args["datapath"]))
 
-    file_paths = g_utils.sort_paths_according_to_header_dicts(
+    file_paths, _ = g_utils.sort_paths_according_to_header_dicts(
         file_paths, ["ny_n", "diff_exponent"]
     )
 
@@ -232,7 +232,7 @@ def plot_period4_spectrum_ratio_vs_alpha(args: dict):
     # Find csv files
     file_paths = g_utils.get_files_in_path(pl.Path(args["datapath"]))
     # Sort files
-    file_paths = g_utils.sort_paths_according_to_header_dicts(
+    file_paths, _ = g_utils.sort_paths_according_to_header_dicts(
         file_paths, ["ny_n", "diff_exponent"]
     )
 

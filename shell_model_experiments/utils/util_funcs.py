@@ -128,6 +128,8 @@ def set_params(struct: ParamsStructType, parameter: str = None, value: float = N
         struct.sdim = int(value)
     elif parameter == "sample_rate":
         struct.sample_rate = value
+    elif parameter == "seeked_error_norm":
+        struct.seeked_error_norm = value
 
 
 @nb.njit(

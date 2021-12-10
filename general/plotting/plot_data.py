@@ -15,12 +15,16 @@ import config as cfg
 if cfg.MODEL == Models.SHELL_MODEL:
     from shell_model_experiments.params.params import ParamsStructType
     from shell_model_experiments.params.params import PAR as PAR_SH
+    import shell_model_experiments.utils.special_params as sh_sparams
 
     params = PAR_SH
+    sparams = sh_sparams
 elif cfg.MODEL == Models.LORENTZ63:
     import lorentz63_experiments.params.params as l63_params
+    import lorentz63_experiments.params.special_params as l63_sparams
 
     params = l63_params
+    sparams = l63_sparams
 
 
 def plot_exp_growth_rate_vs_time(
@@ -56,22 +60,23 @@ def plot_exp_growth_rate_vs_time(
     ) = g_import.import_perturbation_velocities(args, search_pattern="*perturb*.csv")
 
     # Define time array
+    # -1 since growth rate is a rate between differences (see functino
+    # analyse_mean_exp_growth_rate_vs_time)
     time_array = np.linspace(
         0,
         header_dicts[0]["time_to_run"],
-        int(header_dicts[0]["time_to_run"] * params.tts) + args["endpoint"] * 1,
+        int(header_dicts[0]["time_to_run"] * params.tts) + args["endpoint"] * 1 - 1,
         dtype=np.float64,
         endpoint=args["endpoint"],
     )
 
     n_runs_per_profile = len(perturb_time_pos_list)
 
-    # Analyse error norm and mean exponential growth rate
+    # Analyse mean exponential growth rate
     (
         error_norm_vs_time,
         error_norm_mean_vs_time,
     ) = g_a_data.analyse_error_norm_vs_time(u_stores, args=args)
-
     mean_growth_rate = g_a_data.analyse_mean_exp_growth_rate_vs_time(
         error_norm_vs_time, args=args
     )
@@ -249,11 +254,9 @@ def plot_error_norm_vs_time(
         ]:
             axes.legend(perturb_time_pos_list_legend)
         elif cfg.LICENCE == EXP.SINGULAR_VECTORS:
-            lines: list = list(axes.get_lines())
             for i, header_dict in enumerate(header_dicts):
                 if "run_in_profile" in header_dict:
                     lines[i].set_label(f"sv{int(header_dict['run_in_profile'])}")
-                    # lines[i].set_color(cmap_list[int(header_dict["run_in_profile"])])
                     if i + 1 == n_runs_per_profile:
                         break
             axes.legend()

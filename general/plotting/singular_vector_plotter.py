@@ -278,7 +278,7 @@ def plot_sv_error_norm(args):
         args=args,
         legend_on=True,
         axes=axes,
-        plot_args=[],
+        plot_args=["detailed_title"],
         normalize_start_time=False,
     )
 

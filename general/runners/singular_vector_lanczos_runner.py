@@ -94,8 +94,11 @@ def main(args: dict, exp_setup: dict = None):
     copy_args_atl = copy.deepcopy(args)
 
     # Set error norm to 1
-    # _temp_seeked_error_norm = copy.deepcopy(params.seeked_error_norm)
-    # params.seeked_error_norm = 1
+    _temp_seeked_error_norm = copy.deepcopy(params.seeked_error_norm)
+    if cfg.MODEL == Models.SHELL_MODEL:
+        sh_utils.set_params(params, parameter="seeked_error_norm", value=1)
+    elif cfg.MODEL == Models.LORENTZ63:
+        params.seeked_error_norm = 1
 
     # Calculate the desired number of units
     for i in range(
@@ -126,10 +129,10 @@ def main(args: dict, exp_setup: dict = None):
             lanczos_outarray = None
 
             # Initiate the Lanczos arrays and algorithm
-            propagated_vector: np.ndarray((params.sdim, 1)) = np.empty(
+            propagated_vector: np.ndarray((params.sdim, 1)) = np.zeros(
                 (params.sdim, 1), dtype=sparams.dtype
             )
-            input_vector: np.ndarray((params.sdim, 1)) = np.empty(
+            input_vector: np.ndarray((params.sdim, 1)) = np.zeros(
                 (params.sdim, 1), dtype=sparams.dtype
             )
             lanczos_iterator = pt_utils.lanczos_vector_algorithm(
@@ -251,7 +254,12 @@ def main(args: dict, exp_setup: dict = None):
     g_save.save_exp_info(exp_setup, args)
 
     # Reset seeked error norm
-    # params.seeked_error_norm = _temp_seeked_error_norm
+    if cfg.MODEL == Models.SHELL_MODEL:
+        sh_utils.set_params(
+            params, parameter="seeked_error_norm", value=_temp_seeked_error_norm
+        )
+    elif cfg.MODEL == Models.LORENTZ63:
+        params.seeked_error_norm = _temp_seeked_error_norm
 
     if args["erda_run"]:
         path = pl.Path(args["datapath"], exp_setup["folder_name"])
