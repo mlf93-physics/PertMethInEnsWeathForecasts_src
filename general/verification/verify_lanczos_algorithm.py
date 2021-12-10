@@ -2,6 +2,7 @@ import sys
 
 sys.path.append("..")
 import matplotlib.pyplot as plt
+import matplotlib.ticker as mpl_ticker
 import seaborn as sb
 from pyinstrument import Profiler
 import numpy as np
@@ -37,7 +38,7 @@ def verify_lanczos_algorithm():
     # Define parameters
     # params.sdim = 10
     # params.seeked_error_norm = 1
-    n_vectors = 30  # params.sdim
+    n_vectors = params.sdim
     n_runs = 100
     # Define base matrix
     base_matrix = np.eye(params.sdim)
@@ -95,14 +96,17 @@ def verify_lanczos_algorithm():
     sv_matrix_average = np.mean(sv_matrix_store, axis=0)
     s_values_average = np.mean(s_values_store, axis=0)
 
-    sb.heatmap(np.abs(sv_matrix_average.T), ax=axes[0, 0])
+    # Normalize vectors
+    sv_matrix_average = g_utils.normalize_array(sv_matrix_average, norm_value=1, axis=0)
+
+    sb.heatmap(np.abs(sv_matrix_average.T), ax=axes[0, 0], vmin=0, vmax=1)
     axes[0, 0].set_title("Lanczos singular vectors")
-    axes[0, 0].set_ylabel("SV index")
+    axes[0, 0].set_ylabel("Eigen index")
     axes[0, 0].set_xlabel("Vector component index")
 
-    sb.heatmap(np.abs(np_e_vectors.T), ax=axes[0, 1])
+    sb.heatmap(np.abs(np_e_vectors.T), ax=axes[0, 1], vmin=0, vmax=1)
     axes[0, 1].set_title("Numpy singular vectors")
-    axes[0, 1].set_ylabel("SV index")
+    axes[0, 1].set_ylabel("Eigen index")
     axes[0, 1].set_xlabel("Vector component index")
 
     gs = axes[1, 0].get_gridspec()
@@ -113,6 +117,9 @@ def verify_lanczos_algorithm():
     axbig = fig.add_subplot(gs[1:, :])
     axbig.plot(np.abs(s_values_average), label="Lanczos eigen values")
     axbig.plot(np.abs(np_e_values), label="Numpys eigen values")
+    axbig.set_xlabel("Eigen index")
+    axbig.set_ylabel("Eigen value")
+    axbig.xaxis.set_major_locator(mpl_ticker.MaxNLocator(integer=True))
     axbig.legend()
 
     plt.suptitle(

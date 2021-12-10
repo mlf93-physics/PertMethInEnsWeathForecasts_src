@@ -185,7 +185,7 @@ def plot_s_vectors_average(args, axes: plt.Axes = None, plot_args: list = []):
     mean_abs_singular_vector_units = np.mean(np.abs(singular_vector_units), axis=0)
 
     sb.heatmap(
-        mean_abs_singular_vector_units.T ** 2,
+        mean_abs_singular_vector_units.T,
         ax=axes,
     )
 

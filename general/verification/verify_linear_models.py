@@ -216,8 +216,8 @@ def run_sh_atl_model_verification(
         raw_perturbation=True,
     )
 
-    rhs_identity = np.dot(u_perturb_stored[sparams.u_slice].conj(), data_out[0, 1:])
-    lhs_identity = np.dot(u_tl_stored.conj(), u_tl_stored)
+    rhs_identity = np.dot(u_perturb_stored[sparams.u_slice], data_out[0, 1:])
+    lhs_identity = np.dot(u_tl_stored, u_tl_stored)
     diff_identity = np.abs(lhs_identity - rhs_identity) / np.mean(
         [np.abs(lhs_identity), np.abs(rhs_identity)]
     )
@@ -372,7 +372,7 @@ def verify_tlm_model(args: dict):
 def verify_atlm_model(args: dict):
     # Set number of iterations to a low number, e.g. to investigate one
     # iteration
-    args["Nt"] = 100
+    args["Nt"] = 2
     # Import reference data
     u_ref, _, ref_header_dict = g_import.import_start_u_profiles(args=args)
 

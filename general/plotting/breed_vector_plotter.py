@@ -259,7 +259,8 @@ def plot_breed_eof_vectors_3D(args: dict):
         args
     )
 
-    eof_vectors, variances = bv_analysis.calc_bv_eof_vectors(perturb_vectors)
+    print("\nCalculating BV-EOF vectors from BV vectors")
+    eof_vectors, variances = bv_analysis.calc_eof_vectors(perturb_vectors)
     n_vectors: int = eof_vectors.shape[2]
 
     origin: np.ndarray = np.zeros(n_vectors)
