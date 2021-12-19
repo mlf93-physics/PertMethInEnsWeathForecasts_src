@@ -120,9 +120,7 @@ def plot_normal_mode_dist(args):
     min_e_value = np.min(e_values.real)
 
     # Prepare cmap and norm
-    cmap, norm = g_plt_utils.get_cmap_distributed_around_zero(
-        vmin=min_e_value, vmax=max_e_value
-    )
+    cmap, norm = g_plt_utils.get_custom_cmap(vmin=min_e_value, vmax=max_e_value)
     # Plot attractor
     plot_attractor(args, ax=ax1)
 
@@ -240,7 +238,7 @@ def plot_energy_dist(args):
     dE_array = np.sum(du_data * u_data, axis=1)
 
     # Prepare cmap and norm
-    cmap, norm = g_plt_utils.get_cmap_distributed_around_zero(
+    cmap, norm = g_plt_utils.get_custom_cmap(
         vmin=np.min(dE_array), vmax=np.max(dE_array)
     )
 

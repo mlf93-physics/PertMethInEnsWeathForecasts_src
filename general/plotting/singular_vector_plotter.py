@@ -96,6 +96,7 @@ def plot_s_values(args, axes: plt.Axes = None, plot_args=[]):
     axes[0].set_ylabel("Singular value")
     axes[0].set_xlabel("Singular value index")
     axes[0].set_title(s_value_dist_title)
+    # axes[0].set_yscale("log")
 
     # Get val pos from dicts
     val_pos_list = g_utils.get_values_from_dicts(header_dicts, "val_pos")

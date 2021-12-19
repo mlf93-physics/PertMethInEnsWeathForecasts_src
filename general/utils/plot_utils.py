@@ -23,9 +23,10 @@ def get_non_repeating_colors(
     return cmap_list
 
 
-def get_cmap_distributed_around_zero(
+def get_custom_cmap(
     vmin: float = -1,
     vmax: float = 1,
+    vcenter: float = 0,
     neg_thres: float = 0.5,
     pos_thres: float = 0.5,
     cmap_handle: plt.cm = plt.cm.coolwarm,
@@ -38,6 +39,8 @@ def get_cmap_distributed_around_zero(
         The minimum value of the cmap, by default -1
     vmax : float, optional
         The maximum value of the cmap, by default 1
+    vcenter : float, optional
+        The center value of the cmap, by default 0
     neg_thres : float, optional
         The upper threshold of the negative colours, i.e. the negative colours
         are mapped to the range [0, neg_thres], by default 0.5
@@ -59,7 +62,7 @@ def get_cmap_distributed_around_zero(
 
     norm = colors.TwoSlopeNorm(
         vmin=vmin,
-        vcenter=0,
+        vcenter=vcenter,
         vmax=vmax,
     )
 

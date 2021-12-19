@@ -1041,7 +1041,7 @@ def plot_howmoller_diagram_u_energy(args=None, plt_args: list = ["rel_mean"]):
         # energy_rel_mean_array = np.clip(energy_rel_mean_array, -15, None)
 
         # Get cmap
-        cmap, norm = g_plt_utils.get_cmap_distributed_around_zero(
+        cmap, norm = g_plt_utils.get_custom_cmap(
             vmin=np.min(energy_rel_mean_array),
             vmax=np.max(energy_rel_mean_array),
             neg_thres=0.4,
@@ -1109,7 +1109,7 @@ def plot_howmoller_diagram_helicity(args=None, plt_args: list = ["rel_mean"]):
         helicity_rel_mean_array = np.clip(helicity_rel_mean_array, vmin, vmax)
 
         # Get cmap
-        cmap, norm = g_plt_utils.get_cmap_distributed_around_zero(
+        cmap, norm = g_plt_utils.get_custom_cmap(
             vmin=vmin,
             vmax=vmax,
             neg_thres=0.4,
