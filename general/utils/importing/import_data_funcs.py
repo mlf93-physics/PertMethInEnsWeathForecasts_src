@@ -10,6 +10,7 @@ import config as cfg
 import general.utils.custom_decorators as dec
 import general.utils.exceptions as g_exceptions
 import general.utils.util_funcs as g_utils
+from libs.libutils import file_utils as lib_file_utils
 import numpy as np
 from general.params.model_licences import Models
 from general.utils.module_import.type_import import *
@@ -376,7 +377,7 @@ def import_perturbation_velocities(
     ref_file_match_keys_array = np.array(list(ref_file_match.keys()))
 
     # Get sorted file paths
-    ref_record_files_sorted = g_utils.get_files_in_path(
+    ref_record_files_sorted = lib_file_utils.get_files_in_path(
         pl.Path(args["datapath"], "ref_data")
     )
 
@@ -572,7 +573,7 @@ def import_start_u_profiles(args: dict = None) -> Tuple[np.ndarray, List[int], d
     )
 
     # Get sorted file paths
-    ref_record_files_sorted = g_utils.get_files_in_path(
+    ref_record_files_sorted = lib_file_utils.get_files_in_path(
         pl.Path(args["datapath"], "ref_data")
     )
 

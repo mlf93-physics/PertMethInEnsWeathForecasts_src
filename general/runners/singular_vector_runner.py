@@ -27,6 +27,7 @@ import general.utils.saving.save_utils as g_save_utils
 import general.utils.saving.save_vector_funcs as v_save
 import general.utils.user_interface as g_ui
 import general.utils.util_funcs as g_utils
+from libs.libutils import file_utils as lib_file_utils
 import general.utils.perturb_utils as pt_utils
 from general.params.model_licences import Models
 
@@ -62,7 +63,7 @@ def main(args):
     exp_setup = exp_utils.get_exp_setup(exp_file_path, args)
 
     # Get number of existing blocks
-    n_existing_units = g_utils.count_existing_files_or_dirs(
+    n_existing_units = lib_file_utils.count_existing_files_or_dirs(
         search_path=pl.Path(args["datapath"], exp_setup["folder_name"]),
         search_pattern="singular_vector*.csv",
     )

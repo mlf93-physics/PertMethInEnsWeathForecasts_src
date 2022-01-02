@@ -4,6 +4,7 @@ import random
 import itertools as it
 import numpy as np
 import general.utils.util_funcs as g_utils
+from libs.libutils import file_utils as lib_file_utils
 import general.utils.importing.import_data_funcs as g_import
 import general.utils.exceptions as g_exceptions
 from general.utils.module_import.type_import import *
@@ -70,7 +71,7 @@ def import_lorentz_block_perturbations(args=None, raw_perturbations=True):
     )
 
     # Get sorted file paths
-    ref_record_files_sorted = g_utils.get_files_in_path(
+    ref_record_files_sorted = lib_file_utils.get_files_in_path(
         pl.Path(args["datapath"], "ref_data")
     )
 
@@ -179,7 +180,7 @@ def import_profiles_for_nm_analysis(args: dict = None) -> Tuple[np.ndarray, dict
     num_profiles = n_profiles * n_runs_per_profile
 
     # Get sorted file paths
-    ref_record_files_sorted = g_utils.get_files_in_path(
+    ref_record_files_sorted = lib_file_utils.get_files_in_path(
         pl.Path(args["datapath"], "ref_data")
     )
 
