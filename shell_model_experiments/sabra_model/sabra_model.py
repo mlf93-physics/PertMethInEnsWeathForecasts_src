@@ -23,7 +23,7 @@ from shell_model_experiments.params.params import PAR, ParamsStructType
 import shell_model_experiments.utils.special_params as sparams
 from shell_model_experiments.sabra_model.runge_kutta4 import runge_kutta4
 import shell_model_experiments.utils.custom_decorators as dec
-import general.utils.runner_utils as r_utils
+import general.utils.running.runner_utils as r_utils
 
 
 # Set global params

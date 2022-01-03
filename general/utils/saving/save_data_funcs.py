@@ -2,6 +2,7 @@ import os
 import sys
 
 sys.path.append("..")
+sys.path.append("../../")
 import json
 import pathlib as pl
 import numpy as np

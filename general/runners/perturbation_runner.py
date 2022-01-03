@@ -35,18 +35,17 @@ import pathlib as pl
 import config as cfg
 import general.utils.argument_parsers as a_parsers
 import general.utils.exceptions as g_exceptions
-import general.utils.importing.import_data_funcs as g_import
-import general.utils.importing.import_perturbation_data as pt_import
-import general.utils.perturb_utils as pt_utils
 import general.utils.saving.save_data_funcs as g_save
 import general.utils.saving.save_perturbation as pt_save
 import general.utils.user_interface as g_ui
-import general.utils.runner_utils as r_utils
+import general.utils.running.runner_utils as r_utils
+import general.utils.process_utils as pr_utils
 import general.utils.util_funcs as g_utils
 import numpy as np
 from general.params.experiment_licences import Experiments as EXP
 from general.params.model_licences import Models
 from general.utils.module_import.type_import import *
+from libs.libutils import file_utils as lib_file_utils
 from pyinstrument import Profiler
 
 if cfg.MODEL == Models.SHELL_MODEL:
@@ -266,189 +265,6 @@ def perturbation_runner(
             data_out_list.append(data_out[-1, 1:])
 
 
-def prepare_run_times(
-    args: dict,
-) -> Tuple[np.ndarray, np.ndarray]:
-
-    num_perturbations = args["n_runs_per_profile"] * args["n_profiles"]
-
-    if cfg.LICENCE != EXP.LORENTZ_BLOCK:
-        times_to_run = np.ones(num_perturbations) * args["time_to_run"]
-        Nt_array = np.round(times_to_run / params.dt).astype(np.int64)
-    else:
-        if len(args["start_times"]) > 1:
-            start_times = np.array(args["start_times"])
-        else:
-            start_times = np.ones(num_perturbations) * args["start_times"]
-
-        times_to_run = start_times[0] + args["time_to_run"] - start_times
-        Nt_array = (times_to_run / params.dt).astype(np.int64)
-
-    return times_to_run, Nt_array
-
-
-def prepare_perturbations(
-    args: dict, raw_perturbations: bool = False
-) -> Tuple[np.ndarray, List[int]]:
-    """Prepare the perturbed initial conditions according to the desired perturbation
-    type (given by args["pert_mode"])
-
-    Parameters
-    ----------
-    args : dict
-        Run-time arguments
-    raw_perturbations : bool, optional
-        If the raw perturbations should be returned instead of the perturbations
-        added to the u_init_profiles, by default False
-
-    Returns
-    -------
-    tuple
-        (
-            u_return : perturbed u profiles
-            perturb_positions : position of the perturbation (in samples)
-        )
-
-
-    Raises
-    ------
-    g_exceptions.ModelError
-        Raised if the single_shell_perturb option is set while not using the shell
-        model
-    g_exceptions.InvalidRuntimeArgument
-        Raised if the perturbation mode is not valid
-    """
-
-    # Import reference info file
-    ref_header_dict = g_import.import_info_file(pl.Path(args["datapath"], "ref_data"))
-    # header_dict = g_utils.handle_different_headers(header_dict)
-
-    # Adjust parameters to have the correct ny/ny_n for shell model
-    g_utils.determine_params_from_header_dict(ref_header_dict, args)
-
-    # Only import start profiles beforehand if not using bv, bv_eof or sv perturbations,
-    # i.e. also when running in singel_shell_perturb mode
-
-    if args["pert_mode"] not in ["bv", "bv_eof", "sv"]:
-        (
-            u_init_profiles,
-            perturb_positions,
-            header_dict,
-        ) = g_import.import_start_u_profiles(args=args)
-
-    # NM pert generation mode; if True, the perturbations are generated in the
-    # plane of the complex-conjugate pair of the leading NM. Otherwise only one
-    # perturbation is made
-    # nm_complex_conj = False
-
-    if args["pert_mode"] is not None:
-
-        if args["pert_mode"] == "nm":
-            print("\nRunning with NORMAL MODE perturbations\n")
-            if cfg.MODEL == Models.SHELL_MODEL:
-                (perturb_vectors, _, _,) = sh_nm_estimator.find_normal_modes(
-                    u_init_profiles[
-                        :,
-                        0 : args["n_profiles"]
-                        * args["n_runs_per_profile"] : args["n_runs_per_profile"],
-                    ],
-                    args,
-                    dev_plot_active=False,
-                    local_ny=header_dict["ny"],
-                )
-            elif cfg.MODEL == Models.LORENTZ63:
-                (
-                    perturb_vectors,
-                    e_values_max,
-                    _,
-                    _,
-                ) = l63_nm_estimator.find_normal_modes(
-                    u_init_profiles[
-                        :,
-                        0 : args["n_profiles"]
-                        * args["n_runs_per_profile"] : args["n_runs_per_profile"],
-                    ],
-                    args,
-                    n_profiles=args["n_profiles"],
-                )
-        elif "bv" in args["pert_mode"]:
-            if args["pert_mode"] == "bv":
-                print("\nRunning with BREED VECTOR perturbations\n")
-                _raw_perturbations = False
-            elif args["pert_mode"] == "bv_eof":
-                print("\nRunning with BREED EOF VECTOR perturbations\n")
-                _raw_perturbations = True
-            (
-                perturb_vectors,
-                _,
-                u_init_profiles,
-                perturb_positions,
-                _,
-            ) = pt_import.import_perturb_vectors(
-                args, raw_perturbations=_raw_perturbations
-            )
-
-            # Reshape perturb_vectors
-            perturb_vectors = np.reshape(
-                np.transpose(perturb_vectors, axes=(2, 0, 1)),
-                (params.sdim, args["n_profiles"] * args["n_runs_per_profile"]),
-            )
-
-        elif "sv" in args["pert_mode"]:
-            print("\nRunning with SINGULAR VECTOR perturbations\n")
-            (
-                perturb_vectors,
-                _,
-                u_init_profiles,
-                perturb_positions,
-                _,
-            ) = pt_import.import_perturb_vectors(
-                args, raw_perturbations=True, dtype=np.complex128
-            )
-            # Reshape perturb_vectors
-            perturb_vectors = np.reshape(
-                np.transpose(perturb_vectors, axes=(2, 0, 1)),
-                (params.sdim, args["n_profiles"] * args["n_runs_per_profile"]),
-            )
-
-        elif args["pert_mode"] == "rd":
-            print("\nRunning with RANDOM perturbations\n")
-            perturb_vectors = np.ones(
-                (params.sdim, args["n_profiles"]), dtype=sparams.dtype
-            )
-    # Check if single shell perturb should be activated
-    elif args["single_shell_perturb"] is not None:
-        # Specific to shell model setup
-        if cfg.MODEL == Models.SHELL_MODEL:
-            print("\nRunning in single shell perturb mode\n")
-            perturb_vectors = None
-        else:
-            raise g_exceptions.ModelError(model=cfg.MODEL)
-    else:
-        _pert_arg = (
-            "pert_mode: " + args["pert_mode"]
-            if "pert_mode" in args
-            else "single_shell_perturb: " + args["single_shell_perturb"]
-        )
-        raise g_exceptions.InvalidRuntimeArgument(
-            "Not a valid perturbation mode", argument=_pert_arg
-        )
-
-    # Make perturbations
-    perturbations = pt_utils.calculate_perturbations(
-        perturb_vectors, dev_plot_active=False, args=args
-    )
-
-    if raw_perturbations:
-        # Return raw perturbations
-        u_return = perturbations
-    else:
-        # Apply perturbations
-        u_return = u_init_profiles + perturbations
-
-    return u_return, perturb_positions
-
-
 def prepare_processes(
     u_profiles_perturbed: np.ndarray,
     perturb_positions: List[int],
@@ -531,7 +347,7 @@ def main_setup(
     # Initiate arrays
     # params.initiate_sdim_arrays(args["sdim"])
 
-    times_to_run, Nt_array = prepare_run_times(args)
+    times_to_run, Nt_array = r_utils.prepare_run_times(args)
 
     # If in 2. or higher breed cycle, the perturbation is given as input
     if u_profiles_perturbed is None:  # or perturb_positions is None:
@@ -541,19 +357,14 @@ def main_setup(
         if cfg.LICENCE == EXP.LYAPUNOV_VECTORS or cfg.LICENCE == EXP.SINGULAR_VECTORS:
             raw_perturbations = True
 
-        u_profiles_perturbed, perturb_positions = prepare_perturbations(
+        u_profiles_perturbed, perturb_positions = r_utils.prepare_perturbations(
             args, raw_perturbations=raw_perturbations
         )
 
     # Detect if other perturbations exist in the perturbation_folder and calculate
     # perturbation count to start at
-    # Check if path exists
     expected_path = pl.Path(args["datapath"], args["out_exp_folder"])
-    dir_exists = os.path.isdir(expected_path)
-    if dir_exists:
-        n_perturbation_files = len(list(expected_path.glob("*.csv")))
-    else:
-        n_perturbation_files = 0
+    n_perturbation_files = lib_file_utils.count_existing_files_or_dirs(expected_path)
 
     processes, data_out_list = prepare_processes(
         u_profiles_perturbed,
@@ -569,46 +380,6 @@ def main_setup(
         g_save.save_perturb_info(args=args, exp_setup=exp_setup)
 
     return processes, data_out_list, perturb_positions, u_profiles_perturbed
-
-
-def main_run(processes, args=None, n_units=None):
-    """Run the processes in parallel. The processes are distributed according
-    to the number of units to run
-
-    Parameters
-    ----------
-    processes : list
-        List of processes to run
-    args : dict, optional
-        Run-time arguments, by default None
-    n_units : int, optional
-        The number of units to run (e.g. blocks, vectors etc. depending on
-        the experiment license), by default None
-    """
-
-    cpu_count = multiprocessing.cpu_count()
-    num_processes = len(processes)
-
-    for j in range(num_processes // cpu_count):
-
-        for i in range(cpu_count):
-            count = j * cpu_count + i
-            processes[count].start()
-
-        for i in range(cpu_count):
-            count = j * cpu_count + i
-            processes[count].join()
-            processes[count].close()
-
-    for i in range(num_processes % cpu_count):
-
-        count = (num_processes // cpu_count) * cpu_count + i
-        processes[count].start()
-
-    for i in range(num_processes % cpu_count):
-        count = (num_processes // cpu_count) * cpu_count + i
-        processes[count].join()
-        processes[count].close()
 
 
 if __name__ == "__main__":
@@ -637,7 +408,7 @@ if __name__ == "__main__":
     profiler.start()
 
     processes, _, _, _ = main_setup(args=args)
-    main_run(processes, args=args)
+    pr_utils.main_run(processes)
 
     profiler.stop()
     print(profiler.output_text(color=True))

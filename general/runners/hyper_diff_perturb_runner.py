@@ -25,7 +25,8 @@ import general.utils.experiments.exp_utils as exp_utils
 import general.utils.exceptions as g_exceptions
 import general.utils.argument_parsers as a_parsers
 import general.utils.user_interface as g_ui
-import general.utils.runner_utils as r_utils
+import general.utils.running.runner_utils as r_utils
+import general.utils.process_utils as pr_utils
 import config as cfg
 
 # Get parameters for model
@@ -62,7 +63,7 @@ def main(args):
     processes.extend(temp_processes)
 
     if len(processes) > 0:
-        pt_runner.main_run(
+        pr_utils.main_run(
             processes,
             args=copy_args,
         )

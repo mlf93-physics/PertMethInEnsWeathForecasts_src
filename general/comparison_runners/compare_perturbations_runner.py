@@ -18,7 +18,7 @@ import general.runners.perturbation_runner as pt_runner
 import general.utils.argument_parsers as a_parsers
 import general.utils.experiments.exp_utils as exp_utils
 import general.utils.process_utils as pr_utils
-import general.utils.runner_utils as r_utils
+import general.utils.running.runner_utils as r_utils
 import general.utils.user_interface as g_ui
 import general.utils.util_funcs as g_utils
 from general.params.experiment_licences import Experiments as exp

@@ -17,7 +17,8 @@ import config as cfg
 import general.utils.argument_parsers as a_parsers
 import general.utils.experiments.exp_utils as exp_utils
 import general.utils.experiments.validate_exp_setups as ut_exp_val
-import general.utils.runner_utils as r_utils
+import general.utils.running.runner_utils as r_utils
+import general.utils.process_utils as pr_utils
 import general.utils.saving.save_data_funcs as g_save
 import general.utils.saving.save_utils as g_save_utils
 import general.utils.user_interface as g_ui
@@ -111,7 +112,7 @@ def main(args):
         processes.extend(temp_processes)
 
     if len(processes) > 0:
-        pt_runner.main_run(
+        pr_utils.main_run(
             processes,
             args=copy_args,
             n_units=min(args["n_units"], num_possible_units - n_existing_units),

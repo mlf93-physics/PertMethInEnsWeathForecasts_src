@@ -6,7 +6,7 @@ from pyinstrument import Profiler
 import numpy as np
 import general.utils.importing.import_data_funcs as g_import
 import general.utils.saving.save_perturbation as pt_save
-import general.runners.perturbation_runner as pt_runner
+import general.utils.running.runner_utils as r_utils
 import general.utils.exceptions as g_exceptions
 import general.utils.argument_parsers as a_parsers
 from general.params.model_licences import Models
@@ -285,7 +285,7 @@ def verify_tlm_model(args: dict):
     u_ref, _, ref_header_dict = g_import.import_start_u_profiles(args=args)
 
     # Prepare random perturbation
-    perturbations, perturb_positions = pt_runner.prepare_perturbations(
+    perturbations, perturb_positions = r_utils.prepare_perturbations(
         args, raw_perturbations=True
     )
     # Normalize perturbation
@@ -378,7 +378,7 @@ def verify_atlm_model(args: dict):
 
     # Prepare random perturbation
     # perturb = pt_utils.generate_rd_perturbations()
-    perturbations, _ = pt_runner.prepare_perturbations(args, raw_perturbations=True)
+    perturbations, _ = r_utils.prepare_perturbations(args, raw_perturbations=True)
     # Prepare arrays
     data_out = np.zeros((args["Nt"], params.sdim + 1), dtype=sparams.dtype)
     # Run verification multiple times

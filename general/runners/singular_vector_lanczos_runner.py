@@ -17,12 +17,14 @@ import pathlib as pl
 
 import config as cfg
 import general.runners.perturbation_runner as pt_runner
+import general.runners.iterative_unit_runner as it_unit_runner
 import general.utils.argument_parsers as a_parsers
 import general.utils.experiments.exp_utils as exp_utils
 import general.utils.experiments.validate_exp_setups as ut_exp_val
 import general.utils.importing.import_data_funcs as g_import
 import general.utils.perturb_utils as pt_utils
-import general.utils.runner_utils as r_utils
+import general.utils.process_utils as pr_utils
+import general.utils.running.runner_utils as r_utils
 import general.utils.saving.save_data_funcs as g_save
 import general.utils.saving.save_utils as g_save_utils
 import general.utils.saving.save_vector_funcs as v_save
@@ -38,6 +40,8 @@ if cfg.MODEL == Models.SHELL_MODEL:
     import shell_model_experiments.utils.util_funcs as sh_utils
     from shell_model_experiments.params.params import PAR as PAR_SH
     from shell_model_experiments.params.params import ParamsStructType
+
+    from shell_model_experiments.sabra_model.sabra_model import run_model as sh_model
 
     params = PAR_SH
     sparams = sh_sparams
@@ -72,6 +76,13 @@ def main(args: dict, exp_setup: dict = None):
 
     # Generate start times
     start_times, num_possible_units = r_utils.generate_start_times(exp_setup, args)
+    # Get index numbers of units to generate
+    unit_indices = np.arange(
+        n_existing_units,
+        min(args["n_profiles"] + n_existing_units, num_possible_units),
+        dtype=np.int32,
+    )
+    start_times = [start_times[index] for index in unit_indices]
 
     processes = []
     # Prepare arguments
@@ -101,153 +112,42 @@ def main(args: dict, exp_setup: dict = None):
     elif cfg.MODEL == Models.LORENTZ63:
         params.seeked_error_norm = 1
 
+    # Update start times
+    copy_args_tl["start_times"] = start_times
+    copy_args_atl["start_times"] = [
+        start_times[i] + exp_setup["integration_time"]
+        for i in range(args["n_profiles"])
+    ]
+
+    u_ref, _, ref_header_dict = g_import.import_start_u_profiles(args=copy_args_tl)
+
+    print("u_ref", u_ref.shape, u_ref)
+    exit()
     # Calculate the desired number of units
-    for i in range(
-        n_existing_units,
-        min(args["n_units"] + n_existing_units, num_possible_units),
-    ):
-        # Update start times
-        copy_args_tl["start_times"] = [start_times[i]]
-        copy_args_atl["start_times"] = [start_times[i] + exp_setup["integration_time"]]
+    # for i in range(
+    #     n_existing_units,
+    #     min(args["n_units"] + n_existing_units, num_possible_units),
+    # ):
 
-        # Prepare storage of sv vectors and -values
-        sv_matrix_store = np.empty(
-            (exp_setup["n_lanczos_iterations"], params.sdim, exp_setup["n_vectors"]),
-            dtype=sparams.dtype,
-        )
-        s_values_store = np.empty(
-            (exp_setup["n_lanczos_iterations"], exp_setup["n_vectors"]),
-            dtype=np.complex128,
-        )
+    processes, data_out_dict = it_unit_runner.main_setup(
+        args=args, exp_setup=exp_setup, u_ref=u_ref, n_existing_files=n_existing_units
+    )
 
-        for j in range(exp_setup["n_lanczos_iterations"]):
-            # Import reference data
-            u_ref, _, ref_header_dict = g_import.import_start_u_profiles(
-                args=copy_args_tl
-            )
+    pr_utils.main_run(processes)
 
-            # Initiate rescaled_perturbations
-            lanczos_outarray = None
+    # Set out folder
+    args["out_exp_folder"] = pl.Path(exp_setup["folder_name"])
 
-            # Initiate the Lanczos arrays and algorithm
-            propagated_vector: np.ndarray((params.sdim, 1)) = np.zeros(
-                (params.sdim, 1), dtype=sparams.dtype
-            )
-            input_vector: np.ndarray((params.sdim, 1)) = np.zeros(
-                (params.sdim, 1), dtype=sparams.dtype
-            )
-            lanczos_iterator = pt_utils.lanczos_vector_algorithm(
-                propagated_vector=propagated_vector,
-                input_vector_j=input_vector,
-                n_iterations=exp_setup["n_vectors"],
-            )
-
-            # Calculate the desired number of SVs
-            for _ in range(exp_setup["n_vectors"]):
-
-                # Run specified number of model iterations
-                for k in range(exp_setup["n_model_iterations"]):
-                    ###### TL model run ######
-                    # Add TL submodel attribute
-                    cfg.MODEL.submodel = "TL"
-                    # On all other iterations except the first, the rescaled
-                    # perturbations are used and are not None
-                    (
-                        processes,
-                        data_out_list,
-                        _,
-                        u_profiles_perturbed,
-                    ) = pt_runner.main_setup(
-                        copy_args_tl,
-                        u_profiles_perturbed=lanczos_outarray,
-                        exp_setup=exp_setup,
-                        u_ref=u_ref,
-                    )
-
-                    # Store the initial perturbation vector
-                    if k == 0:
-                        store_u_profiles_perturbed = np.copy(
-                            u_profiles_perturbed[sparams.u_slice]
-                        )
-
-                    if len(processes) > 0:
-                        pt_runner.main_run(
-                            processes,
-                            args=copy_args_tl,
-                        )
-                    else:
-                        print("No processes to run - check if units already exists")
-
-                    ###### Adjoint model run ######
-                    # Add ATL submodel attribute
-                    cfg.MODEL.submodel = "ATL"
-                    processes, data_out_list, _, _ = pt_runner.main_setup(
-                        copy_args_atl,
-                        u_profiles_perturbed=np.pad(
-                            np.array(data_out_list).T,
-                            pad_width=((params.bd_size, params.bd_size), (0, 0)),
-                            mode="constant",
-                        ),
-                        exp_setup=exp_setup,
-                        u_ref=u_ref,
-                    )
-
-                    if len(processes) > 0:
-                        # Run specified number of iterations
-                        pt_runner.main_run(
-                            processes,
-                            args=copy_args_atl,
-                        )
-
-                        lanczos_outarray = pt_utils.rescale_perturbations(
-                            data_out_list, copy_args_atl, raw_perturbations=True
-                        )
-
-                    else:
-                        print("No processes to run - check if units already exists")
-
-                # Update arrays for the lanczos algorithm
-                propagated_vector[:, :] = np.reshape(data_out_list[0], (params.sdim, 1))
-                input_vector[:, :] = store_u_profiles_perturbed
-                # Iterate the Lanczos algorithm one step
-                lanczos_outarray, tridiag_matrix, input_vector_matrix = next(
-                    lanczos_iterator
-                )
-                lanczos_outarray = np.pad(
-                    lanczos_outarray,
-                    pad_width=((params.bd_size, params.bd_size), (0, 0)),
-                    mode="constant",
-                )
-            # Calculate SVs from eigen vectors of tridiag_matrix
-            sv_matrix, s_values = pt_utils.calculate_svs(
-                tridiag_matrix, input_vector_matrix
-            )
-
-            sv_matrix_store[j, :, :] = sv_matrix
-            s_values_store[j, :] = s_values
-
-        # Set out folder
-        args["out_exp_folder"] = pl.Path(exp_setup["folder_name"])
-        # Reset submodel
-        cfg.MODEL.submodel = None
-
-        # Do averaging
-        sv_matrix_average = np.mean(sv_matrix_store, axis=0)
-        s_values_average = np.mean(s_values_store, axis=0)
-
-        # Save singular vectors
+    # Save singular vectors
+    for unit in data_out_dict.keys():
         v_save.save_vector_unit(
-            sv_matrix_average.T,
-            characteristic_values=s_values_average,
-            perturb_position=int(round(start_times[i] * params.tts)),
-            unit=i,
+            data_out_dict[unit]["sv_matrix"].T,
+            characteristic_values=data_out_dict[unit]["s_values"],
+            perturb_position=int(round(start_times[unit] * params.tts)),
+            unit=unit,
             args=args,
             exp_setup=exp_setup,
         )
-        # fig, axes = plt.subplots(nrows=2, ncols=1)
-        # sb.heatmap(sv_matrix_store[:, :, 0].T, ax=axes[0])
-        # axes[1].plot(s_values_store)
-        # plt.show()
 
     # Reset exp_folder
     args["out_exp_folder"] = exp_setup["folder_name"]
@@ -265,6 +165,129 @@ def main(args: dict, exp_setup: dict = None):
     if args["erda_run"]:
         path = pl.Path(args["datapath"], exp_setup["folder_name"])
         g_save_utils.compress_dir(path)
+
+
+def sv_generator1(
+    exp_setup,
+    copy_args,
+    u_ref,
+):
+
+    # Initiate rescaled_perturbations
+    lanczos_outarray = None
+
+    # Initiate the Lanczos arrays and algorithm
+    propagated_vector: np.ndarray((params.sdim, 1)) = np.zeros(
+        (params.sdim, 1), dtype=sparams.dtype
+    )
+    input_vector: np.ndarray((params.sdim, 1)) = np.zeros(
+        (params.sdim, 1), dtype=sparams.dtype
+    )
+    lanczos_iterator = pt_utils.lanczos_vector_algorithm(
+        propagated_vector=propagated_vector,
+        input_vector_j=input_vector,
+        n_iterations=exp_setup["n_vectors"],
+    )
+
+    sv_matrix = np.zeros(
+        (params.sdim, exp_setup["n_vectors"]),
+        dtype=sparams.dtype,
+    )
+    s_values = np.zeros(
+        exp_setup["n_vectors"],
+        dtype=np.complex128,
+    )
+    # Average over multiple iterations of the lanczos algorithm
+    for _ in range(exp_setup["n_lanczos_iterations"]):
+        # Calculate the desired number of SVs
+        for _ in range(exp_setup["n_vectors"]):
+            # Run specified number of model iterations
+            for k in range(exp_setup["n_model_iterations"]):
+                ###### TL model run ######
+                # Add TL submodel attribute
+                cfg.MODEL.submodel = "TL"
+                # On all other iterations except the first, the rescaled
+                # perturbations are used and are not None
+                (
+                    processes,
+                    data_out_list,
+                    _,
+                    u_profiles_perturbed,
+                ) = pt_runner.main_setup(
+                    copy_args,
+                    u_profiles_perturbed=lanczos_outarray,
+                    exp_setup=exp_setup,
+                    u_ref=u_ref,
+                )
+
+                # Store the initial perturbation vector
+                if k == 0:
+                    store_u_profiles_perturbed = np.copy(
+                        u_profiles_perturbed[sparams.u_slice]
+                    )
+
+                if len(processes) > 0:
+                    pr_utils.main_run(
+                        processes,
+                        args=copy_args,
+                    )
+                else:
+                    print("No processes to run - check if units already exists")
+
+                    ###### Adjoint model run ######
+                    # Add ATL submodel attribute
+                cfg.MODEL.submodel = "ATL"
+                processes, data_out_list, _, _ = pt_runner.main_setup(
+                    copy_args,
+                    u_profiles_perturbed=np.pad(
+                        np.array(data_out_list).T,
+                        pad_width=((params.bd_size, params.bd_size), (0, 0)),
+                        mode="constant",
+                    ),
+                    exp_setup=exp_setup,
+                    u_ref=u_ref,
+                )
+
+                if len(processes) > 0:
+                    # Run specified number of iterations
+                    pr_utils.main_run(
+                        processes,
+                        args=copy_args,
+                    )
+
+                    lanczos_outarray = pt_utils.rescale_perturbations(
+                        data_out_list, copy_args, raw_perturbations=True
+                    )
+
+                else:
+                    print("No processes to run - check if units already exists")
+
+            # Update arrays for the lanczos algorithm
+            propagated_vector[:, :] = np.reshape(data_out_list[0], (params.sdim, 1))
+            input_vector[:, :] = store_u_profiles_perturbed
+            # Iterate the Lanczos algorithm one step
+            lanczos_outarray, tridiag_matrix, input_vector_matrix = next(
+                lanczos_iterator
+            )
+            lanczos_outarray = np.pad(
+                lanczos_outarray,
+                pad_width=((params.bd_size, params.bd_size), (0, 0)),
+                mode="constant",
+            )
+
+        # Calculate SVs from eigen vectors of tridiag_matrix
+        temp_sv_matrix, temp_s_values = pt_utils.calculate_svs(
+            tridiag_matrix, input_vector_matrix
+        )
+
+        sv_matrix += temp_sv_matrix
+        s_values += temp_s_values
+
+    # Average singular vectors and values
+    sv_matrix /= exp_setup["n_lanczos_iterations"]
+    s_values /= exp_setup["n_lanczos_iterations"]
+
+    return sv_matrix, s_values
 
 
 if __name__ == "__main__":
