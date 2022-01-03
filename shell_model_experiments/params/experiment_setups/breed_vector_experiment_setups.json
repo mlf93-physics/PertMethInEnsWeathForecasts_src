@@ -41,5 +41,16 @@
         "eval_times": [
             11.5
         ]
+    },
+    "TestRun4": {
+        "folder_name": "pt_vectors/test_bv1",
+        "sub_exp_folder": "perturb_data",
+        "integration_time": 0.01,
+        "n_cycles": 4,
+        "n_vectors": 8,
+        "vector_offset": 0.01,
+        "eval_times": [
+            11.22
+        ]
     }
 }

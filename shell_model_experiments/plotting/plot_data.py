@@ -73,6 +73,7 @@ def plot_energy_spectrum(
     )
     title_suffix: str = ""
     color = plot_kwargs["color"] if "color" in plot_kwargs else None
+    linestyle = plot_kwargs["linestyle"] if "linestyle" in plot_kwargs else None
 
     # Fit the slope of the spectrum
     k_vectors = np.log2(PAR.k_vec_temp)
@@ -90,12 +91,7 @@ def plot_energy_spectrum(
         title_suffix += "rel. fit, "
 
     # Plot energy spectrum
-    axes.plot(
-        k_vectors,
-        mean_energy,
-        label=label,
-        color=color,
-    )
+    axes.plot(k_vectors, mean_energy, label=label, color=color, linestyle=linestyle)
 
     # Axes setup
     axes.set_yscale("log")
@@ -467,14 +463,9 @@ def plot_energy_per_shell(
 
 def plots_related_to_energy(args=None, axes=None, plot_args=["detailed_title"]):
 
-    # Import reference data
-    time, u_data, header_dict = g_import.import_ref_data(args=args)
-
     # Conserning ny
     # plot_energy_spectrum(u_data, header_dict, args=args)
-    g_plt_data.plot_energy(
-        time, u_data, header_dict, axes=axes, args=args, plot_args=plot_args
-    )
+    g_plt_data.plot_energy(args, axes=axes, plot_args=plot_args)
     # plot_energy_per_shell(time, u_data, header_dict, path=args["datapath"], args=args)
 
 
@@ -1050,7 +1041,7 @@ def plot_howmoller_diagram_u_energy(args=None, plt_args: list = ["rel_mean"]):
         # energy_rel_mean_array = np.clip(energy_rel_mean_array, -15, None)
 
         # Get cmap
-        cmap, norm = g_plt_utils.get_cmap_distributed_around_zero(
+        cmap, norm = g_plt_utils.get_custom_cmap(
             vmin=np.min(energy_rel_mean_array),
             vmax=np.max(energy_rel_mean_array),
             neg_thres=0.4,
@@ -1118,7 +1109,7 @@ def plot_howmoller_diagram_helicity(args=None, plt_args: list = ["rel_mean"]):
         helicity_rel_mean_array = np.clip(helicity_rel_mean_array, vmin, vmax)
 
         # Get cmap
-        cmap, norm = g_plt_utils.get_cmap_distributed_around_zero(
+        cmap, norm = g_plt_utils.get_custom_cmap(
             vmin=vmin,
             vmax=vmax,
             neg_thres=0.4,
@@ -1211,7 +1202,13 @@ if __name__ == "__main__":
         if args["datapath"] is None:
             print("No path specified to analyse error norms.")
         else:
-            g_plt_data.plot_error_norm_vs_time(args=args)
+            g_plt_data.plot_error_norm_vs_time(
+                args=args,
+                legend_on=False,
+                # cmap_list=["blue"],
+                plot_args=[],
+                normalize_start_time=False,
+            )
 
     if "error_spectrum_vs_time" in args["plot_type"]:
         plot_error_energy_spectrum_vs_time_2D(args=args)
@@ -1244,7 +1241,7 @@ if __name__ == "__main__":
         plot_howmoller_diagram_u_energy(args=args, plt_args=["rel_mean"])
 
     if "hel_howmoller_rel_mean" in args["plot_type"]:
-        plot_howmoller_diagram_helicity(args=args, plt_args=[])
+        plot_howmoller_diagram_helicity(args=args, plt_args=["rel_mean"])
 
     if "helicity_spectrum" in args["plot_type"]:
         _, u_data, header_dict = g_import.import_ref_data(args=args)

@@ -9,6 +9,7 @@ def save_perturbation_data(
     data_out: np.ndarray,
     perturb_position: int = None,
     perturb_count: int = None,
+    run_count: int = None,
     args: dict = None,
 ):
     """Save the perturbation data depending on the LICENCE
@@ -40,6 +41,10 @@ def save_perturbation_data(
         prefix = f"lyapunov_perturb{perturb_count}_"
     elif cfg.LICENCE == EXP.HYPER_DIFFUSIVITY:
         prefix = f"hyper_perturb{perturb_count}_"
+    elif cfg.LICENCE == EXP.SINGULAR_VECTORS:
+        prefix = f"singular_vector_perturb{perturb_count}_"
+    elif cfg.LICENCE == EXP.VERIFICATION:
+        prefix = f"verification_perturb{perturb_count}_"
     else:
         print(f"No saving method present for the current licence ({cfg.LICENCE})")
 
@@ -47,5 +52,6 @@ def save_perturbation_data(
         data_out,
         prefix=prefix,
         perturb_position=perturb_position,
+        run_count=run_count,
         args=args,
     )

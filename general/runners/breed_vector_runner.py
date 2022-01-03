@@ -21,20 +21,23 @@ import general.utils.saving.save_utils as g_save_utils
 import general.utils.saving.save_vector_funcs as v_save
 import general.utils.user_interface as g_ui
 import general.utils.util_funcs as g_utils
-import lorentz63_experiments.params.params as l63_params
-from shell_model_experiments.params.params import ParamsStructType
-from shell_model_experiments.params.params import PAR as PAR_SH
-import shell_model_experiments.utils.util_funcs as sh_utils
-import shell_model_experiments.utils.special_params as sh_sparams
-import lorentz63_experiments.params.special_params as l63_sparams
+from libs.libutils import file_utils as lib_file_utils
 from general.params.model_licences import Models
 from pyinstrument import Profiler
 
 # Get parameters for model
 if cfg.MODEL == Models.SHELL_MODEL:
+    from shell_model_experiments.params.params import ParamsStructType
+    from shell_model_experiments.params.params import PAR as PAR_SH
+    import shell_model_experiments.utils.util_funcs as sh_utils
+    import shell_model_experiments.utils.special_params as sh_sparams
+
     params = PAR_SH
     sparams = sh_sparams
 elif cfg.MODEL == Models.LORENTZ63:
+    import lorentz63_experiments.params.params as l63_params
+    import lorentz63_experiments.params.special_params as l63_sparams
+
     params = l63_params
     sparams = l63_sparams
 
@@ -43,6 +46,16 @@ cfg.GLOBAL_PARAMS.ref_run = False
 
 
 def main(args: dict, exp_setup: dict = None):
+    """Run the BREED VECTOR experiment to generate breed vectors based on the
+    reference records
+
+    Parameters
+    ----------
+    args : dict
+        Run-time arguments
+    exp_setup : dict, optional
+        The experiment setup, by default None
+    """
     if exp_setup is None:
         # Set exp_setup path
         exp_file_path = pl.Path(
@@ -52,7 +65,7 @@ def main(args: dict, exp_setup: dict = None):
         exp_setup = exp_utils.get_exp_setup(exp_file_path, args)
 
     # Get number of existing blocks
-    n_existing_units = g_utils.count_existing_files_or_dirs(
+    n_existing_units = lib_file_utils.count_existing_files_or_dirs(
         search_path=pl.Path(args["datapath"], exp_setup["folder_name"]),
         search_pattern="breed_vector*.csv",
     )
@@ -99,7 +112,7 @@ def main(args: dict, exp_setup: dict = None):
             if copy_args["save_last_pert"] and (j + 1) == exp_setup["n_cycles"]:
                 copy_args["skip_save_data"] = False
 
-            processes, data_out_list, perturb_positions = pt_runner.main_setup(
+            processes, data_out_list, perturb_positions, _ = pt_runner.main_setup(
                 copy_args,
                 u_profiles_perturbed=rescaled_data,
                 perturb_positions=perturb_positions,
@@ -156,7 +169,8 @@ if __name__ == "__main__":
     # Shell model specific
     if cfg.MODEL == Models.SHELL_MODEL:
         # Initiate and update variables and arrays
-        sh_utils.update_dependent_params(params, sdim=int(args["sdim"]))
+        sh_utils.update_dependent_params(params)
+        sh_utils.set_params(params, parameter="sdim", value=args["sdim"])
         sh_utils.update_arrays(params)
         # Add ny argument
         args["ny"] = sh_utils.ny_from_ny_n_and_forcing(
@@ -164,6 +178,7 @@ if __name__ == "__main__":
         )
 
     g_ui.confirm_run_setup(args)
+    r_utils.adjust_run_setup(args)
 
     # Make profiler
     profiler = Profiler()

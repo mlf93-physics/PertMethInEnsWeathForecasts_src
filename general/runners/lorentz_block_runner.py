@@ -22,19 +22,22 @@ import general.utils.saving.save_data_funcs as g_save
 import general.utils.saving.save_utils as g_save_utils
 import general.utils.user_interface as g_ui
 import general.utils.util_funcs as g_utils
-import lorentz63_experiments.params.params as l63_params
-import shell_model_experiments.utils.util_funcs as sh_utils
+from libs.libutils import file_utils as lib_file_utils
 from general.params.env_params import *
 from general.params.model_licences import Models
-from shell_model_experiments.params.params import PAR as PAR_SH
-from shell_model_experiments.params.params import ParamsStructType
 
 import perturbation_runner as pt_runner
 
 # Get parameters for model
 if cfg.MODEL == Models.SHELL_MODEL:
+    import shell_model_experiments.utils.util_funcs as sh_utils
+    from shell_model_experiments.params.params import PAR as PAR_SH
+    from shell_model_experiments.params.params import ParamsStructType
+
     params = PAR_SH
 elif cfg.MODEL == Models.LORENTZ63:
+    import lorentz63_experiments.params.params as l63_params
+
     params = l63_params
 
 # Set global params
@@ -51,7 +54,7 @@ def main(args):
     ut_exp_val.validate_lorentz_block_setup(exp_setup=exp_setup)
 
     # Get number of existing blocks
-    n_existing_units = g_utils.count_existing_files_or_dirs(
+    n_existing_units = lib_file_utils.count_existing_files_or_dirs(
         search_path=pl.Path(args["datapath"], exp_setup["folder_name"]),
         search_pattern="/",
     )
@@ -92,7 +95,7 @@ def main(args):
         # Copy args in order not override in forecast processes
         copy_args = copy.deepcopy(args)
 
-        temp_processes, _, _ = pt_runner.main_setup(copy_args)
+        temp_processes, _, _, _ = pt_runner.main_setup(copy_args)
         processes.extend(temp_processes)
 
         # Make forecasts
@@ -104,7 +107,7 @@ def main(args):
         args["out_exp_folder"] = f"{parent_perturb_folder}/forecasts"
 
         copy_args = copy.deepcopy(args)
-        temp_processes, _, _ = pt_runner.main_setup(copy_args)
+        temp_processes, _, _, _ = pt_runner.main_setup(copy_args)
         processes.extend(temp_processes)
 
     if len(processes) > 0:
@@ -133,10 +136,12 @@ if __name__ == "__main__":
     mult_pert_arg_setup.setup_parser()
     args = mult_pert_arg_setup.args
     g_ui.confirm_run_setup(args)
+    r_utils.adjust_run_setup(args)
 
     if cfg.MODEL == Models.SHELL_MODEL:
         # Initiate and update variables and arrays
-        sh_utils.update_dependent_params(params, sdim=int(args["sdim"]))
+        sh_utils.update_dependent_params(params)
+        sh_utils.set_params(params, parameter="sdim", value=args["sdim"])
         sh_utils.update_arrays(params)
 
     main(args)

@@ -25,6 +25,7 @@ import general.utils.experiments.exp_utils as exp_utils
 import general.utils.exceptions as g_exceptions
 import general.utils.argument_parsers as a_parsers
 import general.utils.user_interface as g_ui
+import general.utils.runner_utils as r_utils
 import config as cfg
 
 # Get parameters for model
@@ -57,7 +58,7 @@ def main(args):
     )
 
     copy_args = copy.deepcopy(args)
-    temp_processes, _, _ = pt_runner.main_setup(copy_args)
+    temp_processes, _, _, _ = pt_runner.main_setup(copy_args)
     processes.extend(temp_processes)
 
     if len(processes) > 0:
@@ -88,9 +89,11 @@ if __name__ == "__main__":
     args = pert_arg_setup.args
 
     # Initiate and update variables and arrays
-    sh_utils.update_dependent_params(params, sdim=int(args["sdim"]))
+    sh_utils.update_dependent_params(params)
+    sh_utils.set_params(params, parameter="sdim", value=args["sdim"])
     sh_utils.update_arrays(params)
 
     g_ui.confirm_run_setup(args)
+    r_utils.adjust_run_setup(args)
 
     main(args)

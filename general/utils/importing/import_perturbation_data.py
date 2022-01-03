@@ -3,12 +3,8 @@ import pathlib as pl
 import random
 import itertools as it
 import numpy as np
-from shell_model_experiments.params.params import ParamsStructType
-from shell_model_experiments.params.params import PAR as PAR_SH
-import lorentz63_experiments.params.params as l63_params
-import shell_model_experiments.utils.special_params as sh_sparams
-import lorentz63_experiments.params.special_params as l63_sparams
 import general.utils.util_funcs as g_utils
+from libs.libutils import file_utils as lib_file_utils
 import general.utils.importing.import_data_funcs as g_import
 import general.utils.exceptions as g_exceptions
 from general.utils.module_import.type_import import *
@@ -17,9 +13,16 @@ import config as cfg
 
 # Get parameters for model
 if cfg.MODEL == Models.SHELL_MODEL:
+    from shell_model_experiments.params.params import ParamsStructType
+    from shell_model_experiments.params.params import PAR as PAR_SH
+    import shell_model_experiments.utils.special_params as sh_sparams
+
     params = PAR_SH
     sparams = sh_sparams
 elif cfg.MODEL == Models.LORENTZ63:
+    import lorentz63_experiments.params.params as l63_params
+    import lorentz63_experiments.params.special_params as l63_sparams
+
     params = l63_params
     sparams = l63_sparams
 
@@ -68,7 +71,9 @@ def import_lorentz_block_perturbations(args=None, raw_perturbations=True):
     )
 
     # Get sorted file paths
-    ref_record_names_sorted = g_utils.get_sorted_ref_record_names(args=args)
+    ref_record_files_sorted = lib_file_utils.get_files_in_path(
+        pl.Path(args["datapath"], "ref_data")
+    )
 
     ref_file_counter = 0
     perturb_index = 0
@@ -106,7 +111,7 @@ def import_lorentz_block_perturbations(args=None, raw_perturbations=True):
 
         # Import reference u vectors
         ref_data_in, ref_header_dict = g_import.import_data(
-            ref_record_names_sorted[ref_file_match_keys_array[ref_file_counter]],
+            ref_record_files_sorted[ref_file_match_keys_array[ref_file_counter]],
             start_line=start_index,
             max_lines=perturb_offset * (num_blocks),
             step=perturb_offset,
@@ -175,14 +180,16 @@ def import_profiles_for_nm_analysis(args: dict = None) -> Tuple[np.ndarray, dict
     num_profiles = n_profiles * n_runs_per_profile
 
     # Get sorted file paths
-    ref_record_names_sorted = g_utils.get_sorted_ref_record_names(args=args)
+    ref_record_files_sorted = lib_file_utils.get_files_in_path(
+        pl.Path(args["datapath"], "ref_data")
+    )
 
     ref_header_dict = g_import.import_info_file(pl.Path(args["datapath"], "ref_data"))
 
-    num_ref_records = len(ref_record_names_sorted)
+    num_ref_records = len(ref_record_files_sorted)
     profiles = []
 
-    for ifile, ref_file in enumerate(ref_record_names_sorted):
+    for ifile, ref_file in enumerate(ref_record_files_sorted):
         with open(ref_file) as file:
             lines = random.sample(
                 list(it.chain(file)),
@@ -209,7 +216,7 @@ def import_profiles_for_nm_analysis(args: dict = None) -> Tuple[np.ndarray, dict
 
 
 def import_perturb_vectors(
-    args: dict,
+    args: dict, raw_perturbations: bool = False, dtype=None
 ) -> Tuple[np.ndarray, np.ndarray, List[int], List[dict]]:
     """Import units of perturbation vectors, e.g. BVs or SVs
 
@@ -289,24 +296,44 @@ def import_perturb_vectors(
         _,
     ) = g_import.import_start_u_profiles(args=args)
 
-    vector_units = []
+    vector_units = np.empty(
+        (args["n_files"], args["n_runs_per_profile"], params.sdim), dtype=np.float64
+    )
+
+    characteristic_values = np.zeros(
+        (args["n_files"], args["n_runs_per_profile"]), dtype=np.complex128
+    )
 
     for i, file_name in enumerate(perturb_file_names):
         vector_unit, _ = g_import.import_data(
             file_name,
-            max_lines=args["n_runs_per_profile"] + 1,
+            max_lines=args["n_runs_per_profile"],
+            dtype=dtype,
+            start_line=args["specific_start_vector"] + 1,
         )
 
-        vector_units.append(vector_unit)
+        # Skip characteristic value if present
+        if vector_unit.shape[1] == params.sdim + 1:
+            characteristic_values[i, :] = vector_unit[:, 0]
+            vector_units[i, :, :] = vector_unit[:, 1:].real
+        else:
+            vector_units[i, :, :] = vector_unit.real
+
         if i + 1 >= args["n_files"]:
             break
 
-    vector_units = np.array(vector_units)
-    # u_init_profiles is reshaped to fit shape (n_units, n_runs_per_profile, sdim)
-    # of vector_units array
-    vector_units = vector_units - np.reshape(
-        u_init_profiles[sparams.u_slice, :].T,
-        (args["n_files"], args["n_runs_per_profile"], params.sdim),
-    )
+    if not raw_perturbations:
+        # u_init_profiles is reshaped to fit shape (n_units, n_runs_per_profile, sdim)
+        # of vector_units array
+        vector_units = vector_units - np.reshape(
+            u_init_profiles[sparams.u_slice, :].T,
+            (args["n_files"], args["n_runs_per_profile"], params.sdim),
+        )
 
-    return vector_units, u_init_profiles, eval_pos, perturb_header_dicts
+    return (
+        vector_units,
+        characteristic_values,
+        u_init_profiles,
+        eval_pos,
+        perturb_header_dicts,
+    )

@@ -12,6 +12,16 @@ python ../general/runners/perturbation_runner.py
 --start_times 4 8
 --pert_mode=rd
 
+or
+
+python ../general/runners/perturbation_runner.py
+--out_exp_folder=test2
+--time_to_run=0.1
+--n_runs_per_profile=4
+--pert_mode=bv_eof
+--pert_vector_folder=pt_vectors
+--exp_folder=shell_model_breed_vectors_4cycles
+
 """
 
 import os
@@ -23,7 +33,6 @@ import multiprocessing
 import pathlib as pl
 
 import config as cfg
-import general.analyses.breed_vector_eof_analysis as bv_eof_anal
 import general.utils.argument_parsers as a_parsers
 import general.utils.exceptions as g_exceptions
 import general.utils.importing.import_data_funcs as g_import
@@ -32,31 +41,48 @@ import general.utils.perturb_utils as pt_utils
 import general.utils.saving.save_data_funcs as g_save
 import general.utils.saving.save_perturbation as pt_save
 import general.utils.user_interface as g_ui
+import general.utils.runner_utils as r_utils
 import general.utils.util_funcs as g_utils
-import lorentz63_experiments.params.params as l63_params
-import lorentz63_experiments.params.special_params as l63_sparams
-import lorentz63_experiments.perturbations.normal_modes as l63_nm_estimator
-import lorentz63_experiments.utils.util_funcs as ut_funcs
 import numpy as np
-import shell_model_experiments.perturbations.normal_modes as sh_nm_estimator
-import shell_model_experiments.utils.special_params as sh_sparams
-import shell_model_experiments.utils.util_funcs as sh_utils
 from general.params.experiment_licences import Experiments as EXP
 from general.params.model_licences import Models
 from general.utils.module_import.type_import import *
-from lorentz63_experiments.lorentz63_model.lorentz63 import run_model as l63_model
-from lorentz63_experiments.lorentz63_model.tl_lorentz63 import run_model as l63_tl_model
 from pyinstrument import Profiler
-from shell_model_experiments.params.params import PAR as PAR_SH
-from shell_model_experiments.params.params import ParamsStructType
-from shell_model_experiments.sabra_model.sabra_model import run_model as sh_model
-from shell_model_experiments.sabra_model.tl_sabra_model import run_model as sh_tl_model
 
-# Get parameters for model
 if cfg.MODEL == Models.SHELL_MODEL:
-    params = PAR_SH
+    # Shell model specific imports
+    import shell_model_experiments.perturbations.normal_modes as sh_nm_estimator
+    import shell_model_experiments.utils.special_params as sh_sparams
+    import shell_model_experiments.utils.util_funcs as ut_funcs
+    from shell_model_experiments.params.params import PAR
+    from shell_model_experiments.params.params import ParamsStructType
+    from shell_model_experiments.sabra_model.tl_sabra_model import (
+        run_model as sh_tl_model,
+    )
+    from shell_model_experiments.sabra_model.atl_sabra_model import (
+        run_model as sh_atl_model,
+    )
+
+    from shell_model_experiments.sabra_model.sabra_model import run_model as sh_model
+
+    # Get parameters for model
+    params = PAR
     sparams = sh_sparams
 elif cfg.MODEL == Models.LORENTZ63:
+    # Lorentz-63 model specific imports
+    import lorentz63_experiments.params.params as l63_params
+    import lorentz63_experiments.params.special_params as l63_sparams
+    import lorentz63_experiments.perturbations.normal_modes as l63_nm_estimator
+    import lorentz63_experiments.utils.util_funcs as ut_funcs
+    from lorentz63_experiments.lorentz63_model.lorentz63 import run_model as l63_model
+    from lorentz63_experiments.lorentz63_model.tl_lorentz63 import (
+        run_model as l63_tl_model,
+    )
+    from lorentz63_experiments.lorentz63_model.atl_lorentz63 import (
+        run_model as l63_atl_model,
+    )
+
+    # Get parameters for model
     params = l63_params
     sparams = l63_sparams
 
@@ -67,7 +93,6 @@ cfg.GLOBAL_PARAMS.ref_run = False
 def perturbation_runner(
     u_old: np.ndarray,
     perturb_positions: List[int],
-    du_array: np.ndarray,
     data_out_list: List[np.ndarray],
     args: dict,
     run_count: int,
@@ -82,8 +107,6 @@ def perturbation_runner(
         The previous velocity vector (i.e. the initial vel. vector)
     perturb_positions : List[int]
         List of perturbation index positions
-    du_array : np.ndarray
-        Array to store the du vector
     data_out_list : List[np.ndarray]
         List to store output data from processes (i.e. when LICENCE = BREEDING_VECTORS)
     args : dict
@@ -109,77 +132,138 @@ def perturbation_runner(
         + f" {run_count % args['n_runs_per_profile']}"
     )
     if cfg.MODEL == Models.SHELL_MODEL:
+        # Get diffusion functions
+        if args["diff_type"] == "inf_hyper":
+            diff_function = ut_funcs.infinit_hyper_diffusion
+        else:
+            diff_function = ut_funcs.normal_diffusion
+
         if cfg.MODEL.submodel is None:
             sh_model(
+                diff_function,
                 u_old,
                 data_out,
                 args["Nt"] + args["endpoint"] * 1,
                 args["ny"],
                 args["forcing"],
                 args["diff_exponent"],
-                params,
-            )
-        elif cfg.MODEL.submodel == "TL":
-            sh_tl_model(
-                u_old,
-                np.copy(u_ref[:, run_count]),
-                data_out,
-                args["Nt"] + args["endpoint"] * 1,
-                args["ny"],
-                args["diff_exponent"],
-                args["forcing"],
                 params,
             )
         else:
-            g_exceptions.ModelError(
-                "Submodel invalid or not implemented yet",
-                model=f"{cfg.MODEL.submodel} {cfg.MODEL}",
-            )
+            # Initialise the Jacobian and diagonal arrays
+            (
+                J_matrix,
+                diagonal0,
+                diagonal1,
+                diagonal2,
+                diagonal_1,
+                diagonal_2,
+            ) = sh_nm_estimator.init_jacobian()
+
+            if cfg.MODEL.submodel == "TL":
+                sh_tl_model(
+                    u_old,
+                    np.copy(u_ref[:, run_count]),
+                    data_out,
+                    args["Nt"] + args["endpoint"] * 1,
+                    args["ny"],
+                    args["diff_exponent"],
+                    args["forcing"],
+                    params,
+                    J_matrix,
+                    diagonal0,
+                    diagonal1,
+                    diagonal2,
+                    diagonal_1,
+                    diagonal_2,
+                )
+            elif cfg.MODEL.submodel == "ATL":
+                sh_atl_model(
+                    u_old,
+                    np.copy(u_ref[:, run_count]),
+                    data_out,
+                    args["Nt"] + args["endpoint"] * 1,
+                    args["ny"],
+                    args["diff_exponent"],
+                    args["forcing"],
+                    params,
+                    J_matrix,
+                    diagonal0,
+                    diagonal1,
+                    diagonal2,
+                    diagonal_1,
+                    diagonal_2,
+                )
+            else:
+                g_exceptions.ModelError(
+                    "Submodel invalid or not implemented yet",
+                    model=f"{cfg.MODEL.submodel} {cfg.MODEL}",
+                )
     elif cfg.MODEL == Models.LORENTZ63:
+        # General model setup
+        lorentz_matrix = ut_funcs.setup_lorentz_matrix(args)
+
+        # Submodel specific setup
         if cfg.MODEL.submodel is None:
-            # Model specific setup
-            deriv_matrix = ut_funcs.setup_deriv_matrix(args)
             l63_model(
                 u_old,
-                du_array,
-                deriv_matrix,
+                lorentz_matrix,
                 data_out,
                 args["Nt"] + args["endpoint"] * 1,
             )
-        elif cfg.MODEL.submodel == "TL":
-            deriv_matrix = l63_nm_estimator.init_jacobian(args)
-
-            l63_tl_model(
-                u_old,
-                du_array,
-                u_ref,
-                deriv_matrix,
-                data_out,
-                args["Nt"] + args["endpoint"] * 1,
-                r_const=args["r_const"],
-            )
-
-            # Add reference data to TL model trajectory, since only the perturbation
-            # is integrated in the model
-            data_out[:, 1:] += u_ref
-
         else:
-            g_exceptions.ModelError(
-                "Submodel invalid or not implemented yet",
-                model=f"{cfg.MODEL.submodel} {cfg.MODEL}",
-            )
+            # Common to all submodels
+            jacobian_matrix = l63_nm_estimator.init_jacobian(args)
+
+            if cfg.MODEL.submodel == "TL":
+                l63_tl_model(
+                    u_old,
+                    np.copy(u_ref[:, run_count]),
+                    lorentz_matrix,
+                    jacobian_matrix,
+                    data_out,
+                    args["Nt"] + args["endpoint"] * 1,
+                    r_const=args["r_const"],
+                    raw_perturbation=True,
+                )
+            elif cfg.MODEL.submodel == "ATL":
+                l63_atl_model(
+                    np.reshape(u_old, (params.sdim, 1)),
+                    np.copy(u_ref[:, run_count]),
+                    lorentz_matrix,
+                    jacobian_matrix,
+                    data_out,
+                    args["Nt"] + args["endpoint"] * 1,
+                    r_const=args["r_const"],
+                    raw_perturbation=True,
+                )
+            else:
+                g_exceptions.ModelError(
+                    "Submodel invalid or not implemented yet",
+                    model=f"{cfg.MODEL.submodel} {cfg.MODEL}",
+                )
 
     if not args["skip_save_data"]:
         pt_save.save_perturbation_data(
             data_out,
             perturb_position=perturb_positions[run_count // args["n_runs_per_profile"]],
             perturb_count=perturb_count,
+            run_count=run_count,
             args=args,
         )
 
-    if cfg.LICENCE == EXP.BREEDING_VECTORS or cfg.LICENCE == EXP.LYAPUNOV_VECTORS:
-        # Save latest state vector to output dir
-        data_out_list.append(data_out[-1, 1:])
+    if (
+        cfg.LICENCE == EXP.BREEDING_VECTORS
+        or cfg.LICENCE == EXP.LYAPUNOV_VECTORS
+        or cfg.LICENCE == EXP.SINGULAR_VECTORS
+    ):
+        # For the ATL model, time goes backwards, i.e. first datapoint in data_out
+        # stores the result of the last integration.
+        if cfg.MODEL.submodel == "ATL":
+            data_out_list.append(data_out[0, 1:])
+        else:
+            # Save latest state vector to output dir
+            data_out_list.append(data_out[-1, 1:])
 
 
 def prepare_run_times(
@@ -242,9 +326,10 @@ def prepare_perturbations(
     # Adjust parameters to have the correct ny/ny_n for shell model
     g_utils.determine_params_from_header_dict(ref_header_dict, args)
 
-    # Only import start profiles beforehand if not using breed_vector perturbations,
+    # Only import start profiles beforehand if not using bv, bv_eof or sv perturbations,
     # i.e. also when running in singel_shell_perturb mode
-    if args["pert_mode"] not in ["bv", "bv_eof"]:
+
+    if args["pert_mode"] not in ["bv", "bv_eof", "sv"]:
         (
             u_init_profiles,
             perturb_positions,
@@ -286,14 +371,22 @@ def prepare_perturbations(
                     args,
                     n_profiles=args["n_profiles"],
                 )
-        elif args["pert_mode"] == "bv":
-            print("\nRunning with BREED VECTOR perturbations\n")
+        elif "bv" in args["pert_mode"]:
+            if args["pert_mode"] == "bv":
+                print("\nRunning with BREED VECTOR perturbations\n")
+                _raw_perturbations = False
+            elif args["pert_mode"] == "bv_eof":
+                print("\nRunning with BREED EOF VECTOR perturbations\n")
+                _raw_perturbations = True
             (
                 perturb_vectors,
+                _,
                 u_init_profiles,
                 perturb_positions,
                 _,
-            ) = pt_import.import_perturb_vectors(args)
+            ) = pt_import.import_perturb_vectors(
+                args, raw_perturbations=_raw_perturbations
+            )
 
             # Reshape perturb_vectors
             perturb_vectors = np.reshape(
@@ -301,22 +394,20 @@ def prepare_perturbations(
                 (params.sdim, args["n_profiles"] * args["n_runs_per_profile"]),
             )
 
-        elif args["pert_mode"] == "bv_eof":
-            print("\nRunning with BREED VECTOR EOF perturbations\n")
-
+        elif "sv" in args["pert_mode"]:
+            print("\nRunning with SINGULAR VECTOR perturbations\n")
             (
-                breed_vectors,
+                perturb_vectors,
+                _,
                 u_init_profiles,
                 perturb_positions,
                 _,
-            ) = pt_import.import_perturb_vectors(args)
-
-            eof_vectors: np.ndarray = bv_eof_anal.calc_bv_eof_vectors(
-                breed_vectors, args["n_runs_per_profile"]
+            ) = pt_import.import_perturb_vectors(
+                args, raw_perturbations=True, dtype=np.complex128
             )
-            # Reshape and save as perturb_vectors
+            # Reshape perturb_vectors
             perturb_vectors = np.reshape(
-                np.transpose(eof_vectors, axes=(1, 0, 2)),
+                np.transpose(perturb_vectors, axes=(2, 0, 1)),
                 (params.sdim, args["n_profiles"] * args["n_runs_per_profile"]),
             )
 
@@ -392,7 +483,6 @@ def prepare_processes(
                     args=(
                         np.copy(u_profiles_perturbed[:, count]),
                         perturb_positions,
-                        params.du_array,
                         data_out_list,
                         copy_args,
                         count,
@@ -419,7 +509,6 @@ def prepare_processes(
                 args=(
                     np.copy(u_profiles_perturbed[:, count]),
                     perturb_positions,
-                    params.du_array,
                     data_out_list,
                     copy_args,
                     count,
@@ -445,11 +534,11 @@ def main_setup(
     times_to_run, Nt_array = prepare_run_times(args)
 
     # If in 2. or higher breed cycle, the perturbation is given as input
-    if u_profiles_perturbed is None or perturb_positions is None:
+    if u_profiles_perturbed is None:  # or perturb_positions is None:
 
         raw_perturbations = False
         # Get only raw_perturbations if licence is LYAPUNOV_VECTORS
-        if cfg.LICENCE == EXP.LYAPUNOV_VECTORS:
+        if cfg.LICENCE == EXP.LYAPUNOV_VECTORS or cfg.LICENCE == EXP.SINGULAR_VECTORS:
             raw_perturbations = True
 
         u_profiles_perturbed, perturb_positions = prepare_perturbations(
@@ -479,7 +568,7 @@ def main_setup(
     if not args["skip_save_data"]:
         g_save.save_perturb_info(args=args, exp_setup=exp_setup)
 
-    return processes, data_out_list, perturb_positions
+    return processes, data_out_list, perturb_positions, u_profiles_perturbed
 
 
 def main_run(processes, args=None, n_units=None):
@@ -500,18 +589,7 @@ def main_run(processes, args=None, n_units=None):
     cpu_count = multiprocessing.cpu_count()
     num_processes = len(processes)
 
-    # if n_units is not None:
-    #     if cfg.LICENCE == EXP.NORMAL_PERTURBATION or cfg.LICENCE == EXP.BREEDING_VECTORS:
-    #         num_processes_per_unit = args["n_profiles"] * args["n_runs_per_profile"]
-    #     elif cfg.LICENCE == EXP.LORENTZ_BLOCK:
-    #         num_processes_per_unit = 2 * args["n_profiles"] * args["n_runs_per_profile"]
-
     for j in range(num_processes // cpu_count):
-        # if n_units is not None:
-        #     print(
-        #         f"Unit {int(j*cpu_count // num_processes_per_unit)}-"
-        #         + f"{int(((j + 1)*cpu_count // num_processes_per_unit))}"
-        #     )
 
         for i in range(cpu_count):
             count = j * cpu_count + i
@@ -522,15 +600,6 @@ def main_run(processes, args=None, n_units=None):
             processes[count].join()
             processes[count].close()
 
-    # if n_units is not None:
-    #     _dummy_done_count = (j + 1) * cpu_count // num_processes_per_unit
-    #     _dummy_remain_count = math.ceil(
-    #         num_processes % cpu_count / num_processes_per_unit
-    #     )
-    #     print(
-    #         f"Unit {int(_dummy_done_count)}-"
-    #         + f"{int(_dummy_done_count + _dummy_remain_count)}"
-    #     )
     for i in range(num_processes % cpu_count):
 
         count = (num_processes // cpu_count) * cpu_count + i
@@ -553,20 +622,21 @@ if __name__ == "__main__":
 
     if cfg.MODEL == Models.SHELL_MODEL:
         # Initiate and update variables and arrays
-        sh_utils.update_dependent_params(params, sdim=int(args["sdim"]))
-        sh_utils.update_arrays(params)
+        ut_funcs.update_dependent_params(params)
+        ut_funcs.update_arrays(params)
     # Initiate arrays
     # params.initiate_sdim_arrays(args["sdim"])
     args = g_utils.adjust_start_times_with_offset(args)
 
     g_ui.confirm_run_setup(args)
+    r_utils.adjust_run_setup(args)
 
     # Make profiler
     profiler = Profiler()
     # Start profiler
     profiler.start()
 
-    processes, _, _ = main_setup(args=args)
+    processes, _, _, _ = main_setup(args=args)
     main_run(processes, args=args)
 
     profiler.stop()

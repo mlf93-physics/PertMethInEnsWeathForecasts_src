@@ -24,43 +24,58 @@ import general.utils.importing.import_perturbation_data as pt_import
 import general.utils.importing.import_utils as g_imp_utils
 import general.utils.plot_utils as g_plt_utils
 import general.utils.user_interface as g_ui
-import lorentz63_experiments.params.params as l63_params
-import lorentz63_experiments.perturbations.normal_modes as l63_nm_estimator
-import lorentz63_experiments.plotting.plot_data as l63_plot
 import matplotlib.pyplot as plt
 import numpy as np
-import shell_model_experiments.plotting.plot_data as sh_plot
-import shell_model_experiments.utils.util_funcs as sh_utils
 from general.params.model_licences import Models
 from general.utils.module_import.type_import import *
 from mpl_toolkits import mplot3d
 from pyinstrument import Profiler
-from shell_model_experiments.params.params import PAR as PAR_SH
-from shell_model_experiments.params.params import ParamsStructType
 
 # Get parameters for model
 if cfg.MODEL == Models.SHELL_MODEL:
+    import shell_model_experiments.plotting.plot_data as sh_plot
+    import shell_model_experiments.utils.util_funcs as sh_utils
+    from shell_model_experiments.params.params import PAR as PAR_SH
+    from shell_model_experiments.params.params import ParamsStructType
+
     params = PAR_SH
 elif cfg.MODEL == Models.LORENTZ63:
+    import lorentz63_experiments.params.params as l63_params
+    import lorentz63_experiments.perturbations.normal_modes as l63_nm_estimator
+    import lorentz63_experiments.plotting.plot_data as l63_plot
+
     params = l63_params
 
 
 def plot_breed_vectors(args):
 
     # Import breed vectors
-    breed_vector_units, _ = pt_import.import_perturb_vectors(args)
+    breed_vector_units, _, _, _, _ = pt_import.import_perturb_vectors(
+        args, raw_perturbations=True
+    )
 
     # Import info file
     pert_info_dict = g_import.import_info_file(
-        pl.Path(args["datapath"], args["exp_folder"])
+        pl.Path(
+            args["datapath"],
+            args["pert_vector_folder"],
+            args["exp_folder"],
+            "perturb_data",
+        )
     )
     # Set number of vectors/profiles
     args["n_profiles"] = min(args["n_units"], breed_vector_units.shape[0])
 
     # Average and norm vectors
     mean_breed_vector_units = np.mean(breed_vector_units, axis=1)
-    normed_mean_breed_vector_units = mean_breed_vector_units / np.reshape(
-        np.linalg.norm(mean_breed_vector_units, axis=0), (1, args["n_profiles"])
+
+    normed_mean_breed_vector_units = mean_breed_vector_units / np.repeat(
+        np.reshape(
+            np.linalg.norm(mean_breed_vector_units, axis=1),
+            (args["n_profiles"], 1),
+        ),
+        repeats=params.sdim,
+        axis=1,
     )
 
     # Calculate orthonormality
@@ -91,7 +106,7 @@ def plot_breed_vectors(args):
     )
 
     plt.figure()
-    plt.plot(normed_mean_breed_vector_units, "k")
+    plt.plot(normed_mean_breed_vector_units.T, "k")
     plt.xlabel("BV component index")
     plt.ylabel("BV component")
     plt.title(bv_2d_title)
@@ -106,9 +121,9 @@ def plot_breed_vectors(args):
             origin,
             origin,
             origin,
-            normed_mean_breed_vector_units[0, :],
-            normed_mean_breed_vector_units[1, :],
-            normed_mean_breed_vector_units[2, :],
+            normed_mean_breed_vector_units[:, 0],
+            normed_mean_breed_vector_units[:, 1],
+            normed_mean_breed_vector_units[:, 2],
             # normalize=True,
             # length=0.5,
         )
@@ -131,7 +146,13 @@ def plot_breed_vectors(args):
 
 def plot_breed_comparison_to_nm(args):
     # Import breed vectors
-    breed_vector_units, breed_vec_header_dicts = pt_import.import_perturb_vectors(args)
+    (
+        breed_vector_units,
+        _,
+        _,
+        _,
+        breed_vec_header_dicts,
+    ) = pt_import.import_perturb_vectors(args)
 
     # Import perturbation info file
     pert_info_dict = g_import.import_info_file(
@@ -234,9 +255,12 @@ def plot_breed_eof_vectors_3D(args: dict):
         Run-time arguments
     """
 
-    perturb_vectors, perturb_header_dicts = pt_import.import_perturb_vectors(args)
+    perturb_vectors, _, _, _, perturb_header_dicts = pt_import.import_perturb_vectors(
+        args
+    )
 
-    eof_vectors = bv_analysis.calc_bv_eof_vectors(perturb_vectors)
+    print("\nCalculating BV-EOF vectors from BV vectors")
+    eof_vectors, variances = bv_analysis.calc_eof_vectors(perturb_vectors)
     n_vectors: int = eof_vectors.shape[2]
 
     origin: np.ndarray = np.zeros(n_vectors)
@@ -274,13 +298,14 @@ if __name__ == "__main__":
     if cfg.MODEL == Models.SHELL_MODEL:
         # Initiate and update variables and arrays
         sh_utils.update_dependent_params(params)
+        sh_utils.set_params(params, parameter="sdim", value=args["sdim"])
         sh_utils.update_arrays(params)
 
     # Make profiler
     profiler = Profiler()
     profiler.start()
 
-    if "pert_vector_folder" in args["plot_type"]:
+    if "pert_vectors" in args["plot_type"]:
         plot_breed_vectors(args)
     elif "nm_compare" in args["plot_type"]:
         plot_breed_comparison_to_nm(args)

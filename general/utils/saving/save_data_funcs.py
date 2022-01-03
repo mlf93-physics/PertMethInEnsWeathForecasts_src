@@ -5,18 +5,21 @@ sys.path.append("..")
 import json
 import pathlib as pl
 import numpy as np
-from shell_model_experiments.params.params import PAR as PAR_SH
-from shell_model_experiments.params.params import ParamsStructType
-import lorentz63_experiments.params.params as l63_params
 import general.utils.saving.save_data_funcs as g_save
 import general.utils.saving.save_utils as g_save_utils
+from libs.libutils import file_utils as lib_file_utils
 from general.params.model_licences import Models
 import config as cfg
 
 # Get parameters for model
 if cfg.MODEL == Models.SHELL_MODEL:
+    from shell_model_experiments.params.params import ParamsStructType
+    from shell_model_experiments.params.params import PAR as PAR_SH
+
     PAR = PAR_SH
 elif cfg.MODEL == Models.LORENTZ63:
+    import lorentz63_experiments.params.params as l63_params
+
     PAR = l63_params
 
 
@@ -25,6 +28,7 @@ def save_data(
     subsubfolder: str = "",
     prefix: str = "",
     perturb_position: int = None,
+    run_count: int = None,
     args: dict = None,
 ) -> pl.Path:
     """Save the data to disc.
@@ -54,8 +58,8 @@ def save_data(
 
     if cfg.GLOBAL_PARAMS.ref_run:
         # Generate path if not existing
-        expected_path = g_save_utils.generate_dir(
-            pl.Path("data", stand_data_name, "ref_data"), args=args
+        expected_path = lib_file_utils.generate_dir(
+            pl.Path("data", stand_data_name, "ref_data")
         )
 
         prefix = "ref_"
@@ -68,14 +72,18 @@ def save_data(
     else:
         ref_filename_extra = ""
         # Generate path if not existing
-        expected_path = g_save_utils.generate_dir(
-            pl.Path(args["datapath"], args["out_exp_folder"], subsubfolder), args=args
+        expected_path = lib_file_utils.generate_dir(
+            pl.Path(args["datapath"], args["out_exp_folder"], subsubfolder)
         )
 
         # Prepare extra header items
         perturb_header_extra = ""
         if perturb_position is not None:
-            perturb_header_extra = f"perturb_pos={perturb_position}, "
+            perturb_header_extra = (
+                f"perturb_pos={perturb_position}, "
+                + f"profile={run_count // args['n_runs_per_profile']}, "
+                + f"run_in_profile={run_count % args['n_runs_per_profile']}, "
+            )
 
         header = g_save_utils.generate_header(
             args,
@@ -105,8 +113,8 @@ def save_reference_info(args):
     stand_data_name = g_save_utils.generate_standard_data_name(args)
 
     # Generate path if not existing
-    expected_path = g_save_utils.generate_dir(
-        pl.Path("data", stand_data_name, "ref_data"), args=args
+    expected_path = lib_file_utils.generate_dir(
+        pl.Path("data", stand_data_name, "ref_data")
     )
 
     ref_data_info_path = f"{expected_path}/ref_data_info_{stand_data_name}.txt"
@@ -131,8 +139,8 @@ def save_perturb_info(args=None, exp_setup=None):
 
     """
 
-    expected_path = g_save_utils.generate_dir(
-        pl.Path(args["datapath"], args["out_exp_folder"]), args=args
+    expected_path = lib_file_utils.generate_dir(
+        pl.Path(args["datapath"], args["out_exp_folder"])
     )
     # Prepare filename
     perturb_data_info_path = pl.Path(expected_path)
@@ -187,8 +195,8 @@ def save_exp_info(exp_info: dict, args: dict):
     prefix = "exp_info"
 
     # Generate path if not existing
-    expected_path = g_save.g_save_utils.generate_dir(
-        pl.Path(args["datapath"], args["out_exp_folder"]), args=args
+    expected_path = g_save.lib_file_utils.generate_dir(
+        pl.Path(args["datapath"], args["out_exp_folder"])
     )
 
     out_path = pl.Path(expected_path, f"{prefix}{out_name}.json")

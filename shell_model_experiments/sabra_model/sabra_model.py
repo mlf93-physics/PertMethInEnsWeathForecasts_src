@@ -7,6 +7,8 @@ python sabra_model/sabra_model.py --time_to_run=1
 import sys
 
 sys.path.append("..")
+from pyinstrument import Profiler
+
 from math import ceil
 
 import config as cfg
@@ -17,20 +19,19 @@ import general.utils.user_interface as g_ui
 import numba as nb
 import numpy as np
 import shell_model_experiments.utils.util_funcs as ut_funcs
-from pyinstrument import Profiler
 from shell_model_experiments.params.params import PAR, ParamsStructType
 import shell_model_experiments.utils.special_params as sparams
 from shell_model_experiments.sabra_model.runge_kutta4 import runge_kutta4
 import shell_model_experiments.utils.custom_decorators as dec
+import general.utils.runner_utils as r_utils
 
-
-profiler = Profiler()
 
 # Set global params
 cfg.GLOBAL_PARAMS.record_max_time = 30
 
+profiler = Profiler()
 
-@dec.diffusion_type_decorator
+# @dec.diffusion_type_decorator
 @nb.njit(
     [
         (nb.types.Array(nb.types.complex128, 1, "C", readonly=False))(
@@ -89,7 +90,7 @@ def run_model(
             sample_number += 1
 
         # Solve nonlinear terms + forcing
-        u_old = runge_kutta4(y0=u_old, forcing=forcing, PAR=PAR)
+        u_old = runge_kutta4(u_old=u_old, forcing=forcing, PAR=PAR)
 
         # Solve diffusion depending on method
         u_old = diffusion_func(u_old, PAR, ny, diff_exponent)
@@ -111,6 +112,12 @@ def main(args=None):
     # Write ref info file
     g_save.save_reference_info(args)
 
+    # Get diffusion functions
+    if args["diff_type"] == "inf_hyper":
+        diff_function = ut_funcs.infinit_hyper_diffusion
+    else:
+        diff_function = ut_funcs.normal_diffusion
+
     profiler.start()
     print(
         f'\nRunning sabra model for {args["Nt"]*PAR.dt:.2f}s with a burn-in time'
@@ -126,6 +133,7 @@ def main(args=None):
 
         print(f'running burn-in phase of {args["burn_in_time"]}s\n')
         u_old = run_model(
+            diff_function,
             u_old,
             data_out,
             int(args["burn_in_time"] / PAR.dt),
@@ -133,7 +141,6 @@ def main(args=None):
             args["forcing"],
             args["diff_exponent"],
             PAR,
-            diff_type=args["diff_type"],
         )
 
     for ir in range(args["n_records"]):
@@ -153,6 +160,7 @@ def main(args=None):
         # Run model
         print(f'running record {ir + 1}/{args["n_records"]}')
         u_old = run_model(
+            diff_function,
             u_old,
             data_out,
             int(out_array_size / PAR.sample_rate),
@@ -160,7 +168,6 @@ def main(args=None):
             args["forcing"],
             args["diff_exponent"],
             PAR,
-            diff_type=args["diff_type"],
         )
 
         # Add record_id to datafile header
@@ -174,9 +181,6 @@ def main(args=None):
         compress_out_name = f"ref_data_{stand_data_name}"
         g_save_utils.compress_dir(save_path, compress_out_name)
 
-    profiler.stop()
-    print(profiler.output_text(color=True))
-
 
 if __name__ == "__main__":
     cfg.init_licence()
@@ -187,9 +191,11 @@ if __name__ == "__main__":
     args = stand_arg_setup.args
 
     g_ui.confirm_run_setup(args)
+    r_utils.adjust_run_setup(args)
 
     # Initiate and update variables and arrays
-    ut_funcs.update_dependent_params(PAR, sdim=int(args["sdim"]))
+    ut_funcs.update_dependent_params(PAR)
+    ut_funcs.set_params(PAR, parameter="sdim", value=args["sdim"])
     ut_funcs.update_arrays(PAR)
     args["ny"] = ut_funcs.ny_from_ny_n_and_forcing(
         args["forcing"], args["ny_n"], args["diff_exponent"]

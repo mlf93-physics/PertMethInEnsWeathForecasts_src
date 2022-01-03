@@ -87,60 +87,26 @@ def analyse_mean_velocity_spectra(args: dict):
         g_save.save_data(mean_velocity, prefix="mean_", args=args)
 
 
-def analyse_mean_energy_spectrum(args: dict) -> Tuple[np.ndarray, dict]:
-
-    _, u_data, header_dict = g_import.import_ref_data(args=args)
+def analyse_mean_energy_spectrum(args: dict, u_data: np.ndarray, header_dict: dict):
 
     g_utils.determine_params_from_header_dict(header_dict, args)
 
     mean_energy = get_mean_energy(u_data)
 
-    return mean_energy, header_dict
+    mean_energy = np.reshape(mean_energy, (1, mean_energy.size))
+
+    g_save.save_data(mean_energy, prefix="mean_energy_", args=args)
 
 
-def analyse_mean_energy_spectra(args: dict):
-
-    if args["datapaths"] is None:
-        raise g_exceptions.InvalidRuntimeArgument(
-            "Argument not set", argument="datapaths"
-        )
-
-    for i, path in enumerate(args["datapaths"]):
-        args["datapath"] = path
-
-        mean_energy, _ = analyse_mean_energy_spectrum(args)
-
-        mean_energy = np.reshape(mean_energy, (1, mean_energy.size))
-
-        g_save.save_data(mean_energy, prefix="mean_energy_", args=args)
-
-
-def analyse_mean_helicity_spectrum(args: dict) -> Tuple[np.ndarray, dict]:
-
-    _, u_data, header_dict = g_import.import_ref_data(args=args)
+def analyse_mean_helicity_spectrum(args: dict, u_data: np.ndarray, header_dict: dict):
 
     g_utils.determine_params_from_header_dict(header_dict, args)
 
     mean_helicity = get_mean_helicity(u_data)
 
-    return mean_helicity, header_dict
+    mean_helicity = np.reshape(mean_helicity, (1, mean_helicity.size))
 
-
-def analyse_mean_helicity_spectra(args: dict):
-
-    if args["datapaths"] is None:
-        raise g_exceptions.InvalidRuntimeArgument(
-            "Argument not set", argument="datapaths"
-        )
-
-    for _, path in enumerate(args["datapaths"]):
-        args["datapath"] = path
-
-        mean_helicity, _ = analyse_mean_helicity_spectrum(args)
-
-        mean_helicity = np.reshape(mean_helicity, (1, mean_helicity.size))
-
-        g_save.save_data(mean_helicity, prefix="mean_helicity_", args=args)
+    g_save.save_data(mean_helicity, prefix="mean_helicity_", args=args)
 
 
 def fit_spectrum_slope(
@@ -180,39 +146,21 @@ def fit_spectrum_slope(
     return slope, intercept
 
 
-def temp_energy_relation(args):
-
-    # Find csv files
-    file_paths = g_utils.get_files_in_path(pl.Path(args["datapath"]))
-
-    file_paths = g_utils.sort_paths_according_to_header_dicts(
-        file_paths, ["ny_n", "diff_exponent"]
-    )
-
-    for i, file_path in enumerate(file_paths):
-        # Import data
-        u_data, header_dict = g_import.import_data(file_path, start_line=1)
-        print("u_data", u_data.shape)
-
-        mean_energy = get_mean_energy(u_data)
-
-        shellN = int(header_dict["ny_n"]) - 1
-
-        theta_n_2 = np.angle(u_data[0, shellN - 2])
-
-        En_3_factor = PAR.lambda_const ** 2 * (
-            1 + (PAR.epsilon / (PAR.epsilon - 1)) ** 2
-        ) + 2 * PAR.lambda_const * PAR.epsilon / (PAR.epsilon - 1) * np.cos(
-            2 * theta_n_2
+def main(args):
+    if args["datapaths"] is None:
+        raise g_exceptions.InvalidRuntimeArgument(
+            "Argument not set", argument="datapaths"
         )
 
-        print("file_path", file_path.name)
-        print("$E_{{N-3}}$ factor", En_3_factor)
-        print(
-            f"$E_{{N}}$ = {mean_energy[shellN]}",
-            f"$E_{{N-3}}$ = {mean_energy[shellN-3]} (data)",
-            f"$E_{{N-3}}$ = {En_3_factor*mean_energy[shellN]} (calculated)",
-        )
+    for _, path in enumerate(args["datapaths"]):
+        args["datapath"] = path
+
+        _, u_data, header_dict = g_import.import_ref_data(args=args)
+
+        args["out_exp_folder"] = "../../mean_energy_analysed_30shells"
+        analyse_mean_energy_spectrum(args, u_data, header_dict)
+        args["out_exp_folder"] = "../../mean_helicity_analysed_30shells"
+        analyse_mean_helicity_spectrum(args, u_data, header_dict)
 
 
 if __name__ == "__main__":
@@ -227,10 +175,8 @@ if __name__ == "__main__":
     g_ui.confirm_run_setup(args)
 
     # Initiate and update variables and arrays
-    ut_funcs.update_dependent_params(PAR, sdim=int(args["sdim"]))
+    ut_funcs.update_dependent_params(PAR)
+    ut_funcs.set_params(PAR, parameter="sdim", value=args["sdim"])
     ut_funcs.update_arrays(PAR)
 
-    # analyse_mean_energy_spectra(args)
-    # analyse_mean_helicity_spectra(args)
-    analyse_mean_velocity_spectra(args)
-    # temp_energy_relation(args)
+    main(args)

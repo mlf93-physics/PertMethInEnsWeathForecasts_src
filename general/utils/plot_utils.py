@@ -23,9 +23,10 @@ def get_non_repeating_colors(
     return cmap_list
 
 
-def get_cmap_distributed_around_zero(
+def get_custom_cmap(
     vmin: float = -1,
     vmax: float = 1,
+    vcenter: float = 0,
     neg_thres: float = 0.5,
     pos_thres: float = 0.5,
     cmap_handle: plt.cm = plt.cm.coolwarm,
@@ -38,6 +39,8 @@ def get_cmap_distributed_around_zero(
         The minimum value of the cmap, by default -1
     vmax : float, optional
         The maximum value of the cmap, by default 1
+    vcenter : float, optional
+        The center value of the cmap, by default 0
     neg_thres : float, optional
         The upper threshold of the negative colours, i.e. the negative colours
         are mapped to the range [0, neg_thres], by default 0.5
@@ -59,7 +62,7 @@ def get_cmap_distributed_around_zero(
 
     norm = colors.TwoSlopeNorm(
         vmin=vmin,
-        vcenter=0,
+        vcenter=vcenter,
         vmax=vmax,
     )
 
@@ -80,10 +83,15 @@ def load_interactive_fig(args):
         fig.show()
 
 
-def save_figure(subpath: pl.Path = None, file_name="figure1", fig: plt.Figure = None):
+def save_figure(
+    subpath: pl.Path = None,
+    file_name="figure1",
+    fig: plt.Figure = None,
+    tight_layout_rect: list = None,
+):
     print("\nSaving figure...\n")
     # Prepare layout
-    plt.tight_layout()
+    plt.tight_layout(rect=tight_layout_rect)
 
     if subpath is None:
         full_path = FIG_ROOT
@@ -153,26 +161,26 @@ def generate_title(
     if detailed:
         # Add suffixes
         title += exp_suffix + file_suffix + title_suffix
+    else:
+        title += title_suffix
 
     # Strip trailing commas
     title = title.rstrip(",")
     title = title.rstrip(", ")
 
     # Wrap title
-    title = "\n".join(textwrap.wrap(title, 80))
+    title = "\n".join(textwrap.wrap(title, 60))
 
     return title
 
 
-def save_or_show_plot(args: dict):
+def save_or_show_plot(args: dict, tight_layout_rect: list = None):
     if args["save_fig"]:
-        subpath = pl.Path(
-            "shell_model_experiments/hyper_diffusivity/helicity_investigations/"
-        )
+        subpath = pl.Path("lorentz63_experiments/singular_vectors/test_perturbations2/")
 
         for i in plt.get_fignums():
             fig = plt.figure(i)
-            file_name = "howmoller_for_helicity_alpha2_ny_n19"
+            file_name = "sv_perturbations_sv1"
 
             name = g_ui.get_name_input(
                 "Proposed name of figure: ", proposed_input=file_name
@@ -186,12 +194,18 @@ def save_or_show_plot(args: dict):
 
             answer = g_ui.ask_user(question)
             if answer:
-                save_figure(subpath=subpath, file_name=name, fig=fig)
+                save_figure(
+                    subpath=subpath,
+                    file_name=name,
+                    fig=fig,
+                    tight_layout_rect=tight_layout_rect,
+                )
             else:
                 print("\nSaving the figure was aborted\n")
 
     elif not args["noplot"]:
-        # plt.tight_layout()
+        if not args["notight"]:
+            plt.tight_layout()
         plt.show()
 
 

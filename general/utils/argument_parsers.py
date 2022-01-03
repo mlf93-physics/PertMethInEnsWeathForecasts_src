@@ -74,7 +74,12 @@ class StandardModelArgSetup:
     def setup_parser(self):
         # Add model specific arguments
         if cfg.MODEL == Models.SHELL_MODEL:
-            self._parser.add_argument("--ny_n", default=19, type=int)
+            self._parser.add_argument(
+                "--ny_n",
+                default=19,
+                type=int,
+                help="The shell at which the diffusion sets in",
+            )
             self._parser.add_argument("--forcing", default=1, type=float)
             self._parser.add_argument("--diff_exponent", default=2, type=int)
             self._parser.add_argument(
@@ -123,6 +128,7 @@ class StandardRunnerArgSetup:
         # Add general arguments
         self._parser.add_argument("--erda_run", action="store_true")
         self._parser.add_argument("--skip_save_data", action="store_true")
+        self._parser.add_argument("--noprint", action="store_true")
 
 
 class RelReferenceArgSetup:
@@ -190,7 +196,8 @@ class PerturbationVectorArgSetup:
 
     def setup_parser(self):
         # Add arguments
-        self._parser.add_argument("--pert_vector_folder", default=None, type=str)
+        self._parser.add_argument("--pert_vector_folder", default="", type=str)
+        self._parser.add_argument("--specific_start_vector", default=0, type=int)
 
 
 class PerturbationArgSetup:
@@ -228,10 +235,10 @@ class PerturbationArgSetup:
         self._parser.add_argument("--endpoint", action="store_true")
         pert_mode_group = self._parser.add_mutually_exclusive_group(
             required=cfg.LICENCE
-            not in [EXP.COMPARISON, EXP.LYAPUNOV_VECTORS, EXP.LORENTZ_BLOCK]
+            in [EXP.NORMAL_PERTURBATION, EXP.HYPER_DIFFUSIVITY, EXP.BREEDING_VECTORS]
         )
         pert_mode_group.add_argument(
-            "--pert_mode", choices=["rd", "nm", "bv", "bv_eof"], type=str
+            "--pert_mode", choices=["rd", "nm", "bv", "bv_eof", "sv"], type=str
         )
 
         # Add model specific arguments
@@ -258,9 +265,10 @@ class PerturbationArgSetup:
 
         # Test if start_times is set when pert_mode in ["rd", "nm"]
         if self.args["pert_mode"] in ["rd", "nm"] and self.args["start_times"] is None:
-            self._parser.error(
-                "--start_times argument is required when pert_mode is 'rd' or 'nm'"
-            )
+            if cfg.LICENCE not in [EXP.VERIFICATION]:
+                self._parser.error(
+                    "--start_times argument is required when pert_mode is 'rd' or 'nm'"
+                )
 
 
 class MultiPerturbationArgSetup:
@@ -420,6 +428,7 @@ class StandardPlottingArgParser:
             + " detailed : plot extra details in plots",
         )
         self._parser.add_argument("-np", "--noplot", action="store_true")
+        self._parser.add_argument("-nt", "--notight", action="store_true")
         self._parser.add_argument("-s", "--save_fig", action="store_true")
         self._parser.add_argument(
             "--datapaths",
@@ -452,3 +461,31 @@ class StandardPlottingArgParser:
                 + " experiments, where only region of shells below diffusion region"
                 + " is relevant",
             )
+
+
+class VerificationArgParser:
+    def __init__(self):
+        self._parser = parser
+        self._args = None
+
+    @property
+    def args(self):
+        """The vars(parsed arguments.)
+
+        The parsed args are saved to a local attribute if not already present
+        to avoid multiple calls to parse_args()
+
+        Returns
+        -------
+        argparse.Namespace
+            The parsed arguments
+        """
+        if not isinstance(self._args, argparse.Namespace):
+            self._args = vars(self._parser.parse_known_args()[0])
+
+        return self._args
+
+    def setup_parser(self):
+        self._parser.add_argument(
+            "--verification_type", default=None, required=True, type=str
+        )

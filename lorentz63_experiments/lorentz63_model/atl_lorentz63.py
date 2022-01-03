@@ -7,6 +7,7 @@ import numpy as np
 from numba import njit, types
 import lorentz63_experiments.lorentz63_model.runge_kutta4 as rk4
 from lorentz63_experiments.params.params import *
+import lorentz63_experiments.params.special_params as sparams
 import lorentz63_experiments.perturbations.normal_modes as l63_nm_estimator
 import general.utils.saving.save_data_funcs as g_save
 import general.utils.importing.import_data_funcs as g_import
@@ -28,7 +29,7 @@ cfg.GLOBAL_PARAMS.ref_run = False
 @njit(
     [
         (
-            types.Array(types.float64, 1, "C", readonly=False),
+            types.Array(types.float64, 2, "C", readonly=False),
             types.Array(types.float64, 1, "C", readonly=False),
             types.Array(types.float64, 2, "C", readonly=False),
             types.Array(types.float64, 2, "C", readonly=False),
@@ -38,7 +39,7 @@ cfg.GLOBAL_PARAMS.ref_run = False
             types.boolean,
         ),
         (
-            types.Array(types.float64, 1, "C", readonly=False),
+            types.Array(types.float64, 2, "C", readonly=False),
             types.Array(types.float64, 1, "C", readonly=False),
             types.Array(types.float64, 2, "C", readonly=False),
             types.Array(types.float64, 2, "C", readonly=False),
@@ -51,20 +52,20 @@ cfg.GLOBAL_PARAMS.ref_run = False
     cache=cfg.NUMBA_CACHE,
 )
 def run_model(
-    u_tl_old,
+    u_atl_old,
     u_ref_old,
     lorentz_matrix,
     jacobian_matrix,
     data_out,
     Nt_local,
     r_const,
-    raw_perturbation: bool = False,
+    raw_perturbation=False,
 ):
     """Execute the integration of the tangent linear Lorentz63 model.
 
     Parameters
     ----------
-    u_tl_old : ndarray
+    u_atl_old : ndarray
         The initial lorentz perturbation velocities
     du_array : ndarray
         A helper array used to store the current derivative of the lorentz
@@ -73,25 +74,33 @@ def run_model(
         An array to store samples of the integrated lorentz_velocities.
 
     """
+    ref_data = np.zeros((Nt_local, sdim), dtype=sparams.dtype)
 
-    sample_number = 0
-    # Perform calculations
+    # Run forward non-linear model
     for i in range(Nt_local):
+        # Save reference data
+        ref_data[i, :] = u_ref_old
+        # Update u_ref_old
+        u_ref_old = rk4.runge_kutta4(y0=u_ref_old, lorentz_matrix=lorentz_matrix, h=dt)
+
+    # Run backward ATL model
+    for i in range(Nt_local - 1, -1, -1):
         # Save samples for plotting
-        if i % int(1 / sample_rate) == 0:
-            data_out[sample_number, 0] = dt * i
-            # Add reference data to TL model trajectory if requested, since only
-            # the perturbation is integrated in the model
-            data_out[sample_number, 1:] = u_tl_old
-            if not raw_perturbation:
-                data_out[sample_number, 1:] += u_ref_old
+        data_out[i, 0] = dt * i
+        data_out[i, 1:] = u_atl_old.ravel()
+        # Add reference data to TL model trajectory, since only the perturbation
+        # is integrated in the model
+        if not raw_perturbation:
+            data_out[i, 1:] += ref_data[i, :]
 
-            sample_number += 1
+        # Break if last datapoint has been saved
+        if i == 0:
+            break
 
-        # Update u_tl_old
-        u_tl_old, u_ref_old = rk4.tl_runge_kutta4(
-            u_tl_old=u_tl_old,
-            u_ref_old=u_ref_old,
+        # Update u_atl_old
+        u_atl_old = rk4.atl_runge_kutta4(
+            u_atl_old=u_atl_old,
+            u_ref_old=ref_data[i - 1, :],
             lorentz_matrix=lorentz_matrix,
             jacobian_matrix=jacobian_matrix,
             dt=dt,
@@ -114,20 +123,21 @@ def main(args=None):
     # Prepare random perturbation
     perturb = pt_utils.generate_rd_perturbations()
     # Normalize perturbation
-    u_tl_old = g_utils.normalize_array(perturb, norm_value=seeked_error_norm)
+    u_atl_old = g_utils.normalize_array(perturb, norm_value=seeked_error_norm)
+    u_atl_old = np.reshape(u_atl_old, (sdim, 1))
 
     # Initialise jacobian and deriv matrix
     jacobian_matrix = l63_nm_estimator.init_jacobian(args)
     lorentz_matrix = ut_funcs.setup_lorentz_matrix(args)
 
     profiler.start()
-    print(f'\nRunning Lorentz63 TL model for {args["Nt"]*dt:.2f}s\n')
+    print(f'\nRunning Lorentz63 ATL model for {args["Nt"]*dt:.2f}s\n')
 
     data_out = np.zeros((args["Nt"], sdim + 1), dtype=np.float64)
 
     # Run model
     run_model(
-        u_tl_old,
+        u_atl_old,
         u_ref,
         lorentz_matrix,
         jacobian_matrix,
@@ -138,7 +148,7 @@ def main(args=None):
 
     if not args["skip_save_data"]:
         print(f"saving record\n")
-        g_save.save_data(data_out, args=args, prefix="tl_")
+        g_save.save_data(data_out, args=args, prefix="atl_")
 
     profiler.stop()
     print(profiler.output_text(color=True))

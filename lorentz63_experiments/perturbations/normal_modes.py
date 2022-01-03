@@ -67,15 +67,15 @@ def find_normal_modes(
         # positive_e_values_indices = np.argwhere(e_values.real > 0)
         chosen_e_value_index = np.argmax(e_values.real)
 
-        e_vector_matrix[:, i] = e_vectors[:, chosen_e_value_index]
-        e_values_max[i] = e_values[chosen_e_value_index]
+        e_vector_matrix[:, i] = e_vectors[:, chosen_e_value_index].ravel()
+        e_values_max[i] = e_values[chosen_e_value_index].ravel()
 
     return e_vector_matrix, e_values_max, e_vector_collection, e_value_collection
 
 
 def init_jacobian(args):
 
-    j_matrix = np.zeros((sdim, sdim), dtype=np.float64)
+    j_matrix = np.matrix(np.zeros((sdim, sdim), dtype=np.float64))
 
     j_matrix[0, 0] = -args["sigma"]
     j_matrix[0, 1] = args["sigma"]
@@ -114,3 +114,34 @@ def calc_jacobian(j_matrix, u_profile, r_const):
     j_matrix[1, 2] = -u_profile[0]
     j_matrix[2, 0] = u_profile[1]
     j_matrix[2, 1] = u_profile[0]
+
+
+@njit(
+    (types.Array(types.float64, 2, "F", readonly=True))(
+        types.Array(types.float64, 2, "C", readonly=False),
+        types.Array(types.float64, 1, "C", readonly=True),
+        types.float64,
+    ),
+    cache=cfg.NUMBA_CACHE,
+)
+def calc_adjoint_jacobian(j_matrix, u_profile, r_const):
+    """Calculate the adjoint jacobian at a given point in time given through
+    the u_profile
+
+    Parameters
+    ----------
+    j_matrix : numpy.ndarray
+        The initialized jacobian matrix
+    u_profile : numpy.ndarray
+        The velocity profile
+    args : dict
+        Run-time arguments
+
+    Returns
+    -------
+    numpy.ndarray
+        The jacobian
+    """
+    calc_jacobian(j_matrix, u_profile, r_const)
+
+    return j_matrix.T.conj()

@@ -7,6 +7,7 @@ import pathlib as pl
 import numpy as np
 import general.utils.importing.import_perturbation_data as pt_import
 import general.utils.util_funcs as g_utils
+from libs.libutils import file_utils as lib_file_utils
 
 
 def calculate_rmse_of_block(args):
@@ -82,7 +83,7 @@ def get_block_dirs(args):
 
     experiment_dir = pl.Path(args["datapath"], args["exp_folder"])
 
-    block_dirs = g_utils.get_dirs_in_path(experiment_dir)
+    block_dirs = lib_file_utils.get_dirs_in_path(experiment_dir)
 
     # Adjust number of blocks
     if args["n_units"] < np.inf and args["n_units"] > 0:

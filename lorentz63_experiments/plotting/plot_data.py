@@ -94,7 +94,13 @@ def plot_energy(args, axes=None):
 
 def plot_error_norm_vs_time(args):
 
-    g_plt_data.plot_error_norm_vs_time(args, normalize_start_time=False)
+    g_plt_data.plot_error_norm_vs_time(
+        args,
+        normalize_start_time=False,
+        legend_on=False,
+        cmap_list=["blue"],
+        plot_args=["unique_linestyle"],
+    )
 
 
 def plot_normal_mode_dist(args):
@@ -114,9 +120,7 @@ def plot_normal_mode_dist(args):
     min_e_value = np.min(e_values.real)
 
     # Prepare cmap and norm
-    cmap, norm = g_plt_utils.get_cmap_distributed_around_zero(
-        vmin=min_e_value, vmax=max_e_value
-    )
+    cmap, norm = g_plt_utils.get_custom_cmap(vmin=min_e_value, vmax=max_e_value)
     # Plot attractor
     plot_attractor(args, ax=ax1)
 
@@ -218,23 +222,23 @@ def plot_energy_dist(args):
 
     coll2 = Line3DCollection(segments, cmap="coolwarm")
 
-    # Calculate deriv_matrix
-    deriv_matrix = l_utils.setup_deriv_matrix(args)
-    deriv_matrix_array = np.repeat(
-        np.reshape(deriv_matrix, (1, sdim, sdim)), u_data.shape[0], axis=0
+    # Calculate lorentz_matrix
+    lorentz_matrix = l_utils.setup_lorentz_matrix(args)
+    lorentz_matrix_array = np.repeat(
+        np.reshape(lorentz_matrix, (1, sdim, sdim)), u_data.shape[0], axis=0
     )
-    deriv_matrix_array[:, 1, 2] = u_data[:, 0]
-    deriv_matrix_array[:, 2, 0] = u_data[:, 1]
+    lorentz_matrix_array[:, 1, 2] = u_data[:, 0]
+    lorentz_matrix_array[:, 2, 0] = u_data[:, 1]
 
     # Calculate du_array
-    du_data = deriv_matrix_array @ np.reshape(u_data, (*u_data.shape, 1))
+    du_data = lorentz_matrix_array @ np.reshape(u_data, (*u_data.shape, 1))
     du_data = np.squeeze(du_data, axis=2)
 
     # Calculate change in energy
     dE_array = np.sum(du_data * u_data, axis=1)
 
     # Prepare cmap and norm
-    cmap, norm = g_plt_utils.get_cmap_distributed_around_zero(
+    cmap, norm = g_plt_utils.get_custom_cmap(
         vmin=np.min(dE_array), vmax=np.max(dE_array)
     )
 
@@ -283,6 +287,4 @@ if __name__ == "__main__":
     elif "energy_dist" in args["plot_type"]:
         plot_energy_dist(args)
 
-    if not args["noplot"]:
-        plt.tight_layout()
-        plt.show()
+    g_plt_utils.save_or_show_plot(args)

@@ -9,6 +9,7 @@ import general.utils.importing.import_data_funcs as g_import
 import general.utils.plot_utils as g_plt_utils
 import general.utils.user_interface as g_ui
 import general.utils.util_funcs as g_utils
+from libs.libutils import file_utils as lib_file_utils
 import matplotlib.pyplot as plt
 import numpy as np
 import shell_model_experiments.analyses.analyse_data as sh_analysis
@@ -28,11 +29,11 @@ def plot_energy_spectrum_comparison(args: dict):
     axes = plt.axes()
 
     # Find csv files
-    file_paths = g_utils.get_files_in_path(pl.Path(args["datapath"]))
+    file_paths = lib_file_utils.get_files_in_path(pl.Path(args["datapath"]))
     if len(file_paths) == 0:
         raise ImportError("No files to import")
 
-    file_paths = g_utils.sort_paths_according_to_header_dicts(
+    file_paths, _ = g_utils.sort_paths_according_to_header_dicts(
         file_paths, ["ny_n", "diff_exponent"]
     )
 
@@ -89,9 +90,9 @@ def plot_helicity_spectrum_comparison(args: dict):
     axes = plt.axes()
 
     # Find csv files
-    file_paths = g_utils.get_files_in_path(pl.Path(args["datapath"]))
+    file_paths = lib_file_utils.get_files_in_path(pl.Path(args["datapath"]))
 
-    file_paths = g_utils.sort_paths_according_to_header_dicts(
+    file_paths, _ = g_utils.sort_paths_according_to_header_dicts(
         file_paths, ["ny_n", "diff_exponent"]
     )
 
@@ -147,7 +148,7 @@ def plot_period4_spectrum_ratio(args: dict):
     fig, axes = plt.subplots(nrows=3, ncols=1, sharex=True)
 
     # Find csv files
-    file_paths = g_utils.get_files_in_path(pl.Path(args["datapath"]))
+    file_paths = lib_file_utils.get_files_in_path(pl.Path(args["datapath"]))
 
     # Bounds reference (ny_n = 19) to the top index
     ref_index = [
@@ -230,9 +231,9 @@ def plot_period4_spectrum_ratio_vs_alpha(args: dict):
     fig, axes = plt.subplots(nrows=1, ncols=1)
 
     # Find csv files
-    file_paths = g_utils.get_files_in_path(pl.Path(args["datapath"]))
+    file_paths = lib_file_utils.get_files_in_path(pl.Path(args["datapath"]))
     # Sort files
-    file_paths = g_utils.sort_paths_according_to_header_dicts(
+    file_paths, _ = g_utils.sort_paths_according_to_header_dicts(
         file_paths, ["ny_n", "diff_exponent"]
     )
 
@@ -341,6 +342,7 @@ if __name__ == "__main__":
     # initiate_sdim_arrays(args["sdim"])
     # Initiate and update variables and arrays
     ut_funcs.update_dependent_params(PAR)
+    ut_funcs.set_params(PAR, parameter="sdim", value=args["sdim"])
     ut_funcs.update_arrays(PAR)
 
     g_ui.confirm_run_setup(args)

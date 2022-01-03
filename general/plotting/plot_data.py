@@ -1,12 +1,10 @@
 import pathlib as pl
 import numpy as np
 import matplotlib.pyplot as plt
-from shell_model_experiments.params.params import ParamsStructType
-from shell_model_experiments.params.params import PAR as PAR_SH
-import lorentz63_experiments.params.params as l63_params
 from general.utils.module_import.type_import import *
 import general.utils.importing.import_data_funcs as g_import
 import general.utils.plot_utils as g_plt_utils
+import general.analyses.analyse_data as g_a_data
 import general.utils.util_funcs as g_utils
 from general.plotting.plot_params import *
 from general.params.experiment_licences import Experiments as EXP
@@ -15,75 +13,107 @@ import config as cfg
 
 # Get parameters for model
 if cfg.MODEL == Models.SHELL_MODEL:
+    from shell_model_experiments.params.params import ParamsStructType
+    from shell_model_experiments.params.params import PAR as PAR_SH
+    import shell_model_experiments.utils.special_params as sh_sparams
+
     params = PAR_SH
+    sparams = sh_sparams
 elif cfg.MODEL == Models.LORENTZ63:
+    import lorentz63_experiments.params.params as l63_params
+    import lorentz63_experiments.params.special_params as l63_sparams
+
     params = l63_params
+    sparams = l63_sparams
 
 
-def analyse_error_norm_vs_time(u_stores, args=None):
+def plot_exp_growth_rate_vs_time(
+    args=None,
+    normalize_start_time=True,
+    axes=None,
+    exp_setup=None,
+    linestyle: str = "-",
+    linewidth: float = 2,
+    alpha: float = 1.0,
+    zorder: float = 0.0,
+    color=None,
+    legend_on: bool = True,
+    title_suffix: str = "",
+    plot_args: list = ["detailed_title"],
+):
 
-    if len(u_stores) == 0:
-        raise IndexError("Not enough u_store arrays to compare.")
+    if exp_setup is None:
+        try:
+            exp_setup = g_import.import_exp_info_file(args)
+        except ImportError:
+            print(
+                "\nThe .json config file was not found, so this plot doesnt work "
+                + "if the file is needed\n"
+            )
 
-    if args["combinations"]:
-        combinations = [
-            [j, i] for j in range(len(u_stores)) for i in range(j + 1) if j != i
-        ]
-        error_norm_vs_time = np.zeros((u_stores[0].shape[0], len(combinations)))
+    (
+        u_stores,
+        perturb_time_pos_list,
+        perturb_time_pos_list_legend,
+        header_dicts,
+        u_ref_stores,
+    ) = g_import.import_perturbation_velocities(args, search_pattern="*perturb*.csv")
 
-        for enum, indices in enumerate(combinations):
-            error_norm_vs_time[:, enum] = np.linalg.norm(
-                u_stores[indices[0]] - u_stores[indices[1]], axis=1
-            ).real
-    else:
-        error_norm_vs_time = np.zeros((u_stores[0].shape[0], len(u_stores)))
-
-        for i in range(len(u_stores)):
-            if len(u_stores[i]) == 1:
-                u_stores[i] = np.reshape(u_stores[i], (u_stores[i].size, 1))
-
-            error_norm_vs_time[:, i] = np.linalg.norm(u_stores[i], axis=1).real
-
-    error_norm_mean_vs_time = np.mean(error_norm_vs_time, axis=1)
-
-    return error_norm_vs_time, error_norm_mean_vs_time
-
-
-def analyse_error_spread_vs_time_norm_of_mean(u_stores, args=None):
-    """Calculates the spread of the error (u' - u) using the 'norm of the mean.'
-
-    Formula: ||\sqrt{<((u' - u) - <u' - u>)²>}||
-
-    """
-
-    u_mean = np.mean(np.array(u_stores), axis=0)
-
-    error_spread = np.array([(u_stores[i] - u_mean) ** 2 for i in range(len(u_stores))])
-
-    error_spread = np.sqrt(np.mean(error_spread, axis=0))
-    error_spread = np.linalg.norm(error_spread, axis=1)
-
-    return error_spread
-
-
-def analyse_error_spread_vs_time_mean_of_norm(u_stores, args=None):
-    """Calculates the spread of the error (u' - u) using the 'mean of the norm'
-
-    Formula: \sqrt{<(||u' - u|| - <||u' - u||>)²>}
-
-    """
-    u_mean_norm = np.mean(np.linalg.norm(np.array(u_stores), axis=2).real, axis=0)
-
-    error_spread = np.array(
-        [
-            (np.linalg.norm(u_stores[i], axis=1).real - u_mean_norm) ** 2
-            for i in range(len(u_stores))
-        ]
+    # Define time array
+    # -1 since growth rate is a rate between differences (see functino
+    # analyse_mean_exp_growth_rate_vs_time)
+    time_array = np.linspace(
+        0,
+        header_dicts[0]["time_to_run"],
+        int(header_dicts[0]["time_to_run"] * params.tts) + args["endpoint"] * 1 - 1,
+        dtype=np.float64,
+        endpoint=args["endpoint"],
     )
 
-    error_spread = np.sqrt(np.mean(error_spread, axis=0))
+    n_runs_per_profile = len(perturb_time_pos_list)
 
-    return error_spread
+    # Analyse mean exponential growth rate
+    (
+        error_norm_vs_time,
+        error_norm_mean_vs_time,
+    ) = g_a_data.analyse_error_norm_vs_time(u_stores, args=args)
+    mean_growth_rate = g_a_data.analyse_mean_exp_growth_rate_vs_time(
+        error_norm_vs_time, args=args
+    )
+
+    # Prepare axes
+    if axes is None:
+        axes = plt.axes()
+
+    if "detailed_label" in plot_args:
+        label = args["exp_folder"]
+    else:
+        label = str(pl.Path(args["exp_folder"]).name)
+
+    axes.plot(
+        time_array,
+        mean_growth_rate,
+        linestyle=linestyle,
+        alpha=alpha,
+        linewidth=linewidth,
+        zorder=zorder,
+        label=label,
+        color=color,
+    )
+
+    if legend_on:
+        axes.legend()
+
+    title = g_plt_utils.generate_title(
+        args,
+        header_dict=header_dicts[0],
+        title_header="Exponential growth rate vs time",
+        title_suffix=title_suffix,
+        detailed="detailed_title" in plot_args,
+    )
+    axes.set_title(title)
+    axes.set_xlabel("Time")
+    axes.set_ylabel("Exp. growth rate, $\\lambda$")
 
 
 def plot_error_norm_vs_time(
@@ -117,13 +147,17 @@ def plot_error_norm_vs_time(
         u_ref_stores,
     ) = g_import.import_perturbation_velocities(args, search_pattern="*perturb*.csv")
 
-    num_perturbations = len(perturb_time_pos_list)
+    # Get number of runs per profile and n_profiles
+    n_runs_per_profile = int(header_dicts[0]["n_runs_per_profile"])
+    n_profiles = int(header_dicts[0]["n_profiles"])
+    n_perturbations = len(perturb_time_pos_list)
 
-    error_norm_vs_time, error_norm_mean_vs_time = analyse_error_norm_vs_time(
-        u_stores, args=args
-    )
+    (
+        error_norm_vs_time,
+        error_norm_mean_vs_time,
+    ) = g_a_data.analyse_error_norm_vs_time(u_stores, args=args)
     if args["plot_mode"] == "detailed":
-        error_spread_vs_time = analyse_error_spread_vs_time_mean_of_norm(
+        error_spread_vs_time = g_a_data.analyse_error_spread_vs_time_mean_of_norm(
             u_stores, args=args
         )
 
@@ -136,11 +170,11 @@ def plot_error_norm_vs_time(
     )
     if not normalize_start_time:
         time_array = np.repeat(
-            np.reshape(time_array, (time_array.size, 1)), num_perturbations, axis=1
+            np.reshape(time_array, (time_array.size, 1)), n_perturbations, axis=1
         )
 
         time_array += np.reshape(
-            np.array(perturb_time_pos_list) * params.stt, (1, num_perturbations)
+            np.array(perturb_time_pos_list) * params.stt, (1, n_perturbations)
         )
 
     # Pick out specified runs
@@ -157,14 +191,16 @@ def plot_error_norm_vs_time(
 
     # Prepare axes
     if axes is None:
-        axes = plt.gca()
+        axes = plt.axes()
 
     # Get non-repeating colorcycle
-    if cfg.LICENCE == EXP.BREEDING_VECTORS or cfg.LICENCE == EXP.LYAPUNOV_VECTORS:
+    if cfg.LICENCE in [
+        EXP.LYAPUNOV_VECTORS,
+        EXP.BREEDING_VECTORS,
+    ]:
         n_colors = exp_setup["n_vectors"]
     else:
-        n_colors = num_perturbations
-
+        n_colors = n_runs_per_profile
     # Set colors
     if cmap_list is None:
         cmap_list = g_plt_utils.get_non_repeating_colors(n_colors=n_colors)
@@ -188,9 +224,16 @@ def plot_error_norm_vs_time(
         linewidth=linewidth,
         zorder=zorder,
     )
-    # if header_dicts[0]["pert_mode"] == "bv_eof":
-    #     for i, line in enumerate(lines):
-    #         line.set_linestyle(LINESTYLES[i % 3])
+
+    # Set unique linestyle
+    if "unique_linestyle" in plot_args:
+        for i, header_dict in enumerate(header_dicts):
+            if "run_in_profile" in header_dict:
+                lines[i].set_linestyle(LINESTYLES[int(header_dict["run_in_profile"])])
+            else:
+                raise KeyError(
+                    "run_in_profile not found in header_dict. Unique linestyles cannot be made."
+                )
 
     if args["plot_mode"] == "detailed":
         # Plot perturbation error norms
@@ -204,8 +247,19 @@ def plot_error_norm_vs_time(
     axes.set_yscale("log")
 
     if legend_on:
-        if cfg.LICENCE not in [EXP.BREEDING_VECTORS, EXP.LYAPUNOV_VECTORS]:
+        if cfg.LICENCE not in [
+            EXP.BREEDING_VECTORS,
+            EXP.LYAPUNOV_VECTORS,
+            EXP.SINGULAR_VECTORS,
+        ]:
             axes.legend(perturb_time_pos_list_legend)
+        elif cfg.LICENCE == EXP.SINGULAR_VECTORS:
+            for i, header_dict in enumerate(header_dicts):
+                if "run_in_profile" in header_dict:
+                    lines[i].set_label(f"sv{int(header_dict['run_in_profile'])}")
+                    if i + 1 == n_runs_per_profile:
+                        break
+            axes.legend()
 
     if args["xlim"] is not None:
         axes.set_xlim(args["xlim"][0], args["xlim"][1])
@@ -230,14 +284,15 @@ def plot_error_norm_vs_time(
 
 
 def plot_energy(
-    time=None,
-    u_data=None,
-    header_dict=None,
+    args,
     axes=None,
-    args=None,
     zero_time_ref=None,
     plot_args=["detailed_title"],
+    plot_kwargs={"exp_file_type": "perturbations"},
 ):
+    # Import reference data
+    time, u_data, header_dict = g_import.import_ref_data(args=args)
+
     # If data is not present, import it
     if time is None or u_data is None or header_dict is None:
         # Import reference data
@@ -265,13 +320,13 @@ def plot_energy(
 
     if "exp_folder" in args:
         if args["exp_folder"] is not None:
-            perturb_file_names = list(
-                pl.Path(args["datapath"], args["exp_folder"]).glob("*.csv")
+            _, perturb_files = g_utils.get_exp_files_and_names(
+                args, type=plot_kwargs["exp_file_type"]
             )
 
             # Import headers to get perturb positions
             index = []
-            for ifile, file_name in enumerate(perturb_file_names):
+            for ifile, file_name in enumerate(perturb_files):
                 header_dict = g_import.import_header(file_name=file_name)
 
                 if zero_time_ref:

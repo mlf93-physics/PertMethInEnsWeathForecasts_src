@@ -34,11 +34,13 @@ class ParamsStructType(types.StructRef):
 class ParamsStruct(structref.StructRefProxy):
     def __new__(
         cls,
+        # ny,
         epsilon,
         lambda_const,
         dt,
         sample_rate,
         bd_size,
+        forcing,
         n_forcing,
         u0,
         seeked_error_norm,
@@ -60,11 +62,13 @@ class ParamsStruct(structref.StructRefProxy):
         # IMPORTANT: Users should not override __init__.
         return structref.StructRefProxy.__new__(
             cls,
+            # ny,
             epsilon,
             lambda_const,
             dt,
             sample_rate,
             bd_size,
+            forcing,
             n_forcing,
             u0,
             seeked_error_norm,
@@ -83,6 +87,11 @@ class ParamsStruct(structref.StructRefProxy):
     # By default, the proxy type does not reflect the attributes or
     # methods to the Python side. It is up to users to define
     # these. (This may be automated in the future.)
+
+    # @property
+    # def ny(self):
+    #     # The definition of lambda_const is shown later.
+    #     return struct_get_ny(self)
 
     @property
     def epsilon(self):
@@ -105,6 +114,11 @@ class ParamsStruct(structref.StructRefProxy):
     def bd_size(self):
         # The definition of struct_get_bd_size is shown later.
         return struct_get_bd_size(self)
+
+    @property
+    def forcing(self):
+        # The definition of struct_get_forcing is shown later.
+        return struct_get_forcing(self)
 
     @property
     def n_forcing(self):
@@ -180,6 +194,11 @@ class ParamsStruct(structref.StructRefProxy):
 # Define python wrappers for the struct
 # In jit-code, the StructRef's attribute is exposed via
 # structref.register
+# @njit(cache=cfg.NUMBA_CACHE)
+# def struct_get_ny(self):
+#     return self.ny
+
+
 @njit(cache=cfg.NUMBA_CACHE)
 def struct_get_epsilon(self):
     return self.epsilon
@@ -198,6 +217,11 @@ def struct_get_dt(self):
 @njit(cache=cfg.NUMBA_CACHE)
 def struct_get_bd_size(self):
     return self.bd_size
+
+
+@njit(cache=cfg.NUMBA_CACHE)
+def struct_get_forcing(self):
+    return self.forcing
 
 
 @njit(cache=cfg.NUMBA_CACHE)
@@ -277,11 +301,13 @@ structref.define_proxy(
     ParamsStruct,
     ParamsStructType,
     [
+        # "ny",
         "epsilon",
         "lambda_const",
         "dt",
         "sample_rate",
         "bd_size",
+        "forcing",
         "n_forcing",
         "u0",
         "seeked_error_norm",
@@ -302,12 +328,14 @@ structref.define_proxy(
 # Remember to indicate variable type through default value, e.g. 0.0 for float
 # instead of 0 (if set to 0 -> variable will be integer)
 PAR = ParamsStruct(
+    # ny=1e-8,
     epsilon=0.5,
     lambda_const=2.0,
     dt=1e-7,
     sdim=20,
     sample_rate=0.001,
     bd_size=2,
+    forcing=1,
     n_forcing=0,
     u0=1,
     seeked_error_norm=1e-4,

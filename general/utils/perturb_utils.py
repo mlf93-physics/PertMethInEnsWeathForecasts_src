@@ -8,20 +8,22 @@ import general.utils.dev_plots as g_dev_plots
 import general.utils.importing.import_data_funcs as g_import
 import general.utils.importing.import_perturbation_data as pt_import
 import general.utils.util_funcs as g_utils
-import lorentz63_experiments.params.params as l63_params
-import lorentz63_experiments.params.special_params as l63_sparams
 import numpy as np
-import shell_model_experiments.utils.special_params as sh_sparams
 from general.params.model_licences import Models
 from general.utils.module_import.type_import import *
-from shell_model_experiments.params.params import PAR as PAR_SH
-from shell_model_experiments.params.params import ParamsStructType
 
 # Get parameters for model
 if cfg.MODEL == Models.SHELL_MODEL:
+    import shell_model_experiments.utils.special_params as sh_sparams
+    from shell_model_experiments.params.params import PAR as PAR_SH
+    from shell_model_experiments.params.params import ParamsStructType
+
     params = PAR_SH
     sparams = sh_sparams
 elif cfg.MODEL == Models.LORENTZ63:
+    import lorentz63_experiments.params.params as l63_params
+    import lorentz63_experiments.params.special_params as l63_sparams
+
     params = l63_params
     sparams = l63_sparams
 
@@ -71,15 +73,9 @@ def calculate_perturbations(
                     perturb_vectors, perturb_vectors_conj, n_runs_per_profile, i
                 )
 
-            # Apply breed vector perturbation
-            elif args["pert_mode"] == "bv":
-                # Generate random weights of the complex-conjugate eigenvector pair
-                # _weight = np.random.rand() * 2 - 1
+            # Apply bv, bv_eof or sv perturbation
+            elif "bv" in args["pert_mode"] or "sv" in args["pert_mode"]:
                 # Make perturbation vector
-                perturb = perturb_vectors[:, i]
-
-            # Apply breed vector EOF perturbations
-            elif args["pert_mode"] == "bv_eof":
                 perturb = perturb_vectors[:, i]
 
         # Apply single shell perturbation
@@ -112,7 +108,9 @@ def calculate_perturbations(
     return perturbations
 
 
-def rescale_perturbations(perturb_data: np.ndarray, args: dict) -> np.ndarray:
+def rescale_perturbations(
+    perturb_data: np.ndarray, args: dict, raw_perturbations: bool = False
+) -> np.ndarray:
     """Rescale a set of perturbations to the seeked error norm relative to
     the reference data
 
@@ -122,21 +120,19 @@ def rescale_perturbations(perturb_data: np.ndarray, args: dict) -> np.ndarray:
         The perturbations that are rescaled
     args : dict
         Run-time arguments
+    raw_perturbations : bool, optional
+        If the raw perturbations should be returned instead of the perturbations
+        added to the u_init_profiles, by default False
+
 
     Returns
     -------
     np.ndarray
         The rescaled perturbations added to the reference data
+        (if raw_perturbations is True)
     """
 
     num_perturbations = args["n_runs_per_profile"]
-
-    # Import reference data
-    (
-        u_init_profiles,
-        _,
-        _,
-    ) = g_import.import_start_u_profiles(args=args)
 
     # Transform into 2d array
     perturb_data = np.array(perturb_data)
@@ -147,8 +143,19 @@ def rescale_perturbations(perturb_data: np.ndarray, args: dict) -> np.ndarray:
         mode="constant",
     )
 
-    # Diff data
-    diff_data = perturb_data.T - u_init_profiles
+    if not raw_perturbations:
+        # Import reference data
+        (
+            u_init_profiles,
+            _,
+            _,
+        ) = g_import.import_start_u_profiles(args=args)
+
+        # Diff data
+        diff_data = perturb_data.T - u_init_profiles
+    else:
+        diff_data = perturb_data.T
+
     # Rescale data
     rescaled_data = (
         diff_data
@@ -162,8 +169,12 @@ def rescale_perturbations(perturb_data: np.ndarray, args: dict) -> np.ndarray:
             np.linalg.norm(rescaled_data[:, 0] - rescaled_data[:, 1], axis=0),
         )
 
-    # Add rescaled data to u_init_profiles
-    u_init_profiles += rescaled_data
+    if not raw_perturbations:
+        # Add rescaled data to u_init_profiles
+        u_init_profiles += rescaled_data
+    else:
+        # Return raw rescaled perturbations
+        u_init_profiles = rescaled_data
 
     return u_init_profiles
 
@@ -240,3 +251,150 @@ def generate_nm_perturbations(
         ).real
 
     return perturb
+
+
+def lanczos_vector_algorithm(
+    propagated_vector: np.ndarray((params.sdim, 1), dtype=sparams.dtype) = None,
+    input_vector_j: np.ndarray((params.sdim, 1), dtype=sparams.dtype) = None,
+    n_iterations: int = 0,
+):
+    """Execute the Lanczos algorithm to find eigenvectors and -values of the L*L
+    matrix, i.e. the singular vectors and values.
+
+    Calculates the tri-diagonal matrix and Lanczos vectors, which can be
+    diagonalised to get eigenvalues and eigenvectors. These vectors can be
+    projected onto the Lanczos vectors to get the singular vectors of L*L. See
+    pt_utils.calculate_svs function for details of the projection.
+
+    Parameters
+    ----------
+    propagated_vector : np.ndarray, optional
+        The propagated vector w defined as w = L*L v, by default None
+    input_vector_j : np.ndarray, optional
+        The input vector, v, which is propagated into w, by default None
+    n_iterations : int, optional
+        The number of iterations of the Lanczos algorithm, by default 0.
+        Corresponds to the number of singular vectors
+        calculated.
+
+    Yields
+    ------
+    tuple
+        (
+            output_vector : np.ndarray
+                The vector that will be propagated by L*L in next iterations
+            tridiag_matrix : np.ndarray
+                The tri-diagonal matrix which can be used to solve the eigenvalue
+                problem of L*L.
+            input_vector_matrix : np.ndarray
+                The matrix with columns equal to all input vectors (Lanczos vectors)
+                from all iterations
+        )
+    """
+    beta_j = 0
+    tridiag_matrix = np.zeros((n_iterations, n_iterations), dtype=sparams.dtype)
+    input_vector_matrix = np.zeros((params.sdim, n_iterations), dtype=sparams.dtype)
+    iteration = 0
+
+    def iterator(
+        beta_j: float = 0,
+        iteration: int = 0,
+    ):
+        """The iterator of the Lanczos algorithm
+
+        Parameters
+        ----------
+        beta_j : float, optional
+            The previous value for the Beta variable, by default 0
+        iteration : int, optional
+            The iteration number, by default 0
+
+        Returns
+        -------
+        tuple
+            (
+                output_vector : np.ndarray
+                    The vector to be propagated by L*L
+                beta_j : float
+                    The new value for the Beta variable
+            )
+        """
+        omega_j_temp = propagated_vector
+        alpha_j = (omega_j_temp.T.conj() @ input_vector_j)[0, 0]
+
+        # Save alpha_j to tridiag_matrix
+        tridiag_matrix[iteration, iteration] = alpha_j
+
+        # Calculate omega_j (on first iteration beta_j == 0)
+        omega_j = (
+            omega_j_temp
+            - alpha_j * input_vector_j
+            - beta_j
+            * np.reshape(input_vector_matrix[:, iteration - 1], (params.sdim, 1))
+        )
+
+        # Update beta_j
+        beta_j = np.linalg.norm(omega_j)
+
+        if iteration > 0:
+            # Save beta_j to matrix
+            tridiag_matrix[iteration - 1, iteration] = tridiag_matrix[
+                iteration, iteration - 1
+            ] = beta_j
+        if beta_j != 0:
+            output_vector = omega_j / beta_j
+        else:
+            print("hello1, implementation lacking")
+
+        return output_vector, beta_j
+
+    while True:
+        output_vector, beta_j = iterator(beta_j, iteration)
+        input_vector_matrix[:, iteration] = input_vector_j.ravel()
+
+        # Update iteration
+        iteration += 1
+
+        yield output_vector, tridiag_matrix, input_vector_matrix
+
+
+def calculate_svs(
+    tridiag_matrix: np.ndarray, vector_matrix: np.ndarray
+) -> Tuple[np.ndarray, np.ndarray]:
+    """Calculate the singular vectors from the tri-diagonal matrix returned by
+    the lanczos_vector_algorithm function.
+
+    Parameters
+    ----------
+    tridiag_matrix : np.ndarray
+        The tri-diagonal matrix to be diagonalised
+    vector_matrix : np.ndarray
+        A matrix with the Lanczos vectors at each column
+
+    Returns
+    -------
+    tuple
+        (
+            sv_matrix : np.ndarray
+                The sorted singular vectors of the L*L operator
+            s_values : np.ndarray
+                The sorted singular values of the L*L operator
+        )
+    """
+
+    # Get eigenvectors from tridiag_matrix.
+    e_values, e_vectors = np.linalg.eig(tridiag_matrix)
+    # Take sqrt to get singular values of L
+    s_values = np.sqrt(e_values.astype(np.complex128))
+    # Sort e_values and e_vectors
+    sort_index = np.argsort(s_values)[::-1]
+    s_values = s_values[sort_index]
+    e_vectors = e_vectors[:, sort_index]
+    # Get SVs
+    sv_matrix = vector_matrix @ e_vectors
+    # Normalize
+    sv_matrix = g_utils.normalize_array(
+        sv_matrix, norm_value=params.seeked_error_norm, axis=1
+    )
+
+    return sv_matrix, s_values

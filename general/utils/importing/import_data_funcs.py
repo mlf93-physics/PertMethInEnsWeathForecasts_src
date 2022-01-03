@@ -2,28 +2,33 @@ import sys
 
 sys.path.append("..")
 import itertools as it
-import re
 import json
 import pathlib as pl
-import numpy as np
-from general.utils.module_import.type_import import *
-from shell_model_experiments.params.params import ParamsStructType
-from shell_model_experiments.params.params import PAR as PAR_SH
-import shell_model_experiments.utils.special_params as sh_sparams
-import lorentz63_experiments.params.special_params as l63_sparams
-import lorentz63_experiments.params as l63_params
-from general.params.model_licences import Models
-import general.utils.util_funcs as g_utils
-import general.utils.exceptions as g_exceptions
-from general.utils.module_import.type_import import *
-import general.utils.custom_decorators as dec
-import config as cfg
+import re
 
-# Get parameters for model
+import config as cfg
+import general.utils.custom_decorators as dec
+import general.utils.exceptions as g_exceptions
+import general.utils.util_funcs as g_utils
+from libs.libutils import file_utils as lib_file_utils
+import numpy as np
+from general.params.model_licences import Models
+from general.utils.module_import.type_import import *
+
 if cfg.MODEL == Models.SHELL_MODEL:
-    params = PAR_SH
+    # Shell model specific imports
+    import shell_model_experiments.utils.special_params as sh_sparams
+    from shell_model_experiments.params.params import PAR, ParamsStructType
+
+    # Get parameters for model
+    params = PAR
     sparams = sh_sparams
 elif cfg.MODEL == Models.LORENTZ63:
+    # Get parameters for model
+    import lorentz63_experiments.params.params as l63_params
+    import lorentz63_experiments.params.special_params as l63_sparams
+
+    # Get parameters for model
     params = l63_params
     sparams = l63_sparams
 
@@ -126,9 +131,27 @@ def imported_sorted_perturbation_info(folder_name, args, search_pattern="*.csv")
         # Import perturbation header info
         perturb_header_dict = import_header(file_name=perturb_file)
 
-        # Save time positions, by taking into account different sample rates
-        perturb_time_pos_list.append(int(perturb_header_dict["perturb_pos"]))
+        # Take submodel into account (if ATL -> time goes backwards)
+        _temp_time_pos = int(round(perturb_header_dict["perturb_pos"]))
+        if "submodel" in perturb_header_dict:
+            if perturb_header_dict["submodel"] is not None:
+                if perturb_header_dict["submodel"] == "ATL":
+                    # Subtract number of datapoints in order to be able to match
+                    # ATL perturbation against reference file import
+                    _temp_time_pos = _temp_time_pos - int(
+                        round(
+                            perturb_header_dict["Nt"]
+                            * perturb_header_dict["sample_rate"]
+                        )
+                    )
+                    if _temp_time_pos < 0:
+                        raise ValueError(
+                            f"Time position becomes negative due to submodel={perturb_header_dict['submodel']}"
+                        )
 
+        perturb_time_pos_list.append(_temp_time_pos)
+
+        # Save time positions, by taking into account different sample rates
         perturb_time_pos_list_legend.append(
             f"Start time: "
             + f'{perturb_header_dict["perturb_pos"]/perturb_header_dict["sample_rate"]*perturb_header_dict["dt"]:.3f}s'
@@ -136,34 +159,35 @@ def imported_sorted_perturbation_info(folder_name, args, search_pattern="*.csv")
 
         perturb_header_dicts.append(perturb_header_dict)
 
-    # Get sort index
-    ascending_perturb_pos_index = np.argsort(perturb_time_pos_list)
+    # Sort according to profile and run_in_profile if the keys are present
+    if "profile" in perturb_header_dicts[0]:
+        (
+            perturb_file_names,
+            ascending_sort_index,
+        ) = g_utils.sort_paths_according_to_header_dicts(
+            perturb_file_names, ["profile", "run_in_profile"]
+        )
+    else:
+        # Get sort index
+        ascending_sort_index = np.argsort(perturb_time_pos_list)
+        # Sort perturb file names
+        perturb_file_names = [perturb_file_names[i] for i in ascending_sort_index]
 
     # Sort arrays/lists
     perturb_time_pos_list = np.array(
-        [
-            perturb_time_pos_list[i]
-            for i in ascending_perturb_pos_index
-            if (i + 1) <= args["n_files"]
-        ]
+        [perturb_time_pos_list[i] for i in ascending_sort_index]
     )
     perturb_time_pos_list_legend = np.array(
-        [
-            perturb_time_pos_list_legend[i]
-            for i in ascending_perturb_pos_index
-            if (i + 1) <= args["n_files"]
-        ]
+        [perturb_time_pos_list_legend[i] for i in ascending_sort_index]
     )
-    perturb_header_dicts = [
-        perturb_header_dicts[i]
-        for i in ascending_perturb_pos_index
-        if (i + 1) <= args["n_files"]
-    ]
-    perturb_file_names = [
-        perturb_file_names[i]
-        for i in ascending_perturb_pos_index
-        if (i + 1) <= args["n_files"]
-    ]
+    perturb_header_dicts = [perturb_header_dicts[i] for i in ascending_sort_index]
+
+    # Truncate at n_files
+    if args["n_files"] < np.inf:
+        perturb_file_names = perturb_file_names[: args["n_files"]]
+        perturb_time_pos_list = perturb_time_pos_list[: args["n_files"]]
+        perturb_time_pos_list_legend = perturb_time_pos_list_legend[: args["n_files"]]
+        perturb_header_dicts = perturb_header_dicts[: args["n_files"]]
 
     return (
         perturb_time_pos_list,
@@ -174,7 +198,11 @@ def imported_sorted_perturbation_info(folder_name, args, search_pattern="*.csv")
 
 
 def import_data(
-    file_name: pl.Path, start_line: int = 0, max_lines: int = None, step: int = 1
+    file_name: pl.Path,
+    start_line: int = 0,
+    max_lines: int = None,
+    step: int = 1,
+    dtype=None,
 ) -> Tuple[np.ndarray, dict]:
 
     # Import header
@@ -189,6 +217,10 @@ def import_data(
     # if len_file == 0:
     #     raise ImportError(f"File is empty; file_name = {file_name}")
 
+    # Set dtype if not given as argument
+    if dtype is None:
+        dtype = sparams.dtype
+
     stop_line = None if max_lines is None else start_line + max_lines
     # Import data
     with open(file_name) as file:
@@ -199,8 +231,8 @@ def import_data(
             stop_line,
             step,
         )
-        data_in: np.ndarray(dtype=sparams.dtype) = np.genfromtxt(
-            line_iterator, dtype=sparams.dtype, delimiter=","
+        data_in: np.ndarray(dtype=dtype) = np.genfromtxt(
+            line_iterator, dtype=dtype, delimiter=","
         )
 
     if data_in.size == 0:
@@ -225,7 +257,7 @@ def import_ref_data(args=None):
     ref_files_sort_index = np.argsort(
         [str(ref_record_name) for ref_record_name in ref_record_names]
     )
-    ref_record_names_sorted = [ref_record_names[i] for i in ref_files_sort_index]
+    ref_record_files_sorted = [ref_record_names[i] for i in ref_files_sort_index]
 
     time_concat = []
     u_data_concat = []
@@ -238,7 +270,7 @@ def import_ref_data(args=None):
         print("\n Importing listed reference data records: ", records_to_import, "\n")
 
     for i, record in enumerate(records_to_import):
-        file_name = ref_record_names_sorted[record]
+        file_name = ref_record_files_sorted[record]
 
         endpoint = args["endpoint"] if "endpoint" in args else False
 
@@ -345,7 +377,9 @@ def import_perturbation_velocities(
     ref_file_match_keys_array = np.array(list(ref_file_match.keys()))
 
     # Get sorted file paths
-    ref_record_names_sorted = g_utils.get_sorted_ref_record_names(args=args)
+    ref_record_files_sorted = lib_file_utils.get_files_in_path(
+        pl.Path(args["datapath"], "ref_data")
+    )
 
     ref_file_counter = 0
     perturb_index = 0
@@ -376,7 +410,9 @@ def import_perturbation_velocities(
         ref_data_in = np.array([], dtype=sparams.dtype).reshape(0, params.sdim + 1)
 
         # Determine offset to work with perturb_pos=0
-        _offset = 1 * (perturb_header_dict["perturb_pos"] == 0)
+        # perturb_time_pos_list is used in order to take into account adjusted
+        # position when import ATL perturbation
+        _offset = 1 * (perturb_time_pos_list[iperturb_file] == 0)
 
         # Keep importing datafiles untill ref_data_in has same size as perturb dataarray
         counter = 0
@@ -394,9 +430,8 @@ def import_perturbation_velocities(
                 if counter == 0
                 else int(perturb_header_dict["N_data"]) - ref_data_in.shape[0]
             )
-
             temp_ref_data_in, ref_header_dict = import_data(
-                ref_record_names_sorted[
+                ref_record_files_sorted[
                     ref_file_match_keys_array[ref_file_counter] + counter
                 ],
                 start_line=skip_lines,
@@ -491,17 +526,20 @@ def import_start_u_profiles(args: dict = None) -> Tuple[np.ndarray, List[int], d
             + "in reference datafile(s)\n"
         )
         if "time" in ref_header_dict:
-            time_to_run = ref_header_dict["time"]
+            ref_time_to_run = ref_header_dict["time"]
         elif "time_to_run" in ref_header_dict:
-            time_to_run = ref_header_dict["time_to_run"]
+            ref_time_to_run = ref_header_dict["time_to_run"]
         else:
             raise KeyError("No valid key with time to run information")
 
-        n_data = int((time_to_run) * params.tts)
+        n_data = int(ref_time_to_run * params.tts)
 
         # Generate random start positions
         # division = total #datapoints - burn_in #datapoints - #datapoints per perturbation
         division_size = int(n_data // n_profiles - args["Nt"] * params.sample_rate)
+        if division_size < 0:
+            raise ValueError("division_size is negative")
+
         rand_division_start = np.random.randint(
             low=0, high=division_size, size=n_profiles
         )
@@ -535,7 +573,9 @@ def import_start_u_profiles(args: dict = None) -> Tuple[np.ndarray, List[int], d
     )
 
     # Get sorted file paths
-    ref_record_names_sorted = g_utils.get_sorted_ref_record_names(args=args)
+    ref_record_files_sorted = lib_file_utils.get_files_in_path(
+        pl.Path(args["datapath"], "ref_data")
+    )
 
     # Prepare u_init_profiles matrix
     u_init_profiles = np.zeros(
@@ -549,7 +589,7 @@ def import_start_u_profiles(args: dict = None) -> Tuple[np.ndarray, List[int], d
     for file_id in ref_file_match.keys():
         for position in ref_file_match[int(file_id)]:
             temp_u_init_profile = np.genfromtxt(
-                ref_record_names_sorted[int(file_id)],
+                ref_record_files_sorted[int(file_id)],
                 dtype=sparams.dtype,
                 delimiter=",",
                 skip_header=np.int64(round(position, 0)),

@@ -21,23 +21,27 @@ import general.utils.importing.import_data_funcs as g_import
 import general.utils.importing.import_perturbation_data as pt_import
 import general.utils.importing.import_utils as g_imp_utils
 import general.utils.plot_utils as g_plt_utils
+from general.plotting.plot_params import *
 import general.utils.user_interface as g_ui
 import general.utils.util_funcs as g_utils
-import lorentz63_experiments.params.params as l63_params
-import lorentz63_experiments.plotting.plot_data as l63_plot
+from libs.libutils import file_utils as lib_file_utils, type_utils as lib_type_utils
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sb
-import shell_model_experiments.plotting.plot_data as sh_plot
-import shell_model_experiments.utils.util_funcs as sh_utils
 from general.params.model_licences import Models
-from shell_model_experiments.params.params import PAR as PAR_SH
-from shell_model_experiments.params.params import ParamsStructType
 
 # Get parameters for model
 if cfg.MODEL == Models.SHELL_MODEL:
+    import shell_model_experiments.plotting.plot_data as sh_plot
+    import shell_model_experiments.utils.util_funcs as sh_utils
+    from shell_model_experiments.params.params import PAR as PAR_SH
+    from shell_model_experiments.params.params import ParamsStructType
+
     params = PAR_SH
 elif cfg.MODEL == Models.LORENTZ63:
+    import lorentz63_experiments.params.params as l63_params
+    import lorentz63_experiments.plotting.plot_data as l63_plot
+
     params = l63_params
 
 
@@ -55,9 +59,13 @@ def plt_vector_comparison(args):
     # First folder: breed vectors
     args["exp_folder"] = args["exp_folders"][0]
 
-    breed_vector_units, _, _, breed_vec_header_dicts = pt_import.import_perturb_vectors(
-        args
-    )
+    (
+        breed_vector_units,
+        _,
+        _,
+        _,
+        breed_vec_header_dicts,
+    ) = pt_import.import_perturb_vectors(args, raw_perturbations=True)
     # breed_vector_units = np.squeeze(breed_vector_units, axis=0)
     # Normalize vectors
     breed_vector_units = g_utils.normalize_array(
@@ -70,8 +78,9 @@ def plt_vector_comparison(args):
         lyapunov_vector_units,
         _,
         _,
+        _,
         lyapunov_vec_header_dicts,
-    ) = pt_import.import_perturb_vectors(args)
+    ) = pt_import.import_perturb_vectors(args, raw_perturbations=True)
 
     # lyapunov_vector_units = np.squeeze(lyapunov_vector_units, axis=0)
     # Normalize vectors
@@ -81,8 +90,12 @@ def plt_vector_comparison(args):
 
     n_vectors = args["n_runs_per_profile"]
 
-    num_subplot_cols = math.floor(args["n_profiles"] / 2)
-    num_subplot_rows = math.ceil(args["n_profiles"] / num_subplot_cols)
+    if args["n_profiles"] > 1:
+        num_subplot_cols = math.floor(args["n_profiles"] / 2)
+        num_subplot_rows = math.ceil(args["n_profiles"] / num_subplot_cols)
+    else:
+        num_subplot_cols = 1
+        num_subplot_rows = 1
 
     fig1, axes1 = plt.subplots(
         num_subplot_rows, num_subplot_cols, sharex=True, sharey=True
@@ -90,6 +103,11 @@ def plt_vector_comparison(args):
     fig2, axes2 = plt.subplots(
         num_subplot_rows, num_subplot_cols, sharex=True, sharey=True
     )
+
+    if args["n_profiles"] == 1:
+        axes1 = np.array(axes1)
+        axes2 = np.array(axes2)
+
     axes1 = axes1.ravel()
     axes2 = axes2.ravel()
 
@@ -109,6 +127,13 @@ def plt_vector_comparison(args):
         orthogonality_matrix = np.abs(
             breed_vector_units[i, :, :].conj() @ lyapunov_vector_units[i, :, :].T
         )
+
+        # print(
+        #     "orthogonality_matrix mean",
+        #     np.mean(
+        #         orthogonality_matrix[~np.eye(orthogonality_matrix.shape[0], dtype=bool)]
+        #     ),
+        # )
 
         sb.heatmap(
             orthogonality_matrix,
@@ -150,7 +175,7 @@ def plot_error_norm_comparison(args: dict):
     elif args["exp_folder"] is not None:
         # Get dirs in path
         _path = pl.Path(args["datapath"], args["exp_folder"])
-        _dirs = g_utils.get_dirs_in_path(_path)
+        _dirs = lib_file_utils.get_dirs_in_path(_path)
         len_folders = len(_dirs)
 
         if len_folders == 0:
@@ -160,8 +185,10 @@ def plot_error_norm_comparison(args: dict):
             args["exp_folders"] = [
                 str(pl.Path(_dirs[i].parent.name, _dirs[i].name))
                 for i in range(len_folders)
-                if "bv" in _dirs[i].name
-                # if "rd" in _dirs[i].name or "nm" in _dirs[i].name
+                # if "sv" in _dirs[i].name
+                # if "bv" in _dirs[i].name
+                # or "bv_eof" in _dirs[i].name
+                if "perturbations" in _dirs[i].name  # or "nm" in _dirs[i].name
             ]
 
         # Update number of folders after filtering
@@ -170,28 +197,46 @@ def plot_error_norm_comparison(args: dict):
     cmap_list = plt.rcParams["axes.prop_cycle"].by_key()["color"]
 
     line_counter = 0
+    perturb_type_old = ""
     for i, folder in enumerate(args["exp_folders"]):
+        folder_path = pl.Path(folder)
         # Set exp_folder
         args["exp_folder"] = folder
+
+        digits_in_name = lib_type_utils.get_digits_from_string(folder_path.name)
+        if digits_in_name is not None:
+            if isinstance(digits_in_name, int):
+                perturb_type = folder_path.name.split(str(digits_in_name))[0]
+
+                if not perturb_type == perturb_type_old:
+                    color = cmap_list[i]
+                    _save_color = color
+                    perturb_type_old = perturb_type
+                else:
+                    color = _save_color
+                    if digits_in_name >= args["n_runs_per_profile"]:
+                        continue
+
+                linestyle = LINESTYLES[digits_in_name]
+
+        else:
+            color = cmap_list[i]
+            linestyle = None
 
         g_plt_data.plot_error_norm_vs_time(
             args,
             axes=axes[0],
-            cmap_list=[cmap_list[i]],
+            cmap_list=[color],
+            linestyle=linestyle,
             legend_on=False,
             normalize_start_time=False,
             plot_args=[],
         )
         lines: list = list(axes[0].get_lines())
-        lines[line_counter].set_label(folder)
+        lines[line_counter].set_label(str(pl.Path(folder).name))
 
         len_lines = len(lines)
         line_counter += len_lines - line_counter
-
-        # for j in range(0, len_lines, 3):
-        #     lines[j].set_linestyle("-")
-        #     lines[(j + 1) % len_lines].set_linestyle("--")
-        #     lines[(j + 2) % len_lines].set_linestyle("-.")
 
     axes[0].legend()
 
@@ -218,6 +263,82 @@ def plot_error_norm_comparison(args: dict):
         l63_plot.plot_energy(args, axes=axes[1])
 
 
+def plot_exp_growth_rate_comparison(args: dict):
+    """Plots a comparison of the exponential growth rates vs time for the different
+    perturbation methods
+
+    Parameters
+    ----------
+    args : dict
+        Run-time arguments
+    """
+
+    # args["endpoint"] = True
+
+    if args["exp_folders"] is not None:
+        len_folders = len(args["exp_folders"])
+    elif args["exp_folder"] is not None:
+        # Get dirs in path
+        _path = pl.Path(args["datapath"], args["exp_folder"])
+        _dirs = lib_file_utils.get_dirs_in_path(_path)
+        len_folders = len(_dirs)
+
+        if len_folders == 0:
+            args["exp_folders"] = [args["exp_folder"]]
+        else:
+            # Sort out dirs not named *_perturbations
+            args["exp_folders"] = [
+                str(pl.Path(_dirs[i].parent.name, _dirs[i].name))
+                for i in range(len_folders)
+                if "sv" in _dirs[i].name
+                # if "perturbations" in _dirs[i].name  # or "nm" in _dirs[i].name
+            ]
+
+        # Update number of folders after filtering
+        len_folders = len(args["exp_folders"])
+
+    cmap_list = plt.rcParams["axes.prop_cycle"].by_key()["color"]
+    cmap_list = g_plt_utils.get_non_repeating_colors(n_colors=len_folders)
+    cmap_list[0] = "k"
+    axes = plt.axes()
+
+    perturb_type_old = ""
+    for i, folder in enumerate(args["exp_folders"]):
+        folder_path = pl.Path(folder)
+
+        digits_in_name = lib_type_utils.get_digits_from_string(folder_path.name)
+        if digits_in_name is not None:
+            if isinstance(digits_in_name, int):
+                perturb_type = folder_path.name.split(str(digits_in_name))[0]
+
+                if not perturb_type == perturb_type_old:
+                    color = cmap_list[i]
+                    _save_color = color
+                    perturb_type_old = perturb_type
+                else:
+                    color = _save_color
+                    if digits_in_name >= args["n_runs_per_profile"]:
+                        continue
+
+                linestyle = LINESTYLES[digits_in_name]
+
+        else:
+            color = cmap_list[i]
+            linestyle = None
+
+        # Set exp_folder
+        args["exp_folder"] = folder
+
+        g_plt_data.plot_exp_growth_rate_vs_time(
+            args=args,
+            axes=axes,
+            color=cmap_list[i],
+            # linestyle=linestyle,
+            plot_args=[],
+            title_suffix=str(folder_path.parent),
+        )
+
+
 if __name__ == "__main__":
     cfg.init_licence()
 
@@ -234,6 +355,7 @@ if __name__ == "__main__":
     if cfg.MODEL == Models.SHELL_MODEL:
         # Initiate and update variables and arrays
         sh_utils.update_dependent_params(params)
+        sh_utils.set_params(params, parameter="sdim", value=args["sdim"])
         sh_utils.update_arrays(params)
 
     g_ui.confirm_run_setup(args)
@@ -242,7 +364,9 @@ if __name__ == "__main__":
         plt_vector_comparison(args)
     elif "error_norm_compare" in args["plot_type"]:
         plot_error_norm_comparison(args)
+    elif "exp_growth_rate_compare" in args["plot_type"]:
+        plot_exp_growth_rate_comparison(args)
     else:
         raise ValueError("No valid plot type given as input argument")
 
-    g_plt_utils.save_or_show_plot(args)
+    g_plt_utils.save_or_show_plot(args, tight_layout_rect=[0, 0, 0.9, 1])

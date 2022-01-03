@@ -21,21 +21,23 @@ import general.plotting.plot_data as g_plt_data
 import general.utils.argument_parsers as a_parsers
 import general.utils.importing.import_data_funcs as g_import
 import general.utils.user_interface as g_ui
-import lorentz63_experiments.params.params as l63_params
-import lorentz63_experiments.plotting.plot_data as l63_plot
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sb
-import shell_model_experiments.plotting.plot_data as sh_plot
-import shell_model_experiments.utils.util_funcs as sh_utils
 from general.params.model_licences import Models
-from shell_model_experiments.params.params import PAR as PAR_SH
-from shell_model_experiments.params.params import ParamsStructType
 
 # Get parameters for model
 if cfg.MODEL == Models.SHELL_MODEL:
+    import shell_model_experiments.plotting.plot_data as sh_plot
+    import shell_model_experiments.utils.util_funcs as sh_utils
+    from shell_model_experiments.params.params import PAR as PAR_SH
+    from shell_model_experiments.params.params import ParamsStructType
+
     params = PAR_SH
 elif cfg.MODEL == Models.LORENTZ63:
+    import lorentz63_experiments.params.params as l63_params
+    import lorentz63_experiments.plotting.plot_data as l63_plot
+
     params = l63_params
 
 # Setup plotting defaults
@@ -58,6 +60,7 @@ def plot_tlm_solution(args, axes=None):
     )
 
     args["exp_folder"] = pl.Path(exp_setup["folder_name"], exp_setup["sub_exp_folder"])
+
     g_plt_data.plot_error_norm_vs_time(
         args=args,
         normalize_start_time=False,
@@ -195,7 +198,8 @@ if __name__ == "__main__":
     # Shell model specific
     if cfg.MODEL == Models.SHELL_MODEL:
         # Initiate and update variables and arrays
-        sh_utils.update_dependent_params(params, sdim=int(args["sdim"]))
+        sh_utils.update_dependent_params(params)
+        sh_utils.set_params(params, parameter="sdim", value=args["sdim"])
         sh_utils.update_arrays(params)
 
     if "tlm_error_norm" in args["plot_type"]:

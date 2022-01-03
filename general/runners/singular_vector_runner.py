@@ -1,8 +1,8 @@
-"""Calculate the Lyapunov vectors
+"""Calculate the singular vectors
 
 Example
 -------
-python ../general/runners/lyapunov_vector_runner.py --exp_setup=TestRun4 --n_units=1
+python ../general/runners/singular_vector_runner.py --exp_setup=TestRun0 --n_units=1
 
 """
 
@@ -28,22 +28,27 @@ import general.utils.saving.save_vector_funcs as v_save
 import general.utils.user_interface as g_ui
 import general.utils.util_funcs as g_utils
 from libs.libutils import file_utils as lib_file_utils
-import numpy as np
+import general.utils.perturb_utils as pt_utils
 from general.params.model_licences import Models
 
 import perturbation_runner as pt_runner
 
+
 # Get parameters for model
 if cfg.MODEL == Models.SHELL_MODEL:
     import shell_model_experiments.utils.util_funcs as sh_utils
+    import shell_model_experiments.utils.special_params as sh_sparams
     from shell_model_experiments.params.params import PAR as PAR_SH
     from shell_model_experiments.params.params import ParamsStructType
 
     params = PAR_SH
+    sparams = sh_sparams
 elif cfg.MODEL == Models.LORENTZ63:
     import lorentz63_experiments.params.params as l63_params
+    import lorentz63_experiments.params.special_params as l63_sparams
 
     params = l63_params
+    sparams = l63_sparams
 
 # Set global params
 cfg.GLOBAL_PARAMS.ref_run = False
@@ -52,7 +57,7 @@ cfg.GLOBAL_PARAMS.ref_run = False
 def main(args):
     # Set exp_setup path
     exp_file_path = pl.Path(
-        "./params/experiment_setups/lyapunov_vector_experiment_setups.json"
+        "./params/experiment_setups/singular_vector_experiment_setups.json"
     )
     # Get the current experiment setup
     exp_setup = exp_utils.get_exp_setup(exp_file_path, args)
@@ -60,7 +65,7 @@ def main(args):
     # Get number of existing blocks
     n_existing_units = lib_file_utils.count_existing_files_or_dirs(
         search_path=pl.Path(args["datapath"], exp_setup["folder_name"]),
-        search_pattern="lyapunov_vector*.csv",
+        search_pattern="singular_vector*.csv",
     )
 
     # Validate the start time method
@@ -79,6 +84,18 @@ def main(args):
     args["endpoint"] = True
     args["n_profiles"] = 1
     args["n_runs_per_profile"] = exp_setup["n_vectors"]
+    # Set exp folder (folder is reset before save of exp info)
+    args["out_exp_folder"] = pl.Path(
+        exp_setup["folder_name"], exp_setup["sub_exp_folder"]
+    )
+    # Adjust start times
+    args = g_utils.adjust_start_times_with_offset(args)
+    # Copy args for models
+    copy_args_tl = copy.deepcopy(args)
+    copy_args_atl = copy.deepcopy(args)
+
+    # Initiate rescaled_perturbations
+    rescaled_perturbations = None
 
     # Calculate the desired number of units
     for i in range(
@@ -86,40 +103,82 @@ def main(args):
         min(args["n_units"] + n_existing_units, num_possible_units),
     ):
         # Update start times
-        args["start_times"] = [start_times[i]]
-        # Set exp folder (folder is reset before save of exp info)
-        args["out_exp_folder"] = pl.Path(
-            exp_setup["folder_name"], exp_setup["sub_exp_folder"]
-        )
-        args = g_utils.adjust_start_times_with_offset(args)
-
+        copy_args_tl["start_times"] = [start_times[i]]
+        copy_args_atl["start_times"] = [start_times[i] + exp_setup["integration_time"]]
         # Import reference data
-        u_ref, _, ref_header_dict = g_import.import_start_u_profiles(args=args)
+        u_ref, _, ref_header_dict = g_import.import_start_u_profiles(args=copy_args_tl)
 
-        # Copy args in order not override in forecast processes
-        copy_args = copy.deepcopy(args)
+        # Skip save data except last iteration
+        if args["save_last_pert"]:
+            copy_args_tl["skip_save_data"] = True
+            copy_args_atl["skip_save_data"] = True
 
-        processes, data_out_list, _, _ = pt_runner.main_setup(
-            copy_args, exp_setup=exp_setup, u_ref=u_ref
-        )
+        for j in range(exp_setup["n_iterations"]):
 
-        if len(processes) > 0:
-            # Run specified number of cycles
-            pt_runner.main_run(
-                processes,
-                args=copy_args,
+            if copy_args_tl["save_last_pert"] and (j + 1) == exp_setup["n_iterations"]:
+                copy_args_tl["skip_save_data"] = False
+                copy_args_atl["skip_save_data"] = False
+
+            ###### TL model run ######
+            # Add TL submodel attribute
+            cfg.MODEL.submodel = "TL"
+            # On all other iterations except the first, the rescaled
+            # perturbations are used and are not None
+            processes, data_out_list, _, _ = pt_runner.main_setup(
+                copy_args_tl,
+                u_profiles_perturbed=rescaled_perturbations,
+                exp_setup=exp_setup,
+                u_ref=u_ref,
             )
 
-        else:
-            print("No processes to run - check if units already exists")
+            if len(processes) > 0:
+                # Run specified number of cycles
+                pt_runner.main_run(
+                    processes,
+                    args=copy_args_tl,
+                )
 
-        # Prepare Lyapunov vector data to be saved
-        data_out = np.array(data_out_list)
+                # The rescaled data is used to start off the adjoint model
+                rescaled_perturbations = pt_utils.rescale_perturbations(
+                    data_out_list, copy_args_atl, raw_perturbations=True
+                )
+
+            else:
+                print("No processes to run - check if units already exists")
+
+            ###### Adjoint model run ######
+            # Add ATL submodel attribute
+            cfg.MODEL.submodel = "ATL"
+            processes, data_out_list, _, _ = pt_runner.main_setup(
+                copy_args_atl,
+                u_profiles_perturbed=rescaled_perturbations,
+                exp_setup=exp_setup,
+                u_ref=u_ref,
+            )
+
+            if len(processes) > 0:
+                # Run specified number of iterations
+                pt_runner.main_run(
+                    processes,
+                    args=copy_args_atl,
+                )
+
+                # The rescaled data is used to start off the next iteration
+                rescaled_perturbations = pt_utils.rescale_perturbations(
+                    data_out_list, copy_args_tl, raw_perturbations=True
+                )
+
+            else:
+                print("No processes to run - check if units already exists")
+
         # Set out folder
         args["out_exp_folder"] = pl.Path(exp_setup["folder_name"])
-        # Save lyapunov vectors
+        # Reset submodel
+        cfg.MODEL.submodel = None
+
+        # Save singular vectors
         v_save.save_vector_unit(
-            data_out,
+            rescaled_perturbations[sparams.u_slice, :].T,
             perturb_position=int(round(start_times[i] * params.tts)),
             unit=i,
             args=args,
@@ -155,16 +214,12 @@ if __name__ == "__main__":
         sh_utils.set_params(params, parameter="sdim", value=args["sdim"])
         sh_utils.update_arrays(params)
 
-    # Add submodel attribute
-    cfg.MODEL.submodel = "TL"
-
     # Add ny argument
     if cfg.MODEL == Models.SHELL_MODEL:
         args["ny"] = sh_utils.ny_from_ny_n_and_forcing(
             args["forcing"], args["ny_n"], args["diff_exponent"]
         )
-
     main(args)
 
     profiler.stop()
-    print(profiler.output_text(color=True))
+    # print(profiler.output_text(color=True))

@@ -6,6 +6,7 @@ import numpy as np
 import numba as nb
 from shell_model_experiments.params.params import PAR, ParamsStructType
 import shell_model_experiments.utils.special_params as sparams
+from general.utils.module_import.type_import import *
 import config as cfg
 
 
@@ -108,35 +109,35 @@ def update_arrays(struct: ParamsStructType):
 
 @nb.njit(
     [
-        (nb.types.none)(nb.typeof(PAR), nb.types.int32),
-        (nb.types.none)(nb.typeof(PAR), nb.types.Omitted(None)),
+        (nb.types.none)(nb.typeof(PAR), nb.types.string, nb.types.float64),
+        (nb.types.none)(nb.typeof(PAR), nb.types.Omitted(None), nb.types.Omitted(None)),
     ],
     cache=cfg.NUMBA_CACHE,
 )
-def set_params(struct: ParamsStructType, sdim: int = None):
+def set_params(struct: ParamsStructType, parameter: str = None, value: float = None):
     """Set parameters in param struct
 
     Parameters
     ----------
     struct : ParamsStructType
         The parameter struct
-    sdim : int, optional
-        The dimension parameter, by default None
+    parameter : str, optional
+        The name of the parameter to set
     """
-    if sdim is not None:
-        struct.sdim = sdim
+    if parameter == "sdim":
+        struct.sdim = int(value)
+    elif parameter == "sample_rate":
+        struct.sample_rate = value
+    elif parameter == "seeked_error_norm":
+        struct.seeked_error_norm = value
 
 
 @nb.njit(
-    [
-        (nb.types.none)(nb.typeof(PAR), nb.types.int32),
-        (nb.types.none)(nb.typeof(PAR), nb.types.Omitted(None)),
-    ],
+    (nb.types.none)(nb.typeof(PAR)),
     cache=cfg.NUMBA_CACHE,
 )
-def update_dependent_params(struct: ParamsStructType, sdim: int = None):
-    """Update parameters based on other parameters and specific params given
-    as input arguments
+def update_dependent_params(struct: ParamsStructType):
+    """Update parameters based on other parameters
 
     Parameters
     ----------
@@ -149,9 +150,6 @@ def update_dependent_params(struct: ParamsStructType, sdim: int = None):
     struct.stt = struct.dt / struct.sample_rate
     struct.factor2 = -struct.epsilon / struct.lambda_const
     struct.factor3 = (1 - struct.epsilon) / struct.lambda_const ** 2
-
-    if sdim is not None:
-        set_params(struct, sdim=sdim)
 
 
 def format_params_to_string():

@@ -20,6 +20,9 @@ def detect_exp_licence() -> Experiment:
     if "perturbation_runner" == root_file_name:
         licence = exp.NORMAL_PERTURBATION
 
+    elif "breed_vector_eof" in root_file_name:
+        licence = exp.BREEDING_EOF_VECTORS
+
     elif "breed_vector" in root_file_name:
         licence = exp.BREEDING_VECTORS
 
@@ -32,11 +35,14 @@ def detect_exp_licence() -> Experiment:
     elif "lyapunov_vector_runner" == root_file_name:
         licence = exp.LYAPUNOV_VECTORS
 
-    elif "singular_vector_runner" == root_file_name:
+    elif "singular_vector" in root_file_name:
         licence = exp.SINGULAR_VECTORS
 
     elif "compare" in root_file_name:
         licence = exp.COMPARISON
+
+    elif "veri" in root_file_name:
+        licence = exp.VERIFICATION
 
     elif "plot_data" in root_file_name:
         licence = exp.NORMAL_PERTURBATION
