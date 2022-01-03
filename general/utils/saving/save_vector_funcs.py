@@ -5,6 +5,7 @@ import general.utils.saving.save_utils as g_save_utils
 import numpy as np
 from general.params.experiment_licences import Experiments as EXP
 from general.params.model_licences import Models
+from libs.libutils import file_utils as lib_file_utils
 
 # Get parameters for model
 if cfg.MODEL == Models.SHELL_MODEL:
@@ -52,8 +53,8 @@ def save_vector_unit(
     n_data = vectors.shape[0]
 
     # Generate path if not existing
-    expected_path = g_save_utils.generate_dir(
-        pl.Path(args["datapath"], args["out_exp_folder"]), args=args
+    expected_path = lib_file_utils.generate_dir(
+        pl.Path(args["datapath"], args["out_exp_folder"])
     )
     # Calculate position of when the vector is to be valid
     if cfg.LICENCE == EXP.BREEDING_VECTORS:

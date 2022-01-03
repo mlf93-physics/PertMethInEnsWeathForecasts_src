@@ -24,6 +24,7 @@ import general.utils.plot_utils as g_plt_utils
 from general.plotting.plot_params import *
 import general.utils.user_interface as g_ui
 import general.utils.util_funcs as g_utils
+from libs.libutils import file_utils as lib_file_utils, type_utils as lib_type_utils
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sb
@@ -174,7 +175,7 @@ def plot_error_norm_comparison(args: dict):
     elif args["exp_folder"] is not None:
         # Get dirs in path
         _path = pl.Path(args["datapath"], args["exp_folder"])
-        _dirs = g_utils.get_dirs_in_path(_path)
+        _dirs = lib_file_utils.get_dirs_in_path(_path)
         len_folders = len(_dirs)
 
         if len_folders == 0:
@@ -202,7 +203,7 @@ def plot_error_norm_comparison(args: dict):
         # Set exp_folder
         args["exp_folder"] = folder
 
-        digits_in_name = g_utils.get_digits_from_string(folder_path.name)
+        digits_in_name = lib_type_utils.get_digits_from_string(folder_path.name)
         if digits_in_name is not None:
             if isinstance(digits_in_name, int):
                 perturb_type = folder_path.name.split(str(digits_in_name))[0]
@@ -279,7 +280,7 @@ def plot_exp_growth_rate_comparison(args: dict):
     elif args["exp_folder"] is not None:
         # Get dirs in path
         _path = pl.Path(args["datapath"], args["exp_folder"])
-        _dirs = g_utils.get_dirs_in_path(_path)
+        _dirs = lib_file_utils.get_dirs_in_path(_path)
         len_folders = len(_dirs)
 
         if len_folders == 0:
@@ -305,7 +306,7 @@ def plot_exp_growth_rate_comparison(args: dict):
     for i, folder in enumerate(args["exp_folders"]):
         folder_path = pl.Path(folder)
 
-        digits_in_name = g_utils.get_digits_from_string(folder_path.name)
+        digits_in_name = lib_type_utils.get_digits_from_string(folder_path.name)
         if digits_in_name is not None:
             if isinstance(digits_in_name, int):
                 perturb_type = folder_path.name.split(str(digits_in_name))[0]

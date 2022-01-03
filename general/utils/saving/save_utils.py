@@ -84,38 +84,6 @@ def args_to_string(args):
     return arg_str
 
 
-def generate_dir(expected_path, subfolder="", args=None):
-    """Generate a directory from a path and possibly a subfolder
-
-    Parameters
-    ----------
-    expected_path : str, Path
-        Path to the dir
-    subfolder : str, optional
-        Subfolder to append to the path
-    args : dict
-        A dictionary containing run-time arguments
-
-    """
-
-    if len(subfolder) == 0:
-        # See if folder is present
-        dir_exists = os.path.isdir(expected_path)
-
-        if not dir_exists:
-            os.makedirs(expected_path)
-
-    else:
-        # Check if path exists
-        expected_path = str(pl.Path(expected_path, subfolder))
-        dir_exists = os.path.isdir(expected_path)
-
-        if not dir_exists:
-            os.makedirs(expected_path)
-
-    return expected_path
-
-
 def compress_dir(path_to_dir: pl.Path, zip_name: str = "test_temp1"):
     """Compress a directory using tar. The resulting .tar.gz file will be
     located at path_to_dir

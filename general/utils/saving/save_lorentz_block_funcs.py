@@ -3,6 +3,7 @@ import sys
 sys.path.append("..")
 import numpy as np
 import general.utils.saving.save_utils as g_save_utils
+from libs.libutils import file_utils as lib_file_utils
 from general.params.model_licences import Models
 import config as cfg
 
@@ -36,8 +37,8 @@ def save_lorentz_block_data(
     ]
     data_out = perturb_data[slice, :]
 
-    expected_path = g_save_utils.generate_dir(
-        args["datapath"], subfolder=f"{args['out_exp_folder']}", args=args
+    expected_path = lib_file_utils.generate_dir(
+        args["datapath"], subfolder=f"{args['out_exp_folder']}"
     )
     if perturb_position is not None:
         lorentz_header_extra = f"perturb_pos={int(perturb_position)}, "

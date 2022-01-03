@@ -10,7 +10,7 @@ import general.utils.importing.import_data_funcs as g_import
 import numpy as np
 from general.params.model_licences import Models
 from general.utils.module_import.type_import import *
-import libs.libutils as libutils
+from libs.libutils import file_utils as lib_file_utils
 
 # Get parameters for model
 if cfg.MODEL == Models.SHELL_MODEL:
@@ -104,8 +104,8 @@ def get_exp_files_and_names(args, type: str = "perturbations") -> list:
     elif type == "vectors":
         path = pl.Path(args["datapath"], args["pert_vector_folder"], args["exp_folder"])
 
-    names = libutils.file_utils.get_file_names_in_path(path)
-    files = libutils.file_utils.get_files_in_path(path)
+    names = lib_file_utils.get_file_names_in_path(path)
+    files = lib_file_utils.get_files_in_path(path)
 
     return names, files
 
@@ -281,27 +281,3 @@ def sort_paths_according_to_header_dicts(
         sort_index.append(enum_path[0])
 
     return sorted_parths, sort_index
-
-
-def get_digits_from_string(string: str) -> Union[None, int, list]:
-    """Get digit(s) embeded in a string
-
-    Parameters
-    ----------
-    string : str
-        The string to find digits in
-
-    Returns
-    -------
-    Union[int, list]
-        The digit(s) found in the string
-    """
-
-    digits = list(int(s) for s in re.findall(r"\d+", string))
-
-    if len(digits) == 0:
-        return None
-    elif len(digits) == 1:
-        return digits[0]
-    else:
-        return digits
