@@ -68,7 +68,13 @@ def sv_generator(
         dtype=np.complex128,
     )
 
-    # Start out by running on u_old, but hereafter lanczos_outarray will be updated
+    # Setup matrixes
+    if cfg.MODEL == Models.LORENTZ63:
+        lorentz_matrix = ut_funcs.setup_lorentz_matrix(copy_args)
+        jacobian_matrix = l63_nm_estimator.init_jacobian(copy_args)
+
+    # Start out by running on u_old, but hereafter lanczos_outarray will be
+    # updated by the lanczos_iterator
     lanczos_outarray = u_old
 
     # Average over multiple iterations of the lanczos algorithm
@@ -83,10 +89,7 @@ def sv_generator(
                     )
                 elif cfg.MODEL == Models.LORENTZ63:
 
-                    # Setup matrixes
-                    lorentz_matrix = ut_funcs.setup_lorentz_matrix(copy_args)
-                    jacobian_matrix = l63_nm_estimator.init_jacobian(copy_args)
-
+                    # Run TL model
                     l63_tl_model(
                         lanczos_outarray.ravel(),
                         u_ref,
@@ -100,8 +103,9 @@ def sv_generator(
 
                     # Store the initial perturbation vector
                     if k == 0:
-                        store_u_profiles_perturbed = np.copy(u_old[sparams.u_slice])
+                        store_u_profiles_perturbed = np.copy(lanczos_outarray.ravel())
 
+                    # Run the ATL model
                     l63_atl_model(
                         np.reshape(data_out[-1, 1:].T, (params.sdim, 1)),
                         u_ref,
@@ -113,7 +117,7 @@ def sv_generator(
                         raw_perturbation=True,
                     )
 
-                # NOTE: Rescale perturbations
+                #  Rescale perturbations
                 lanczos_outarray = pt_utils.rescale_perturbations(
                     data_out[0, 1:][np.newaxis, :], copy_args, raw_perturbations=True
                 )
@@ -121,6 +125,7 @@ def sv_generator(
             # Update arrays for the lanczos algorithm
             propagated_vector[:, :] = np.reshape(data_out[0, 1:], (params.sdim, 1))
             input_vector[:, :] = store_u_profiles_perturbed[:, np.newaxis]
+
             # Iterate the Lanczos algorithm one step
             lanczos_outarray, tridiag_matrix, input_vector_matrix = next(
                 lanczos_iterator
@@ -136,6 +141,7 @@ def sv_generator(
             tridiag_matrix, input_vector_matrix
         )
 
+        # Add to arrays to perform averaging
         sv_matrix += temp_sv_matrix
         s_values += temp_s_values
 

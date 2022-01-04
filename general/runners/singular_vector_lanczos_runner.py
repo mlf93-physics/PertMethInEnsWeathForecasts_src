@@ -65,7 +65,7 @@ def main(args: dict, exp_setup: dict = None):
         # Get the current experiment setup
         exp_setup = exp_utils.get_exp_setup(exp_file_path, args)
 
-    # Get number of existing blocks
+    # Get number of existing units
     n_existing_units = lib_file_utils.count_existing_files_or_dirs(
         search_path=pl.Path(args["datapath"], exp_setup["folder_name"]),
         search_pattern="singular_vector*.csv",
@@ -74,18 +74,24 @@ def main(args: dict, exp_setup: dict = None):
     # Validate the start time method
     ut_exp_val.validate_start_time_method(exp_setup=exp_setup)
 
+    # Since the SV calculation is an iterative procedure for a given unit, and
+    # because the units are calculated in parallel, n_profiles = n_units in order
+    # for the import of start velocity profiles to work.
+    if args["n_units"] < np.inf:
+        args["n_profiles"] = args["n_units"]
+    else:
+        args["n_units"] = args["n_profiles"]
+
     # Generate start times
     start_times, num_possible_units = r_utils.generate_start_times(exp_setup, args)
     # Get index numbers of units to generate
     unit_indices = np.arange(
         n_existing_units,
-        min(args["n_profiles"] + n_existing_units, num_possible_units),
+        min(args["n_units"] + n_existing_units, num_possible_units),
         dtype=np.int32,
     )
     start_times = [start_times[index] for index in unit_indices]
-    # print("start_times", start_times)
 
-    processes = []
     # Prepare arguments
     args["pert_mode"] = "rd"
     args["time_to_run"] = exp_setup["integration_time"]
@@ -120,27 +126,19 @@ def main(args: dict, exp_setup: dict = None):
         for i in range(args["n_profiles"])
     ]
 
+    # Import start profiles
     u_ref, _, ref_header_dict = g_import.import_start_u_profiles(args=copy_args_tl)
-    # print("u_ref", u_ref.shape)
 
-    # Calculate the desired number of units
-    # data_out_dict = {}
-    # for i in range(
-    #     n_existing_units,
-    #     min(args["n_units"] + n_existing_units, num_possible_units),
-    # ):
-
-    #     sv_matrix, s_values = sv_generator1(exp_setup, copy_args_tl, u_ref)
-    #     data_out_dict[i] = {"sv_matrix": sv_matrix, "s_values": s_values}
-
+    # Make processes
+    processes = []
     processes, data_out_dict = it_unit_runner.main_setup(
         args=copy_args_tl,
         exp_setup=exp_setup,
         u_ref=u_ref,
         n_existing_units=n_existing_units,
     )
-    # print("data_out_dict", data_out_dict.keys())
 
+    # Run processes
     pr_utils.main_run(processes)
 
     # Set out folder
@@ -148,7 +146,6 @@ def main(args: dict, exp_setup: dict = None):
 
     # Save singular vectors
     for unit in data_out_dict.keys():
-        print("unit", unit)
         v_save.save_vector_unit(
             data_out_dict[unit]["sv_matrix"].T,
             characteristic_values=data_out_dict[unit]["s_values"],
