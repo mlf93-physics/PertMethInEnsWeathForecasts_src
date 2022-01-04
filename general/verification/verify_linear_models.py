@@ -24,8 +24,8 @@ if cfg.MODEL == Models.SHELL_MODEL:
     from shell_model_experiments.sabra_model.tl_sabra_model import (
         run_model as sh_tl_model,
     )
-    from shell_model_experiments.sabra_model.atl_sabra_model import (
-        run_model as sh_atl_model,
+    from shell_model_experiments.sabra_model.sabra_model_combinations import (
+        sh_tl_atl_model,
     )
 
     # Get parameters for model
@@ -170,54 +170,21 @@ def run_sh_atl_model_verification(
     diagonal_1: np.ndarray,
     diagonal_2: np.ndarray,
 ):
-    u_perturb_stored = np.copy(u_perturb)
-
-    # Run TL model one time step
-    sh_tl_model(
+    u_tl_out, _, u_init_perturb = sh_tl_atl_model(
         u_perturb,
         u_ref,
         data_out,
-        args["Nt"] + args["endpoint"] * 1,
-        args["ny"],
-        args["diff_exponent"],
-        args["forcing"],
-        params,
+        args,
         J_matrix,
         diagonal0,
         diagonal1,
         diagonal2,
         diagonal_1,
         diagonal_2,
-        raw_perturbation=True,
     )
 
-    u_tl_stored = data_out[-1, 1:]
-
-    # Run ATL model one time step
-    sh_atl_model(
-        np.pad(
-            data_out[-1, 1:].T,
-            pad_width=(params.bd_size, params.bd_size),
-            mode="constant",
-        ),
-        u_ref,
-        data_out,
-        args["Nt"] + args["endpoint"] * 1,
-        args["ny"],
-        args["diff_exponent"],
-        args["forcing"],
-        params,
-        J_matrix,
-        diagonal0,
-        diagonal1,
-        diagonal2,
-        diagonal_1,
-        diagonal_2,
-        raw_perturbation=True,
-    )
-
-    rhs_identity = np.dot(u_perturb_stored[sparams.u_slice], data_out[0, 1:])
-    lhs_identity = np.dot(u_tl_stored, u_tl_stored)
+    rhs_identity = np.dot(u_init_perturb[sparams.u_slice], data_out[0, 1:])
+    lhs_identity = np.dot(u_tl_out, u_tl_out)
     diff_identity = np.abs(lhs_identity - rhs_identity) / np.mean(
         [np.abs(lhs_identity), np.abs(rhs_identity)]
     )
