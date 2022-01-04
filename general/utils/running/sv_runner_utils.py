@@ -10,11 +10,8 @@ if cfg.MODEL == Models.SHELL_MODEL:
     from shell_model_experiments.params.params import ParamsStructType
     import shell_model_experiments.perturbations.normal_modes as sh_nm_estimator
     import shell_model_experiments.utils.util_funcs as ut_funcs
-    from shell_model_experiments.sabra_model.tl_sabra_model import (
-        run_model as sh_tl_model,
-    )
-    from shell_model_experiments.sabra_model.atl_sabra_model import (
-        run_model as sh_atl_model,
+    from shell_model_experiments.sabra_model.sabra_model_combinations import (
+        sh_tl_atl_model,
     )
 
     params = PAR_SH
@@ -65,7 +62,17 @@ def sv_generator(
     )
 
     # Setup matrixes
-    if cfg.MODEL == Models.LORENTZ63:
+    if cfg.MODEL == Models.SHELL_MODEL:
+        # Initialise the Jacobian and diagonal arrays
+        (
+            J_matrix,
+            diagonal0,
+            diagonal1,
+            diagonal2,
+            diagonal_1,
+            diagonal_2,
+        ) = sh_nm_estimator.init_jacobian()
+    elif cfg.MODEL == Models.LORENTZ63:
         lorentz_matrix = ut_funcs.setup_lorentz_matrix(copy_args)
         jacobian_matrix = l63_nm_estimator.init_jacobian(copy_args)
 
@@ -78,10 +85,19 @@ def sv_generator(
         # Calculate the desired number of SVs
         for _ in range(exp_setup["n_vectors"]):
             # Run specified number of model iterations
-            for k in range(exp_setup["n_model_iterations"]):
+            for _ in range(exp_setup["n_model_iterations"]):
                 if cfg.MODEL == Models.SHELL_MODEL:
-                    print(
-                        "Optimized SV calculation for shell model not implemented yet"
+                    _, u_atl_out, u_init_perturb = sh_tl_atl_model(
+                        lanczos_outarray.ravel(),
+                        u_ref,
+                        data_out,
+                        copy_args,
+                        J_matrix,
+                        diagonal0,
+                        diagonal1,
+                        diagonal2,
+                        diagonal_1,
+                        diagonal_2,
                     )
                 elif cfg.MODEL == Models.LORENTZ63:
                     # Run TL model followed by ATL model
@@ -101,7 +117,7 @@ def sv_generator(
 
             # Update arrays for the lanczos algorithm
             propagated_vector[:, :] = np.reshape(u_atl_out, (params.sdim, 1))
-            input_vector[:, :] = u_init_perturb[:, np.newaxis]
+            input_vector[:, :] = u_init_perturb[sparams.u_slice, np.newaxis]
 
             # Iterate the Lanczos algorithm one step
             lanczos_outarray, tridiag_matrix, input_vector_matrix = next(
