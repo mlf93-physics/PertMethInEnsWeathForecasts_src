@@ -136,6 +136,7 @@ def rescale_perturbations(
 
     # Transform into 2d array
     perturb_data = np.array(perturb_data)
+    print("perturb_data", perturb_data.shape)
     # Pad array if necessary
     perturb_data = np.pad(
         perturb_data,

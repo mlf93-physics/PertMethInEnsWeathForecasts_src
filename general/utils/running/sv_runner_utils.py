@@ -67,6 +67,10 @@ def sv_generator(
         exp_setup["n_vectors"],
         dtype=np.complex128,
     )
+
+    # Start out by running on u_old, but hereafter lanczos_outarray will be updated
+    lanczos_outarray = u_old
+
     # Average over multiple iterations of the lanczos algorithm
     for _ in range(exp_setup["n_lanczos_iterations"]):
         # Calculate the desired number of SVs
@@ -84,8 +88,8 @@ def sv_generator(
                     jacobian_matrix = l63_nm_estimator.init_jacobian(copy_args)
 
                     l63_tl_model(
-                        u_old,
-                        np.copy(u_ref[:, run_count]),
+                        lanczos_outarray.ravel(),
+                        u_ref,
                         lorentz_matrix,
                         jacobian_matrix,
                         data_out,
@@ -100,7 +104,7 @@ def sv_generator(
 
                     l63_atl_model(
                         np.reshape(data_out[-1, 1:].T, (params.sdim, 1)),
-                        np.copy(u_ref[:, run_count]),
+                        u_ref,
                         lorentz_matrix,
                         jacobian_matrix,
                         data_out,
@@ -111,12 +115,12 @@ def sv_generator(
 
                 # NOTE: Rescale perturbations
                 lanczos_outarray = pt_utils.rescale_perturbations(
-                    data_out[0, 1:], copy_args, raw_perturbations=True
+                    data_out[0, 1:][np.newaxis, :], copy_args, raw_perturbations=True
                 )
 
             # Update arrays for the lanczos algorithm
             propagated_vector[:, :] = np.reshape(data_out[0, 1:], (params.sdim, 1))
-            input_vector[:, :] = store_u_profiles_perturbed
+            input_vector[:, :] = store_u_profiles_perturbed[:, np.newaxis]
             # Iterate the Lanczos algorithm one step
             lanczos_outarray, tridiag_matrix, input_vector_matrix = next(
                 lanczos_iterator

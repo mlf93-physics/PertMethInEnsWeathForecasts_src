@@ -83,6 +83,7 @@ def main(args: dict, exp_setup: dict = None):
         dtype=np.int32,
     )
     start_times = [start_times[index] for index in unit_indices]
+    # print("start_times", start_times)
 
     processes = []
     # Prepare arguments
@@ -120,18 +121,25 @@ def main(args: dict, exp_setup: dict = None):
     ]
 
     u_ref, _, ref_header_dict = g_import.import_start_u_profiles(args=copy_args_tl)
+    # print("u_ref", u_ref.shape)
 
-    print("u_ref", u_ref.shape, u_ref)
-    exit()
     # Calculate the desired number of units
+    # data_out_dict = {}
     # for i in range(
     #     n_existing_units,
     #     min(args["n_units"] + n_existing_units, num_possible_units),
     # ):
 
+    #     sv_matrix, s_values = sv_generator1(exp_setup, copy_args_tl, u_ref)
+    #     data_out_dict[i] = {"sv_matrix": sv_matrix, "s_values": s_values}
+
     processes, data_out_dict = it_unit_runner.main_setup(
-        args=args, exp_setup=exp_setup, u_ref=u_ref, n_existing_files=n_existing_units
+        args=copy_args_tl,
+        exp_setup=exp_setup,
+        u_ref=u_ref,
+        n_existing_units=n_existing_units,
     )
+    # print("data_out_dict", data_out_dict.keys())
 
     pr_utils.main_run(processes)
 
@@ -140,6 +148,7 @@ def main(args: dict, exp_setup: dict = None):
 
     # Save singular vectors
     for unit in data_out_dict.keys():
+        print("unit", unit)
         v_save.save_vector_unit(
             data_out_dict[unit]["sv_matrix"].T,
             characteristic_values=data_out_dict[unit]["s_values"],
@@ -229,7 +238,6 @@ def sv_generator1(
                 if len(processes) > 0:
                     pr_utils.main_run(
                         processes,
-                        args=copy_args,
                     )
                 else:
                     print("No processes to run - check if units already exists")
@@ -252,7 +260,6 @@ def sv_generator1(
                     # Run specified number of iterations
                     pr_utils.main_run(
                         processes,
-                        args=copy_args,
                     )
 
                     lanczos_outarray = pt_utils.rescale_perturbations(

@@ -36,9 +36,10 @@ elif cfg.MODEL == Models.LORENTZ63:
 
 def unit_runner(
     u_old: np.ndarray,
-    run_count: int,
-    exp_setup: dict,
     args: dict,
+    exp_setup: dict,
+    run_count: int,
+    unit_count: int,
     data_out_dict: dict,
     perturb_positions: np.ndarray,
     u_ref: Union[np.ndarray, None] = None,
@@ -50,12 +51,7 @@ def unit_runner(
         dtype=sparams.dtype,
     )
 
-    print(
-        f"Running perturbation {run_count + 1}/"
-        + f"{args['n_profiles']*args['n_runs_per_profile']} | profile"
-        + f" {run_count // args['n_runs_per_profile']}, profile run"
-        + f" {run_count % args['n_runs_per_profile']}"
-    )
+    print(f"Running unit {run_count + 1}/{args['n_profiles']}")
 
     if cfg.LICENCE == EXP.SINGULAR_VECTORS:
         sv_matrix, s_values = sv_r_utils.sv_generator(
@@ -68,11 +64,12 @@ def prepare_processes(
     u_profiles_perturbed: np.ndarray,
     u_ref: np.ndarray,
     n_units: int,
-    n_perturbation_files: int,
+    n_unit_files: int,
     perturb_positions: List[int],
     times_to_run: np.ndarray,
     Nt_array: np.ndarray,
     args: dict,
+    exp_setup: dict,
 ):
     # Prepare return data list
     manager = multiprocessing.Manager()
@@ -98,12 +95,13 @@ def prepare_processes(
                     args=(
                         np.copy(u_profiles_perturbed[:, count]),
                         copy_args,
+                        exp_setup,
                         count,
-                        count + n_perturbation_files,
+                        count + n_unit_files,
                         data_out_dict,
                         perturb_positions,
                     ),
-                    kwargs={"u_ref": u_ref},
+                    kwargs={"u_ref": np.copy(u_ref[:, count])},
                 )
             )
 
@@ -122,12 +120,13 @@ def prepare_processes(
                 args=(
                     np.copy(u_profiles_perturbed[:, count]),
                     copy_args,
+                    exp_setup,
                     count,
-                    count + n_perturbation_files,
+                    count + n_unit_files,
                     data_out_dict,
                     perturb_positions,
                 ),
-                kwargs={"u_ref": u_ref},
+                kwargs={"u_ref": np.copy(u_ref[:, count])},
             )
         )
 
@@ -138,7 +137,7 @@ def main_setup(
     args: dict = None,
     exp_setup: dict = None,
     u_ref: np.ndarray = None,
-    n_existing_files: int = 0,
+    n_existing_units: int = 0,
 ) -> Tuple[List[multiprocessing.Process], dict]:
 
     times_to_run, Nt_array = r_utils.prepare_run_times(args)
@@ -157,11 +156,13 @@ def main_setup(
     processes, data_out_dict = prepare_processes(
         u_profiles_perturbed,
         u_ref,
-        n_existing_files,
+        args["n_profiles"],
+        n_existing_units,
         perturb_positions,
         times_to_run,
         Nt_array,
         args,
+        exp_setup,
     )
 
     # if not args["skip_save_data"]:

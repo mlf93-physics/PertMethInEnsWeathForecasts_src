@@ -516,7 +516,6 @@ def import_start_u_profiles(args: dict = None) -> Tuple[np.ndarray, List[int], d
 
     # Check if ref path exists
     ref_file_path = pl.Path(args["datapath"], "ref_data")
-    print("ref_file_path", ref_file_path)
 
     # Get ref info text file
     ref_header_dict = import_info_file(ref_file_path)
