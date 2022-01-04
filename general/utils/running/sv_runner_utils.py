@@ -24,11 +24,8 @@ elif cfg.MODEL == Models.LORENTZ63:
     import lorentz63_experiments.params.special_params as l63_sparams
     import lorentz63_experiments.perturbations.normal_modes as l63_nm_estimator
     import lorentz63_experiments.utils.util_funcs as ut_funcs
-    from lorentz63_experiments.lorentz63_model.tl_lorentz63 import (
-        run_model as l63_tl_model,
-    )
-    from lorentz63_experiments.lorentz63_model.atl_lorentz63 import (
-        run_model as l63_atl_model,
+    from lorentz63_experiments.lorentz63_model.lorentz63_model_combinations import (
+        l63_tl_atl_model,
     )
 
     params = l63_params
@@ -40,7 +37,6 @@ def sv_generator(
     copy_args,
     u_ref,
     u_old: np.ndarray,
-    run_count: int,
     data_out: np.ndarray,
 ):
     # Initiate rescaled_perturbations
@@ -88,43 +84,24 @@ def sv_generator(
                         "Optimized SV calculation for shell model not implemented yet"
                     )
                 elif cfg.MODEL == Models.LORENTZ63:
-
-                    # Run TL model
-                    l63_tl_model(
+                    # Run TL model followed by ATL model
+                    _, u_atl_out, u_init_perturb = l63_tl_atl_model(
                         lanczos_outarray.ravel(),
                         u_ref,
-                        lorentz_matrix,
                         jacobian_matrix,
-                        data_out,
-                        copy_args["Nt"] + copy_args["endpoint"] * 1,
-                        r_const=copy_args["r_const"],
-                        raw_perturbation=True,
-                    )
-
-                    # Store the initial perturbation vector
-                    if k == 0:
-                        store_u_profiles_perturbed = np.copy(lanczos_outarray.ravel())
-
-                    # Run the ATL model
-                    l63_atl_model(
-                        np.reshape(data_out[-1, 1:].T, (params.sdim, 1)),
-                        u_ref,
                         lorentz_matrix,
-                        jacobian_matrix,
                         data_out,
-                        copy_args["Nt"] + copy_args["endpoint"] * 1,
-                        r_const=copy_args["r_const"],
-                        raw_perturbation=True,
+                        copy_args,
                     )
 
                 #  Rescale perturbations
                 lanczos_outarray = pt_utils.rescale_perturbations(
-                    data_out[0, 1:][np.newaxis, :], copy_args, raw_perturbations=True
+                    u_atl_out[np.newaxis, :], copy_args, raw_perturbations=True
                 )
 
             # Update arrays for the lanczos algorithm
-            propagated_vector[:, :] = np.reshape(data_out[0, 1:], (params.sdim, 1))
-            input_vector[:, :] = store_u_profiles_perturbed[:, np.newaxis]
+            propagated_vector[:, :] = np.reshape(u_atl_out, (params.sdim, 1))
+            input_vector[:, :] = u_init_perturb[:, np.newaxis]
 
             # Iterate the Lanczos algorithm one step
             lanczos_outarray, tridiag_matrix, input_vector_matrix = next(

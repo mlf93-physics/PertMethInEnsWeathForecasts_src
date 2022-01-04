@@ -7,7 +7,7 @@ import numpy as np
 import general.utils.importing.import_data_funcs as g_import
 import general.utils.saving.save_perturbation as pt_save
 import general.utils.running.runner_utils as r_utils
-import general.utils.exceptions as g_exceptions
+from general.utils.module_import.type_import import *
 import general.utils.argument_parsers as a_parsers
 from general.params.model_licences import Models
 import config as cfg
@@ -40,8 +40,8 @@ elif cfg.MODEL == Models.LORENTZ63:
     from lorentz63_experiments.lorentz63_model.tl_lorentz63 import (
         run_model as l63_tl_model,
     )
-    from lorentz63_experiments.lorentz63_model.atl_lorentz63 import (
-        run_model as l63_atl_model,
+    from lorentz63_experiments.lorentz63_model.lorentz63_model_combinations import (
+        l63_tl_atl_model,
     )
 
     # Get parameters for model
@@ -228,36 +228,12 @@ def run_sh_atl_model_verification(
 def run_l63_atl_model_verification(
     args, u_ref, u_perturb, jacobian_matrix, lorentz_matrix, data_out
 ):
-    u_perturb_stored = np.copy(u_perturb)
-
-    # Run TL model one time step
-    l63_tl_model(
-        u_perturb,
-        u_ref,
-        lorentz_matrix,
-        jacobian_matrix,
-        data_out,
-        args["Nt"],
-        r_const=args["r_const"],
-        raw_perturbation=True,
+    u_tl_out, u_atl_out, u_init_perturb = l63_tl_atl_model(
+        u_perturb, u_ref, jacobian_matrix, lorentz_matrix, data_out, args
     )
 
-    u_tl_stored = data_out[-1, 1:].T
-
-    # Run ATL model one time step
-    l63_atl_model(
-        np.reshape(data_out[-1, 1:].T, (params.sdim, 1)),
-        u_ref,
-        lorentz_matrix,
-        jacobian_matrix,
-        data_out,
-        args["Nt"],
-        r_const=args["r_const"],
-        raw_perturbation=True,
-    )
-
-    rhs_identity = np.dot(u_perturb_stored, data_out[0, 1:])
-    lhs_identity = np.dot(u_tl_stored, u_tl_stored)
+    rhs_identity = np.dot(u_init_perturb, u_atl_out)
+    lhs_identity = np.dot(u_tl_out, u_tl_out)
 
     diff_identity = abs(lhs_identity - rhs_identity) / np.mean(
         [lhs_identity, rhs_identity]

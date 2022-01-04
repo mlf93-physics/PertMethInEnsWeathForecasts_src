@@ -90,6 +90,7 @@ def main(args: dict, exp_setup: dict = None):
         min(args["n_units"] + n_existing_units, num_possible_units),
         dtype=np.int32,
     )
+    # Filter out all start_times which are not to be used
     start_times = [start_times[index] for index in unit_indices]
 
     # Prepare arguments
@@ -150,7 +151,7 @@ def main(args: dict, exp_setup: dict = None):
             data_out_dict[unit]["sv_matrix"].T,
             characteristic_values=data_out_dict[unit]["s_values"],
             perturb_position=int(round(start_times[unit] * params.tts)),
-            unit=unit,
+            unit=data_out_dict[unit]["unit_count"],
             args=args,
             exp_setup=exp_setup,
         )

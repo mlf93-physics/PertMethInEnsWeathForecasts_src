@@ -55,9 +55,13 @@ def unit_runner(
 
     if cfg.LICENCE == EXP.SINGULAR_VECTORS:
         sv_matrix, s_values = sv_r_utils.sv_generator(
-            exp_setup, args, u_ref, u_old, run_count, data_out
+            exp_setup, args, u_ref, u_old, data_out
         )
-        data_out_dict[run_count] = {"sv_matrix": sv_matrix, "s_values": s_values}
+        data_out_dict[run_count] = {
+            "sv_matrix": sv_matrix,
+            "s_values": s_values,
+            "unit_count": unit_count,
+        }
 
 
 def prepare_processes(
@@ -149,10 +153,6 @@ def main_setup(
             args, raw_perturbations=raw_perturbations
         )
 
-    # Detect if other perturbations exist in the perturbation_folder and calculate
-    # perturbation count to start at
-    expected_path = pl.Path(args["datapath"], args["out_exp_folder"])
-
     processes, data_out_dict = prepare_processes(
         u_profiles_perturbed,
         u_ref,
@@ -164,8 +164,5 @@ def main_setup(
         args,
         exp_setup,
     )
-
-    # if not args["skip_save_data"]:
-    #     g_save.save_perturb_info(args=args, exp_setup=exp_setup)
 
     return processes, data_out_dict
