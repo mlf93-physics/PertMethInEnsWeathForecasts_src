@@ -1,7 +1,6 @@
 import sys
 
 sys.path.append("..")
-import pathlib as pl
 
 import config as cfg
 import general.utils.argument_parsers as a_parsers
@@ -11,6 +10,7 @@ import general.utils.saving.save_data_funcs as g_save
 import general.utils.user_interface as g_ui
 import general.utils.util_funcs as g_utils
 import numpy as np
+import scipy.ndimage as sp_ndi
 import scipy.stats as sp_stats
 import shell_model_experiments.utils.util_funcs as ut_funcs
 from general.utils.module_import.type_import import *
@@ -163,6 +163,79 @@ def main(args):
         analyse_mean_helicity_spectrum(args, u_data, header_dict)
 
 
+def find_distinct_pred_regimes(args):
+    # import matplotlib.pyplot as plt
+
+    # Import reference data
+    time, u_data, header_dict = g_import.import_ref_data(args=args)
+
+    # if isinstance(args["shell_cutoff"], int):
+    #     u_data = u_data[:, : args["shell_cutoff"]]
+    # else:
+    #     raise ValueError(
+    #         "shell_cutoff should be set to find the distinct predictability regimes"
+    #     )
+
+    # Get total energy
+    total_energy = np.sum((u_data * np.conj(u_data)).real, axis=1)
+
+    # Differentiate total energy
+    diff_total_energy = (total_energy[1:] - total_energy[:-1]) / PAR.stt
+
+    # Find positive and negative slopes
+    bool_diff_array = diff_total_energy > 0
+
+    # Prepare for erosion and dilation
+    structure = np.ones(int(PAR.tts * 0.05))
+
+    # Perform erosion and dilation to remove smallest regions in boolean array
+    eroded_bool_array = sp_ndi.binary_erosion(
+        bool_diff_array, origin=10, structure=structure
+    )
+    dilated_bool_array = sp_ndi.binary_dilation(
+        eroded_bool_array, origin=10, structure=structure, iterations=2
+    )
+    eroded_bool_array: np.ndarray = sp_ndi.binary_erosion(
+        dilated_bool_array, origin=10, structure=structure
+    )
+
+    # Find indices when the eroded boolean array changes bool value, which
+    # indicates when a high or low pred regime begins.
+    roll_array = np.roll(eroded_bool_array, 1)
+    high_pred_regime_starts = np.logical_and(
+        np.logical_not(roll_array), eroded_bool_array
+    )
+    low_pred_regime_starts = np.logical_and(
+        roll_array, np.logical_not(eroded_bool_array)
+    )
+
+    # Convert indices to start times
+    high_pred_regime_starts_times = time.real[np.where(high_pred_regime_starts)]
+    low_pred_regime_starts_times = time.real[np.where(low_pred_regime_starts)]
+
+    # Check if sizes are equal
+    if high_pred_regime_starts_times.size != low_pred_regime_starts_times.size:
+        raise ValueError(
+            "Size of high pred and low pred regime start time arrays are not equal"
+        )
+
+    # Prepare array to be saved
+    out_array = np.stack(
+        [high_pred_regime_starts_times, low_pred_regime_starts_times], axis=1
+    )
+
+    # Save array
+    g_save.save_data(out_array, prefix="regime_start_times", args=args)
+
+    # fig, axes = plt.subplots(nrows=4, ncols=1, sharex=True)
+    # axes[0].plot(time.real, summed_shell_energy)
+    # axes[1].plot(time.real[:-1] + 1 / 2 * PAR.stt, differentiated_shell_energy)
+    # axes[2].plot(time.real[:-1] + 1 / 2 * PAR.stt, eroded_bool_array)
+    # axes[3].plot(time.real[:-1] + 1 / 2 * PAR.stt, high_pred_regime_starts)
+    # axes[3].plot(time.real[:-1] + 1 / 2 * PAR.stt, low_pred_regime_starts)
+    # plt.show()
+
+
 if __name__ == "__main__":
     cfg.init_licence()
 
@@ -179,4 +252,9 @@ if __name__ == "__main__":
     ut_funcs.set_params(PAR, parameter="sdim", value=args["sdim"])
     ut_funcs.update_arrays(PAR)
 
-    main(args)
+    args["ny"] = ut_funcs.ny_from_ny_n_and_forcing(
+        args["forcing"], args["ny_n"], args["diff_exponent"]
+    )
+
+    # main(args)
+    find_distinct_pred_regimes(args)

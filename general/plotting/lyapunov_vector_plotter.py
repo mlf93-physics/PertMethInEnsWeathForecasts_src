@@ -83,7 +83,7 @@ def plot_tlm_solution(args, axes=None):
     )
 
     if cfg.MODEL == Models.SHELL_MODEL:
-        sh_plot.plots_related_to_energy(args, axes=axes[1])
+        sh_plot.plot_energy(args, axes=axes[1])
     elif cfg.MODEL == Models.LORENTZ63:
         l63_plot.plot_energy(args, axes=axes[1])
 

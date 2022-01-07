@@ -254,7 +254,7 @@ def plot_error_norm_comparison(args: dict):
     args["ref_end_time"] = end_time
 
     if cfg.MODEL == Models.SHELL_MODEL:
-        sh_plot.plots_related_to_energy(
+        sh_plot.plot_energy(
             args,
             axes=axes[1],
             plot_args=[],
