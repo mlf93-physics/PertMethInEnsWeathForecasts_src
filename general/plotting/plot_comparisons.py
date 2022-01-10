@@ -349,8 +349,6 @@ if __name__ == "__main__":
     compare_plot_arg_parser.setup_parser()
     args: dict = compare_plot_arg_parser.args
 
-    # Initiate variables
-    # params.initiate_sdim_arrays(args["sdim"])
     # Shell model specific
     if cfg.MODEL == Models.SHELL_MODEL:
         # Initiate and update variables and arrays

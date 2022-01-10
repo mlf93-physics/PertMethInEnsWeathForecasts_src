@@ -344,8 +344,6 @@ def main_setup(
     exp_setup=None,
     u_ref=None,
 ):
-    # Initiate arrays
-    # params.initiate_sdim_arrays(args["sdim"])
 
     times_to_run, Nt_array = r_utils.prepare_run_times(args)
 
@@ -395,9 +393,12 @@ if __name__ == "__main__":
         # Initiate and update variables and arrays
         ut_funcs.update_dependent_params(params)
         ut_funcs.update_arrays(params)
-    # Initiate arrays
-    # params.initiate_sdim_arrays(args["sdim"])
-    args = g_utils.adjust_start_times_with_offset(args)
+
+    if args["regime_start"] is None:
+        args = g_utils.adjust_start_times_with_offset(args)
+    else:
+        start_times, _ = r_utils.get_regime_start_times(args)
+        args["start_times"] = start_times[: args["n_profiles"]]
 
     g_ui.confirm_run_setup(args)
     r_utils.adjust_run_setup(args)
