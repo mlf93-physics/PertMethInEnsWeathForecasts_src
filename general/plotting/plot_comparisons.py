@@ -329,10 +329,15 @@ def plot_exp_growth_rate_comparison(args: dict):
         # Set exp_folder
         args["exp_folder"] = folder
 
+        if i == 0:
+            zorder = 10
+        else:
+            zorder = 0
         g_plt_data.plot_exp_growth_rate_vs_time(
             args=args,
             axes=axes,
             color=cmap_list[i],
+            zorder=zorder,
             # linestyle=linestyle,
             plot_args=[],
             title_suffix=str(folder_path.parent),

@@ -46,11 +46,6 @@ def sv_generator(
     input_vector: np.ndarray((params.sdim, 1)) = np.zeros(
         (params.sdim, 1), dtype=sparams.dtype
     )
-    lanczos_iterator = pt_utils.lanczos_vector_algorithm(
-        propagated_vector=propagated_vector,
-        input_vector_j=input_vector,
-        n_iterations=exp_setup["n_vectors"],
-    )
 
     sv_matrix = np.zeros(
         (params.sdim, exp_setup["n_vectors"]),
@@ -76,12 +71,16 @@ def sv_generator(
         lorentz_matrix = ut_funcs.setup_lorentz_matrix(copy_args)
         jacobian_matrix = l63_nm_estimator.init_jacobian(copy_args)
 
-    # Start out by running on u_old, but hereafter lanczos_outarray will be
-    # updated by the lanczos_iterator
-    lanczos_outarray = u_old
-
     # Average over multiple iterations of the lanczos algorithm
     for _ in range(exp_setup["n_lanczos_iterations"]):
+        # Start out by running on u_old, but hereafter lanczos_outarray will be
+        # updated by the lanczos_iterator
+        lanczos_outarray = u_old
+        lanczos_iterator = pt_utils.lanczos_vector_algorithm(
+            propagated_vector=propagated_vector,
+            input_vector_j=input_vector,
+            n_iterations=exp_setup["n_vectors"],
+        )
         # Calculate the desired number of SVs
         for _ in range(exp_setup["n_vectors"]):
             # Run specified number of model iterations

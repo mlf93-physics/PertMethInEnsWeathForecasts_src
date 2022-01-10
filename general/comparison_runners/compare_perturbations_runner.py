@@ -347,7 +347,7 @@ def execute_pert_experiments(args: dict, exp_setup: dict):
 
     # Execute experiments
     # bv_pert_experiment(copy.deepcopy(args), local_exp_setup)
-    bv_eof_pert_experiment(copy.deepcopy(args), local_exp_setup)
+    # bv_eof_pert_experiment(copy.deepcopy(args), local_exp_setup)
     # rd_pert_experiment(copy.deepcopy(args), local_exp_setup)
     # nm_pert_experiment(copy.deepcopy(args), local_exp_setup)
     sv_pert_experiment(copy.deepcopy(args), local_exp_setup)
@@ -373,7 +373,7 @@ def main(args: dict):
     args["n_units"] = exp_setup["general"]["n_units"]
 
     # Generate perturbation vectors
-    generate_vectors(copy.deepcopy(args), exp_setup)
+    # generate_vectors(copy.deepcopy(args), exp_setup)
 
     # Perform perturbation experiments
     execute_pert_experiments(copy.deepcopy(args), exp_setup)

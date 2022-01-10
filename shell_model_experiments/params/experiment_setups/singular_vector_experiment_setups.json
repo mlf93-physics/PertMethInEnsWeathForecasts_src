@@ -34,5 +34,17 @@
         "start_times": [
             11.22
         ]
+    },
+    "TestRun3": {
+        "folder_name": "pt_vectors/test_sv_n_lanczos_runs1",
+        "sub_exp_folder": "perturb_data",
+        "integration_time": 0.01,
+        "n_vectors": 20,
+        "n_lanczos_iterations": 1,
+        "n_model_iterations": 1,
+        "vector_offset": 0.01,
+        "start_times": [
+            11.22
+        ]
     }
 }
