@@ -23,8 +23,8 @@
             10
         ]
     },
-    "TestRun3": {
-        "folder_name": "pt_vectors/test_sv3",
+    "LowPredRegime": {
+        "folder_name": "pt_vectors/sv_low_pred_regime",
         "sub_exp_folder": "perturb_data",
         "integration_time": 0.01,
         "n_vectors": 20,

@@ -28,8 +28,10 @@ def save_data(
     data_out: np.ndarray,
     subsubfolder: str = "",
     prefix: str = "",
+    header: str = "",
     perturb_position: int = None,
     run_count: int = None,
+    fmt: str = "%.18e",
     args: dict = None,
 ) -> pl.Path:
     """Save the data to disc.
@@ -66,9 +68,10 @@ def save_data(
         prefix = "ref_"
         ref_filename_extra = f"_rec{args['record_id']}"
         ref_header_extra = f"rec_id={args['record_id']}, "
-        header = g_save_utils.generate_header(
-            args, n_data=n_data, append_extra=ref_header_extra
-        )
+        if len(header) == 0:
+            header = g_save_utils.generate_header(
+                args, n_data=n_data, append_extra=ref_header_extra
+            )
 
     else:
         ref_filename_extra = ""
@@ -85,16 +88,16 @@ def save_data(
                 + f"profile={run_count // args['n_runs_per_profile']}, "
                 + f"run_in_profile={run_count % args['n_runs_per_profile']}, "
             )
-
-        header = g_save_utils.generate_header(
-            args,
-            n_data=n_data,
-            append_extra=perturb_header_extra,
-            append_options=["licence"],
-        )
+        if len(header) == 0:
+            header = g_save_utils.generate_header(
+                args,
+                n_data=n_data,
+                append_extra=perturb_header_extra,
+                append_options=["licence"],
+            )
 
     # Generate out file name
-    out_name = f"udata_{stand_data_name}"
+    out_name = f"data_{stand_data_name}"
 
     # Save data
     np.savetxt(
@@ -102,6 +105,7 @@ def save_data(
         data_out,
         delimiter=",",
         header=header,
+        fmt=fmt,
     )
 
     return expected_path

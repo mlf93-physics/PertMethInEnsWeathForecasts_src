@@ -78,9 +78,6 @@ def adjust_start_times_with_offset(args):
             np.testing.assert_equal(
                 len(args["start_times"]), 1, "Too many start times given"
             )
-    elif args["regime_start"] is not None:
-        # NOTE: Import start times from file generated from regime analysis
-        pass
 
     return args
 

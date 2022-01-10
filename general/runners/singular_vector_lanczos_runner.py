@@ -82,8 +82,13 @@ def main(args: dict, exp_setup: dict = None):
     else:
         args["n_units"] = args["n_profiles"]
 
-    # Generate start times
-    start_times, num_possible_units = r_utils.generate_start_times(exp_setup, args)
+    # Only generate start times if not requesting regime start
+    if args["regime_start"] is None:
+        # Generate start times
+        start_times, num_possible_units = r_utils.generate_start_times(exp_setup, args)
+    else:
+        start_times, num_possible_units = r_utils.get_regime_start_times(args)
+
     # Get index numbers of units to generate
     unit_indices = np.arange(
         n_existing_units,

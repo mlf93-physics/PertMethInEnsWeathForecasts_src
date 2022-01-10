@@ -2,6 +2,7 @@ import sys
 
 sys.path.append("..")
 
+import decimal
 import config as cfg
 import general.utils.argument_parsers as a_parsers
 import general.utils.exceptions as g_exceptions
@@ -164,7 +165,6 @@ def main(args):
 
 
 def find_distinct_pred_regimes(args):
-    # import matplotlib.pyplot as plt
 
     # Import reference data
     time, u_data, header_dict = g_import.import_ref_data(args=args)
@@ -224,15 +224,46 @@ def find_distinct_pred_regimes(args):
         [high_pred_regime_starts_times, low_pred_regime_starts_times], axis=1
     )
 
+    # Determine precision of time
+    _precision = abs(decimal.Decimal(str(PAR.stt)).as_tuple().exponent)
+    # Round off start times
+    out_array = np.round(out_array, decimals=_precision)
+
     # Save array
-    g_save.save_data(out_array, prefix="regime_start_times", args=args)
+    g_save.save_data(
+        out_array,
+        prefix="regime_start_times_",
+        header="high=0, low=1",
+        fmt=f"%.{_precision}f",
+        args=args,
+    )
+
+    # import matplotlib.pyplot as plt
 
     # fig, axes = plt.subplots(nrows=4, ncols=1, sharex=True)
-    # axes[0].plot(time.real, summed_shell_energy)
-    # axes[1].plot(time.real[:-1] + 1 / 2 * PAR.stt, differentiated_shell_energy)
-    # axes[2].plot(time.real[:-1] + 1 / 2 * PAR.stt, eroded_bool_array)
-    # axes[3].plot(time.real[:-1] + 1 / 2 * PAR.stt, high_pred_regime_starts)
-    # axes[3].plot(time.real[:-1] + 1 / 2 * PAR.stt, low_pred_regime_starts)
+    # axes[0].plot(time.real, total_energy)
+    # axes[0].set_title("Total energy")
+    # axes[1].plot(time.real[:-1] + 1 / 2 * PAR.stt, diff_total_energy)
+    # axes[1].set_title("Diff. total energy")
+    # axes[2].plot(
+    #     time.real[:-1] + 1 / 2 * PAR.stt,
+    #     eroded_bool_array,
+    # )
+    # axes[2].set_title("Erosion/dilation filtered diff. array")
+    # axes[3].plot(
+    #     time.real[:-1] + 1 / 2 * PAR.stt,
+    #     high_pred_regime_starts,
+    #     label="High pred start",
+    # )
+    # axes[3].plot(
+    #     time.real[:-1] + 1 / 2 * PAR.stt, low_pred_regime_starts, label="Low pred start"
+    # )
+    # axes[3].set_title("Detected regime start times")
+    # axes[3].legend(
+    #     loc="center right",
+    #     bbox_to_anchor=(1.15, 0.5),
+    # )
+    # plt.tight_layout()
     # plt.show()
 
 
