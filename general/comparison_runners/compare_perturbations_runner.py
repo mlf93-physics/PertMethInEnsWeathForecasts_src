@@ -26,6 +26,7 @@ from general.params.model_licences import Models
 from general.runners.breed_vector_runner import main as bv_runner
 from general.analyses.breed_vector_eof_analysis import main as bv_eof_analyser
 from general.runners.singular_vector_lanczos_runner import main as sv_runner
+from libs.libutils import type_utils as lib_type_utils
 
 # Get parameters for model
 if cfg.MODEL == Models.SHELL_MODEL:
@@ -276,9 +277,11 @@ def bv_eof_pert_experiment(args: dict, local_exp_setup: dict):
 
     for i in range(n_vectors):
         args["specific_start_vector"] = i
+        # Prepare vector str index
+        str_index = lib_type_utils.zpad_string(str(i), n_zeros=2)
         args["out_exp_folder"] = pl.Path(
             local_exp_setup["folder_name"],
-            f"bv_eof{i}_perturbations",
+            f"bv_eof{str_index}_perturbations",
         )
         # Copy args in order not override in forecast processes
         copy_args = copy.deepcopy(args)
@@ -311,9 +314,11 @@ def sv_pert_experiment(args: dict, local_exp_setup: dict):
 
     for i in range(n_vectors):
         args["specific_start_vector"] = i
+        # Prepare vector str index
+        str_index = lib_type_utils.zpad_string(str(i), n_zeros=2)
         args["out_exp_folder"] = pl.Path(
             local_exp_setup["folder_name"],
-            f"sv{i}_perturbations",
+            f"sv{str_index}_perturbations",
         )
         # Copy args in order not override in forecast processes
         copy_args = copy.deepcopy(args)
