@@ -21,6 +21,7 @@ if cfg.MODEL == Models.SHELL_MODEL:
     params = PAR_SH
     sparams = sh_sparams
 elif cfg.MODEL == Models.LORENTZ63:
+    import lorentz63_experiments.perturbations.random_fields as rf_pert
     import lorentz63_experiments.params.params as l63_params
     import lorentz63_experiments.params.special_params as l63_sparams
 
@@ -74,7 +75,7 @@ def calculate_perturbations(
                 )
 
             # Apply bv, bv_eof or sv perturbation
-            elif "bv" in args["pert_mode"] or "sv" in args["pert_mode"]:
+            elif args["pert_mode"] in ["bv", "sv", "rf"]:
                 # Make perturbation vector
                 perturb = perturb_vectors[:, i]
 
@@ -398,3 +399,51 @@ def calculate_svs(
     )
 
     return sv_matrix, s_values
+
+
+def get_rand_field_perturbations(args: dict) -> np.ndarray:
+    """Get the random field perturbations calculated from the difference between
+    two randomly chosen fields belonging to the same attractor wing and separated
+    a specific time from each other.
+
+    Parameters
+    ----------
+    args : dict
+        Run-time arguments
+
+    Returns
+    -------
+    np.ndarray
+        The random field perturbations
+    """
+
+    # Import reference data
+    if cfg.MODEL == Models.SHELL_MODEL:
+        args["ref_end_time"] = 30
+    elif cfg.MODEL == Models.LORENTZ63:
+        args["ref_end_time"] = 1000
+
+    time, u_data, ref_header_dict = g_import.import_ref_data(args=args)
+
+    # Instantiate random field selector
+    rand_field_iterator = rf_pert.choose_rand_field_indices(u_data)
+
+    # Instantiate arrays
+    rand_field_diffs = np.empty((params.sdim, args["n_profiles"]))
+
+    # Get the desired number of random fields
+    for i, indices_tuple in enumerate(rand_field_iterator):
+        rand_field1_indices, rand_field2_indices = indices_tuple
+        rand_field_diffs[:, i] = (
+            u_data[rand_field1_indices, :] - u_data[rand_field2_indices, :]
+        )
+
+        if i + 1 >= args["n_profiles"]:
+            break
+
+    # Normalize to get perturbations
+    rand_field_perturabtions = g_utils.normalize_array(
+        rand_field_diffs, norm_value=params.seeked_error_norm, axis=0
+    )
+
+    return rand_field_perturabtions

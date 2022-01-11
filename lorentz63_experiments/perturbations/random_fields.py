@@ -63,61 +63,17 @@ def choose_rand_field_indices(
         yield rand_field1_index, rand_field2_index
 
 
-def get_rand_field_perturbations(args: dict) -> np.ndarray:
-    """Get the random field perturbations calculated from the difference between
-    two randomly chosen fields belonging to the same attractor wing and separated
-    a specific time from each other.
+# if __name__ == "__main__":
+#     cfg.init_licence()
 
-    Parameters
-    ----------
-    args : dict
-        Run-time arguments
+#     # Get arguments
+#     _parser = a_parsers.PerturbationArgSetup()
+#     _parser.setup_parser()
+#     _parser.validate_arguments()
+#     _parser = a_parsers.ReferenceAnalysisArgParser()
+#     _parser.setup_parser()
+#     args = _parser.args
 
-    Returns
-    -------
-    np.ndarray
-        The random field perturbations
-    """
+#     g_ui.confirm_run_setup(args)
 
-    # Import reference data
-    args["ref_end_time"] = 1000
-    time, u_data, ref_header_dict = g_import.import_ref_data(args=args)
-
-    # Instantiate random field selector
-    rand_field_iterator = choose_rand_field_indices(u_data)
-
-    # Instantiate arrays
-    rand_field_diffs = np.empty((args["n_profiles"], sdim))
-
-    # Get the desired number of random fields
-    for i, indices_tuple in enumerate(rand_field_iterator):
-        rand_field1_indices, rand_field2_indices = indices_tuple
-        rand_field_diffs[i, :] = (
-            u_data[rand_field1_indices, :] - u_data[rand_field2_indices, :]
-        )
-
-        if i + 1 >= args["n_profiles"]:
-            break
-
-    # Normalize to get perturbations
-    rand_field_perturabtions = g_utils.normalize_array(
-        rand_field_diffs, norm_value=seeked_error_norm, axis=1
-    )
-
-    return rand_field_perturabtions
-
-
-if __name__ == "__main__":
-    cfg.init_licence()
-
-    # Get arguments
-    _parser = a_parsers.PerturbationArgSetup()
-    _parser.setup_parser()
-    _parser.validate_arguments()
-    _parser = a_parsers.ReferenceAnalysisArgParser()
-    _parser.setup_parser()
-    args = _parser.args
-
-    g_ui.confirm_run_setup(args)
-
-    get_rand_field_perturbations(args)
+#     get_rand_field_perturbations(args)
