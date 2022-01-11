@@ -55,7 +55,7 @@
     },
     "TestRun2": {
         "general": {
-            "folder_name": "compare_svs",
+            "folder_name": "compare_sv_eofs",
             "vector_folder": "vectors",
             "perturbation_folder": "perturbations",
             "sub_exp_folder": "perturb_data",

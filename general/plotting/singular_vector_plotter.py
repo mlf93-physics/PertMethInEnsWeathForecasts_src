@@ -97,7 +97,10 @@ def plot_s_values(args, axes: plt.Axes = None, plot_args=[]):
     axes[0].set_ylabel("Singular value")
     axes[0].set_xlabel("Singular value index")
     axes[0].set_title(s_value_dist_title)
-    # axes[0].set_yscale("log")
+    if "normalize" in plot_args:
+        axes[0].set_ylim(-0.2, 0.4)
+    else:
+        axes[0].set_yscale("log")
 
     # Get val pos from dicts
     val_pos_list = g_utils.get_values_from_dicts(header_dicts, "val_pos")
@@ -184,11 +187,17 @@ def plot_s_vectors_average(args, axes: plt.Axes = None, plot_args: list = []):
     if axes is None:
         axes = plt.axes()
 
-    mean_abs_singular_vector_units = np.mean(np.abs(singular_vector_units) ** 2, axis=0)
+    mean_abs_singular_vector_units = np.mean(np.abs(singular_vector_units), axis=0)
 
-    sb.heatmap(mean_abs_singular_vector_units.T, ax=axes, cbar_kws={"pad": 0.1})
-    axes.set_xlim(params.sdim, 0)
-    axes.set_ylim(0, params.sdim)
+    sb.heatmap(
+        mean_abs_singular_vector_units.T,
+        ax=axes,
+        cbar_kws={
+            "pad": 0.1,
+        },
+        vmin=0,
+        vmax=0.5,
+    )
     axes.invert_yaxis()
     axes.invert_xaxis()
     plt.xticks(rotation=0)
@@ -229,7 +238,7 @@ def plot3D_s_vectors_average(args, axes: plt.Axes = None, plot_args: list = []):
         # axes = plt.axes()
         fig, axes = plt.subplots(subplot_kw={"projection": "3d"})
 
-    mean_abs_singular_vector_units = np.mean(np.abs(singular_vector_units) ** 2, axis=0)
+    mean_abs_singular_vector_units = np.mean(np.abs(singular_vector_units), axis=0)
 
     # Prepare plot settings
     mpl_ticker.MaxNLocator.default_params["integer"] = True
@@ -244,14 +253,16 @@ def plot3D_s_vectors_average(args, axes: plt.Axes = None, plot_args: list = []):
     axes.set_xlim(params.sdim, 0)
     axes.set_ylim(0, params.sdim)
     fig.colorbar(surf_plot, ax=axes, pad=0.1)
+    surf_plot.set_clim(0, 0.5)
 
     axes.xaxis.set_major_locator(mpl_ticker.MaxNLocator(integer=True))
     axes.yaxis.set_major_locator(mpl_ticker.MaxNLocator(integer=True))
 
     axes.set_xlabel("SV index, j")
     axes.set_ylabel("Shell index, i")
-    axes.set_zlabel("$\\langle|sv_i^j|^2\\rangle$")
+    axes.set_zlabel("$\\langle|sv_i^j|\\rangle$")
     axes.view_init(elev=28.0, azim=-60)
+    axes.set_zlim(0, 0.5)
 
     # Generate title
     s_vector_title = g_plt_utils.generate_title(
@@ -421,7 +432,7 @@ if __name__ == "__main__":
     profiler.start()
 
     if "s_values" in args["plot_type"]:
-        plot_s_values(args, plot_args=["normalize"])
+        plot_s_values(args, plot_args=[])
     elif "s_vectors" in args["plot_type"]:
         plot_s_vectors_units(args)
     elif "s_vectors_average" in args["plot_type"]:
