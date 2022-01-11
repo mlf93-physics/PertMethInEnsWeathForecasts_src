@@ -42,7 +42,10 @@ def plot_attractor(args, ax=None):
         ax = plt.axes(projection="3d")
 
     # Plot
-    ax.plot3D(u_data[:, 0], u_data[:, 1], u_data[:, 2], "k-", alpha=0.6, linewidth=0.5)
+    ax.plot3D(u_data[:, 0], u_data[:, 1], u_data[:, 2], "k-", alpha=1.0, linewidth=0.5)
+    ax.set_xlabel("x")
+    ax.set_ylabel("y")
+    ax.set_zlabel("z")
 
     return time, u_data, header_dict
 
@@ -261,22 +264,24 @@ def plot_energy_dist(args):
 def plot_characteristic_periods(args: dict, axes: plt.Axes = None):
     # Import reference data
     time, u_data, ref_header_dict = g_import.import_ref_data(args=args)
-    energy = 1 / 2 * np.sum(u_data ** 2, axis=1)
+    # variable = 1 / 2 * np.sum(u_data ** 2, axis=1)
+    variable = u_data[:, 1]
 
-    spectrum = np.fft.fft(energy)
+    spectrum = np.fft.fft(variable)
     power_spec = np.abs(spectrum) ** 2
-    freqs = np.fft.fftfreq(energy.shape[0], d=stt)
+    freqs = np.fft.fftfreq(variable.shape[0], d=stt)
     idx = np.argsort(freqs)[(freqs.size // 2 + 1) :]
 
     # Prepare axes
     if axes is None:
         axes = plt.axes()
 
-    # plt.plot(freq[:spectrum.shape[-1]//2], power_spec.real)
-    # plt.plot(freq[:spectrum.shape[-1]//2], power_spec.imag)
-    axes.plot(freqs[idx], power_spec[idx])
+    axes.plot(1 / freqs[idx], power_spec[idx])
     axes.set_xscale("log")
-    # axes.set_yscale("log")
+    axes.set_yscale("log")
+    axes.set_ylabel("Power")
+    axes.set_xlabel("Period [tu]")
+    axes.set_title("Power spectrum | y")
     axes.grid()
 
 
