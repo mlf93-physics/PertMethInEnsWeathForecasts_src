@@ -28,11 +28,11 @@ import general.utils.plot_utils as g_plt_utils
 import general.utils.user_interface as g_ui
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mpl_ticker
+from mpl_toolkits import mplot3d
 import seaborn as sb
 import numpy as np
 from general.params.model_licences import Models
 from general.utils.module_import.type_import import *
-from mpl_toolkits import mplot3d
 from pyinstrument import Profiler
 
 # Get parameters for model
@@ -184,10 +184,11 @@ def plot_s_vectors_average(args, axes: plt.Axes = None, plot_args: list = []):
     if axes is None:
         axes = plt.axes()
 
-    mean_abs_singular_vector_units = np.mean(np.abs(singular_vector_units), axis=0)
+    mean_abs_singular_vector_units = np.mean(np.abs(singular_vector_units) ** 2, axis=0)
 
     sb.heatmap(mean_abs_singular_vector_units.T, ax=axes, cbar_kws={"pad": 0.1})
-
+    axes.set_xlim(params.sdim, 0)
+    axes.set_ylim(0, params.sdim)
     axes.invert_yaxis()
     axes.invert_xaxis()
     plt.xticks(rotation=0)
@@ -195,6 +196,62 @@ def plot_s_vectors_average(args, axes: plt.Axes = None, plot_args: list = []):
     axes.yaxis.set_label_position("right")
     axes.set_xlabel("SV index")
     axes.set_ylabel("Shell index")
+
+    # Generate title
+    s_vector_title = g_plt_utils.generate_title(
+        args,
+        header_dict=header_dicts[0],
+        title_header="Averaged normalized SVs | shell model \n",
+    )
+    axes.set_title(s_vector_title)
+
+
+def plot3D_s_vectors_average(args, axes: plt.Axes = None, plot_args: list = []):
+
+    # Import breed vectors
+    (
+        singular_vector_units,
+        singular_values,
+        _,
+        _,
+        header_dicts,
+    ) = pt_import.import_perturb_vectors(
+        args, raw_perturbations=True, dtype=sparams.dtype
+    )
+
+    # Normalize
+    singular_vector_units = g_utils.normalize_array(
+        singular_vector_units, norm_value=1, axis=2
+    )
+
+    # Prepare axes
+    if axes is None:
+        # axes = plt.axes()
+        fig, axes = plt.subplots(subplot_kw={"projection": "3d"})
+
+    mean_abs_singular_vector_units = np.mean(np.abs(singular_vector_units) ** 2, axis=0)
+
+    # Prepare plot settings
+    mpl_ticker.MaxNLocator.default_params["integer"] = True
+
+    # Make data
+    shells = np.arange(0, params.sdim, 1)
+    sv_index = np.arange(0, params.sdim, 1)
+    sv_index, shells = np.meshgrid(sv_index, shells)
+    surf_plot = axes.plot_surface(
+        sv_index, shells, mean_abs_singular_vector_units.T, cmap="Reds"
+    )
+    axes.set_xlim(params.sdim, 0)
+    axes.set_ylim(0, params.sdim)
+    fig.colorbar(surf_plot, ax=axes, pad=0.1)
+
+    axes.xaxis.set_major_locator(mpl_ticker.MaxNLocator(integer=True))
+    axes.yaxis.set_major_locator(mpl_ticker.MaxNLocator(integer=True))
+
+    axes.set_xlabel("SV index, j")
+    axes.set_ylabel("Shell index, i")
+    axes.set_zlabel("$\\langle|sv_i^j|^2\\rangle$")
+    axes.view_init(elev=28.0, azim=-60)
 
     # Generate title
     s_vector_title = g_plt_utils.generate_title(
@@ -369,6 +426,8 @@ if __name__ == "__main__":
         plot_s_vectors_units(args)
     elif "s_vectors_average" in args["plot_type"]:
         plot_s_vectors_average(args)
+    elif "s_vectors_average_3D" in args["plot_type"]:
+        plot3D_s_vectors_average(args)
     elif "s_vector_ortho" in args["plot_type"]:
         plot_s_vector_ortho(args)
     elif "s_vector_ortho_average" in args["plot_type"]:
