@@ -250,7 +250,7 @@ class PerturbationArgSetup:
             in [EXP.NORMAL_PERTURBATION, EXP.HYPER_DIFFUSIVITY, EXP.BREEDING_VECTORS]
         )
         pert_mode_group.add_argument(
-            "--pert_mode", choices=["rd", "nm", "bv", "bv_eof", "sv"], type=str
+            "--pert_mode", choices=["rd", "nm", "bv", "bv_eof", "rf", "sv"], type=str
         )
 
         # Add model specific arguments
