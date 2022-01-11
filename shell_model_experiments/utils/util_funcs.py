@@ -148,6 +148,8 @@ def update_dependent_params(struct: ParamsStructType):
     # Update parameters based on other parameters
     struct.tts = int(round(struct.sample_rate / struct.dt))
     struct.stt = struct.dt / struct.sample_rate
+    # Round off stt
+    struct.stt = round(struct.stt, -int(math.floor(math.log10(abs(struct.stt)))))
     struct.factor2 = -struct.epsilon / struct.lambda_const
     struct.factor3 = (1 - struct.epsilon) / struct.lambda_const ** 2
 

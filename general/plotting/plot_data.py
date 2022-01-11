@@ -293,11 +293,6 @@ def plot_energy(
     # Import reference data
     time, u_data, header_dict = g_import.import_ref_data(args=args)
 
-    # If data is not present, import it
-    if time is None or u_data is None or header_dict is None:
-        # Import reference data
-        time, u_data, header_dict = g_import.import_ref_data(args=args)
-
     if axes is None:
         fig = plt.figure()
         axes = plt.axes()

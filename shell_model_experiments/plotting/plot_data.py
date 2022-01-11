@@ -358,15 +358,18 @@ def plot_velocity_spectrum(
     plt.legend()
 
 
-def plot_energy_per_shell(
-    time, u_store, header_dict, ax=None, omit=None, path=None, args=None
-):
+def plot_energy_per_shell(ax=None, omit=None, path=None, args=None):
     if ax is None:
         ax = plt.axes()
-        fig = plt.figure()
+
+    # Import reference data
+    time, u_data, header_dict = g_import.import_ref_data(args=args)
+
+    if isinstance(args["shell_cutoff"], int):
+        u_data = u_data[:, : args["shell_cutoff"]]
 
     # Plot total energy vs time
-    energy_vs_time = np.cumsum((u_store * np.conj(u_store)).real, axis=1)
+    energy_vs_time = np.cumsum((u_data * np.conj(u_data)).real, axis=1)
     ax.plot(time.real, energy_vs_time, "k")
     ax.set_xlabel("Time")
     ax.set_ylabel("Energy")
@@ -430,7 +433,7 @@ def plot_energy_per_shell(
                 (
                     (
                         pert_u_stores[idx]
-                        + u_store[
+                        + u_data[
                             int(header_dicts[idx]["perturb_pos"]) : int(
                                 header_dicts[idx]["perturb_pos"]
                             )
@@ -440,7 +443,7 @@ def plot_energy_per_shell(
                     )
                     * np.conj(
                         pert_u_stores[idx]
-                        + u_store[
+                        + u_data[
                             int(header_dicts[idx]["perturb_pos"]) : int(
                                 header_dicts[idx]["perturb_pos"]
                             )
@@ -461,12 +464,10 @@ def plot_energy_per_shell(
                 break
 
 
-def plots_related_to_energy(args=None, axes=None, plot_args=["detailed_title"]):
+def plot_energy(args=None, axes=None, plot_args=["detailed_title"]):
 
-    # Conserning ny
     # plot_energy_spectrum(u_data, header_dict, args=args)
     g_plt_data.plot_energy(args, axes=axes, plot_args=plot_args)
-    # plot_energy_per_shell(time, u_data, header_dict, path=args["datapath"], args=args)
 
 
 def plot_shell_error_vs_time(args=None):
@@ -1172,8 +1173,11 @@ if __name__ == "__main__":
         args["Nt"] = int(args["time_to_run"] / PAR.dt * PAR.sample_rate)
 
     # Perform plotting
-    if "energy_plots" in args["plot_type"]:
-        plots_related_to_energy(args=args)
+    if "energy" in args["plot_type"]:
+        plot_energy(args=args)
+
+    if "cum_energy" in args["plot_type"]:
+        plot_energy_per_shell(args=args)
 
     if "energy_spectrum" in args["plot_type"]:
         # Import reference data

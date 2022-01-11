@@ -52,5 +52,32 @@
         "pert_setup": {
             "time_to_run": 0.01
         }
+    },
+    "TestRun2": {
+        "general": {
+            "folder_name": "compare_sv_eofs",
+            "vector_folder": "vectors",
+            "perturbation_folder": "perturbations",
+            "sub_exp_folder": "perturb_data",
+            "eval_times": [
+                11.22
+            ],
+            "n_units": 30,
+            "unit_offset": 0.01
+        },
+        "bv_gen_setup": {
+            "integration_time": 0.01,
+            "n_cycles": 4,
+            "n_vectors": 8
+        },
+        "sv_gen_setup": {
+            "integration_time": 0.01,
+            "n_vectors": 20,
+            "n_lanczos_iterations": 1,
+            "n_model_iterations": 1
+        },
+        "pert_setup": {
+            "time_to_run": 0.01
+        }
     }
 }

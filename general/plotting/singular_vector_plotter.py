@@ -27,11 +27,12 @@ import general.utils.util_funcs as g_utils
 import general.utils.plot_utils as g_plt_utils
 import general.utils.user_interface as g_ui
 import matplotlib.pyplot as plt
+import matplotlib.ticker as mpl_ticker
+from mpl_toolkits import mplot3d
 import seaborn as sb
 import numpy as np
 from general.params.model_licences import Models
 from general.utils.module_import.type_import import *
-from mpl_toolkits import mplot3d
 from pyinstrument import Profiler
 
 # Get parameters for model
@@ -76,9 +77,9 @@ def plot_s_values(args, axes: plt.Axes = None, plot_args=[]):
     for i, header_dict in enumerate(header_dicts):
         labels.append(f"Start time: {header_dict['val_pos']*params.stt:.2f}")
 
-    real_lines = axes[0].plot(singular_values.T.real)
+    real_lines = axes[0].plot(singular_values.T.real, "k", alpha=0.3)
     colors = [line.get_color() for line in real_lines]
-    imag_lines = axes[0].plot(singular_values.T.imag, linestyle="--")
+    imag_lines = axes[0].plot(singular_values.T.imag, linestyle="--", alpha=0.3)
 
     for i, line in enumerate(imag_lines):
         line.set_color(colors[i])
@@ -96,7 +97,10 @@ def plot_s_values(args, axes: plt.Axes = None, plot_args=[]):
     axes[0].set_ylabel("Singular value")
     axes[0].set_xlabel("Singular value index")
     axes[0].set_title(s_value_dist_title)
-    # axes[0].set_yscale("log")
+    if "normalize" in plot_args:
+        axes[0].set_ylim(-0.2, 0.4)
+    else:
+        axes[0].set_yscale("log")
 
     # Get val pos from dicts
     val_pos_list = g_utils.get_values_from_dicts(header_dicts, "val_pos")
@@ -188,9 +192,17 @@ def plot_s_vectors_average(args, axes: plt.Axes = None, plot_args: list = []):
     sb.heatmap(
         mean_abs_singular_vector_units.T,
         ax=axes,
+        cbar_kws={
+            "pad": 0.1,
+        },
+        vmin=0,
+        vmax=0.5,
     )
-
     axes.invert_yaxis()
+    axes.invert_xaxis()
+    plt.xticks(rotation=0)
+    axes.yaxis.tick_right()
+    axes.yaxis.set_label_position("right")
     axes.set_xlabel("SV index")
     axes.set_ylabel("Shell index")
 
@@ -203,7 +215,65 @@ def plot_s_vectors_average(args, axes: plt.Axes = None, plot_args: list = []):
     axes.set_title(s_vector_title)
 
 
-def plot_s_vector_orthogonality(args, axes=None):
+def plot3D_s_vectors_average(args, axes: plt.Axes = None, plot_args: list = []):
+
+    # Import breed vectors
+    (
+        singular_vector_units,
+        singular_values,
+        _,
+        _,
+        header_dicts,
+    ) = pt_import.import_perturb_vectors(
+        args, raw_perturbations=True, dtype=sparams.dtype
+    )
+
+    # Normalize
+    singular_vector_units = g_utils.normalize_array(
+        singular_vector_units, norm_value=1, axis=2
+    )
+
+    # Prepare axes
+    if axes is None:
+        # axes = plt.axes()
+        fig, axes = plt.subplots(subplot_kw={"projection": "3d"})
+
+    mean_abs_singular_vector_units = np.mean(np.abs(singular_vector_units), axis=0)
+
+    # Prepare plot settings
+    mpl_ticker.MaxNLocator.default_params["integer"] = True
+
+    # Make data
+    shells = np.arange(0, params.sdim, 1)
+    sv_index = np.arange(0, params.sdim, 1)
+    sv_index, shells = np.meshgrid(sv_index, shells)
+    surf_plot = axes.plot_surface(
+        sv_index, shells, mean_abs_singular_vector_units.T, cmap="Reds"
+    )
+    axes.set_xlim(params.sdim, 0)
+    axes.set_ylim(0, params.sdim)
+    fig.colorbar(surf_plot, ax=axes, pad=0.1)
+    surf_plot.set_clim(0, 0.5)
+
+    axes.xaxis.set_major_locator(mpl_ticker.MaxNLocator(integer=True))
+    axes.yaxis.set_major_locator(mpl_ticker.MaxNLocator(integer=True))
+
+    axes.set_xlabel("SV index, j")
+    axes.set_ylabel("Shell index, i")
+    axes.set_zlabel("$\\langle|sv_i^j|\\rangle$")
+    axes.view_init(elev=28.0, azim=-60)
+    axes.set_zlim(0, 0.5)
+
+    # Generate title
+    s_vector_title = g_plt_utils.generate_title(
+        args,
+        header_dict=header_dicts[0],
+        title_header="Averaged normalized SVs | shell model \n",
+    )
+    axes.set_title(s_vector_title)
+
+
+def plot_s_vector_ortho(args, axes=None):
 
     # Import breed vectors
     (
@@ -271,6 +341,62 @@ def plot_s_vector_orthogonality(args, axes=None):
     fig.tight_layout(rect=[0, 0, 0.9, 1])
 
 
+def plot_s_vector_ortho_average(args, axes=None):
+
+    # Import breed vectors
+    (
+        singular_vector_units,
+        singular_values,
+        _,
+        _,
+        header_dicts,
+    ) = pt_import.import_perturb_vectors(
+        args, raw_perturbations=True, dtype=sparams.dtype
+    )
+
+    # Normalize
+    singular_vector_units = g_utils.normalize_array(
+        singular_vector_units, norm_value=1, axis=2
+    )
+
+    # Prepare axes
+    if axes is None:
+        fig, axes = plt.subplots(ncols=1, nrows=1)
+
+    orthogonality_matrix = 0
+    for i in range(args["n_profiles"]):
+        orthogonality_matrix += g_plt_anal.orthogonality_of_vectors(
+            singular_vector_units[i, :, :]
+        )
+
+    orthogonality_matrix /= args["n_profiles"]
+
+    sb.heatmap(
+        orthogonality_matrix,
+        ax=axes,
+        cmap="Reds",
+        vmin=0,
+        vmax=1,
+        # annot=True,
+        fmt=".1f",
+        annot_kws={"fontsize": 8},
+        cbar_kws=dict(use_gridspec=True, label="Orthogonality"),
+    )
+
+    axes.set_title(f'Val. pos. {header_dicts[i]["val_pos"]*params.stt:.2f}')
+
+    # Generate title
+    s_vector_title = g_plt_utils.generate_title(
+        args,
+        header_dict=header_dicts[0],
+        title_header="Averaged orthogonality between SVs | shell model \n",
+    )
+    fig.suptitle(s_vector_title)
+    fig.supxlabel("SV index")
+    fig.supylabel("SV index")
+    fig.tight_layout(rect=[0, 0, 0.9, 1])
+
+
 def plot_sv_error_norm(args):
 
     axes = plt.axes()
@@ -311,8 +437,12 @@ if __name__ == "__main__":
         plot_s_vectors_units(args)
     elif "s_vectors_average" in args["plot_type"]:
         plot_s_vectors_average(args)
-    elif "s_vector_orthogonality" in args["plot_type"]:
-        plot_s_vector_orthogonality(args)
+    elif "s_vectors_average_3D" in args["plot_type"]:
+        plot3D_s_vectors_average(args)
+    elif "s_vector_ortho" in args["plot_type"]:
+        plot_s_vector_ortho(args)
+    elif "s_vector_ortho_average" in args["plot_type"]:
+        plot_s_vector_ortho_average(args)
     elif "sv_error_norm" in args["plot_type"]:
         plot_sv_error_norm(args)
     else:

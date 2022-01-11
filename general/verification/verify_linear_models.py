@@ -6,8 +6,8 @@ from pyinstrument import Profiler
 import numpy as np
 import general.utils.importing.import_data_funcs as g_import
 import general.utils.saving.save_perturbation as pt_save
-import general.runners.perturbation_runner as pt_runner
-import general.utils.exceptions as g_exceptions
+import general.utils.running.runner_utils as r_utils
+from general.utils.module_import.type_import import *
 import general.utils.argument_parsers as a_parsers
 from general.params.model_licences import Models
 import config as cfg
@@ -24,8 +24,8 @@ if cfg.MODEL == Models.SHELL_MODEL:
     from shell_model_experiments.sabra_model.tl_sabra_model import (
         run_model as sh_tl_model,
     )
-    from shell_model_experiments.sabra_model.atl_sabra_model import (
-        run_model as sh_atl_model,
+    from shell_model_experiments.sabra_model.sabra_model_combinations import (
+        sh_tl_atl_model,
     )
 
     # Get parameters for model
@@ -40,8 +40,8 @@ elif cfg.MODEL == Models.LORENTZ63:
     from lorentz63_experiments.lorentz63_model.tl_lorentz63 import (
         run_model as l63_tl_model,
     )
-    from lorentz63_experiments.lorentz63_model.atl_lorentz63 import (
-        run_model as l63_atl_model,
+    from lorentz63_experiments.lorentz63_model.lorentz63_model_combinations import (
+        l63_tl_atl_model,
     )
 
     # Get parameters for model
@@ -170,54 +170,21 @@ def run_sh_atl_model_verification(
     diagonal_1: np.ndarray,
     diagonal_2: np.ndarray,
 ):
-    u_perturb_stored = np.copy(u_perturb)
-
-    # Run TL model one time step
-    sh_tl_model(
+    u_tl_out, _, u_init_perturb = sh_tl_atl_model(
         u_perturb,
         u_ref,
         data_out,
-        args["Nt"] + args["endpoint"] * 1,
-        args["ny"],
-        args["diff_exponent"],
-        args["forcing"],
-        params,
+        args,
         J_matrix,
         diagonal0,
         diagonal1,
         diagonal2,
         diagonal_1,
         diagonal_2,
-        raw_perturbation=True,
     )
 
-    u_tl_stored = data_out[-1, 1:]
-
-    # Run ATL model one time step
-    sh_atl_model(
-        np.pad(
-            data_out[-1, 1:].T,
-            pad_width=(params.bd_size, params.bd_size),
-            mode="constant",
-        ),
-        u_ref,
-        data_out,
-        args["Nt"] + args["endpoint"] * 1,
-        args["ny"],
-        args["diff_exponent"],
-        args["forcing"],
-        params,
-        J_matrix,
-        diagonal0,
-        diagonal1,
-        diagonal2,
-        diagonal_1,
-        diagonal_2,
-        raw_perturbation=True,
-    )
-
-    rhs_identity = np.dot(u_perturb_stored[sparams.u_slice], data_out[0, 1:])
-    lhs_identity = np.dot(u_tl_stored, u_tl_stored)
+    rhs_identity = np.dot(u_init_perturb[sparams.u_slice], data_out[0, 1:])
+    lhs_identity = np.dot(u_tl_out, u_tl_out)
     diff_identity = np.abs(lhs_identity - rhs_identity) / np.mean(
         [np.abs(lhs_identity), np.abs(rhs_identity)]
     )
@@ -228,36 +195,12 @@ def run_sh_atl_model_verification(
 def run_l63_atl_model_verification(
     args, u_ref, u_perturb, jacobian_matrix, lorentz_matrix, data_out
 ):
-    u_perturb_stored = np.copy(u_perturb)
-
-    # Run TL model one time step
-    l63_tl_model(
-        u_perturb,
-        u_ref,
-        lorentz_matrix,
-        jacobian_matrix,
-        data_out,
-        args["Nt"],
-        r_const=args["r_const"],
-        raw_perturbation=True,
+    u_tl_out, u_atl_out, u_init_perturb = l63_tl_atl_model(
+        u_perturb, u_ref, jacobian_matrix, lorentz_matrix, data_out, args
     )
 
-    u_tl_stored = data_out[-1, 1:].T
-
-    # Run ATL model one time step
-    l63_atl_model(
-        np.reshape(data_out[-1, 1:].T, (params.sdim, 1)),
-        u_ref,
-        lorentz_matrix,
-        jacobian_matrix,
-        data_out,
-        args["Nt"],
-        r_const=args["r_const"],
-        raw_perturbation=True,
-    )
-
-    rhs_identity = np.dot(u_perturb_stored, data_out[0, 1:])
-    lhs_identity = np.dot(u_tl_stored, u_tl_stored)
+    rhs_identity = np.dot(u_init_perturb, u_atl_out)
+    lhs_identity = np.dot(u_tl_out, u_tl_out)
 
     diff_identity = abs(lhs_identity - rhs_identity) / np.mean(
         [lhs_identity, rhs_identity]
@@ -285,7 +228,7 @@ def verify_tlm_model(args: dict):
     u_ref, _, ref_header_dict = g_import.import_start_u_profiles(args=args)
 
     # Prepare random perturbation
-    perturbations, perturb_positions = pt_runner.prepare_perturbations(
+    perturbations, perturb_positions = r_utils.prepare_perturbations(
         args, raw_perturbations=True
     )
     # Normalize perturbation
@@ -378,7 +321,7 @@ def verify_atlm_model(args: dict):
 
     # Prepare random perturbation
     # perturb = pt_utils.generate_rd_perturbations()
-    perturbations, _ = pt_runner.prepare_perturbations(args, raw_perturbations=True)
+    perturbations, _ = r_utils.prepare_perturbations(args, raw_perturbations=True)
     # Prepare arrays
     data_out = np.zeros((args["Nt"], params.sdim + 1), dtype=sparams.dtype)
     # Run verification multiple times

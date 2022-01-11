@@ -297,7 +297,7 @@ def import_perturb_vectors(
     ) = g_import.import_start_u_profiles(args=args)
 
     vector_units = np.empty(
-        (args["n_files"], args["n_runs_per_profile"], params.sdim), dtype=np.float64
+        (args["n_files"], args["n_runs_per_profile"], params.sdim), dtype=np.complex128
     )
 
     characteristic_values = np.zeros(
@@ -315,9 +315,13 @@ def import_perturb_vectors(
         # Skip characteristic value if present
         if vector_unit.shape[1] == params.sdim + 1:
             characteristic_values[i, :] = vector_unit[:, 0]
-            vector_units[i, :, :] = vector_unit[:, 1:].real
+            vector_units[i, :, :] = vector_unit[:, 1:]
         else:
-            vector_units[i, :, :] = vector_unit.real
+            vector_units[i, :, :] = vector_unit
+
+        # Take real part if in Lorentz model - only zeros present in imag part
+        if cfg.MODEL == Models.LORENTZ63:
+            vector_units = vector_units.real
 
         if i + 1 >= args["n_files"]:
             break

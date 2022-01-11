@@ -167,9 +167,21 @@ class RelReferenceArgSetup:
         # Add optional arguments
         self._parser.add_argument("--n_runs_per_profile", default=1, type=int)
         self._parser.add_argument("--n_profiles", default=1, type=int)
-        self._parser.add_argument("--start_times", nargs="+", type=float, default=None)
-        self._parser.add_argument("--start_time_offset", default=None, type=float)
         self._parser.add_argument("--exp_setup", default=None, type=str)
+        start_time_group: argparse._MutuallyExclusiveGroup = (
+            self._parser.add_mutually_exclusive_group()
+        )
+        start_time_group.add_argument(
+            "--regime_start",
+            type=str,
+            choices=[None, "low", "high"],
+            default=None,
+            help="Whether to start in low or high predictability regime",
+        )
+        start_time_group.add_argument(
+            "--start_times", nargs="+", type=float, default=None
+        )
+        self._parser.add_argument("--start_time_offset", default=None, type=float)
 
 
 class PerturbationVectorArgSetup:
@@ -264,10 +276,14 @@ class PerturbationArgSetup:
                 )
 
         # Test if start_times is set when pert_mode in ["rd", "nm"]
-        if self.args["pert_mode"] in ["rd", "nm"] and self.args["start_times"] is None:
+        if (
+            self.args["pert_mode"] in ["rd", "nm"]
+            and self.args["start_times"] is None
+            and self.args["regime_start"] is None
+        ):
             if cfg.LICENCE not in [EXP.VERIFICATION]:
                 self._parser.error(
-                    "--start_times argument is required when pert_mode is 'rd' or 'nm'"
+                    "--start_times or --regime_start argument is required when pert_mode is 'rd' or 'nm'"
                 )
 
 

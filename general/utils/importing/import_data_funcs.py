@@ -52,6 +52,7 @@ def import_header(folder: Union[str, pl.Path] = "", file_name: str = "") -> dict
     header_dict = {}
     for item in header:
         splitted_item = item.split("=")
+
         if splitted_item[0] == "f":
             header_dict[splitted_item[0]] = np.complex(splitted_item[1])
         elif splitted_item[0] == "forcing":

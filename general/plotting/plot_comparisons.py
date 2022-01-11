@@ -254,7 +254,7 @@ def plot_error_norm_comparison(args: dict):
     args["ref_end_time"] = end_time
 
     if cfg.MODEL == Models.SHELL_MODEL:
-        sh_plot.plots_related_to_energy(
+        sh_plot.plot_energy(
             args,
             axes=axes[1],
             plot_args=[],
@@ -329,10 +329,15 @@ def plot_exp_growth_rate_comparison(args: dict):
         # Set exp_folder
         args["exp_folder"] = folder
 
+        if i == 0:
+            zorder = 10
+        else:
+            zorder = 0
         g_plt_data.plot_exp_growth_rate_vs_time(
             args=args,
             axes=axes,
             color=cmap_list[i],
+            zorder=zorder,
             # linestyle=linestyle,
             plot_args=[],
             title_suffix=str(folder_path.parent),
@@ -349,8 +354,6 @@ if __name__ == "__main__":
     compare_plot_arg_parser.setup_parser()
     args: dict = compare_plot_arg_parser.args
 
-    # Initiate variables
-    # params.initiate_sdim_arrays(args["sdim"])
     # Shell model specific
     if cfg.MODEL == Models.SHELL_MODEL:
         # Initiate and update variables and arrays
