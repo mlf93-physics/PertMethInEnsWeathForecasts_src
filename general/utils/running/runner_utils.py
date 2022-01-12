@@ -243,7 +243,7 @@ def prepare_perturbations(
     # Only import start profiles beforehand if not using bv, bv_eof or sv perturbations,
     # i.e. also when running in singel_shell_perturb mode
 
-    if args["pert_mode"] not in ["bv", "bv_eof", "sv", "rf"]:
+    if args["pert_mode"] not in ["bv", "bv_eof", "sv"]:
         (
             u_init_profiles,
             perturb_positions,
@@ -332,7 +332,9 @@ def prepare_perturbations(
             )
 
         elif args["pert_mode"] == "rf":
-            perturb_vectors = pt_utils.get_rand_field_perturbations(args)
+            perturb_vectors = pt_utils.get_rand_field_perturbations(
+                args, u_init_profiles
+            )
             print("perturb_vectors", perturb_vectors.shape)
 
     # Check if single shell perturb should be activated

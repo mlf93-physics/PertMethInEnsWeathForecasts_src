@@ -401,7 +401,7 @@ def calculate_svs(
     return sv_matrix, s_values
 
 
-def get_rand_field_perturbations(args: dict) -> np.ndarray:
+def get_rand_field_perturbations(args: dict, u_init_profiles: np.ndarray) -> np.ndarray:
     """Get the random field perturbations calculated from the difference between
     two randomly chosen fields belonging to the same attractor wing and separated
     a specific time from each other.
@@ -421,15 +421,22 @@ def get_rand_field_perturbations(args: dict) -> np.ndarray:
     if cfg.MODEL == Models.SHELL_MODEL:
         args["ref_end_time"] = 30
     elif cfg.MODEL == Models.LORENTZ63:
-        args["ref_end_time"] = 1000
+        args["ref_end_time"] = 3000
 
     time, u_data, ref_header_dict = g_import.import_ref_data(args=args)
 
+    # Determine wing of u_init_profiles
+    wing_u_init_profiles = u_init_profiles[0, :] > 0
+
     # Instantiate random field selector
-    rand_field_iterator = rf_pert.choose_rand_field_indices(u_data)
+    rand_field_iterator = rf_pert.choose_rand_field_indices(
+        u_data, wing_u_init_profiles
+    )
 
     # Instantiate arrays
-    rand_field_diffs = np.empty((params.sdim, args["n_profiles"]))
+    rand_field_diffs = np.empty(
+        (params.sdim, args["n_profiles"] * args["n_runs_per_profile"])
+    )
 
     # Get the desired number of random fields
     for i, indices_tuple in enumerate(rand_field_iterator):
@@ -438,7 +445,7 @@ def get_rand_field_perturbations(args: dict) -> np.ndarray:
             u_data[rand_field1_indices, :] - u_data[rand_field2_indices, :]
         )
 
-        if i + 1 >= args["n_profiles"]:
+        if i + 1 >= args["n_profiles"] * args["n_runs_per_profile"]:
             break
 
     # Normalize to get perturbations

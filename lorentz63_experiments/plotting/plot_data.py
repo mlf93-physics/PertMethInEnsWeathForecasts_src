@@ -41,8 +41,27 @@ def plot_attractor(args, ax=None):
     if ax is None:
         ax = plt.axes(projection="3d")
 
+    wing_indices = u_data[:, 0] > 0
+    not_wing_indices = np.logical_not(wing_indices)
+
     # Plot
-    ax.plot3D(u_data[:, 0], u_data[:, 1], u_data[:, 2], "k-", alpha=1.0, linewidth=0.5)
+    ax.plot3D(
+        u_data[wing_indices, 0],
+        u_data[wing_indices, 1],
+        u_data[wing_indices, 2],
+        "b.",
+        alpha=0.5,
+        # linewidth=0.5,
+    )
+    ax.plot3D(
+        u_data[not_wing_indices, 0],
+        u_data[not_wing_indices, 1],
+        u_data[not_wing_indices, 2],
+        "r.",
+        alpha=0.5,
+        # linewidth=0.5,
+    )
+
     ax.set_xlabel("x")
     ax.set_ylabel("y")
     ax.set_zlabel("z")

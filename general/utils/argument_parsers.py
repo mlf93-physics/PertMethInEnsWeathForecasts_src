@@ -277,7 +277,7 @@ class PerturbationArgSetup:
 
         # Test if start_times is set when pert_mode in ["rd", "nm"]
         if (
-            self.args["pert_mode"] in ["rd", "nm"]
+            self.args["pert_mode"] in ["rd", "nm", "rf"]
             and self.args["start_times"] is None
             and self.args["regime_start"] is None
         ):

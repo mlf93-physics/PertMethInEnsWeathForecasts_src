@@ -384,10 +384,14 @@ if __name__ == "__main__":
     cfg.init_licence()
 
     # Get arguments
-    pert_arg_setup = a_parsers.PerturbationArgSetup()
-    pert_arg_setup.setup_parser()
-    pert_arg_setup.validate_arguments()
-    args = pert_arg_setup.args
+    _parser = a_parsers.PerturbationArgSetup()
+    _parser.setup_parser()
+    _parser.validate_arguments()
+    _parser = (
+        a_parsers.ReferenceAnalysisArgParser()
+    )  # Needed for RF perturbations to work
+    _parser.setup_parser()
+    args = _parser.args
 
     if cfg.MODEL == Models.SHELL_MODEL:
         # Initiate and update variables and arrays

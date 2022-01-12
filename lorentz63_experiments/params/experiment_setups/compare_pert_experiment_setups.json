@@ -6,9 +6,9 @@
             "perturbation_folder": "perturbations",
             "sub_exp_folder": "perturb_data",
             "eval_times": [
-                10
+                6001
             ],
-            "n_units": 50,
+            "n_units": 900,
             "unit_offset": 1.0
         },
         "bv_gen_setup": {

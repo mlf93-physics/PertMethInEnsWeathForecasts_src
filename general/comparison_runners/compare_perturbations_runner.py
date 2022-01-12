@@ -328,6 +328,42 @@ def sv_pert_experiment(args: dict, local_exp_setup: dict):
         pr_utils.run_pert_processes(copy_args, local_exp_setup, processes)
 
 
+def rf_pert_experiment(args: dict, local_exp_setup: dict):
+    """Run perturbations with SV as pert_mode
+
+    Parameters
+    ----------
+    args : dict
+        Local run-time arguments
+    local_exp_setup : dict
+        Local experiment setup
+    """
+
+    processes = []
+
+    # Prepare arguments for perturbation run
+    args["n_runs_per_profile"] = 2
+    args["n_profiles"] = local_exp_setup["n_units"]
+    args["pert_mode"] = "rf"
+    args["start_times"] = local_exp_setup["eval_times"]
+    args["start_time_offset"] = local_exp_setup["unit_offset"]
+    args["out_exp_folder"] = pl.Path(
+        local_exp_setup["folder_name"],
+        "rf_perturbations",
+    )
+
+    # Adjust start times
+    args = g_utils.adjust_start_times_with_offset(args)
+
+    # Copy args in order not override in forecast processes
+    copy_args = copy.deepcopy(args)
+
+    temp_processes, _, _, _ = pt_runner.main_setup(copy_args)
+    processes.extend(temp_processes)
+
+    pr_utils.run_pert_processes(copy_args, local_exp_setup, processes)
+
+
 def execute_pert_experiments(args: dict, exp_setup: dict):
     """Execute all perturbation experiments, i.e. run perturbations with different
     perturbation modes
@@ -355,7 +391,8 @@ def execute_pert_experiments(args: dict, exp_setup: dict):
     # bv_eof_pert_experiment(copy.deepcopy(args), local_exp_setup)
     # rd_pert_experiment(copy.deepcopy(args), local_exp_setup)
     # nm_pert_experiment(copy.deepcopy(args), local_exp_setup)
-    sv_pert_experiment(copy.deepcopy(args), local_exp_setup)
+    # sv_pert_experiment(copy.deepcopy(args), local_exp_setup)
+    rf_pert_experiment(copy.deepcopy(args), local_exp_setup)
 
 
 def main(args: dict):
@@ -387,9 +424,13 @@ def main(args: dict):
 if __name__ == "__main__":
     cfg.init_licence()
     # Get arguments
-    mult_pert_arg_setup = a_parsers.MultiPerturbationArgSetup()
-    mult_pert_arg_setup.setup_parser()
-    args = mult_pert_arg_setup.args
+    _parser = a_parsers.MultiPerturbationArgSetup()
+    _parser.setup_parser()
+    _parser = (
+        a_parsers.ReferenceAnalysisArgParser()
+    )  # Needed for RF perturbations to work
+    _parser.setup_parser()
+    args = _parser.args
 
     # Shell model specific
     if cfg.MODEL == Models.SHELL_MODEL:

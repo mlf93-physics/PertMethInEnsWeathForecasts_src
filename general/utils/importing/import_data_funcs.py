@@ -501,7 +501,8 @@ def import_start_u_profiles(args: dict = None) -> Tuple[np.ndarray, List[int], d
     -------
     tuple
         (
-            u_init_profiles : The initial velocity profiles
+            u_init_profiles : np.ndarray((params.sdim + 2 * params.bd_size, n_profiles * n_runs_per_profile))
+                The initial velocity profiles
             positions : The index position of the profiles
             ref_header_dict : The header dictionary of the reference data file
         )
