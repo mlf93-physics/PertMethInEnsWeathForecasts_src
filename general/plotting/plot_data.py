@@ -29,7 +29,6 @@ elif cfg.MODEL == Models.LORENTZ63:
 
 def plot_exp_growth_rate_vs_time(
     args=None,
-    normalize_start_time=True,
     axes=None,
     exp_setup=None,
     linestyle: str = "-",
@@ -39,6 +38,7 @@ def plot_exp_growth_rate_vs_time(
     color=None,
     legend_on: bool = True,
     title_suffix: str = "",
+    anal_type: str = "instant",
     plot_args: list = ["detailed_title"],
 ):
 
@@ -50,7 +50,6 @@ def plot_exp_growth_rate_vs_time(
                 "\nThe .json config file was not found, so this plot doesnt work "
                 + "if the file is needed\n"
             )
-
     (
         u_stores,
         perturb_time_pos_list,
@@ -58,6 +57,10 @@ def plot_exp_growth_rate_vs_time(
         header_dicts,
         u_ref_stores,
     ) = g_import.import_perturbation_velocities(args, search_pattern="*perturb*.csv")
+
+    mean_growth_rate = g_a_data.execute_mean_exp_growth_rate_vs_time_analysis(
+        args, u_stores, anal_type=anal_type
+    )
 
     # Define time array
     # -1 since growth rate is a rate between differences (see functino
@@ -70,17 +73,6 @@ def plot_exp_growth_rate_vs_time(
         endpoint=args["endpoint"],
     )
 
-    n_runs_per_profile = len(perturb_time_pos_list)
-
-    # Analyse mean exponential growth rate
-    (
-        error_norm_vs_time,
-        error_norm_mean_vs_time,
-    ) = g_a_data.analyse_error_norm_vs_time(u_stores, args=args)
-    mean_growth_rate = g_a_data.analyse_mean_exp_growth_rate_vs_time(
-        error_norm_vs_time, args=args
-    )
-
     # Prepare axes
     if axes is None:
         axes = plt.axes()
@@ -88,7 +80,9 @@ def plot_exp_growth_rate_vs_time(
     if "detailed_label" in plot_args:
         label = args["exp_folder"]
     else:
-        label = str(pl.Path(args["exp_folder"]).name)
+        label = str(pl.Path(args["exp_folder"]).name).split("_perturbations")[0]
+        if anal_type == "mean":
+            label += f"; $\\lambda_{{mean}}$={mean_growth_rate[-1]:.2f}"
 
     axes.plot(
         time_array,
@@ -206,7 +200,7 @@ def plot_error_norm_vs_time(
         cmap_list = g_plt_utils.get_non_repeating_colors(n_colors=n_colors)
     axes.set_prop_cycle("color", cmap_list)
 
-    if header_dicts[0]["pert_mode"] in ["rd", "nm"]:
+    if header_dicts[0]["pert_mode"] in ["rd", "nm", "rf"]:
         linewidth: float = 1.0
         alpha: float = 0.5
         zorder: float = 0

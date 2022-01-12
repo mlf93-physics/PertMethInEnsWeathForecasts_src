@@ -186,8 +186,8 @@ def plot_error_norm_comparison(args: dict):
             args["exp_folders"] = [
                 str(pl.Path(_dirs[i].parent.name, _dirs[i].name))
                 for i in range(len_folders)
-                if "sv" in _dirs[i].name
-                or "bv" in _dirs[i].name
+                if "rd" in _dirs[i].name
+                or "nm" in _dirs[i].name
                 or "rf" in _dirs[i].name
                 # if "bv" in _dirs[i].name
                 # if "perturbations" in _dirs[i].name  # or "nm" in _dirs[i].name
@@ -311,7 +311,10 @@ def plot_exp_growth_rate_comparison(args: dict):
         digits_in_name = lib_type_utils.get_digits_from_string(folder_path.name)
         if digits_in_name is not None:
             if isinstance(digits_in_name, int):
-                perturb_type = folder_path.name.split(str(digits_in_name))[0]
+
+                perturb_type = folder_path.name.split(
+                    lib_type_utils.zpad_string(str(digits_in_name), n_zeros=2)
+                )[0]
 
                 if not perturb_type == perturb_type_old:
                     color = cmap_list[i]
@@ -341,6 +344,7 @@ def plot_exp_growth_rate_comparison(args: dict):
             color=color,  # cmap_list[i],
             # zorder=zorder,
             linestyle=linestyle,
+            anal_type="mean",
             plot_args=[],
             title_suffix=str(folder_path.parent),
         )

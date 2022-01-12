@@ -335,7 +335,6 @@ def prepare_perturbations(
             perturb_vectors = pt_utils.get_rand_field_perturbations(
                 args, u_init_profiles
             )
-            print("perturb_vectors", perturb_vectors.shape)
 
     # Check if single shell perturb should be activated
     elif args["single_shell_perturb"] is not None:

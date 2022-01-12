@@ -124,10 +124,6 @@ def main(args: dict, exp_setup: dict = None):
                 # Run specified number of cycles
                 pr_utils.main_run(
                     processes,
-                    args=copy_args,
-                    n_units=min(
-                        copy_args["n_units"], num_possible_units - n_existing_units
-                    ),
                 )
                 # Offset time to prepare for next run and import of reference data
                 # for rescaling
