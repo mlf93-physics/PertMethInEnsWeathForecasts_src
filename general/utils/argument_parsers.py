@@ -339,6 +339,51 @@ class MultiPerturbationArgSetup:
         )
 
 
+class ComparisonArgParser:
+    def __init__(self):
+        self._parser = parser
+        self._args = None
+
+        _temp_parser = MultiPerturbationArgSetup()
+        _temp_parser.setup_parser()
+        # Needed for RF perturbations to work
+        _temp_parser = ReferenceAnalysisArgParser()
+        _temp_parser.setup_parser()
+
+    @property
+    def args(self):
+        """The vars(parsed arguments.)
+
+        The parsed args are saved to a local attribute if not already present
+        to avoid multiple calls to parse_args()
+
+        Returns
+        -------
+        argparse.Namespace
+            The parsed arguments
+        """
+        if not isinstance(self._args, argparse.Namespace):
+            self._args = vars(self._parser.parse_known_args()[0])
+
+        return self._args
+
+    def setup_parser(self):
+        self._parser.add_argument(
+            "-v",
+            "--vectors",
+            nargs="+",
+            default=[],
+            choices=["bv", "bv_eof", "sv", "all"],
+        )
+        self._parser.add_argument(
+            "-pt",
+            "--perturbations",
+            nargs="+",
+            default=[],
+            choices=["bv", "bv_eof", "rd", "nm", "sv", "rf", "all"],
+        )
+
+
 class ReferenceAnalysisArgParser:
     def __init__(self):
         self._parser = parser

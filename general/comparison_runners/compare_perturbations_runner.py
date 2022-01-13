@@ -12,7 +12,7 @@ import sys
 sys.path.append("..")
 import copy
 import pathlib as pl
-
+import colorama as col
 import config as cfg
 import general.runners.perturbation_runner as pt_runner
 import general.utils.argument_parsers as a_parsers
@@ -54,6 +54,7 @@ def generate_bvs(args: dict, exp_setup: dict):
     exp_setup : dict
         Experiment setup
     """
+    print(f"{col.Fore.GREEN}BV GENERATION{col.Fore.RESET}")
     # Update licence
     cfg.LICENCE = exp.BREEDING_VECTORS
 
@@ -83,6 +84,7 @@ def generate_bv_eofs(args: dict, exp_setup: dict):
     exp_setup : dict
         Experiment setup
     """
+    print(f"{col.Fore.GREEN}BV-EOF GENERATION{col.Fore.RESET}")
     # Update licence
     cfg.LICENCE = exp.BREEDING_EOF_VECTORS
 
@@ -114,6 +116,7 @@ def generate_svs(args: dict, exp_setup: dict):
     exp_setup : dict
         Experiment setup
     """
+    print(f"{col.Fore.GREEN}SV GENERATION{col.Fore.RESET}")
 
     # Update licence
     cfg.LICENCE = exp.SINGULAR_VECTORS
@@ -144,9 +147,12 @@ def generate_vectors(args: dict, exp_setup: dict):
     """
     args["save_last_pert"] = True
 
-    generate_bvs(copy.deepcopy(args), exp_setup)
-    generate_bv_eofs(copy.deepcopy(args), exp_setup)
-    generate_svs(copy.deepcopy(args), exp_setup)
+    if "bv" in args["vectors"] or "all" in args["vectors"]:
+        generate_bvs(copy.deepcopy(args), exp_setup)
+    if "bv_eof" in args["vectors"] or "all" in args["vectors"]:
+        generate_bv_eofs(copy.deepcopy(args), exp_setup)
+    if "sv" in args["vectors"] or "all" in args["vectors"]:
+        generate_svs(copy.deepcopy(args), exp_setup)
 
 
 def rd_pert_experiment(args: dict, local_exp_setup: dict):
@@ -159,6 +165,7 @@ def rd_pert_experiment(args: dict, local_exp_setup: dict):
     local_exp_setup : dict
         Local experiment setup
     """
+    print(f"{col.Fore.GREEN}RD PERTURBATIONS{col.Fore.RESET}")
 
     processes = []
 
@@ -194,6 +201,7 @@ def nm_pert_experiment(args: dict, local_exp_setup: dict):
     local_exp_setup : dict
         Local experiment setup
     """
+    print(f"{col.Fore.GREEN}NM PERTURBATIONS{col.Fore.RESET}")
 
     processes = []
 
@@ -230,6 +238,7 @@ def bv_pert_experiment(args: dict, local_exp_setup: dict):
     local_exp_setup : dict
         Local experiment setup
     """
+    print(f"{col.Fore.GREEN}BV PERTURBATIONS{col.Fore.RESET}")
 
     processes = []
 
@@ -264,6 +273,8 @@ def bv_eof_pert_experiment(args: dict, local_exp_setup: dict):
     local_exp_setup : dict
         Local experiment setup
     """
+    print(f"{col.Fore.GREEN}BV-EOF PERTURBATIONS{col.Fore.RESET}")
+
     # Prepare arguments for perturbation run
     args[
         "n_runs_per_profile"
@@ -300,6 +311,8 @@ def sv_pert_experiment(args: dict, local_exp_setup: dict):
     local_exp_setup : dict
         Local experiment setup
     """
+    print(f"{col.Fore.GREEN}SV PERTURBATIONS{col.Fore.RESET}")
+
     # Prepare arguments for perturbation run
     args[
         "n_runs_per_profile"
@@ -336,6 +349,7 @@ def rf_pert_experiment(args: dict, local_exp_setup: dict):
     local_exp_setup : dict
         Local experiment setup
     """
+    print(f"{col.Fore.GREEN}RF PERTURBATIONS{col.Fore.RESET}")
 
     processes = []
 
@@ -385,14 +399,22 @@ def execute_pert_experiments(args: dict, exp_setup: dict):
     args["n_profiles"] = local_exp_setup["n_units"]
 
     # Execute experiments
-    bv_pert_experiment(copy.deepcopy(args), local_exp_setup)
-    bv_eof_pert_experiment(
-        copy.deepcopy(args), local_exp_setup | exp_setup["bv_eof_gen_setup"]
-    )
-    rd_pert_experiment(copy.deepcopy(args), local_exp_setup)
-    nm_pert_experiment(copy.deepcopy(args), local_exp_setup)
-    sv_pert_experiment(copy.deepcopy(args), local_exp_setup | exp_setup["sv_gen_setup"])
-    rf_pert_experiment(copy.deepcopy(args), local_exp_setup)
+    if "bv" in args["perturbations"] or "all" in args["perturbations"]:
+        bv_pert_experiment(copy.deepcopy(args), local_exp_setup)
+    if "bv_eof" in args["perturbations"] or "all" in args["perturbations"]:
+        bv_eof_pert_experiment(
+            copy.deepcopy(args), local_exp_setup | exp_setup["bv_eof_gen_setup"]
+        )
+    if "rd" in args["perturbations"] or "all" in args["perturbations"]:
+        rd_pert_experiment(copy.deepcopy(args), local_exp_setup)
+    if "nm" in args["perturbations"] or "all" in args["perturbations"]:
+        nm_pert_experiment(copy.deepcopy(args), local_exp_setup)
+    if "sv" in args["perturbations"] or "all" in args["perturbations"]:
+        sv_pert_experiment(
+            copy.deepcopy(args), local_exp_setup | exp_setup["sv_gen_setup"]
+        )
+    if "rf" in args["perturbations"] or "all" in args["perturbations"]:
+        rf_pert_experiment(copy.deepcopy(args), local_exp_setup)
 
 
 def main(args: dict):
@@ -414,21 +436,19 @@ def main(args: dict):
     # Update run-time arguments
     args["n_units"] = exp_setup["general"]["n_units"]
 
-    # Generate perturbation vectors
-    generate_vectors(copy.deepcopy(args), exp_setup)
+    if len(args["vectors"]) > 0:
+        # Generate perturbation vectors
+        generate_vectors(copy.deepcopy(args), exp_setup)
 
-    # Perform perturbation experiments
-    execute_pert_experiments(copy.deepcopy(args), exp_setup)
+    if len(args["perturbations"]) > 0:
+        # Perform perturbation experiments
+        execute_pert_experiments(copy.deepcopy(args), exp_setup)
 
 
 if __name__ == "__main__":
     cfg.init_licence()
     # Get arguments
-    _parser = a_parsers.MultiPerturbationArgSetup()
-    _parser.setup_parser()
-    _parser = (
-        a_parsers.ReferenceAnalysisArgParser()
-    )  # Needed for RF perturbations to work
+    _parser = a_parsers.ComparisonArgParser()
     _parser.setup_parser()
     args = _parser.args
 

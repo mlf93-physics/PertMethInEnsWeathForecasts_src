@@ -448,7 +448,7 @@ def get_rand_field_perturbations(args: dict, u_init_profiles: np.ndarray) -> np.
     # Instantiate arrays
     rand_field_diffs = np.empty(
         (
-            params.sdim + 2 * params.bd_size,
+            params.sdim,
             args["n_profiles"] * args["n_runs_per_profile"],
         ),
         dtype=sparams.dtype,
@@ -480,7 +480,10 @@ def get_rand_field_perturbations(args: dict, u_init_profiles: np.ndarray) -> np.
         )
         # Calculate rand_field diffs
         for i in range(args["n_profiles"] * args["n_runs_per_profile"]):
-            rand_field_diffs[:, i] = u_data_rand_field1[:, i] - u_data_rand_field2[:, i]
+            rand_field_diffs[:, i] = (
+                u_data_rand_field1[sparams.u_slice, i]
+                - u_data_rand_field2[sparams.u_slice, i]
+            )
 
     elif cfg.MODEL == Models.LORENTZ63:
         # Calculate rand_field diffs
@@ -492,7 +495,5 @@ def get_rand_field_perturbations(args: dict, u_init_profiles: np.ndarray) -> np.
     rand_field_perturabtions = g_utils.normalize_array(
         rand_field_diffs, norm_value=params.seeked_error_norm, axis=0
     )
-    print("rand_field_perturabtions", rand_field_perturabtions)
-    exit()
 
     return rand_field_perturabtions
