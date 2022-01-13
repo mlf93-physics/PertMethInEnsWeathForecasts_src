@@ -26,6 +26,8 @@ import general.utils.user_interface as g_ui
 import sklearn.cluster as skl_cluster
 import config as cfg
 
+cfg.GLOBAL_PARAMS.record_max_time = 3000
+
 
 def plot_attractor(args, ax=None):
     """Plot the 3D attractor of the reference data

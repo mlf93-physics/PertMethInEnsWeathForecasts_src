@@ -344,7 +344,7 @@ def plot_exp_growth_rate_comparison(args: dict):
             color=color,  # cmap_list[i],
             # zorder=zorder,
             linestyle=linestyle,
-            anal_type="mean",
+            anal_type="instant",
             plot_args=[],
             title_suffix=str(folder_path.parent),
         )

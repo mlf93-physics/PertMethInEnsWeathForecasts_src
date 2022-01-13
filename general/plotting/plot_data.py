@@ -101,7 +101,7 @@ def plot_exp_growth_rate_vs_time(
     title = g_plt_utils.generate_title(
         args,
         header_dict=header_dicts[0],
-        title_header="Exponential growth rate vs time",
+        title_header=f"{anal_type.capitalize()} " + "exponential growth rate vs time",
         title_suffix=title_suffix,
         detailed="detailed_title" in plot_args,
     )

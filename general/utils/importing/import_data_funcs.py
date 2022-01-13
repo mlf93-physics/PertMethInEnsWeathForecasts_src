@@ -5,7 +5,7 @@ import itertools as it
 import json
 import pathlib as pl
 import re
-
+import math
 import config as cfg
 import general.utils.custom_decorators as dec
 import general.utils.exceptions as g_exceptions
@@ -266,6 +266,23 @@ def import_ref_data(args=None):
     if len(args["specific_ref_records"]) == 1 and args["specific_ref_records"][0] < 0:
         records_to_import = ref_files_sort_index
         print("\n Importing all reference data records\n")
+    elif args["ref_end_time"] > 0:
+        # Calculate how many ref records to import
+        start_rec_number = math.floor(
+            args["ref_start_time"] / cfg.GLOBAL_PARAMS.record_max_time
+        )
+        end_rec_number = math.ceil(
+            args["ref_end_time"] / cfg.GLOBAL_PARAMS.record_max_time
+        )
+
+        num_records = end_rec_number - start_rec_number
+        records_to_import = [i + start_rec_number for i in range(num_records)]
+
+        print(
+            "\n Importing all/subset of data in listed reference data records: ",
+            records_to_import,
+            "\n",
+        )
     else:
         records_to_import = args["specific_ref_records"]
         print("\n Importing listed reference data records: ", records_to_import, "\n")
@@ -275,10 +292,20 @@ def import_ref_data(args=None):
 
         endpoint = args["endpoint"] if "endpoint" in args else False
 
-        data_in, header_dict = import_data(
-            file_name,
-            start_line=int(args["ref_start_time"] * params.tts),
-            max_lines=int(
+        # Only use ref_start_time information when importing first ref record
+        start_line = (
+            int(
+                (args["ref_start_time"] % cfg.GLOBAL_PARAMS.record_max_time)
+                * params.tts
+            )
+            if i == 0
+            else 0
+        )
+
+        # If only importing one reference file, estimate max_line from ref_end_time
+        # and ref_start_time
+        if len(records_to_import) == 1:
+            max_line = int(
                 round(
                     (args["ref_end_time"] - args["ref_start_time"]) * params.tts
                     + (args["ref_start_time"] == 0)
@@ -286,6 +313,26 @@ def import_ref_data(args=None):
                     0,
                 )
             )
+        else:
+            # Only use ref_end_time information if importing last record out of multiple
+            max_line = (
+                int(
+                    round(
+                        (args["ref_end_time"] % cfg.GLOBAL_PARAMS.record_max_time)
+                        * params.tts
+                        + (args["ref_start_time"] == 0)
+                        + endpoint,
+                        0,
+                    )
+                )
+                if i + 1 == len(records_to_import)
+                else None
+            )
+
+        data_in, header_dict = import_data(
+            file_name,
+            start_line=start_line,
+            max_lines=max_line
             if args["ref_end_time"] > args["ref_start_time"]
             else None,
         )
