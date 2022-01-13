@@ -186,11 +186,11 @@ def plot_error_norm_comparison(args: dict):
             args["exp_folders"] = [
                 str(pl.Path(_dirs[i].parent.name, _dirs[i].name))
                 for i in range(len_folders)
-                if "rd" in _dirs[i].name
-                or "nm" in _dirs[i].name
-                or "rf" in _dirs[i].name
+                # if "rd" in _dirs[i].name
+                # or "nm" in _dirs[i].name
+                # or "rf" in _dirs[i].name
                 # if "bv" in _dirs[i].name
-                # if "perturbations" in _dirs[i].name  # or "nm" in _dirs[i].name
+                if "perturbations" in _dirs[i].name  # or "nm" in _dirs[i].name
             ]
 
         # Update number of folders after filtering
@@ -200,6 +200,7 @@ def plot_error_norm_comparison(args: dict):
 
     line_counter = 0
     perturb_type_old = ""
+    color_counter = 0
     for i, folder in enumerate(args["exp_folders"]):
         folder_path = pl.Path(folder)
         # Set exp_folder
@@ -208,12 +209,15 @@ def plot_error_norm_comparison(args: dict):
         digits_in_name = lib_type_utils.get_digits_from_string(folder_path.name)
         if digits_in_name is not None:
             if isinstance(digits_in_name, int):
-                perturb_type = folder_path.name.split(str(digits_in_name))[0]
+                perturb_type = folder_path.name.split(
+                    lib_type_utils.zpad_string(str(digits_in_name), n_zeros=2)
+                )[0]
 
                 if not perturb_type == perturb_type_old:
-                    color = cmap_list[i]
+                    color = cmap_list[color_counter]
                     _save_color = color
                     perturb_type_old = perturb_type
+                    color_counter += 1
                 else:
                     color = _save_color
                     if digits_in_name >= args["n_runs_per_profile"]:

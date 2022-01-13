@@ -14,6 +14,8 @@ def get_regime_start_times(args: dict, return_all=False):
     ----------
     args : dict
         Run-time arguments
+    return_all : bool
+        Whether to return both high and low pred regimes
 
     Raises
     ------
@@ -60,3 +62,49 @@ def get_regime_start_times(args: dict, return_all=False):
         start_times = list(regime_start_time_data[:, int(header[args["regime_start"]])])
 
     return start_times, regime_start_times_shape[0], header
+
+
+def map_time_to_regime(
+    start_times: np.ndarray, regime_start_times: np.ndarray
+) -> np.ndarray:
+    """Map an array of time values to a regime, i.e. it is determined whether
+    a time value belongs to a high or low pred regime
+
+    Parameters
+    ----------
+    start_times : np.ndarray
+        The time values to map
+    regime_start_times : np.ndarray
+        The start times of the different regimes
+
+    Returns
+    -------
+    np.ndarray
+        An array that tells if a time value belongs to a high (False) or low (True)
+        pred regime.
+
+    Raises
+    ------
+    ValueError
+        Raised if the minimum/maximum start_time is smaller/larger than
+        the minimum/maximum regime_start_time
+    """
+
+    if np.min(start_times) < np.min(regime_start_times) or np.max(start_times) > np.max(
+        regime_start_times
+    ):
+        raise ValueError(
+            "The minimum/maximum start_time is smaller/larger than the minimum/maximum regime_start_time"
+        )
+
+    flat_regime_start_times: np.ndarray = regime_start_times.ravel()
+    index_in_regime_array: np.ndarray = np.searchsorted(
+        flat_regime_start_times, start_times
+    )
+
+    # Whether a start_time belongs to a high or low pred regime is determined by
+    # if the index_in_regime_array entries are even (high pred) or odd (low
+    # pred).
+    regimes: np.ndarray = (index_in_regime_array % 2 == 0).astype(np.int16)
+
+    return regimes

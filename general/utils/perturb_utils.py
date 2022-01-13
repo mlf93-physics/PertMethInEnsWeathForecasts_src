@@ -403,15 +403,25 @@ def calculate_svs(
     return sv_matrix, s_values
 
 
-def get_rand_field_perturbations(args: dict, u_init_profiles: np.ndarray) -> np.ndarray:
+def get_rand_field_perturbations(
+    args: dict, u_init_profiles: np.ndarray, start_times: Union[None, np.ndarray] = None
+) -> np.ndarray:
     """Get the random field perturbations calculated from the difference between
-    two randomly chosen fields belonging to the same attractor wing and separated
-    a specific time from each other.
+    two randomly chosen fields belonging to the same regime(shell model)/
+    attractor-wing(lorentz63) and separated a specific time from each other.
 
     Parameters
     ----------
     args : dict
         Run-time arguments
+    u_init_profiles : np.ndarray
+        The initial velocity profiles. Only used by the Lorentz63 model to
+        determine indices of the wings.
+    start_times : np.ndarray
+        Start times of the perturbations. Used by the shell model to map the
+        start times to a regime such that the random fields can be generated
+        from the same type of regime.
+
 
     Returns
     -------
@@ -421,15 +431,18 @@ def get_rand_field_perturbations(args: dict, u_init_profiles: np.ndarray) -> np.
 
     # Import reference data
     if cfg.MODEL == Models.SHELL_MODEL:
-        start_times, num_start_times, header = sh_r_utils.get_regime_start_times(
+        regime_start_times, num_start_times, header = sh_r_utils.get_regime_start_times(
             args, return_all=True
         )
 
+        if start_times is not None:
+            regimes = sh_r_utils.map_time_to_regime(start_times, regime_start_times)
+
         # Convert start_times to indices
-        regime_start_time_indices = (start_times * params.tts).astype(np.int64)
+        regime_start_time_indices = (regime_start_times * params.tts).astype(np.int64)
 
         rand_field_iterator = sh_rf_pert.choose_rand_field_indices(
-            regime_start_time_indices, args, header
+            regime_start_time_indices, args, header, regimes=regimes
         )
 
     elif cfg.MODEL == Models.LORENTZ63:
