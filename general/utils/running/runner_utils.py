@@ -278,7 +278,9 @@ def prepare_perturbations(
 
         elif args["pert_mode"] == "rf":
             perturb_vectors = pt_utils.get_rand_field_perturbations(
-                args, u_init_profiles, start_times=perturb_positions * params.stt
+                args,
+                u_init_profiles=u_init_profiles,
+                start_times=perturb_positions * params.stt,
             )
 
     # Check if single shell perturb should be activated

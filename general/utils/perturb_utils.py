@@ -404,7 +404,9 @@ def calculate_svs(
 
 
 def get_rand_field_perturbations(
-    args: dict, u_init_profiles: np.ndarray, start_times: Union[None, np.ndarray] = None
+    args: dict,
+    u_init_profiles: np.ndarray = None,
+    start_times: Union[None, np.ndarray] = None,
 ) -> np.ndarray:
     """Get the random field perturbations calculated from the difference between
     two randomly chosen fields belonging to the same regime(shell model)/
@@ -435,6 +437,7 @@ def get_rand_field_perturbations(
             args, return_all=True
         )
 
+        regimes = None
         if start_times is not None:
             regimes = sh_r_utils.map_time_to_regime(start_times, regime_start_times)
 
@@ -497,6 +500,13 @@ def get_rand_field_perturbations(
                 u_data_rand_field1[sparams.u_slice, i]
                 - u_data_rand_field2[sparams.u_slice, i]
             )
+            # / np.mean(
+            #     [
+            #         u_data_rand_field1[sparams.u_slice, i],
+            #         u_data_rand_field2[sparams.u_slice, i],
+            #     ],
+            #     axis=0,
+            # )
 
     elif cfg.MODEL == Models.LORENTZ63:
         # Calculate rand_field diffs
