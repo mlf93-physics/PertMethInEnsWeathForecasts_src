@@ -14,14 +14,16 @@ from general.utils.module_import.type_import import *
 
 # Get parameters for model
 if cfg.MODEL == Models.SHELL_MODEL:
+    import shell_model_experiments.perturbations.random_fields as sh_rf_pert
     import shell_model_experiments.utils.special_params as sh_sparams
+    import shell_model_experiments.utils.runner_utils as sh_r_utils
     from shell_model_experiments.params.params import PAR as PAR_SH
     from shell_model_experiments.params.params import ParamsStructType
 
     params = PAR_SH
     sparams = sh_sparams
 elif cfg.MODEL == Models.LORENTZ63:
-    import lorentz63_experiments.perturbations.random_fields as rf_pert
+    import lorentz63_experiments.perturbations.random_fields as l63_rf_pert
     import lorentz63_experiments.params.params as l63_params
     import lorentz63_experiments.params.special_params as l63_sparams
 
@@ -419,38 +421,78 @@ def get_rand_field_perturbations(args: dict, u_init_profiles: np.ndarray) -> np.
 
     # Import reference data
     if cfg.MODEL == Models.SHELL_MODEL:
-        args["ref_end_time"] = 30
+        start_times, num_start_times, header = sh_r_utils.get_regime_start_times(
+            args, return_all=True
+        )
+
+        # Convert start_times to indices
+        regime_start_time_indices = (start_times * params.tts).astype(np.int64)
+
+        rand_field_iterator = sh_rf_pert.choose_rand_field_indices(
+            regime_start_time_indices, args, header
+        )
+
     elif cfg.MODEL == Models.LORENTZ63:
         args["ref_end_time"] = 3000
 
-    time, u_data, ref_header_dict = g_import.import_ref_data(args=args)
+        time, u_data, ref_header_dict = g_import.import_ref_data(args=args)
 
-    # Determine wing of u_init_profiles
-    wing_u_init_profiles = u_init_profiles[0, :] > 0
+        # Determine wing of u_init_profiles
+        wing_u_init_profiles = u_init_profiles[0, :] > 0
 
-    # Instantiate random field selector
-    rand_field_iterator = rf_pert.choose_rand_field_indices(
-        u_data, wing_u_init_profiles
-    )
+        # Instantiate random field selector
+        rand_field_iterator = l63_rf_pert.choose_rand_field_indices(
+            u_data, wing_u_init_profiles
+        )
 
     # Instantiate arrays
     rand_field_diffs = np.empty(
-        (params.sdim, args["n_profiles"] * args["n_runs_per_profile"])
+        (
+            params.sdim + 2 * params.bd_size,
+            args["n_profiles"] * args["n_runs_per_profile"],
+        ),
+        dtype=sparams.dtype,
     )
 
+    rand_field1_indices = np.empty(
+        args["n_profiles"] * args["n_runs_per_profile"], dtype=np.int64
+    )
+    rand_field2_indices = np.empty(
+        args["n_profiles"] * args["n_runs_per_profile"], dtype=np.int64
+    )
     # Get the desired number of random fields
     for i, indices_tuple in enumerate(rand_field_iterator):
-        rand_field1_indices, rand_field2_indices = indices_tuple
-        rand_field_diffs[:, i] = (
-            u_data[rand_field1_indices, :] - u_data[rand_field2_indices, :]
-        )
+        rand_field1_indices[i], rand_field2_indices[i] = indices_tuple
 
         if i + 1 >= args["n_profiles"] * args["n_runs_per_profile"]:
             break
 
+    if cfg.MODEL == Models.SHELL_MODEL:
+        # Convert indices to times
+        rand_field1_times = rand_field1_indices * params.stt
+        rand_field2_times = rand_field2_indices * params.stt
+        # Import u_profiles
+        u_data_rand_field1, _, ref_header_dict = g_import.import_start_u_profiles(
+            args=args, start_times=list(rand_field1_times)
+        )
+        u_data_rand_field2, _, ref_header_dict = g_import.import_start_u_profiles(
+            args=args, start_times=list(rand_field2_times)
+        )
+        # Calculate rand_field diffs
+        for i in range(args["n_profiles"] * args["n_runs_per_profile"]):
+            rand_field_diffs[:, i] = u_data_rand_field1[:, i] - u_data_rand_field2[:, i]
+
+    elif cfg.MODEL == Models.LORENTZ63:
+        # Calculate rand_field diffs
+        for i in range(args["n_profiles"] * args["n_runs_per_profile"]):
+            rand_field_diffs[:, i] = (
+                u_data[rand_field1_indices, :] - u_data[rand_field2_indices, :]
+            )
     # Normalize to get perturbations
     rand_field_perturabtions = g_utils.normalize_array(
         rand_field_diffs, norm_value=params.seeked_error_norm, axis=0
     )
+    print("rand_field_perturabtions", rand_field_perturabtions)
+    exit()
 
     return rand_field_perturabtions

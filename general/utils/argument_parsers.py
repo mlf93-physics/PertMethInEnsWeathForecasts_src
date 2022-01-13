@@ -183,6 +183,15 @@ class RelReferenceArgSetup:
         )
         self._parser.add_argument("--start_time_offset", default=None, type=float)
 
+    def validate_arguments(self):
+        if (
+            self.args["regime_start"] is not None
+            and cfg.MODEL is not Models.SHELL_MODEL
+        ):
+            self._parser.error(
+                f"regime_start argument can only be used with the {str(Models.SHELL_MODEL)}"
+            )
+
 
 class PerturbationVectorArgSetup:
     def __init__(self):
@@ -220,6 +229,7 @@ class PerturbationArgSetup:
         # Setup standard setup
         __relref_arg_setup = RelReferenceArgSetup()
         __relref_arg_setup.setup_parser()
+        __relref_arg_setup.validate_arguments()
 
         # Setup perturbation vector args
         __pert_vector_arg_setup = PerturbationVectorArgSetup()
@@ -412,6 +422,7 @@ class StandardPlottingArgParser:
 
         __relref_arg_setup = RelReferenceArgSetup(setup_parents=False)
         __relref_arg_setup.setup_parser()
+        __relref_arg_setup.validate_arguments()
 
     @property
     def args(self):

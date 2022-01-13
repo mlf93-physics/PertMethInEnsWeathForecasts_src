@@ -6,6 +6,7 @@ import json
 import pathlib as pl
 import re
 import math
+import colorama as col
 import config as cfg
 import general.utils.custom_decorators as dec
 import general.utils.exceptions as g_exceptions
@@ -536,7 +537,9 @@ def import_perturbation_velocities(
     )
 
 
-def import_start_u_profiles(args: dict = None) -> Tuple[np.ndarray, List[int], dict]:
+def import_start_u_profiles(
+    args: dict = None, start_times: list = []
+) -> Tuple[np.ndarray, List[int], dict]:
     """Import all u profiles to start perturbations from
 
     Parameters
@@ -560,8 +563,14 @@ def import_start_u_profiles(args: dict = None) -> Tuple[np.ndarray, List[int], d
         Raised if an unknown key is used to store the time_to_run information
         in the reference header
     """
-    n_profiles = args["n_profiles"]
-    n_runs_per_profile = args["n_runs_per_profile"]
+    len_start_times = len(start_times)
+    if args["start_times"] is not None and len_start_times > 0:
+        print(
+            f"{col.Fore.RED}In import_start_u_profiles: Both args['start_times'] and kwarg start_times specified. start_times overrides args['start_times']{col.Fore.RESET}"
+        )
+
+    n_profiles = args["n_profiles"] if len_start_times == 0 else len_start_times
+    n_runs_per_profile = args["n_runs_per_profile"] if len_start_times == 0 else 1
 
     # Check if ref path exists
     ref_file_path = pl.Path(args["datapath"], "ref_data")
@@ -569,7 +578,7 @@ def import_start_u_profiles(args: dict = None) -> Tuple[np.ndarray, List[int], d
     # Get ref info text file
     ref_header_dict = import_info_file(ref_file_path)
 
-    if args["start_times"] is None:
+    if args["start_times"] is None and len(start_times) == 0:
         print(
             f"\nImporting {n_profiles} velocity profiles randomly positioned "
             + "in reference datafile(s)\n"
@@ -601,14 +610,17 @@ def import_start_u_profiles(args: dict = None) -> Tuple[np.ndarray, List[int], d
             dtype=np.int64,
         )
     else:
+        if len_start_times > 0:
+            _temp_start_times = start_times
+        else:
+            _temp_start_times = args["start_times"]
+
         print(
             f"\nImporting {n_profiles} velocity profiles positioned as "
             + "requested in reference datafile\n"
         )
         # Make sure to round and convert to int in a proper way
-        positions = np.round(np.array(args["start_times"]) * params.tts).astype(
-            np.int64
-        )
+        positions = np.round(np.array(_temp_start_times) * params.tts).astype(np.int64)
 
     print(
         "\nPositions of perturbation start: ",

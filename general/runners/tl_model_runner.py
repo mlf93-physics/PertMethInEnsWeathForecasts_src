@@ -33,6 +33,7 @@ if __name__ == "__main__":
     # Get arguments
     rel_ref_arg_setup = a_parsers.RelReferenceArgSetup()
     rel_ref_arg_setup.setup_parser()
+    rel_ref_arg_setup.validate_arguments()
     ref_arg_setup = a_parsers.ReferenceAnalysisArgParser()
     ref_arg_setup.setup_parser()
     args = ref_arg_setup.args

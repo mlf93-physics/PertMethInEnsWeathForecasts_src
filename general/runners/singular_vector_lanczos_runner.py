@@ -40,7 +40,7 @@ if cfg.MODEL == Models.SHELL_MODEL:
     import shell_model_experiments.utils.util_funcs as sh_utils
     from shell_model_experiments.params.params import PAR as PAR_SH
     from shell_model_experiments.params.params import ParamsStructType
-
+    import shell_model_experiments.utils.runner_utils as sh_r_utils
     from shell_model_experiments.sabra_model.sabra_model import run_model as sh_model
 
     params = PAR_SH
@@ -86,8 +86,8 @@ def main(args: dict, exp_setup: dict = None):
     if args["regime_start"] is None:
         # Generate start times
         start_times, num_possible_units = r_utils.generate_start_times(exp_setup, args)
-    else:
-        start_times, num_possible_units = r_utils.get_regime_start_times(args)
+    elif cfg.MODEL == Models.SHELL_MODEL:
+        start_times, num_possible_units, _ = sh_r_utils.get_regime_start_times(args)
 
     # Get index numbers of units to generate
     unit_indices = np.arange(

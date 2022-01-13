@@ -210,6 +210,7 @@ if __name__ == "__main__":
     # Get arguments
     ref_arg_setup = a_parsers.RelReferenceArgSetup()
     ref_arg_setup.setup_parser()
+    ref_arg_setup.validate_arguments()
     args = ref_arg_setup.args
 
     # Initiate and update variables and arrays

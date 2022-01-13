@@ -12,7 +12,6 @@ import general.utils.perturb_utils as pt_utils
 from general.params.experiment_licences import Experiments as EXP
 from general.utils.module_import.type_import import *
 import general.utils.exceptions as g_exceptions
-from libs.libutils import file_utils as lib_file_utils
 import config as cfg
 from general.params.model_licences import Models
 
@@ -118,60 +117,6 @@ def generate_start_times(exp_setup: dict, args: dict):
         start_times = exp_setup["start_times"]
 
     return start_times, num_possible_units
-
-
-def get_regime_start_times(args: dict):
-    """Get the start times for a given regime (high pred or low pred)
-
-    Parameters
-    ----------
-    args : dict
-        Run-time arguments
-
-    Raises
-    ------
-    ImportError
-        Raised if multiple regime_start_time analysis files found
-    g_exceptions.InvalidRuntimeArgument
-        Raised if the number of requested profiles is larger than the available
-        regime start time
-
-    Returns
-    -------
-    start_times : list
-        The regime start times
-    """
-    if args["regime_start"] is not None:
-        # Find analysis file
-        regime_start_time_path: List[pl.Path] = lib_file_utils.get_files_in_path(
-            pl.Path(args["datapath"], "analysis_data"),
-            search_pattern="regime_start_times*.csv",
-        )
-        if len(regime_start_time_path) > 1:
-            raise ImportError(
-                f"Multiple regime_start_time analysis files found at path {regime_start_time_path}"
-            )
-
-        # Import data
-        regime_start_time_data, header = g_import.import_data(
-            regime_start_time_path[0], dtype=np.float64
-        )
-
-        regime_start_times_shape = regime_start_time_data.shape
-        if args["n_profiles"] > regime_start_times_shape[0]:
-            raise g_exceptions.InvalidRuntimeArgument(
-                "Number of requested profiles is larger than the available regime start time; "
-                + f"{args['n_profiles']}>{regime_start_times_shape[0]}"
-            )
-
-        # Save the requested number of start times
-        # args["start_times"] = [
-        #     regime_start_time_data[i, int(header[args["regime_start"]])]
-        #     for i in range(args["n_profiles"])
-        # ]
-        start_times = list(regime_start_time_data[:, int(header[args["regime_start"]])])
-
-        return start_times, regime_start_times_shape[0]
 
 
 def adjust_run_setup(args: dict):

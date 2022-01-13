@@ -55,6 +55,7 @@ if cfg.MODEL == Models.SHELL_MODEL:
     import shell_model_experiments.utils.util_funcs as ut_funcs
     from shell_model_experiments.params.params import PAR
     from shell_model_experiments.params.params import ParamsStructType
+    import shell_model_experiments.utils.runner_utils as sh_r_utils
     from shell_model_experiments.sabra_model.tl_sabra_model import (
         run_model as sh_tl_model,
     )
@@ -398,11 +399,12 @@ if __name__ == "__main__":
         ut_funcs.update_dependent_params(params)
         ut_funcs.update_arrays(params)
 
+        if args["regime_start"] is not None:
+            start_times, _, _ = sh_r_utils.get_regime_start_times(args)
+            args["start_times"] = start_times[: args["n_profiles"]]
+
     if args["regime_start"] is None:
         args = g_utils.adjust_start_times_with_offset(args)
-    else:
-        start_times, _ = r_utils.get_regime_start_times(args)
-        args["start_times"] = start_times[: args["n_profiles"]]
 
     g_ui.confirm_run_setup(args)
     r_utils.adjust_run_setup(args)
