@@ -386,7 +386,7 @@ def update_exp_folders(args):
                     [
                         str(pl.Path(_dirs[i].parent.name, _dirs[i].name))
                         for i in range(len_folders)
-                        if item in _dirs[i].name  # or "nm" in _dirs[i].name
+                        if item in _dirs[i].name and "perturbations" in _dirs[i].name
                     ]
                 )
             for item in args["vectors"]:
@@ -395,8 +395,7 @@ def update_exp_folders(args):
                         str(pl.Path(*_dirs[i].parts[-3:]))
                         for i in range(len_folders)
                         if item == _dirs[i].name.split("_vectors")[0]
-                        and _dirs[i].parent.name
-                        == "vectors"  # or "nm" in _dirs[i].name
+                        and _dirs[i].parent.name == "vectors"
                     ]
                 )
 
@@ -426,6 +425,7 @@ def plot_exp_growth_rate_comparison(args: dict):
     axes = plt.axes()
 
     perturb_type_old = ""
+    color_counter = 0
     for i, folder in enumerate(args["exp_folders"]):
         folder_path = pl.Path(folder)
 
@@ -436,11 +436,12 @@ def plot_exp_growth_rate_comparison(args: dict):
                 perturb_type = folder_path.name.split(
                     lib_type_utils.zpad_string(str(digits_in_name), n_zeros=2)
                 )[0]
-
+                print("perturb_type", perturb_type)
                 if not perturb_type == perturb_type_old:
-                    color = cmap_list[i]
+                    color = cmap_list[color_counter]
                     _save_color = color
                     perturb_type_old = perturb_type
+                    color_counter += 1
                 else:
                     color = _save_color
                     if digits_in_name >= args["n_runs_per_profile"]:
