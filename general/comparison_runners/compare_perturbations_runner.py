@@ -31,6 +31,7 @@ from libs.libutils import type_utils as lib_type_utils
 # Get parameters for model
 if cfg.MODEL == Models.SHELL_MODEL:
     import shell_model_experiments.utils.util_funcs as sh_utils
+    import shell_model_experiments.utils.runner_utils as sh_r_utils
     from shell_model_experiments.params.params import PAR as PAR_SH
     from shell_model_experiments.params.params import ParamsStructType
 
@@ -172,15 +173,10 @@ def rd_pert_experiment(args: dict, local_exp_setup: dict):
     # Prepare arguments for perturbation run
     args["n_runs_per_profile"] = 10
     args["pert_mode"] = "rd"
-    args["start_times"] = local_exp_setup["eval_times"]
-    args["start_time_offset"] = local_exp_setup["unit_offset"]
     args["out_exp_folder"] = pl.Path(
         local_exp_setup["folder_name"],
         "rd_perturbations",
     )
-
-    # Adjust start times
-    args = g_utils.adjust_start_times_with_offset(args)
 
     # Copy args in order not override in forecast processes
     copy_args = copy.deepcopy(args)
@@ -209,15 +205,10 @@ def nm_pert_experiment(args: dict, local_exp_setup: dict):
     args["n_runs_per_profile"] = 10
     args["n_profiles"] = local_exp_setup["n_units"]
     args["pert_mode"] = "nm"
-    args["start_times"] = local_exp_setup["eval_times"]
-    args["start_time_offset"] = local_exp_setup["unit_offset"]
     args["out_exp_folder"] = pl.Path(
         local_exp_setup["folder_name"],
         "nm_perturbations",
     )
-
-    # Adjust start times
-    args = g_utils.adjust_start_times_with_offset(args)
 
     # Copy args in order not override in forecast processes
     copy_args = copy.deepcopy(args)
@@ -357,15 +348,10 @@ def rf_pert_experiment(args: dict, local_exp_setup: dict):
     args["n_runs_per_profile"] = 10
     args["n_profiles"] = local_exp_setup["n_units"]
     args["pert_mode"] = "rf"
-    args["start_times"] = local_exp_setup["eval_times"]
-    args["start_time_offset"] = local_exp_setup["unit_offset"]
     args["out_exp_folder"] = pl.Path(
         local_exp_setup["folder_name"],
         "rf_perturbations",
     )
-
-    # Adjust start times
-    args = g_utils.adjust_start_times_with_offset(args)
 
     # Copy args in order not override in forecast processes
     copy_args = copy.deepcopy(args)
@@ -397,6 +383,16 @@ def execute_pert_experiments(args: dict, exp_setup: dict):
     args["time_to_run"] = local_exp_setup["time_to_run"]
     args["endpoint"] = True
     args["n_profiles"] = local_exp_setup["n_units"]
+
+    # Only generate start times if not requesting regime start
+    if args["regime_start"] is None:
+        # Generate start times
+        args["start_times"] = local_exp_setup["eval_times"]
+        args["start_time_offset"] = local_exp_setup["unit_offset"]
+        args = g_utils.adjust_start_times_with_offset(args)
+    elif cfg.MODEL == Models.SHELL_MODEL:
+        start_times, num_possible_units, _ = sh_r_utils.get_regime_start_times(args)
+        args["start_times"] = start_times[: args["n_profiles"]]
 
     # Execute experiments
     if "bv" in args["perturbations"] or "all" in args["perturbations"]:

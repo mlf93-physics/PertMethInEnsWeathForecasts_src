@@ -7,6 +7,7 @@ import sys
 
 sys.path.append("..")
 import copy
+import numpy as np
 import pathlib as pl
 
 import config as cfg
@@ -32,6 +33,7 @@ if cfg.MODEL == Models.SHELL_MODEL:
     from shell_model_experiments.params.params import PAR as PAR_SH
     import shell_model_experiments.utils.util_funcs as sh_utils
     import shell_model_experiments.utils.special_params as sh_sparams
+    import shell_model_experiments.utils.runner_utils as sh_r_utils
 
     params = PAR_SH
     sparams = sh_sparams
@@ -74,8 +76,15 @@ def main(args: dict, exp_setup: dict = None):
     # Validate the start time method
     ut_exp_val.validate_start_time_method(exp_setup=exp_setup)
 
-    # Generate start times
-    start_times, num_possible_units = r_utils.generate_start_times(exp_setup, args)
+    # Only generate start times if not requesting regime start
+    if args["regime_start"] is None:
+        # Generate start times
+        start_times, num_possible_units = r_utils.generate_start_times(exp_setup, args)
+    elif cfg.MODEL == Models.SHELL_MODEL:
+        start_times, num_possible_units, _ = sh_r_utils.get_regime_start_times(args)
+        start_times = r_utils.get_bv_start_time(
+            eval_time=np.array(start_times), exp_setup=exp_setup
+        )
 
     processes = []
 

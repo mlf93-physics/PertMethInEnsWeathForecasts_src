@@ -36,6 +36,20 @@ elif cfg.MODEL == Models.LORENTZ63:
     sparams = l63_sparams
 
 
+def get_bv_start_time(
+    eval_time: Union[float, np.ndarray] = None, exp_setup: dict = None
+):
+    _temp_offset = exp_setup["n_cycles"] * exp_setup["integration_time"]
+    if _temp_offset > np.min(eval_time):
+        raise ValueError(
+            "The BV offset (calculated as n_cycles * integration_time) is to "
+            + "large compared to the eval_time"
+        )
+
+    start_time = eval_time - _temp_offset
+    return start_time
+
+
 def generate_start_times(exp_setup: dict, args: dict):
     """Generate start times and calculate the number of possible units from
     the relevant run-time variables and variables from the experiment setup
@@ -79,9 +93,8 @@ def generate_start_times(exp_setup: dict, args: dict):
             _time_offset = exp_setup["start_times"][0]
         elif "eval_times" in exp_setup:
             if cfg.LICENCE == EXP.BREEDING_VECTORS:
-                _time_offset = (
-                    exp_setup["eval_times"][0]
-                    - exp_setup["n_cycles"] * exp_setup["integration_time"]
+                _time_offset = get_bv_start_time(
+                    eval_time=exp_setup["eval_times"][0], exp_setup=exp_setup
                 )
             elif cfg.LICENCE == EXP.LYAPUNOV_VECTORS:
                 _time_offset = (
