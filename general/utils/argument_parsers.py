@@ -56,6 +56,9 @@ class StandardArgSetup:
 
         # Add general arguments
         self._parser.add_argument("-dp", "--datapath", type=str, default=datapath)
+        self._parser.add_argument(
+            "--analysis_path", type=str, default="./data/analysed_data/"
+        )
         self._parser.add_argument("-ttr", "--time_to_run", default=0.1, type=float)
         self._parser.add_argument("--burn_in_time", default=0.0, type=float)
         self._parser.add_argument("--seed_mode", action="store_true")

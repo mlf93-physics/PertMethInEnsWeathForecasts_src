@@ -448,24 +448,19 @@ def get_rand_field_perturbations(
             regime_start_time_indices, args, header, regimes=regimes
         )
 
-        time, u_data, ref_header_dict = g_import.import_ref_data(args=args)
-
-        mean_u_data = np.mean(u_data, axis=0)
+        # Prepare mean_u_data that is used to normalize the RF perturbations to
+        # level out the underlying spectrum in the perturbations
+        anal_file = g_utils.get_analysis_file(args, type="velocities")
+        mean_u_data, _ = g_import.import_data(file_name=anal_file, start_line=1)
+        # Normalize the mean velocity data
         norm_mean_u_data = g_utils.normalize_array(
-            mean_u_data, norm_value=params.seeked_error_norm, axis=0
+            mean_u_data.T, norm_value=params.seeked_error_norm, axis=0
         )
-
-        # rand_fields_rel_u_mean = (
-        #     rand_field_perturbations  # - norm_u_data[:, np.newaxis]
-        # ) / norm_mean_u_data[:, np.newaxis]
-        # rand_fields_rel_u_mean = g_utils.normalize_array(
-        #     rand_fields_rel_u_mean, norm_value=params.seeked_error_norm, axis=0
-        # )
 
     elif cfg.MODEL == Models.LORENTZ63:
         args["ref_end_time"] = 3000
 
-        time, u_data, ref_header_dict = g_import.import_ref_data(args=args)
+        _, u_data, _ = g_import.import_ref_data(args=args)
 
         # Determine wing of u_init_profiles
         wing_u_init_profiles = u_init_profiles[0, :] > 0
@@ -513,14 +508,7 @@ def get_rand_field_perturbations(
             rand_field_diffs[:, i] = (
                 u_data_rand_field1[sparams.u_slice, i]
                 - u_data_rand_field2[sparams.u_slice, i]
-            ) / norm_mean_u_data
-            # / np.mean(
-            #     [
-            #         u_data_rand_field1[sparams.u_slice, i],
-            #         u_data_rand_field2[sparams.u_slice, i],
-            #     ],
-            #     axis=0,
-            # )
+            ) / norm_mean_u_data.ravel()
 
     elif cfg.MODEL == Models.LORENTZ63:
         # Calculate rand_field diffs

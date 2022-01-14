@@ -158,9 +158,9 @@ def main(args):
 
         _, u_data, header_dict = g_import.import_ref_data(args=args)
 
-        args["out_exp_folder"] = "../../mean_energy_analysed_30shells"
+        args["out_exp_folder"] = "../../analysed_data/mean_energy_analysed_30shells"
         analyse_mean_energy_spectrum(args, u_data, header_dict)
-        args["out_exp_folder"] = "../../mean_helicity_analysed_30shells"
+        args["out_exp_folder"] = "../../analysed_data/mean_helicity_analysed_30shells"
         analyse_mean_helicity_spectrum(args, u_data, header_dict)
 
 

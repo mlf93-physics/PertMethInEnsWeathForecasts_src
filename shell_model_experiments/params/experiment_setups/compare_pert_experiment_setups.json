@@ -55,14 +55,14 @@
     },
     "CompareLowPredRegime0.01": {
         "general": {
-            "folder_name": "compare_sv_low_pred_regimes",
+            "folder_name": "compare_pert_low_pred_regimes",
             "vector_folder": "vectors",
             "perturbation_folder": "perturbations",
             "sub_exp_folder": "perturb_data",
             "eval_times": [
                 11.22
             ],
-            "n_units": 6,
+            "n_units": 102,
             "unit_offset": 0.01
         },
         "bv_gen_setup": {

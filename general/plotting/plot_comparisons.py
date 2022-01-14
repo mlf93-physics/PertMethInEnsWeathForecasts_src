@@ -81,6 +81,24 @@ def plt_pert_components(args: dict, axes: plt.Axes = None):
         mean_vectors = np.mean(np.abs(vector_units), axis=0).T
         norm_mean_vectors = g_utils.normalize_array(mean_vectors, norm_value=1, axis=0)
 
+        if "bv" in folder:
+            anal_file = g_utils.get_analysis_file(args, type="velocities")
+            mean_u_data, ref_header_dict = g_import.import_data(
+                file_name=anal_file, start_line=1
+            )
+
+            norm_mean_u_data = g_utils.normalize_array(
+                np.abs(mean_u_data.T), norm_value=1, axis=0
+            )
+            print("norm_mean_u_data", norm_mean_u_data)
+            print("norm_mean_vectors", norm_mean_vectors)
+            norm_mean_vectors /= norm_mean_u_data
+            norm_mean_vectors = g_utils.normalize_array(
+                norm_mean_vectors, norm_value=1, axis=0
+            )
+
+            print("norm_mean_vectors", norm_mean_vectors)
+
         vector_lines = axes.plot(
             shell_index,
             norm_mean_vectors,
