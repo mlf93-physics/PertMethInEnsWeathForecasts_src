@@ -367,9 +367,8 @@ def plot_error_norm_comparison(args: dict):
 
 
 def update_exp_folders(args):
-    if args["exp_folders"] is not None:
-        len_folders = len(args["exp_folders"])
-    elif args["exp_folder"] is not None:
+
+    if args["exp_folder"] is not None:
         # Get dirs in path
         _path = pl.Path(args["datapath"], args["exp_folder"])
         _dirs = lib_file_utils.get_dirs_in_path(_path, recursively=True)
@@ -401,9 +400,6 @@ def update_exp_folders(args):
 
             args["exp_folders"] = _exp_folders
 
-        # Update number of folders after filtering
-        len_folders = len(args["exp_folders"])
-
 
 def plot_exp_growth_rate_comparison(args: dict):
     """Plots a comparison of the exponential growth rates vs time for the different
@@ -418,6 +414,8 @@ def plot_exp_growth_rate_comparison(args: dict):
     # args["endpoint"] = True
 
     update_exp_folders(args)
+    # Update number of folders after filtering
+    len_folders = len(args["exp_folders"])
 
     cmap_list = plt.rcParams["axes.prop_cycle"].by_key()["color"]
     # cmap_list = g_plt_utils.get_non_repeating_colors(n_colors=len_folders)
