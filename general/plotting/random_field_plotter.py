@@ -18,7 +18,7 @@ import general.plotting.plot_data as g_plt_data
 import general.utils.argument_parsers as a_parsers
 import general.utils.importing.import_data_funcs as g_import
 import general.utils.perturb_utils as pt_utils
-import general.utils.importing.import_utils as g_imp_utils
+import general.utils.util_funcs as g_utils
 import general.utils.plot_utils as g_plt_utils
 import general.utils.user_interface as g_ui
 import matplotlib.pyplot as plt
@@ -48,40 +48,59 @@ elif cfg.MODEL == Models.LORENTZ63:
 def plot_rf_perturbation_vectors(args: dict, axes: plt.Axes = None):
     rand_field_perturbations = pt_utils.get_rand_field_perturbations(args)
 
-    rand_field_perturbations_real = np.mean(
-        np.abs(rand_field_perturbations.real), axis=1
-    )
-    rand_field_perturbations_imag = np.mean(
-        np.abs(rand_field_perturbations.imag), axis=1
-    )
+    # time, u_data, ref_header_dict = g_import.import_ref_data(args=args)
+
+    # mean_u_data = np.mean(u_data, axis=0)
+    # norm_u_data = g_utils.normalize_array(
+    #     mean_u_data, norm_value=params.seeked_error_norm, axis=0
+    # )
+
+    # rand_fields_rel_u_mean = (
+    #     rand_field_perturbations  # - norm_u_data[:, np.newaxis]
+    # ) / norm_u_data[:, np.newaxis]
+    # rand_fields_rel_u_mean = g_utils.normalize_array(
+    #     rand_fields_rel_u_mean, norm_value=params.seeked_error_norm, axis=0
+    # )
+    rand_fields_rel_u_mean = np.abs(rand_field_perturbations)
 
     # Prepare axes
     if axes is None:
         axes = plt.axes()
 
-    real_part_lines = axes.plot(
-        np.log2(params.k_vec_temp),
-        rand_field_perturbations_real,
+    shell_index = np.log2(params.k_vec_temp)
+    rand_field_lines = axes.plot(
+        shell_index,
+        rand_fields_rel_u_mean,
         color="b",
         linestyle="solid",
         alpha=0.6,
     )
-    imag_part_lines = axes.plot(
-        np.log2(params.k_vec_temp),
-        rand_field_perturbations_imag,
-        color="r",
-        linestyle="solid",
-        alpha=0.6,
-    )
-    real_part_lines[0].set_label("Real part")
-    imag_part_lines[0].set_label("Imag part")
+    # imag_part_lines = axes.plot(
+    #     shell_index,
+    #     rand_field_perturbations_imag,
+    #     color="r",
+    #     linestyle="solid",
+    #     alpha=0.6,
+    # )
+    # mean_lines = axes.plot(
+    #     shell_index,
+    #     norm_u_data,
+    #     color="k",
+    #     linestyle="solid",
+    #     alpha=0.6,
+    # )
+    rand_field_lines[0].set_label("Real part")
+    # imag_part_lines[0].set_label("Imag part")
+    # mean_lines[0].set_label("Mean")
     axes.xaxis.set_major_locator(mpl_ticker.MaxNLocator(integer=True))
 
     axes.set_xlabel("Shell index")
     axes.set_ylabel("Components")
     axes.set_yscale("log")
     axes.legend()
-    axes.set_title(f"RF perturbations | $n_{{profiles}}$={args['n_profiles']}")
+    axes.set_title(
+        f"RF perturbations rel. $u_{{mean}}$ | $n_{{profiles}}$={args['n_profiles']}"
+    )
 
 
 if __name__ == "__main__":

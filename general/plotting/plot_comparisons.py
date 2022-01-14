@@ -25,8 +25,11 @@ from general.plotting.plot_params import *
 from general.utils.module_import.type_import import *
 import general.utils.user_interface as g_ui
 import general.utils.util_funcs as g_utils
+import general.utils.perturb_utils as pt_utils
+import general.utils.running.runner_utils as r_utils
 from libs.libutils import file_utils as lib_file_utils, type_utils as lib_type_utils
 import matplotlib.pyplot as plt
+import matplotlib.ticker as mpl_ticker
 import numpy as np
 import seaborn as sb
 from general.params.model_licences import Models
@@ -35,18 +38,117 @@ from general.params.model_licences import Models
 if cfg.MODEL == Models.SHELL_MODEL:
     import shell_model_experiments.plotting.plot_data as sh_plot
     import shell_model_experiments.utils.util_funcs as sh_utils
+    import shell_model_experiments.utils.special_params as sh_sparams
     from shell_model_experiments.params.params import PAR as PAR_SH
     from shell_model_experiments.params.params import ParamsStructType
 
     params = PAR_SH
+    sparams = sh_sparams
 elif cfg.MODEL == Models.LORENTZ63:
     import lorentz63_experiments.params.params as l63_params
+    import lorentz63_experiments.params.special_params as l63_sparams
     import lorentz63_experiments.plotting.plot_data as l63_plot
 
     params = l63_params
+    sparams = l63_sparams
 
 
-def plt_vector_comparison(args):
+def plt_pert_components(args: dict, axes: plt.Axes = None):
+    update_exp_folders(args)
+
+    # Prepare axes
+    if axes is None:
+        axes = plt.axes()
+
+    shell_index = np.log2(params.k_vec_temp)
+    cmap_list = plt.rcParams["axes.prop_cycle"].by_key()["color"]
+    ipert = 0
+
+    vector_folders = [folder for folder in args["exp_folders"] if "vectors" in folder]
+
+    # Import perturb vectors and plot
+    for i, folder in enumerate(vector_folders):
+
+        args["exp_folder"] = folder
+        (
+            vector_units,
+            _,
+            _,
+            eval_pos,
+            header_dicts,
+        ) = pt_import.import_perturb_vectors(args, raw_perturbations=True)
+
+        mean_vectors = np.mean(np.abs(vector_units), axis=0).T
+        norm_mean_vectors = g_utils.normalize_array(mean_vectors, norm_value=1, axis=0)
+
+        vector_lines = axes.plot(
+            shell_index,
+            norm_mean_vectors,
+            linestyle="solid",
+            color=cmap_list[ipert],
+        )
+
+        vector_lines[0].set_label(
+            str(pl.Path(args["exp_folder"]).name).split("_vectors")[0]
+        )
+
+        ipert += 1
+
+    # Generate all other perturbation vectors
+    vector_units_list = []
+    vector_label_list = []
+
+    args["start_times"] = np.array(eval_pos) * params.stt
+
+    for item in args["perturbations"]:
+        # Get the requested perturbations
+        if item == "rf":
+            args["pert_mode"] = "rf"
+            vector_label_list.append("rf")
+        elif item == "rd":
+            args["pert_mode"] = "rd"
+            vector_label_list.append("rd")
+
+        elif item == "nm":
+            args["pert_mode"] = "nm"
+            vector_label_list.append("nm")
+        else:
+            continue
+
+        perturbations, _ = r_utils.prepare_perturbations(args, raw_perturbations=True)
+        vector_units_list.append(perturbations[sparams.u_slice, :])
+
+    for i, vector_units in enumerate(vector_units_list):
+        mean_vectors = np.mean(np.abs(vector_units), axis=1)
+        norm_mean_vectors = g_utils.normalize_array(mean_vectors, norm_value=1, axis=0)
+
+        vector_lines = axes.plot(
+            shell_index,
+            norm_mean_vectors,
+            linestyle="solid",
+            color=cmap_list[ipert],
+        )
+        vector_lines[0].set_label(vector_label_list[i])
+        ipert += 1
+
+    axes.xaxis.set_major_locator(mpl_ticker.MaxNLocator(integer=True))
+
+    title = g_plt_utils.generate_title(
+        args,
+        header_dict=header_dicts[0],
+        title_header="Mean perturbation vectors",
+        title_suffix=f"$N_{{vectors}}$={args['n_profiles']}",
+        detailed=False,
+    )
+
+    axes.set_xlabel("Shell index, i")
+    axes.set_ylabel("$\\langle|v_i|\\rangle$")
+    axes.set_yscale("log")
+    axes.set_title(title)
+    axes.legend()
+
+
+def plt_BV_LYAP_vector_comparison(args):
     """Plot a comparison between breed and lyapunov vectors
 
     Parameters
@@ -171,30 +273,7 @@ def plot_error_norm_comparison(args: dict):
 
     args["endpoint"] = True
 
-    if args["exp_folders"] is not None:
-        len_folders = len(args["exp_folders"])
-    elif args["exp_folder"] is not None:
-        # Get dirs in path
-        _path = pl.Path(args["datapath"], args["exp_folder"])
-        _dirs = lib_file_utils.get_dirs_in_path(_path)
-        len_folders = len(_dirs)
-
-        if len_folders == 0:
-            args["exp_folders"] = [args["exp_folder"]]
-        else:
-            # Sort out dirs not named *_perturbations
-            args["exp_folders"] = [
-                str(pl.Path(_dirs[i].parent.name, _dirs[i].name))
-                for i in range(len_folders)
-                # if "rd" in _dirs[i].name
-                # or "nm" in _dirs[i].name
-                # or "rf" in _dirs[i].name
-                # if "bv" in _dirs[i].name
-                if "perturbations" in _dirs[i].name  # or "nm" in _dirs[i].name
-            ]
-
-        # Update number of folders after filtering
-        len_folders = len(args["exp_folders"])
+    update_exp_folders(args)
 
     cmap_list = plt.rcParams["axes.prop_cycle"].by_key()["color"]
 
@@ -269,6 +348,46 @@ def plot_error_norm_comparison(args: dict):
         l63_plot.plot_energy(args, axes=axes[1])
 
 
+def update_exp_folders(args):
+    if args["exp_folders"] is not None:
+        len_folders = len(args["exp_folders"])
+    elif args["exp_folder"] is not None:
+        # Get dirs in path
+        _path = pl.Path(args["datapath"], args["exp_folder"])
+        _dirs = lib_file_utils.get_dirs_in_path(_path, recursively=True)
+
+        len_folders = len(_dirs)
+
+        if len_folders == 0:
+            args["exp_folders"] = [args["exp_folder"]]
+        else:
+            # Sort out dirs not named according to input arguments
+            _exp_folders: list = []
+            for item in args["perturbations"]:
+                _exp_folders.extend(
+                    [
+                        str(pl.Path(_dirs[i].parent.name, _dirs[i].name))
+                        for i in range(len_folders)
+                        if item in _dirs[i].name  # or "nm" in _dirs[i].name
+                    ]
+                )
+            for item in args["vectors"]:
+                _exp_folders.extend(
+                    [
+                        str(pl.Path(*_dirs[i].parts[-3:]))
+                        for i in range(len_folders)
+                        if item == _dirs[i].name.split("_vectors")[0]
+                        and _dirs[i].parent.name
+                        == "vectors"  # or "nm" in _dirs[i].name
+                    ]
+                )
+
+            args["exp_folders"] = _exp_folders
+
+        # Update number of folders after filtering
+        len_folders = len(args["exp_folders"])
+
+
 def plot_exp_growth_rate_comparison(args: dict):
     """Plots a comparison of the exponential growth rates vs time for the different
     perturbation methods
@@ -281,27 +400,7 @@ def plot_exp_growth_rate_comparison(args: dict):
 
     # args["endpoint"] = True
 
-    if args["exp_folders"] is not None:
-        len_folders = len(args["exp_folders"])
-    elif args["exp_folder"] is not None:
-        # Get dirs in path
-        _path = pl.Path(args["datapath"], args["exp_folder"])
-        _dirs = lib_file_utils.get_dirs_in_path(_path)
-        len_folders = len(_dirs)
-
-        if len_folders == 0:
-            args["exp_folders"] = [args["exp_folder"]]
-        else:
-            # Sort out dirs not named *_perturbations
-            args["exp_folders"] = [
-                str(pl.Path(_dirs[i].parent.name, _dirs[i].name))
-                for i in range(len_folders)
-                # if "sv" in _dirs[i].name
-                if "perturbations" in _dirs[i].name  # or "nm" in _dirs[i].name
-            ]
-
-        # Update number of folders after filtering
-        len_folders = len(args["exp_folders"])
+    update_exp_folders(args)
 
     cmap_list = plt.rcParams["axes.prop_cycle"].by_key()["color"]
     # cmap_list = g_plt_utils.get_non_repeating_colors(n_colors=len_folders)
@@ -387,8 +486,10 @@ if __name__ == "__main__":
 
     g_ui.confirm_run_setup(args)
 
-    if "vec_compare" in args["plot_type"]:
-        plt_vector_comparison(args)
+    if "pert_comp_compare" in args["plot_type"]:
+        plt_pert_components(args)
+    elif "bv_lyap_compare" in args["plot_type"]:
+        plt_BV_LYAP_vector_comparison(args)
     elif "error_norm_compare" in args["plot_type"]:
         plot_error_norm_comparison(args)
     elif "exp_growth_rate_compare" in args["plot_type"]:

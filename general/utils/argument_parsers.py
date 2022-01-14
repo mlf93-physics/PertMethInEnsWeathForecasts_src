@@ -340,15 +340,16 @@ class MultiPerturbationArgSetup:
 
 
 class ComparisonArgParser:
-    def __init__(self):
+    def __init__(self, setup_parents=True):
         self._parser = parser
         self._args = None
 
-        _temp_parser = MultiPerturbationArgSetup()
-        _temp_parser.setup_parser()
-        # Needed for RF perturbations to work
-        _temp_parser = ReferenceAnalysisArgParser()
-        _temp_parser.setup_parser()
+        if setup_parents:
+            _temp_parser = MultiPerturbationArgSetup()
+            _temp_parser.setup_parser()
+            # Needed for RF perturbations to work
+            _temp_parser = ReferenceAnalysisArgParser()
+            _temp_parser.setup_parser()
 
     @property
     def args(self):
@@ -418,6 +419,9 @@ class ComparisonPlottingArgParser:
     def __init__(self):
         self._parser = parser
         self._args = None
+
+        _temp_parser = ComparisonArgParser(setup_parents=False)
+        _temp_parser.setup_parser()
 
     @property
     def args(self):

@@ -67,7 +67,7 @@ def generate_bvs(args: dict, exp_setup: dict):
         pl.Path(
             local_exp_setup["folder_name"],
             local_exp_setup["vector_folder"],
-            "breed_vectors",
+            "bv_vectors",
         )
     )
 
@@ -94,14 +94,14 @@ def generate_bv_eofs(args: dict, exp_setup: dict):
     args["out_exp_folder"] = pl.Path(
         local_exp_setup["folder_name"],
         local_exp_setup["vector_folder"],
-        "breed_eof_vectors",
+        "bv_eof_vectors",
     )
     args["n_profiles"] = local_exp_setup["n_units"]
     args["n_runs_per_profile"] = local_exp_setup["n_vectors"]
     args["pert_vector_folder"] = pl.Path(
         local_exp_setup["folder_name"], local_exp_setup["vector_folder"]
     )
-    args["exp_folder"] = "breed_vectors"
+    args["exp_folder"] = "bv_vectors"
 
     bv_eof_analyser(args, exp_setup=local_exp_setup)
 
@@ -128,7 +128,7 @@ def generate_svs(args: dict, exp_setup: dict):
         pl.Path(
             local_exp_setup["folder_name"],
             local_exp_setup["vector_folder"],
-            "singular_vectors",
+            "sv_vectors",
         )
     )
 
@@ -248,7 +248,7 @@ def bv_pert_experiment(args: dict, local_exp_setup: dict):
     args["pert_vector_folder"] = pl.Path(
         local_exp_setup["folder_name"], local_exp_setup["vector_folder"]
     )
-    args["exp_folder"] = "breed_vectors"
+    args["exp_folder"] = "bv_vectors"
     args["out_exp_folder"] = pl.Path(
         local_exp_setup["folder_name"],
         "bv_perturbations",
@@ -283,7 +283,7 @@ def bv_eof_pert_experiment(args: dict, local_exp_setup: dict):
     args["pert_vector_folder"] = pl.Path(
         local_exp_setup["folder_name"], local_exp_setup["vector_folder"]
     )
-    args["exp_folder"] = "breed_eof_vectors"
+    args["exp_folder"] = "bv_eof_vectors"
 
     for i in range(local_exp_setup["n_vectors"]):
         args["specific_start_vector"] = i
@@ -321,7 +321,7 @@ def sv_pert_experiment(args: dict, local_exp_setup: dict):
     args["pert_vector_folder"] = pl.Path(
         local_exp_setup["folder_name"], local_exp_setup["vector_folder"]
     )
-    args["exp_folder"] = "singular_vectors"
+    args["exp_folder"] = "sv_vectors"
 
     for i in range(local_exp_setup["n_vectors"]):
         args["specific_start_vector"] = i

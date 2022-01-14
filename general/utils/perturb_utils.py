@@ -448,6 +448,20 @@ def get_rand_field_perturbations(
             regime_start_time_indices, args, header, regimes=regimes
         )
 
+        time, u_data, ref_header_dict = g_import.import_ref_data(args=args)
+
+        mean_u_data = np.mean(u_data, axis=0)
+        norm_mean_u_data = g_utils.normalize_array(
+            mean_u_data, norm_value=params.seeked_error_norm, axis=0
+        )
+
+        # rand_fields_rel_u_mean = (
+        #     rand_field_perturbations  # - norm_u_data[:, np.newaxis]
+        # ) / norm_mean_u_data[:, np.newaxis]
+        # rand_fields_rel_u_mean = g_utils.normalize_array(
+        #     rand_fields_rel_u_mean, norm_value=params.seeked_error_norm, axis=0
+        # )
+
     elif cfg.MODEL == Models.LORENTZ63:
         args["ref_end_time"] = 3000
 
@@ -499,7 +513,7 @@ def get_rand_field_perturbations(
             rand_field_diffs[:, i] = (
                 u_data_rand_field1[sparams.u_slice, i]
                 - u_data_rand_field2[sparams.u_slice, i]
-            )
+            ) / norm_mean_u_data
             # / np.mean(
             #     [
             #         u_data_rand_field1[sparams.u_slice, i],
