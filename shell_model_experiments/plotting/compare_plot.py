@@ -159,7 +159,7 @@ def plot_period4_spectrum_ratio(args: dict):
     del file_paths[ref_index + 1]
 
     # Get colors
-    cmap_list = g_plt_utils.get_non_repeating_colors(n_colors=len(file_paths))
+    cmap_list, _ = g_plt_utils.get_non_repeating_colors(n_colors=len(file_paths))
 
     for i, file_path in enumerate(file_paths):
         # Import data
@@ -253,7 +253,7 @@ def plot_period4_spectrum_ratio_vs_alpha(args: dict):
     del file_paths[ref_index + 1]
 
     # Get colors
-    # cmap_list = g_plt_utils.get_non_repeating_colors(n_colors=len(file_paths))
+    # cmap_list, _ = g_plt_utils.get_non_repeating_colors(n_colors=len(file_paths))
     cmap_list = plt.rcParams["axes.prop_cycle"].by_key()["color"]
 
     # Prepare diff data collection

@@ -16,11 +16,14 @@ import config as cfg
 
 
 def get_non_repeating_colors(
-    n_colors: int = 1, cmap: colors.LinearSegmentedColormap = plt.cm.gist_rainbow
+    n_colors: int = 1,
+    cmap: colors.LinearSegmentedColormap = plt.cm.gist_rainbow,
+    vmin: float = 0,
+    vmax: float = 1,
 ):
-    cmap_list = [cmap(i) for i in np.linspace(0, 1, n_colors)]
+    cmap_list = [cmap(i) for i in np.linspace(vmin, vmax, n_colors)]
 
-    return cmap_list
+    return cmap_list, cmap
 
 
 def get_custom_cmap(

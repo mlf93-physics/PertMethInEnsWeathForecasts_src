@@ -63,8 +63,8 @@ def plt_pert_components(args: dict, axes: plt.Axes = None):
         axes = plt.axes()
 
     shell_index = np.log2(params.k_vec_temp)
-    cmap_list = plt.rcParams["axes.prop_cycle"].by_key()["color"]
-    ipert = 0
+    cmap_list_base = plt.rcParams["axes.prop_cycle"].by_key()["color"]
+    # ipert = 0
 
     vector_folders = [folder for folder in args["exp_folders"] if "vectors" in folder]
 
@@ -83,36 +83,50 @@ def plt_pert_components(args: dict, axes: plt.Axes = None):
         mean_vectors = np.mean(np.abs(vector_units), axis=0).T
         norm_mean_vectors = g_utils.normalize_array(mean_vectors, norm_value=1, axis=0)
 
-        if "bv" in folder:
-            anal_file = g_utils.get_analysis_file(args, type="velocities")
-            mean_u_data, ref_header_dict = g_import.import_data(
-                file_name=anal_file, start_line=1
-            )
+        # if "bv" in folder:
+        #     anal_file = g_utils.get_analysis_file(args, type="velocities")
+        #     mean_u_data, ref_header_dict = g_import.import_data(
+        #         file_name=anal_file, start_line=1
+        #     )
 
-            norm_mean_u_data = g_utils.normalize_array(
-                np.abs(mean_u_data.T), norm_value=1, axis=0
-            )
-            print("norm_mean_u_data", norm_mean_u_data)
-            print("norm_mean_vectors", norm_mean_vectors)
-            norm_mean_vectors /= norm_mean_u_data
-            norm_mean_vectors = g_utils.normalize_array(
-                norm_mean_vectors, norm_value=1, axis=0
-            )
+        #     norm_mean_u_data = g_utils.normalize_array(
+        #         np.abs(mean_u_data.T), norm_value=1, axis=0
+        #     )
+        #     norm_mean_vectors /= norm_mean_u_data
+        #     norm_mean_vectors = g_utils.normalize_array(
+        #         norm_mean_vectors, norm_value=1, axis=0
+        #     )
 
-            print("norm_mean_vectors", norm_mean_vectors)
+        # Prepare cmap for SVs
+        if "sv" in folder:
+            cmap_list, cmap = g_plt_utils.get_non_repeating_colors(
+                n_colors=norm_mean_vectors.shape[1], cmap=plt.cm.Blues_r, vmax=0.7
+            )
+            axes.set_prop_cycle("color", cmap_list)
+        elif "bv_eof" in folder:
+            cmap_list, cmap = g_plt_utils.get_non_repeating_colors(
+                n_colors=norm_mean_vectors.shape[1], cmap=plt.cm.Oranges_r, vmax=0.7
+            )
+            axes.set_prop_cycle("color", cmap_list)
+        elif "bv" in folder:
+            cmap_list, cmap = g_plt_utils.get_non_repeating_colors(
+                n_colors=norm_mean_vectors.shape[1], cmap=plt.cm.Greens_r, vmax=0.7
+            )
+            axes.set_prop_cycle("color", cmap_list)
 
         vector_lines = axes.plot(
             shell_index,
             norm_mean_vectors,
             linestyle="solid",
-            color=cmap_list[ipert],
+            # color=cmap_list[ipert],
         )
 
         vector_lines[0].set_label(
             str(pl.Path(args["exp_folder"]).name).split("_vectors")[0]
+            + f" ({cmap.name.strip('_r')})"
         )
 
-        ipert += 1
+        # ipert += 1
 
     # Generate all other perturbation vectors
     vector_units_list = []
@@ -138,6 +152,8 @@ def plt_pert_components(args: dict, axes: plt.Axes = None):
         perturbations, _ = r_utils.prepare_perturbations(args, raw_perturbations=True)
         vector_units_list.append(perturbations[sparams.u_slice, :])
 
+    axes.set_prop_cycle("color", cmap_list_base[6:])
+
     for i, vector_units in enumerate(vector_units_list):
         mean_vectors = np.mean(np.abs(vector_units), axis=1)
         norm_mean_vectors = g_utils.normalize_array(mean_vectors, norm_value=1, axis=0)
@@ -146,10 +162,9 @@ def plt_pert_components(args: dict, axes: plt.Axes = None):
             shell_index,
             norm_mean_vectors,
             linestyle="solid",
-            color=cmap_list[ipert],
         )
         vector_lines[0].set_label(vector_label_list[i])
-        ipert += 1
+        # ipert += 1
 
     axes.xaxis.set_major_locator(mpl_ticker.MaxNLocator(integer=True))
 
@@ -238,7 +253,7 @@ def plt_BV_LYAP_vector_comparison(args):
     cbar_ax = fig2.add_axes([0.91, 0.3, 0.03, 0.4])
 
     for i in range(args["n_profiles"]):
-        cmap_list = g_plt_utils.get_non_repeating_colors(n_colors=n_vectors)
+        cmap_list, _ = g_plt_utils.get_non_repeating_colors(n_colors=n_vectors)
         axes1[i].set_prop_cycle("color", cmap_list)
         axes1[i].plot(lyapunov_vector_units[i, :, :].T.real, "--")
 
@@ -421,7 +436,7 @@ def plot_exp_growth_rate_comparison(args: dict):
     len_folders = len(args["exp_folders"])
 
     cmap_list = plt.rcParams["axes.prop_cycle"].by_key()["color"]
-    # cmap_list = g_plt_utils.get_non_repeating_colors(n_colors=len_folders)
+    # cmap_list, _ = g_plt_utils.get_non_repeating_colors(n_colors=len_folders)
     # cmap_list[0] = "k"
     axes = plt.axes()
 

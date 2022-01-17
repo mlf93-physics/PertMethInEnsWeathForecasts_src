@@ -197,7 +197,7 @@ def plot_error_norm_vs_time(
         n_colors = n_runs_per_profile
     # Set colors
     if cmap_list is None:
-        cmap_list = g_plt_utils.get_non_repeating_colors(n_colors=n_colors)
+        cmap_list, _ = g_plt_utils.get_non_repeating_colors(n_colors=n_colors)
     axes.set_prop_cycle("color", cmap_list)
 
     if header_dicts[0]["pert_mode"] in ["rd", "nm", "rf"]:
