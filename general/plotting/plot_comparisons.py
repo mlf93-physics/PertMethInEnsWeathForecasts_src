@@ -70,6 +70,11 @@ def plt_pert_components(args: dict, axes: plt.Axes = None):
 
     # Import perturb vectors and plot
     for i, folder in enumerate(vector_folders):
+        folder_path = pl.Path(folder)
+        if re.match(fr"bv(\d+_vectors|_vectors)", folder_path.name):
+            raw_perturbations = False
+        else:
+            raw_perturbations = True
 
         args["exp_folder"] = folder
         (
@@ -78,7 +83,7 @@ def plt_pert_components(args: dict, axes: plt.Axes = None):
             _,
             eval_pos,
             header_dicts,
-        ) = pt_import.import_perturb_vectors(args, raw_perturbations=True)
+        ) = pt_import.import_perturb_vectors(args, raw_perturbations=raw_perturbations)
 
         mean_vectors = np.mean(np.abs(vector_units), axis=0).T
         norm_mean_vectors = g_utils.normalize_array(mean_vectors, norm_value=1, axis=0)
@@ -100,17 +105,26 @@ def plt_pert_components(args: dict, axes: plt.Axes = None):
         # Prepare cmap for SVs
         if "sv" in folder:
             cmap_list, cmap = g_plt_utils.get_non_repeating_colors(
-                n_colors=norm_mean_vectors.shape[1], cmap=plt.cm.Blues_r, vmax=0.7
+                n_colors=norm_mean_vectors.shape[1],
+                cmap=plt.cm.Blues_r,
+                vmin=0.2,
+                vmax=0.7,
             )
             axes.set_prop_cycle("color", cmap_list)
         elif "bv_eof" in folder:
             cmap_list, cmap = g_plt_utils.get_non_repeating_colors(
-                n_colors=norm_mean_vectors.shape[1], cmap=plt.cm.Oranges_r, vmax=0.7
+                n_colors=norm_mean_vectors.shape[1],
+                cmap=plt.cm.Oranges_r,
+                vmin=0.2,
+                vmax=0.7,
             )
             axes.set_prop_cycle("color", cmap_list)
         elif "bv" in folder:
             cmap_list, cmap = g_plt_utils.get_non_repeating_colors(
-                n_colors=norm_mean_vectors.shape[1], cmap=plt.cm.Greens_r, vmax=0.7
+                n_colors=norm_mean_vectors.shape[1],
+                cmap=plt.cm.Greens_r,
+                vmin=0.2,
+                vmax=0.7,
             )
             axes.set_prop_cycle("color", cmap_list)
 
@@ -179,6 +193,7 @@ def plt_pert_components(args: dict, axes: plt.Axes = None):
     axes.set_xlabel("Shell index, i")
     axes.set_ylabel("$\\langle|v_i|\\rangle$")
     axes.set_yscale("log")
+    # axes.set_ylim(1e-4, None)
     axes.set_title(title)
     axes.legend()
 

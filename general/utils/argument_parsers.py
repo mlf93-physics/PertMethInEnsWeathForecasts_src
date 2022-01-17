@@ -389,7 +389,7 @@ class ComparisonArgParser:
             "-pt",
             "--perturbations",
             nargs="+",
-            default=["rd"],
+            default=[],
             type=str,
             choices=PT_CHOICES,
         )
