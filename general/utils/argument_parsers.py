@@ -20,6 +20,10 @@ from general.params.experiment_licences import Experiments as EXP
 from general.params.model_licences import Models
 import config as cfg
 
+# Global variables
+V_CHOICES = ["bv", "bv_eof", "sv", "all"]
+PT_CHOICES = ["bv", "bv_eof", "rd", "nm", "sv", "rf", "all"]
+
 # Instantiate ArgumentParser
 parser = argparse.ArgumentParser()
 
@@ -41,7 +45,7 @@ class StandardArgSetup:
         argparse.Namespace
             The parsed arguments
         """
-        if not isinstance(self._args, argparse.Namespace):
+        if not isinstance(self._args, dict):
             self._args = vars(self._parser.parse_known_args()[0])
 
         return self._args
@@ -122,7 +126,7 @@ class StandardRunnerArgSetup:
         argparse.Namespace
             The parsed arguments
         """
-        if not isinstance(self._args, argparse.Namespace):
+        if not isinstance(self._args, dict):
             self._args = vars(self._parser.parse_known_args()[0])
 
         return self._args
@@ -156,7 +160,7 @@ class RelReferenceArgSetup:
         argparse.Namespace
             The parsed arguments
         """
-        if not isinstance(self._args, argparse.Namespace):
+        if not isinstance(self._args, dict):
             self._args = vars(self._parser.parse_known_args()[0])
 
         return self._args
@@ -213,7 +217,7 @@ class PerturbationVectorArgSetup:
         argparse.Namespace
             The parsed arguments
         """
-        if not isinstance(self._args, argparse.Namespace):
+        if not isinstance(self._args, dict):
             self._args = vars(self._parser.parse_known_args()[0])
 
         return self._args
@@ -250,7 +254,7 @@ class PerturbationArgSetup:
         argparse.Namespace
             The parsed arguments
         """
-        if not isinstance(self._args, argparse.Namespace):
+        if not isinstance(self._args, dict):
             self._args = vars(self._parser.parse_known_args()[0])
 
         return self._args
@@ -323,7 +327,7 @@ class MultiPerturbationArgSetup:
         argparse.Namespace
             The parsed arguments
         """
-        if not isinstance(self._args, argparse.Namespace):
+        if not isinstance(self._args, dict):
             self._args = vars(self._parser.parse_known_args()[0])
 
         return self._args
@@ -366,7 +370,7 @@ class ComparisonArgParser:
         argparse.Namespace
             The parsed arguments
         """
-        if not isinstance(self._args, argparse.Namespace):
+        if not isinstance(self._args):
             self._args = vars(self._parser.parse_known_args()[0])
 
         return self._args
@@ -377,14 +381,17 @@ class ComparisonArgParser:
             "--vectors",
             nargs="+",
             default=[],
-            choices=["bv", "bv_eof", "sv", "all"],
+            type=str,
+            choices=V_CHOICES,
         )
+
         self._parser.add_argument(
             "-pt",
             "--perturbations",
             nargs="+",
-            default=[],
-            choices=["bv", "bv_eof", "rd", "nm", "sv", "rf", "all"],
+            default=["rd"],
+            type=str,
+            choices=PT_CHOICES,
         )
 
 
@@ -405,7 +412,7 @@ class ReferenceAnalysisArgParser:
         argparse.Namespace
             The parsed arguments
         """
-        if not isinstance(self._args, argparse.Namespace):
+        if not isinstance(self._args, dict):
             self._args = vars(self._parser.parse_known_args()[0])
 
         return self._args
@@ -438,7 +445,7 @@ class ComparisonPlottingArgParser:
         argparse.Namespace
             The parsed arguments
         """
-        if not isinstance(self._args, argparse.Namespace):
+        if not isinstance(self._args, dict):
             self._args = vars(self._parser.parse_known_args()[0])
 
         return self._args
@@ -488,7 +495,7 @@ class StandardPlottingArgParser:
         argparse.Namespace
             The parsed arguments
         """
-        if not isinstance(self._args, argparse.Namespace):
+        if not isinstance(self._args, dict):
             self._args = vars(self._parser.parse_known_args()[0])
 
         return self._args
@@ -559,7 +566,7 @@ class VerificationArgParser:
         argparse.Namespace
             The parsed arguments
         """
-        if not isinstance(self._args, argparse.Namespace):
+        if not isinstance(self._args, dict):
             self._args = vars(self._parser.parse_known_args()[0])
 
         return self._args

@@ -16,6 +16,7 @@ import colorama as col
 import config as cfg
 import general.runners.perturbation_runner as pt_runner
 import general.utils.argument_parsers as a_parsers
+import general.utils.arg_utils as a_utils
 import general.utils.experiments.exp_utils as exp_utils
 import general.utils.process_utils as pr_utils
 import general.utils.running.runner_utils as r_utils
@@ -447,6 +448,8 @@ if __name__ == "__main__":
     _parser = a_parsers.ComparisonArgParser()
     _parser.setup_parser()
     args = _parser.args
+
+    a_utils.react_on_comparison_arguments(args)
 
     # Shell model specific
     if cfg.MODEL == Models.SHELL_MODEL:

@@ -12,11 +12,13 @@ import sys
 
 sys.path.append("..")
 import math
+import re
 import pathlib as pl
 
 import config as cfg
 import general.plotting.plot_data as g_plt_data
 import general.utils.argument_parsers as a_parsers
+import general.utils.arg_utils as a_utils
 import general.utils.importing.import_data_funcs as g_import
 import general.utils.importing.import_perturbation_data as pt_import
 import general.utils.importing.import_utils as g_imp_utils
@@ -385,7 +387,9 @@ def update_exp_folders(args):
                     [
                         str(pl.Path(_dirs[i].parent.name, _dirs[i].name))
                         for i in range(len_folders)
-                        if item in _dirs[i].name and "perturbations" in _dirs[i].name
+                        if re.match(
+                            fr"{item}(\d+_perturbations|_perturbations)", _dirs[i].name
+                        )
                     ]
                 )
             for item in args["vectors"]:
@@ -393,8 +397,7 @@ def update_exp_folders(args):
                     [
                         str(pl.Path(*_dirs[i].parts[-3:]))
                         for i in range(len_folders)
-                        if item == _dirs[i].name.split("_vectors")[0]
-                        and _dirs[i].parent.name == "vectors"
+                        if re.match(fr"{item}(\d+_vectors|_vectors)", _dirs[i].name)
                     ]
                 )
 
@@ -434,7 +437,6 @@ def plot_exp_growth_rate_comparison(args: dict):
                 perturb_type = folder_path.name.split(
                     lib_type_utils.zpad_string(str(digits_in_name), n_zeros=2)
                 )[0]
-                print("perturb_type", perturb_type)
                 if not perturb_type == perturb_type_old:
                     color = cmap_list[color_counter]
                     _save_color = color
@@ -448,8 +450,9 @@ def plot_exp_growth_rate_comparison(args: dict):
                 linestyle = LINESTYLES[digits_in_name]
 
         else:
-            color = cmap_list[i]
+            color = cmap_list[color_counter]
             linestyle = None
+            color_counter += 1
 
         # Set exp_folder
         args["exp_folder"] = folder
@@ -493,6 +496,8 @@ if __name__ == "__main__":
     compare_plot_arg_parser = a_parsers.ComparisonPlottingArgParser()
     compare_plot_arg_parser.setup_parser()
     args: dict = compare_plot_arg_parser.args
+
+    a_utils.react_on_comparison_arguments(args)
 
     # Shell model specific
     if cfg.MODEL == Models.SHELL_MODEL:
