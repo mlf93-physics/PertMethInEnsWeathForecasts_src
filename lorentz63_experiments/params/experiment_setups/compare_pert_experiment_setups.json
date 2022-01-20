@@ -13,8 +13,12 @@
         },
         "bv_gen_setup": {
             "integration_time": 0.1,
-            "n_cycles": 16,
+            "n_cycles": 4,
             "n_vectors": 8
+        },
+        "bv_eof_gen_setup": {
+            "sub_exp_folder": "perturb_data",
+            "n_vectors": 3
         },
         "sv_gen_setup": {
             "integration_time": 0.1,
@@ -28,14 +32,14 @@
     },
     "CompareRunTTR0.1": {
         "general": {
-            "folder_name": "compare_pert_ttr0.1",
+            "folder_name": "compare_pert_ttr0.1_n_units10_v3",
             "vector_folder": "vectors",
             "perturbation_folder": "perturbations",
             "sub_exp_folder": "perturb_data",
             "eval_times": [
-                6001
+                10
             ],
-            "n_units": 900,
+            "n_units": 304,
             "unit_offset": 0.1
         },
         "bv_gen_setup": {

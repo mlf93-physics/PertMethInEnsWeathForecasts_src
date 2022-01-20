@@ -84,7 +84,7 @@ def analyse_error_spread_vs_time_mean_of_norm(u_stores, args=None):
 
 
 def analyse_mean_exp_growth_rate_vs_time(
-    error_norm_vs_time: np.ndarray, anal_type: str = "instant", args: dict = None
+    error_norm_vs_time: np.ndarray, anal_type: str = "instant", header_dicts: dict = {}
 ) -> np.ndarray:
     """Analyse the mean exponential growth rate vs time of one or more error norm vs
     time dataseries
@@ -99,7 +99,7 @@ def analyse_mean_exp_growth_rate_vs_time(
         Run-time arguments, by default None
     """
     n_datapoints, n_perturbations = error_norm_vs_time.shape
-    growth_rates = np.empty((n_datapoints - 1, n_perturbations))
+    growth_rates = np.empty((n_datapoints - 1, n_perturbations), dtype=np.float64)
 
     for i in range(1, n_datapoints):
         # Instantaneous exponential growth rate
@@ -115,7 +115,24 @@ def analyse_mean_exp_growth_rate_vs_time(
                 error_norm_vs_time[i, :] / error_norm_vs_time[0, :]
             )
 
-    mean_growth_rate = np.mean(growth_rates, axis=1)
+    # Get information about what perturbations belong to what profile
+    profile_array: np.ndarray = np.array(
+        g_utils.get_values_from_dicts(header_dicts, "profile"), dtype=np.int32
+    )
+    unique_profiles = np.unique(profile_array)
+    profile_mean_growth_rates = np.empty(
+        (n_datapoints - 1, unique_profiles.size), dtype=np.float64
+    )
+
+    # Average each profile individually
+    for i, profile in enumerate(unique_profiles):
+        profile_indices = np.argwhere(profile_array == profile).ravel()
+        profile_mean_growth_rates[:, i] = np.mean(
+            growth_rates[:, profile_indices], axis=1
+        )
+
+    # Average all profiles
+    mean_growth_rate = np.mean(profile_mean_growth_rates, axis=1)
 
     return mean_growth_rate
 
@@ -123,6 +140,7 @@ def analyse_mean_exp_growth_rate_vs_time(
 def execute_mean_exp_growth_rate_vs_time_analysis(
     args: dict,
     u_stores: List[np.ndarray],
+    header_dicts: dict = {},
     anal_type: str = "instant",
 ):
 
@@ -132,7 +150,7 @@ def execute_mean_exp_growth_rate_vs_time_analysis(
         error_norm_mean_vs_time,
     ) = analyse_error_norm_vs_time(u_stores, args=args)
     mean_growth_rate = analyse_mean_exp_growth_rate_vs_time(
-        error_norm_vs_time, anal_type=anal_type, args=args
+        error_norm_vs_time, anal_type=anal_type, header_dicts=header_dicts
     )
 
     return mean_growth_rate

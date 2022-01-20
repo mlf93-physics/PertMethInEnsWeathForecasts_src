@@ -59,7 +59,7 @@ def plot_exp_growth_rate_vs_time(
     ) = g_import.import_perturbation_velocities(args, search_pattern="*perturb*.csv")
 
     mean_growth_rate = g_a_data.execute_mean_exp_growth_rate_vs_time_analysis(
-        args, u_stores, anal_type=anal_type
+        args, u_stores, header_dicts=header_dicts, anal_type=anal_type
     )
 
     # Define time array

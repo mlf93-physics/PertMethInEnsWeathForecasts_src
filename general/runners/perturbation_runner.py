@@ -311,10 +311,15 @@ def prepare_processes(
         )
 
         # Skip remaining runs per profile if requested
-        if not exec_all_runs_per_profile[profile_count]:
-            # NOTE: Reason for -2: -1, since one run has already been added; -1,
-            # since next skips one on its own
-            next(it.islice(iterator, args["n_runs_per_profile"] - 2, None))
+        if exec_all_runs_per_profile is not None:
+            if not exec_all_runs_per_profile[profile_count]:
+                # NOTE: Reason for -2: -1, since one run has already been added; -1,
+                # since next skips one on its own
+                if args["n_runs_per_profile"] == 1:
+                    continue
+                else:
+                    islice_start = args["n_runs_per_profile"] - 2
+                    next(it.islice(iterator, islice_start, None))
 
     return processes, data_out_list
 
@@ -328,6 +333,7 @@ def main_setup(
 ):
 
     times_to_run, Nt_array = r_utils.prepare_run_times(args)
+    exec_all_runs_per_profile = None
 
     # If in 2. or higher breed cycle, the perturbation is given as input
     if u_profiles_perturbed is None:  # or perturb_positions is None:
