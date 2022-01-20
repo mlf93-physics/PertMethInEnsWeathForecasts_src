@@ -31,7 +31,7 @@ sys.path.append("..")
 import copy
 import multiprocessing
 import pathlib as pl
-
+import itertools as it
 import config as cfg
 import general.utils.argument_parsers as a_parsers
 import general.utils.exceptions as g_exceptions
@@ -273,6 +273,7 @@ def prepare_processes(
     Nt_array: np.ndarray,
     n_perturbation_files: int,
     u_ref: np.ndarray = None,
+    exec_all_runs_per_profile: Union[np.ndarray, None] = None,
     args: dict = None,
 ) -> Tuple[List[multiprocessing.Process], List[np.ndarray]]:
     # Prepare and start the perturbation_runner in multiple processes
@@ -280,39 +281,13 @@ def prepare_processes(
     # Prepare return data list
     manager = multiprocessing.Manager()
     data_out_list = manager.list()
-    # Get number of threads
-    cpu_count = multiprocessing.cpu_count()
 
+    # Make iterator; enables us to skip a number of runs if needed (e.g. for NM
+    # perturbations in L63 model)
+    iterator = iter(range(args["n_runs_per_profile"] * args["n_profiles"]))
     # Append processes
-    for j in range(args["n_runs_per_profile"] * args["n_profiles"] // cpu_count):
-        for i in range(cpu_count):
-            count = j * cpu_count + i
-
-            args["time_to_run"] = times_to_run[count]
-            args["Nt"] = Nt_array[count]
-
-            # Copy args in order to avoid override between processes
-            copy_args = copy.deepcopy(args)
-
-            processes.append(
-                multiprocessing.Process(
-                    target=perturbation_runner,
-                    args=(
-                        np.copy(u_profiles_perturbed[:, count]),
-                        perturb_positions,
-                        data_out_list,
-                        copy_args,
-                        count,
-                        count + n_perturbation_files,
-                    ),
-                    kwargs={"u_ref": u_ref},
-                )
-            )
-
-    for i in range(args["n_runs_per_profile"] * args["n_profiles"] % cpu_count):
-        count = (
-            args["n_runs_per_profile"] * args["n_profiles"] // cpu_count
-        ) * cpu_count + i
+    for count in iterator:
+        profile_count = count // args["n_runs_per_profile"]
 
         args["time_to_run"] = times_to_run[count]
         args["Nt"] = Nt_array[count]
@@ -335,6 +310,12 @@ def prepare_processes(
             )
         )
 
+        # Skip remaining runs per profile if requested
+        if not exec_all_runs_per_profile[profile_count]:
+            # NOTE: Reason for -2: -1, since one run has already been added; -1,
+            # since next skips one on its own
+            next(it.islice(iterator, args["n_runs_per_profile"] - 2, None))
+
     return processes, data_out_list
 
 
@@ -356,9 +337,11 @@ def main_setup(
         if cfg.LICENCE == EXP.LYAPUNOV_VECTORS or cfg.LICENCE == EXP.SINGULAR_VECTORS:
             raw_perturbations = True
 
-        u_profiles_perturbed, perturb_positions = r_utils.prepare_perturbations(
-            args, raw_perturbations=raw_perturbations
-        )
+        (
+            u_profiles_perturbed,
+            perturb_positions,
+            exec_all_runs_per_profile,
+        ) = r_utils.prepare_perturbations(args, raw_perturbations=raw_perturbations)
 
     # Detect if other perturbations exist in the perturbation_folder and calculate
     # perturbation count to start at
@@ -372,6 +355,7 @@ def main_setup(
         Nt_array,
         n_perturbation_files,
         u_ref=u_ref,
+        exec_all_runs_per_profile=exec_all_runs_per_profile,
         args=args,
     )
 

@@ -163,7 +163,9 @@ def plt_pert_components(args: dict, axes: plt.Axes = None):
         else:
             continue
 
-        perturbations, _ = r_utils.prepare_perturbations(args, raw_perturbations=True)
+        perturbations, _, exec_all_runs_per_profile = r_utils.prepare_perturbations(
+            args, raw_perturbations=True
+        )
         vector_units_list.append(perturbations[sparams.u_slice, :])
 
     axes.set_prop_cycle("color", cmap_list_base[6:])

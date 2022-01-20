@@ -1,7 +1,6 @@
 import sys
 
 sys.path.append("..")
-import numpy as np
 from pyinstrument import Profiler
 import lorentz63_experiments.perturbations.normal_modes as l63_nm_estimator
 import general.utils.importing.import_perturbation_data as pt_import

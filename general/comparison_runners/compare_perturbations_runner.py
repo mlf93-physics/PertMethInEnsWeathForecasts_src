@@ -172,7 +172,7 @@ def rd_pert_experiment(args: dict, local_exp_setup: dict):
     processes = []
 
     # Prepare arguments for perturbation run
-    args["n_runs_per_profile"] = 10
+    args["n_runs_per_profile"] = 2
     args["pert_mode"] = "rd"
     args["out_exp_folder"] = pl.Path(
         local_exp_setup["folder_name"],
@@ -203,7 +203,7 @@ def nm_pert_experiment(args: dict, local_exp_setup: dict):
     processes = []
 
     # Prepare arguments for perturbation run
-    args["n_runs_per_profile"] = 10
+    args["n_runs_per_profile"] = 2
     args["n_profiles"] = local_exp_setup["n_units"]
     args["pert_mode"] = "nm"
     args["out_exp_folder"] = pl.Path(
@@ -346,7 +346,7 @@ def rf_pert_experiment(args: dict, local_exp_setup: dict):
     processes = []
 
     # Prepare arguments for perturbation run
-    args["n_runs_per_profile"] = 10
+    args["n_runs_per_profile"] = 2
     args["n_profiles"] = local_exp_setup["n_units"]
     args["pert_mode"] = "rf"
     args["out_exp_folder"] = pl.Path(

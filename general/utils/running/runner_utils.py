@@ -208,10 +208,11 @@ def prepare_perturbations(
             header_dict,
         ) = g_import.import_start_u_profiles(args=args)
 
-    # NM pert generation mode; if True, the perturbations are generated in the
-    # plane of the complex-conjugate pair of the leading NM. Otherwise only one
-    # perturbation is made
-    # nm_complex_conj = False
+    # NM pert generation mode; if item in array is True, all perturbations are
+    # run for a given profile - perturbations lie in the plane of the
+    # complex-conjugate pair of the leading NM. Otherwise only one run per
+    # profile is executed. Defaults to None for all other types of perturbations
+    exec_all_runs_per_profile: Union[np.ndarray, None] = None
 
     if args["pert_mode"] is not None:
 
@@ -243,6 +244,10 @@ def prepare_perturbations(
                     args,
                     n_profiles=args["n_profiles"],
                 )
+                # Evaluate if e_values have imaginary part. Used to determine if
+                # all runs_per_profile or just one run should be executed (see
+                # L. Magnusson 2008)
+                exec_all_runs_per_profile = e_values_max.imag != 0
         elif "bv" in args["pert_mode"]:
             if args["pert_mode"] == "bv":
                 print("\nRunning with BREED VECTOR perturbations\n")
@@ -326,4 +331,4 @@ def prepare_perturbations(
         # Apply perturbations
         u_return = u_init_profiles + perturbations
 
-    return u_return, perturb_positions
+    return u_return, perturb_positions, exec_all_runs_per_profile

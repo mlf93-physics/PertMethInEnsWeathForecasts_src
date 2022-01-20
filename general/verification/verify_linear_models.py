@@ -228,7 +228,7 @@ def verify_tlm_model(args: dict):
     u_ref, _, ref_header_dict = g_import.import_start_u_profiles(args=args)
 
     # Prepare random perturbation
-    perturbations, perturb_positions = r_utils.prepare_perturbations(
+    perturbations, perturb_positions, _ = r_utils.prepare_perturbations(
         args, raw_perturbations=True
     )
     # Normalize perturbation
@@ -321,7 +321,7 @@ def verify_atlm_model(args: dict):
 
     # Prepare random perturbation
     # perturb = pt_utils.generate_rd_perturbations()
-    perturbations, _ = r_utils.prepare_perturbations(args, raw_perturbations=True)
+    perturbations, _, _ = r_utils.prepare_perturbations(args, raw_perturbations=True)
     # Prepare arrays
     data_out = np.zeros((args["Nt"], params.sdim + 1), dtype=sparams.dtype)
     # Run verification multiple times
