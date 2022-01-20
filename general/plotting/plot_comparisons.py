@@ -27,9 +27,9 @@ from general.plotting.plot_params import *
 from general.utils.module_import.type_import import *
 import general.utils.user_interface as g_ui
 import general.utils.util_funcs as g_utils
-import general.utils.perturb_utils as pt_utils
+import general.utils.experiments.exp_utils as e_utils
 import general.utils.running.runner_utils as r_utils
-from libs.libutils import file_utils as lib_file_utils, type_utils as lib_type_utils
+from libs.libutils import type_utils as lib_type_utils
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mpl_ticker
 import numpy as np
@@ -56,7 +56,7 @@ elif cfg.MODEL == Models.LORENTZ63:
 
 
 def plt_pert_components(args: dict, axes: plt.Axes = None):
-    update_exp_folders(args)
+    e_utils.update_compare_exp_folders(args)
 
     # Prepare axes
     if axes is None:
@@ -325,7 +325,7 @@ def plot_error_norm_comparison(args: dict):
 
     args["endpoint"] = True
 
-    update_exp_folders(args)
+    e_utils.update_compare_exp_folders(args)
 
     cmap_list = plt.rcParams["axes.prop_cycle"].by_key()["color"]
 
@@ -400,42 +400,6 @@ def plot_error_norm_comparison(args: dict):
         l63_plot.plot_energy(args, axes=axes[1])
 
 
-def update_exp_folders(args):
-
-    if args["exp_folder"] is not None:
-        # Get dirs in path
-        _path = pl.Path(args["datapath"], args["exp_folder"])
-        _dirs = lib_file_utils.get_dirs_in_path(_path, recursively=True)
-
-        len_folders = len(_dirs)
-
-        if len_folders == 0:
-            args["exp_folders"] = [args["exp_folder"]]
-        else:
-            # Sort out dirs not named according to input arguments
-            _exp_folders: list = []
-            for item in args["perturbations"]:
-                _exp_folders.extend(
-                    [
-                        str(pl.Path(_dirs[i].parent.name, _dirs[i].name))
-                        for i in range(len_folders)
-                        if re.match(
-                            fr"{item}(\d+_perturbations|_perturbations)", _dirs[i].name
-                        )
-                    ]
-                )
-            for item in args["vectors"]:
-                _exp_folders.extend(
-                    [
-                        str(pl.Path(*_dirs[i].parts[-3:]))
-                        for i in range(len_folders)
-                        if re.match(fr"{item}(\d+_vectors|_vectors)", _dirs[i].name)
-                    ]
-                )
-
-            args["exp_folders"] = _exp_folders
-
-
 def plot_exp_growth_rate_comparison(args: dict):
     """Plots a comparison of the exponential growth rates vs time for the different
     perturbation methods
@@ -448,7 +412,7 @@ def plot_exp_growth_rate_comparison(args: dict):
 
     # args["endpoint"] = True
 
-    update_exp_folders(args)
+    e_utils.update_compare_exp_folders(args)
     # Update number of folders after filtering
     len_folders = len(args["exp_folders"])
 

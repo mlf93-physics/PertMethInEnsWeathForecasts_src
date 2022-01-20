@@ -184,12 +184,27 @@ def imported_sorted_perturbation_info(folder_name, args, search_pattern="*.csv")
     )
     perturb_header_dicts = [perturb_header_dicts[i] for i in ascending_sort_index]
 
-    # Truncate at n_files
+    # Truncate at n_files and file_offset
     if args["n_files"] < np.inf:
-        perturb_file_names = perturb_file_names[: args["n_files"]]
-        perturb_time_pos_list = perturb_time_pos_list[: args["n_files"]]
-        perturb_time_pos_list_legend = perturb_time_pos_list_legend[: args["n_files"]]
-        perturb_header_dicts = perturb_header_dicts[: args["n_files"]]
+        perturb_file_names = perturb_file_names[
+            args["file_offset"] : args["n_files"] + args["file_offset"]
+        ]
+        perturb_time_pos_list = perturb_time_pos_list[
+            args["file_offset"] : args["n_files"] + args["file_offset"]
+        ]
+        perturb_time_pos_list_legend = perturb_time_pos_list_legend[
+            args["file_offset"] : args["n_files"] + args["file_offset"]
+        ]
+        perturb_header_dicts = perturb_header_dicts[
+            args["file_offset"] : args["n_files"] + args["file_offset"]
+        ]
+    else:
+        perturb_file_names = perturb_file_names[args["file_offset"] :]
+        perturb_time_pos_list = perturb_time_pos_list[args["file_offset"] :]
+        perturb_time_pos_list_legend = perturb_time_pos_list_legend[
+            args["file_offset"] :
+        ]
+        perturb_header_dicts = perturb_header_dicts[args["file_offset"] :]
 
     return (
         perturb_time_pos_list,
