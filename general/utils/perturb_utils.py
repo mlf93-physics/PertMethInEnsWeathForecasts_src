@@ -512,13 +512,13 @@ def get_rand_field_perturbations(
 
     elif cfg.MODEL == Models.LORENTZ63:
         # Calculate rand_field diffs
-        for i in range(args["n_profiles"] * args["n_runs_per_profile"]):
-            rand_field_diffs[:, i] = (
-                u_data[rand_field1_indices, :] - u_data[rand_field2_indices, :]
-            )
+        rand_field_diffs[:, :] = (
+            u_data[rand_field1_indices, :] - u_data[rand_field2_indices, :]
+        ).T
+
     # Normalize to get perturbations
-    rand_field_perturabtions = g_utils.normalize_array(
+    rand_field_perturbations = g_utils.normalize_array(
         rand_field_diffs, norm_value=params.seeked_error_norm, axis=0
     )
 
-    return rand_field_perturabtions
+    return rand_field_perturbations
