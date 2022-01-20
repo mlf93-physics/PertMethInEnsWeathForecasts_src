@@ -120,9 +120,10 @@ def main(args: dict, exp_setup: dict = None):
 
     # Set error norm to 1
     _temp_seeked_error_norm = copy.deepcopy(params.seeked_error_norm)
+    # NOTE: Uncomment for shell model if using normalization of Lanczos vectors
     if cfg.MODEL == Models.SHELL_MODEL:
         sh_utils.set_params(params, parameter="seeked_error_norm", value=1)
-    elif cfg.MODEL == Models.LORENTZ63:
+    if cfg.MODEL == Models.LORENTZ63:
         params.seeked_error_norm = 1
 
     # Update start times

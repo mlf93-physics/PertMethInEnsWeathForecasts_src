@@ -370,7 +370,7 @@ class ComparisonArgParser:
         argparse.Namespace
             The parsed arguments
         """
-        if not isinstance(self._args):
+        if not isinstance(self._args, dict):
             self._args = vars(self._parser.parse_known_args()[0])
 
         return self._args
