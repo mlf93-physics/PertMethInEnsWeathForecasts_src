@@ -14,13 +14,16 @@ from general.utils.module_import.type_import import *
 
 # Get parameters for model
 if cfg.MODEL == Models.SHELL_MODEL:
+    import shell_model_experiments.perturbations.random_fields as sh_rf_pert
     import shell_model_experiments.utils.special_params as sh_sparams
+    import shell_model_experiments.utils.runner_utils as sh_r_utils
     from shell_model_experiments.params.params import PAR as PAR_SH
     from shell_model_experiments.params.params import ParamsStructType
 
     params = PAR_SH
     sparams = sh_sparams
 elif cfg.MODEL == Models.LORENTZ63:
+    import lorentz63_experiments.perturbations.random_fields as l63_rf_pert
     import lorentz63_experiments.params.params as l63_params
     import lorentz63_experiments.params.special_params as l63_sparams
 
@@ -74,7 +77,7 @@ def calculate_perturbations(
                 )
 
             # Apply bv, bv_eof or sv perturbation
-            elif "bv" in args["pert_mode"] or "sv" in args["pert_mode"]:
+            elif args["pert_mode"] in ["bv", "bv_eof", "sv", "rf"]:
                 # Make perturbation vector
                 perturb = perturb_vectors[:, i]
 
@@ -398,3 +401,124 @@ def calculate_svs(
     )
 
     return sv_matrix, s_values
+
+
+def get_rand_field_perturbations(
+    args: dict,
+    u_init_profiles: np.ndarray = None,
+    start_times: Union[None, np.ndarray] = None,
+) -> np.ndarray:
+    """Get the random field perturbations calculated from the difference between
+    two randomly chosen fields belonging to the same regime(shell model)/
+    attractor-wing(lorentz63) and separated a specific time from each other.
+
+    Parameters
+    ----------
+    args : dict
+        Run-time arguments
+    u_init_profiles : np.ndarray
+        The initial velocity profiles. Only used by the Lorentz63 model to
+        determine indices of the wings.
+    start_times : np.ndarray
+        Start times of the perturbations. Used by the shell model to map the
+        start times to a regime such that the random fields can be generated
+        from the same type of regime.
+
+
+    Returns
+    -------
+    np.ndarray
+        The random field perturbations
+    """
+
+    # Import reference data
+    if cfg.MODEL == Models.SHELL_MODEL:
+        regime_start_times, num_start_times, header = sh_r_utils.get_regime_start_times(
+            args, return_all=True
+        )
+
+        regimes = None
+        if start_times is not None:
+            regimes = sh_r_utils.map_time_to_regime(start_times, regime_start_times)
+
+        # Convert start_times to indices
+        regime_start_time_indices = (regime_start_times * params.tts).astype(np.int64)
+
+        rand_field_iterator = sh_rf_pert.choose_rand_field_indices(
+            regime_start_time_indices, args, header, regimes=regimes
+        )
+
+        # Prepare mean_u_data that is used to normalize the RF perturbations to
+        # level out the underlying spectrum in the perturbations
+        anal_file = g_utils.get_analysis_file(args, type="velocities")
+        mean_u_data, _ = g_import.import_data(file_name=anal_file, start_line=1)
+        # Normalize the mean velocity data
+        norm_mean_u_data = g_utils.normalize_array(
+            mean_u_data.T, norm_value=params.seeked_error_norm, axis=0
+        )
+
+    elif cfg.MODEL == Models.LORENTZ63:
+        args["ref_end_time"] = 3000
+
+        _, u_data, _ = g_import.import_ref_data(args=args)
+
+        # Determine wing of u_init_profiles
+        wing_u_init_profiles = u_init_profiles[0, :] > 0
+
+        # Instantiate random field selector
+        rand_field_iterator = l63_rf_pert.choose_rand_field_indices(
+            u_data, wing_u_init_profiles
+        )
+
+    # Instantiate arrays
+    rand_field_diffs = np.empty(
+        (
+            params.sdim,
+            args["n_profiles"] * args["n_runs_per_profile"],
+        ),
+        dtype=sparams.dtype,
+    )
+
+    rand_field1_indices = np.empty(
+        args["n_profiles"] * args["n_runs_per_profile"], dtype=np.int64
+    )
+    rand_field2_indices = np.empty(
+        args["n_profiles"] * args["n_runs_per_profile"], dtype=np.int64
+    )
+    # Get the desired number of random fields
+    for i, indices_tuple in enumerate(rand_field_iterator):
+        rand_field1_indices[i], rand_field2_indices[i] = indices_tuple
+
+        if i + 1 >= args["n_profiles"] * args["n_runs_per_profile"]:
+            break
+
+    if cfg.MODEL == Models.SHELL_MODEL:
+        # Convert indices to times
+        rand_field1_times = rand_field1_indices * params.stt
+        rand_field2_times = rand_field2_indices * params.stt
+        # Import u_profiles
+        u_data_rand_field1, _, ref_header_dict = g_import.import_start_u_profiles(
+            args=args, start_times=list(rand_field1_times)
+        )
+        u_data_rand_field2, _, ref_header_dict = g_import.import_start_u_profiles(
+            args=args, start_times=list(rand_field2_times)
+        )
+        # Calculate rand_field diffs
+        for i in range(args["n_profiles"] * args["n_runs_per_profile"]):
+            rand_field_diffs[:, i] = (
+                u_data_rand_field1[sparams.u_slice, i]
+                - u_data_rand_field2[sparams.u_slice, i]
+            ) / norm_mean_u_data.ravel()
+
+    elif cfg.MODEL == Models.LORENTZ63:
+        # Calculate rand_field diffs
+        rand_field_diffs[:, :] = (
+            u_data[rand_field1_indices, :] - u_data[rand_field2_indices, :]
+        ).T
+
+    # Normalize to get perturbations
+    rand_field_perturbations = g_utils.normalize_array(
+        rand_field_diffs, norm_value=params.seeked_error_norm, axis=0
+    )
+
+    return rand_field_perturbations

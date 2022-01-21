@@ -1,12 +1,15 @@
 import pathlib as pl
 import numpy as np
 import matplotlib.pyplot as plt
+import seaborn as sb
 from general.utils.module_import.type_import import *
 import general.utils.importing.import_data_funcs as g_import
 import general.utils.plot_utils as g_plt_utils
 import general.analyses.analyse_data as g_a_data
 import general.utils.util_funcs as g_utils
+import general.utils.importing.import_perturbation_data as pt_import
 from general.plotting.plot_params import *
+from matplotlib.colors import LogNorm
 from general.params.experiment_licences import Experiments as EXP
 from general.params.model_licences import Models
 import config as cfg
@@ -29,7 +32,6 @@ elif cfg.MODEL == Models.LORENTZ63:
 
 def plot_exp_growth_rate_vs_time(
     args=None,
-    normalize_start_time=True,
     axes=None,
     exp_setup=None,
     linestyle: str = "-",
@@ -39,6 +41,7 @@ def plot_exp_growth_rate_vs_time(
     color=None,
     legend_on: bool = True,
     title_suffix: str = "",
+    anal_type: str = "instant",
     plot_args: list = ["detailed_title"],
 ):
 
@@ -50,7 +53,6 @@ def plot_exp_growth_rate_vs_time(
                 "\nThe .json config file was not found, so this plot doesnt work "
                 + "if the file is needed\n"
             )
-
     (
         u_stores,
         perturb_time_pos_list,
@@ -58,6 +60,10 @@ def plot_exp_growth_rate_vs_time(
         header_dicts,
         u_ref_stores,
     ) = g_import.import_perturbation_velocities(args, search_pattern="*perturb*.csv")
+
+    mean_growth_rate = g_a_data.execute_mean_exp_growth_rate_vs_time_analysis(
+        args, u_stores, header_dicts=header_dicts, anal_type=anal_type
+    )
 
     # Define time array
     # -1 since growth rate is a rate between differences (see functino
@@ -70,17 +76,6 @@ def plot_exp_growth_rate_vs_time(
         endpoint=args["endpoint"],
     )
 
-    n_runs_per_profile = len(perturb_time_pos_list)
-
-    # Analyse mean exponential growth rate
-    (
-        error_norm_vs_time,
-        error_norm_mean_vs_time,
-    ) = g_a_data.analyse_error_norm_vs_time(u_stores, args=args)
-    mean_growth_rate = g_a_data.analyse_mean_exp_growth_rate_vs_time(
-        error_norm_vs_time, args=args
-    )
-
     # Prepare axes
     if axes is None:
         axes = plt.axes()
@@ -88,7 +83,9 @@ def plot_exp_growth_rate_vs_time(
     if "detailed_label" in plot_args:
         label = args["exp_folder"]
     else:
-        label = str(pl.Path(args["exp_folder"]).name)
+        label = str(pl.Path(args["exp_folder"]).name).split("_perturbations")[0]
+        if anal_type == "mean":
+            label += f"; $\\lambda_{{mean}}$={mean_growth_rate[-1]:.2f}"
 
     axes.plot(
         time_array,
@@ -107,7 +104,7 @@ def plot_exp_growth_rate_vs_time(
     title = g_plt_utils.generate_title(
         args,
         header_dict=header_dicts[0],
-        title_header="Exponential growth rate vs time",
+        title_header=f"{anal_type.capitalize()} " + "exponential growth rate vs time",
         title_suffix=title_suffix,
         detailed="detailed_title" in plot_args,
     )
@@ -203,10 +200,10 @@ def plot_error_norm_vs_time(
         n_colors = n_runs_per_profile
     # Set colors
     if cmap_list is None:
-        cmap_list = g_plt_utils.get_non_repeating_colors(n_colors=n_colors)
+        cmap_list, _ = g_plt_utils.get_non_repeating_colors(n_colors=n_colors)
     axes.set_prop_cycle("color", cmap_list)
 
-    if header_dicts[0]["pert_mode"] in ["rd", "nm"]:
+    if header_dicts[0]["pert_mode"] in ["rd", "nm", "rf"]:
         linewidth: float = 1.0
         alpha: float = 0.5
         zorder: float = 0
@@ -340,3 +337,85 @@ def plot_energy(
                 )
 
     return axes
+
+
+def plot2D_average_vectors(
+    args, axes: plt.Axes = None, rel_mean_vector: bool = False, plot_kwargs: dict = {}
+):
+    (
+        vector_units,
+        characteristic_values,
+        _,
+        _,
+        header_dicts,
+    ) = pt_import.import_perturb_vectors(
+        args, raw_perturbations=True, dtype=np.complex128
+    )
+
+    # Normalize
+    vector_units = g_utils.normalize_array(vector_units, norm_value=1, axis=2)
+
+    # Prepare axes
+    if axes is None:
+        axes = plt.axes()
+
+    mean_abs_vector_units = np.mean(np.abs(vector_units), axis=0)
+
+    if rel_mean_vector:
+        mean_abs_vector_units = (
+            mean_abs_vector_units
+            - np.mean(mean_abs_vector_units, axis=0)[np.newaxis, :]
+        )
+
+    plot2D_vectors(mean_abs_vector_units, args, header_dicts, axes=axes, **plot_kwargs)
+
+
+def plot2D_vectors(
+    vector_units: np.ndarray,
+    args: dict,
+    header_dicts: List[dict],
+    axes: plt.Axes = None,
+    annot: bool = False,
+    vmin: float = None,
+    vmax: float = None,
+    cmap="Reds",
+    log_cmap: bool = False,
+    xlabel: str = "x index",
+    ylabel: str = "y index",
+    title_header: str = "DEFAULT TITLE",
+):
+
+    # Prepare axes
+    if axes is None:
+        axes = plt.axes()
+
+    sb.heatmap(
+        vector_units.T,
+        ax=axes,
+        cmap=cmap,
+        cbar_kws={
+            "pad": 0.1,
+        },
+        annot=annot,
+        fmt=".1f",
+        annot_kws={"fontsize": 8},
+        vmin=vmin,
+        vmax=vmax,
+        norm=LogNorm() if log_cmap else None,
+    )
+
+    axes.invert_yaxis()
+    axes.invert_xaxis()
+    plt.xticks(rotation=0)
+    axes.yaxis.tick_right()
+    axes.yaxis.set_label_position("right")
+    axes.set_xlabel(xlabel)
+    axes.set_ylabel(ylabel)
+
+    # Generate title
+    vector_title = g_plt_utils.generate_title(
+        args,
+        header_dict=header_dicts[0],
+        title_header=title_header,
+    )
+    axes.set_title(vector_title)

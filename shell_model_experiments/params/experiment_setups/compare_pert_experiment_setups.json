@@ -53,9 +53,9 @@
             "time_to_run": 0.01
         }
     },
-    "TestRun2": {
+    "CompareLowPredRegime0.01": {
         "general": {
-            "folder_name": "compare_sv_eofs",
+            "folder_name": "compare_bvs",
             "vector_folder": "vectors",
             "perturbation_folder": "perturbations",
             "sub_exp_folder": "perturb_data",
@@ -68,7 +68,73 @@
         "bv_gen_setup": {
             "integration_time": 0.01,
             "n_cycles": 4,
+            "n_vectors": 20
+        },
+        "bv_eof_gen_setup": {
+            "sub_exp_folder": "perturb_data",
+            "n_vectors": 20
+        },
+        "sv_gen_setup": {
+            "integration_time": 0.01,
+            "n_vectors": 20,
+            "n_lanczos_iterations": 1,
+            "n_model_iterations": 1
+        },
+        "pert_setup": {
+            "time_to_run": 0.01
+        }
+    },
+    "CompareHighPredRegime0.01": {
+        "general": {
+            "folder_name": "compare_pert_high_pred_regimes",
+            "vector_folder": "vectors",
+            "perturbation_folder": "perturbations",
+            "sub_exp_folder": "perturb_data",
+            "eval_times": [
+                11.5
+            ],
+            "n_units": 100,
+            "unit_offset": 0.01
+        },
+        "bv_gen_setup": {
+            "integration_time": 0.01,
+            "n_cycles": 4,
             "n_vectors": 8
+        },
+        "bv_eof_gen_setup": {
+            "sub_exp_folder": "perturb_data",
+            "n_vectors": 3
+        },
+        "sv_gen_setup": {
+            "integration_time": 0.01,
+            "n_vectors": 20,
+            "n_lanczos_iterations": 1,
+            "n_model_iterations": 1
+        },
+        "pert_setup": {
+            "time_to_run": 0.01
+        }
+    },
+    "TestRun2": {
+        "general": {
+            "folder_name": "compare_sv_pert_low_pred_regime_lanczos_normalization",
+            "vector_folder": "vectors",
+            "perturbation_folder": "perturbations",
+            "sub_exp_folder": "perturb_data",
+            "eval_times": [
+                11.22
+            ],
+            "n_units": 64,
+            "unit_offset": 0.01
+        },
+        "bv_gen_setup": {
+            "integration_time": 0.01,
+            "n_cycles": 4,
+            "n_vectors": 8
+        },
+        "bv_eof_gen_setup": {
+            "sub_exp_folder": "perturb_data",
+            "n_vectors": 3
         },
         "sv_gen_setup": {
             "integration_time": 0.01,

@@ -12,7 +12,6 @@ import general.utils.perturb_utils as pt_utils
 from general.params.experiment_licences import Experiments as EXP
 from general.utils.module_import.type_import import *
 import general.utils.exceptions as g_exceptions
-from libs.libutils import file_utils as lib_file_utils
 import config as cfg
 from general.params.model_licences import Models
 
@@ -35,6 +34,20 @@ elif cfg.MODEL == Models.LORENTZ63:
     # Get parameters for model
     params = l63_params
     sparams = l63_sparams
+
+
+def get_bv_start_time(
+    eval_time: Union[float, np.ndarray] = None, exp_setup: dict = None
+):
+    _temp_offset = exp_setup["n_cycles"] * exp_setup["integration_time"]
+    if _temp_offset > np.min(eval_time):
+        raise ValueError(
+            "The BV offset (calculated as n_cycles * integration_time) is to "
+            + "large compared to the eval_time"
+        )
+
+    start_time = eval_time - _temp_offset
+    return start_time
 
 
 def generate_start_times(exp_setup: dict, args: dict):
@@ -80,9 +93,8 @@ def generate_start_times(exp_setup: dict, args: dict):
             _time_offset = exp_setup["start_times"][0]
         elif "eval_times" in exp_setup:
             if cfg.LICENCE == EXP.BREEDING_VECTORS:
-                _time_offset = (
-                    exp_setup["eval_times"][0]
-                    - exp_setup["n_cycles"] * exp_setup["integration_time"]
+                _time_offset = get_bv_start_time(
+                    eval_time=exp_setup["eval_times"][0], exp_setup=exp_setup
                 )
             elif cfg.LICENCE == EXP.LYAPUNOV_VECTORS:
                 _time_offset = (
@@ -118,60 +130,6 @@ def generate_start_times(exp_setup: dict, args: dict):
         start_times = exp_setup["start_times"]
 
     return start_times, num_possible_units
-
-
-def get_regime_start_times(args: dict):
-    """Get the start times for a given regime (high pred or low pred)
-
-    Parameters
-    ----------
-    args : dict
-        Run-time arguments
-
-    Raises
-    ------
-    ImportError
-        Raised if multiple regime_start_time analysis files found
-    g_exceptions.InvalidRuntimeArgument
-        Raised if the number of requested profiles is larger than the available
-        regime start time
-
-    Returns
-    -------
-    start_times : list
-        The regime start times
-    """
-    if args["regime_start"] is not None:
-        # Find analysis file
-        regime_start_time_path: List[pl.Path] = lib_file_utils.get_files_in_path(
-            pl.Path(args["datapath"], "analysis_data"),
-            search_pattern="regime_start_times*.csv",
-        )
-        if len(regime_start_time_path) > 1:
-            raise ImportError(
-                f"Multiple regime_start_time analysis files found at path {regime_start_time_path}"
-            )
-
-        # Import data
-        regime_start_time_data, header = g_import.import_data(
-            regime_start_time_path[0], dtype=np.float64
-        )
-
-        regime_start_times_shape = regime_start_time_data.shape
-        if args["n_profiles"] > regime_start_times_shape[0]:
-            raise g_exceptions.InvalidRuntimeArgument(
-                "Number of requested profiles is larger than the available regime start time; "
-                + f"{args['n_profiles']}>{regime_start_times_shape[0]}"
-            )
-
-        # Save the requested number of start times
-        # args["start_times"] = [
-        #     regime_start_time_data[i, int(header[args["regime_start"]])]
-        #     for i in range(args["n_profiles"])
-        # ]
-        start_times = list(regime_start_time_data[:, int(header[args["regime_start"]])])
-
-        return start_times, regime_start_times_shape[0]
 
 
 def adjust_run_setup(args: dict):
@@ -250,10 +208,11 @@ def prepare_perturbations(
             header_dict,
         ) = g_import.import_start_u_profiles(args=args)
 
-    # NM pert generation mode; if True, the perturbations are generated in the
-    # plane of the complex-conjugate pair of the leading NM. Otherwise only one
-    # perturbation is made
-    # nm_complex_conj = False
+    # NM pert generation mode; if item in array is True, all perturbations are
+    # run for a given profile - perturbations lie in the plane of the
+    # complex-conjugate pair of the leading NM. Otherwise only one run per
+    # profile is executed. Defaults to None for all other types of perturbations
+    exec_all_runs_per_profile: Union[np.ndarray, None] = None
 
     if args["pert_mode"] is not None:
 
@@ -285,6 +244,10 @@ def prepare_perturbations(
                     args,
                     n_profiles=args["n_profiles"],
                 )
+                # Evaluate if e_values have imaginary part. Used to determine if
+                # all runs_per_profile or just one run should be executed (see
+                # L. Magnusson 2008)
+                exec_all_runs_per_profile = e_values_max.imag != 0
         elif "bv" in args["pert_mode"]:
             if args["pert_mode"] == "bv":
                 print("\nRunning with BREED VECTOR perturbations\n")
@@ -330,6 +293,14 @@ def prepare_perturbations(
             perturb_vectors = np.ones(
                 (params.sdim, args["n_profiles"]), dtype=sparams.dtype
             )
+
+        elif args["pert_mode"] == "rf":
+            perturb_vectors = pt_utils.get_rand_field_perturbations(
+                args,
+                u_init_profiles=u_init_profiles,
+                start_times=perturb_positions * params.stt,
+            )
+
     # Check if single shell perturb should be activated
     elif args["single_shell_perturb"] is not None:
         # Specific to shell model setup
@@ -360,4 +331,4 @@ def prepare_perturbations(
         # Apply perturbations
         u_return = u_init_profiles + perturbations
 
-    return u_return, perturb_positions
+    return u_return, perturb_positions, exec_all_runs_per_profile

@@ -147,7 +147,7 @@ def plt_lorentz_block(args):
         # else:
         #     legend = [f"$\\Delta_{{{i + 1}}}$" for i in range(num_forecasts)]
         # Get non-repeating colorcycle
-        cmap_list = g_plt_utils.get_non_repeating_colors(n_colors=num_forecasts)
+        cmap_list, _ = g_plt_utils.get_non_repeating_colors(n_colors=num_forecasts)
 
         # Make average plot...
         if args["average"]:
@@ -332,7 +332,7 @@ def plt_block_and_energy(args):
     fig, axes = plt.subplots(ncols=1, nrows=2)
 
     # Get non-repeating colorcycle
-    cmap_list = g_plt_utils.get_non_repeating_colors(n_colors=num_forecasts)
+    cmap_list, _ = g_plt_utils.get_non_repeating_colors(n_colors=num_forecasts)
     axes[1].set_prop_cycle("color", cmap_list)
     block_handles = axes[1].plot(
         rmse[:, :, 0].T,

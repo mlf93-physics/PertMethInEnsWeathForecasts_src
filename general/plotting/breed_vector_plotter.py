@@ -246,6 +246,36 @@ def plot_breed_error_norm(args):
         l63_plot.plot_energy(args, axes=axes[1])
 
 
+def plot_breed_eof_vectors_average(args: dict, axes: plt.Axes = None):
+    # Prepare plot_kwargs
+    plot_kwargs: dict = {
+        "xlabel": "BV-EOF index",
+        "ylabel": "Shell index",
+        "title_header": "Averaged BV-EOFs",
+    }
+
+    g_plt_data.plot2D_average_vectors(args, axes=axes, plot_kwargs=plot_kwargs)
+
+
+def plot_breed_vectors_average(args: dict, axes: plt.Axes = None):
+    # Generate cmap
+    cmap, norm = g_plt_utils.get_custom_cmap(
+        vcenter=0, neg_thres=0.4, pos_thres=0.6, cmap_handle=plt.cm.bwr
+    )
+
+    # Prepare plot_kwargs
+    plot_kwargs: dict = {
+        "xlabel": "BV index",
+        "ylabel": "Shell index",
+        "title_header": "Averaged BVs rel. mean BV",
+        "cmap": cmap,
+    }
+
+    g_plt_data.plot2D_average_vectors(
+        args, axes=axes, rel_mean_vector=True, plot_kwargs=plot_kwargs
+    )
+
+
 def plot_breed_eof_vectors_3D(args: dict):
     """Plot the EOF breed vectors in 3D
 
@@ -311,6 +341,10 @@ if __name__ == "__main__":
         plot_breed_comparison_to_nm(args)
     elif "bv_error_norm" in args["plot_type"]:
         plot_breed_error_norm(args)
+    elif "bv_vectors_average" in args["plot_type"]:
+        plot_breed_vectors_average(args)
+    elif "bv_eof_vectors_average" in args["plot_type"]:
+        plot_breed_eof_vectors_average(args)
     elif "bv_eof_3D" in args["plot_type"]:
         plot_breed_eof_vectors_3D(args)
     else:

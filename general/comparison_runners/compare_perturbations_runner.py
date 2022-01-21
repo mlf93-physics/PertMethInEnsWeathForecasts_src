@@ -12,10 +12,11 @@ import sys
 sys.path.append("..")
 import copy
 import pathlib as pl
-
+import colorama as col
 import config as cfg
 import general.runners.perturbation_runner as pt_runner
 import general.utils.argument_parsers as a_parsers
+import general.utils.arg_utils as a_utils
 import general.utils.experiments.exp_utils as exp_utils
 import general.utils.process_utils as pr_utils
 import general.utils.running.runner_utils as r_utils
@@ -31,6 +32,7 @@ from libs.libutils import type_utils as lib_type_utils
 # Get parameters for model
 if cfg.MODEL == Models.SHELL_MODEL:
     import shell_model_experiments.utils.util_funcs as sh_utils
+    import shell_model_experiments.utils.runner_utils as sh_r_utils
     from shell_model_experiments.params.params import PAR as PAR_SH
     from shell_model_experiments.params.params import ParamsStructType
 
@@ -54,6 +56,7 @@ def generate_bvs(args: dict, exp_setup: dict):
     exp_setup : dict
         Experiment setup
     """
+    print(f"{col.Fore.GREEN}BV GENERATION{col.Fore.RESET}")
     # Update licence
     cfg.LICENCE = exp.BREEDING_VECTORS
 
@@ -66,7 +69,7 @@ def generate_bvs(args: dict, exp_setup: dict):
         pl.Path(
             local_exp_setup["folder_name"],
             local_exp_setup["vector_folder"],
-            "breed_vectors",
+            "bv_vectors",
         )
     )
 
@@ -83,23 +86,24 @@ def generate_bv_eofs(args: dict, exp_setup: dict):
     exp_setup : dict
         Experiment setup
     """
+    print(f"{col.Fore.GREEN}BV-EOF GENERATION{col.Fore.RESET}")
     # Update licence
     cfg.LICENCE = exp.BREEDING_EOF_VECTORS
 
     # Get subset of experiment setup
-    local_exp_setup = exp_setup["general"]
+    local_exp_setup = exp_setup["general"] | exp_setup["bv_eof_gen_setup"]
     # Set local args params
     args["out_exp_folder"] = pl.Path(
         local_exp_setup["folder_name"],
         local_exp_setup["vector_folder"],
-        "breed_eof_vectors",
+        "bv_eof_vectors",
     )
     args["n_profiles"] = local_exp_setup["n_units"]
-    args["n_runs_per_profile"] = 3
+    args["n_runs_per_profile"] = local_exp_setup["n_vectors"]
     args["pert_vector_folder"] = pl.Path(
         local_exp_setup["folder_name"], local_exp_setup["vector_folder"]
     )
-    args["exp_folder"] = "breed_vectors"
+    args["exp_folder"] = "bv_vectors"
 
     bv_eof_analyser(args, exp_setup=local_exp_setup)
 
@@ -114,6 +118,7 @@ def generate_svs(args: dict, exp_setup: dict):
     exp_setup : dict
         Experiment setup
     """
+    print(f"{col.Fore.GREEN}SV GENERATION{col.Fore.RESET}")
 
     # Update licence
     cfg.LICENCE = exp.SINGULAR_VECTORS
@@ -125,7 +130,7 @@ def generate_svs(args: dict, exp_setup: dict):
         pl.Path(
             local_exp_setup["folder_name"],
             local_exp_setup["vector_folder"],
-            "singular_vectors",
+            "sv_vectors",
         )
     )
 
@@ -144,9 +149,12 @@ def generate_vectors(args: dict, exp_setup: dict):
     """
     args["save_last_pert"] = True
 
-    # generate_bvs(copy.deepcopy(args), exp_setup)
-    generate_bv_eofs(copy.deepcopy(args), exp_setup)
-    generate_svs(copy.deepcopy(args), exp_setup)
+    if "bv" in args["vectors"] or "all" in args["vectors"]:
+        generate_bvs(copy.deepcopy(args), exp_setup)
+    if "bv_eof" in args["vectors"] or "all" in args["vectors"]:
+        generate_bv_eofs(copy.deepcopy(args), exp_setup)
+    if "sv" in args["vectors"] or "all" in args["vectors"]:
+        generate_svs(copy.deepcopy(args), exp_setup)
 
 
 def rd_pert_experiment(args: dict, local_exp_setup: dict):
@@ -159,21 +167,17 @@ def rd_pert_experiment(args: dict, local_exp_setup: dict):
     local_exp_setup : dict
         Local experiment setup
     """
+    print(f"{col.Fore.GREEN}RD PERTURBATIONS{col.Fore.RESET}")
 
     processes = []
 
     # Prepare arguments for perturbation run
-    args["n_runs_per_profile"] = 10
+    args["n_runs_per_profile"] = 1
     args["pert_mode"] = "rd"
-    args["start_times"] = local_exp_setup["eval_times"]
-    args["start_time_offset"] = local_exp_setup["unit_offset"]
     args["out_exp_folder"] = pl.Path(
         local_exp_setup["folder_name"],
         "rd_perturbations",
     )
-
-    # Adjust start times
-    args = g_utils.adjust_start_times_with_offset(args)
 
     # Copy args in order not override in forecast processes
     copy_args = copy.deepcopy(args)
@@ -194,22 +198,18 @@ def nm_pert_experiment(args: dict, local_exp_setup: dict):
     local_exp_setup : dict
         Local experiment setup
     """
+    print(f"{col.Fore.GREEN}NM PERTURBATIONS{col.Fore.RESET}")
 
     processes = []
 
     # Prepare arguments for perturbation run
-    args["n_runs_per_profile"] = 10
+    args["n_runs_per_profile"] = 1
     args["n_profiles"] = local_exp_setup["n_units"]
     args["pert_mode"] = "nm"
-    args["start_times"] = local_exp_setup["eval_times"]
-    args["start_time_offset"] = local_exp_setup["unit_offset"]
     args["out_exp_folder"] = pl.Path(
         local_exp_setup["folder_name"],
         "nm_perturbations",
     )
-
-    # Adjust start times
-    args = g_utils.adjust_start_times_with_offset(args)
 
     # Copy args in order not override in forecast processes
     copy_args = copy.deepcopy(args)
@@ -230,6 +230,7 @@ def bv_pert_experiment(args: dict, local_exp_setup: dict):
     local_exp_setup : dict
         Local experiment setup
     """
+    print(f"{col.Fore.GREEN}BV PERTURBATIONS{col.Fore.RESET}")
 
     processes = []
 
@@ -239,7 +240,7 @@ def bv_pert_experiment(args: dict, local_exp_setup: dict):
     args["pert_vector_folder"] = pl.Path(
         local_exp_setup["folder_name"], local_exp_setup["vector_folder"]
     )
-    args["exp_folder"] = "breed_vectors"
+    args["exp_folder"] = "bv_vectors"
     args["out_exp_folder"] = pl.Path(
         local_exp_setup["folder_name"],
         "bv_perturbations",
@@ -264,18 +265,19 @@ def bv_eof_pert_experiment(args: dict, local_exp_setup: dict):
     local_exp_setup : dict
         Local experiment setup
     """
-    # The number of vectors to perturb from, i.e. BV-EOF1, BV-EOF2, ...
-    n_vectors = 3
+    print(f"{col.Fore.GREEN}BV-EOF PERTURBATIONS{col.Fore.RESET}")
 
     # Prepare arguments for perturbation run
-    args["n_runs_per_profile"] = 1
+    args[
+        "n_runs_per_profile"
+    ] = 1  # In order to separate BV-EOF0, BV-EOF1, BV-EOF2, ... out into separate folders
     args["pert_mode"] = "bv_eof"
     args["pert_vector_folder"] = pl.Path(
         local_exp_setup["folder_name"], local_exp_setup["vector_folder"]
     )
-    args["exp_folder"] = "breed_eof_vectors"
+    args["exp_folder"] = "bv_eof_vectors"
 
-    for i in range(n_vectors):
+    for i in range(local_exp_setup["n_vectors"]):
         args["specific_start_vector"] = i
         # Prepare vector str index
         str_index = lib_type_utils.zpad_string(str(i), n_zeros=2)
@@ -301,18 +303,19 @@ def sv_pert_experiment(args: dict, local_exp_setup: dict):
     local_exp_setup : dict
         Local experiment setup
     """
-    # The number of vectors to perturb from, i.e. BV-EOF1, BV-EOF2, ...
-    n_vectors = 20
+    print(f"{col.Fore.GREEN}SV PERTURBATIONS{col.Fore.RESET}")
 
     # Prepare arguments for perturbation run
-    args["n_runs_per_profile"] = 1
+    args[
+        "n_runs_per_profile"
+    ] = 1  # In order to separate SV0, SV1, SV2, ... out into separate folders
     args["pert_mode"] = "sv"
     args["pert_vector_folder"] = pl.Path(
         local_exp_setup["folder_name"], local_exp_setup["vector_folder"]
     )
-    args["exp_folder"] = "singular_vectors"
+    args["exp_folder"] = "sv_vectors"
 
-    for i in range(n_vectors):
+    for i in range(local_exp_setup["n_vectors"]):
         args["specific_start_vector"] = i
         # Prepare vector str index
         str_index = lib_type_utils.zpad_string(str(i), n_zeros=2)
@@ -326,6 +329,38 @@ def sv_pert_experiment(args: dict, local_exp_setup: dict):
         processes, _, _, _ = pt_runner.main_setup(copy_args)
 
         pr_utils.run_pert_processes(copy_args, local_exp_setup, processes)
+
+
+def rf_pert_experiment(args: dict, local_exp_setup: dict):
+    """Run perturbations with SV as pert_mode
+
+    Parameters
+    ----------
+    args : dict
+        Local run-time arguments
+    local_exp_setup : dict
+        Local experiment setup
+    """
+    print(f"{col.Fore.GREEN}RF PERTURBATIONS{col.Fore.RESET}")
+
+    processes = []
+
+    # Prepare arguments for perturbation run
+    args["n_runs_per_profile"] = 1
+    args["n_profiles"] = local_exp_setup["n_units"]
+    args["pert_mode"] = "rf"
+    args["out_exp_folder"] = pl.Path(
+        local_exp_setup["folder_name"],
+        "rf_perturbations",
+    )
+
+    # Copy args in order not override in forecast processes
+    copy_args = copy.deepcopy(args)
+
+    temp_processes, _, _, _ = pt_runner.main_setup(copy_args)
+    processes.extend(temp_processes)
+
+    pr_utils.run_pert_processes(copy_args, local_exp_setup, processes)
 
 
 def execute_pert_experiments(args: dict, exp_setup: dict):
@@ -350,12 +385,33 @@ def execute_pert_experiments(args: dict, exp_setup: dict):
     args["endpoint"] = True
     args["n_profiles"] = local_exp_setup["n_units"]
 
+    # Only generate start times if not requesting regime start
+    if args["regime_start"] is None:
+        # Generate start times
+        args["start_times"] = local_exp_setup["eval_times"]
+        args["start_time_offset"] = local_exp_setup["unit_offset"]
+        args = g_utils.adjust_start_times_with_offset(args)
+    elif cfg.MODEL == Models.SHELL_MODEL:
+        start_times, num_possible_units, _ = sh_r_utils.get_regime_start_times(args)
+        args["start_times"] = start_times[: args["n_profiles"]]
+
     # Execute experiments
-    # bv_pert_experiment(copy.deepcopy(args), local_exp_setup)
-    # bv_eof_pert_experiment(copy.deepcopy(args), local_exp_setup)
-    # rd_pert_experiment(copy.deepcopy(args), local_exp_setup)
-    # nm_pert_experiment(copy.deepcopy(args), local_exp_setup)
-    sv_pert_experiment(copy.deepcopy(args), local_exp_setup)
+    if "bv" in args["perturbations"] or "all" in args["perturbations"]:
+        bv_pert_experiment(copy.deepcopy(args), local_exp_setup)
+    if "bv_eof" in args["perturbations"] or "all" in args["perturbations"]:
+        bv_eof_pert_experiment(
+            copy.deepcopy(args), local_exp_setup | exp_setup["bv_eof_gen_setup"]
+        )
+    if "rd" in args["perturbations"] or "all" in args["perturbations"]:
+        rd_pert_experiment(copy.deepcopy(args), local_exp_setup)
+    if "nm" in args["perturbations"] or "all" in args["perturbations"]:
+        nm_pert_experiment(copy.deepcopy(args), local_exp_setup)
+    if "sv" in args["perturbations"] or "all" in args["perturbations"]:
+        sv_pert_experiment(
+            copy.deepcopy(args), local_exp_setup | exp_setup["sv_gen_setup"]
+        )
+    if "rf" in args["perturbations"] or "all" in args["perturbations"]:
+        rf_pert_experiment(copy.deepcopy(args), local_exp_setup)
 
 
 def main(args: dict):
@@ -377,19 +433,23 @@ def main(args: dict):
     # Update run-time arguments
     args["n_units"] = exp_setup["general"]["n_units"]
 
-    # Generate perturbation vectors
-    # generate_vectors(copy.deepcopy(args), exp_setup)
+    if len(args["vectors"]) > 0:
+        # Generate perturbation vectors
+        generate_vectors(copy.deepcopy(args), exp_setup)
 
-    # Perform perturbation experiments
-    execute_pert_experiments(copy.deepcopy(args), exp_setup)
+    if len(args["perturbations"]) > 0:
+        # Perform perturbation experiments
+        execute_pert_experiments(copy.deepcopy(args), exp_setup)
 
 
 if __name__ == "__main__":
     cfg.init_licence()
     # Get arguments
-    mult_pert_arg_setup = a_parsers.MultiPerturbationArgSetup()
-    mult_pert_arg_setup.setup_parser()
-    args = mult_pert_arg_setup.args
+    _parser = a_parsers.ComparisonArgParser()
+    _parser.setup_parser()
+    args = _parser.args
+
+    a_utils.react_on_comparison_arguments(args)
 
     # Shell model specific
     if cfg.MODEL == Models.SHELL_MODEL:

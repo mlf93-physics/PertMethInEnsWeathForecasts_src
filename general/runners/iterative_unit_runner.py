@@ -149,9 +149,11 @@ def main_setup(
     if cfg.LICENCE == EXP.SINGULAR_VECTORS:
         raw_perturbations = True
 
-        u_profiles_perturbed, perturb_positions = r_utils.prepare_perturbations(
-            args, raw_perturbations=raw_perturbations
-        )
+        (
+            u_profiles_perturbed,
+            perturb_positions,
+            exec_all_runs_per_profile,
+        ) = r_utils.prepare_perturbations(args, raw_perturbations=raw_perturbations)
 
     processes, data_out_dict = prepare_processes(
         u_profiles_perturbed,

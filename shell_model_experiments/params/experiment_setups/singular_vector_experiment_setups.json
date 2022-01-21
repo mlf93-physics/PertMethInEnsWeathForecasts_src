@@ -24,7 +24,7 @@
         ]
     },
     "LowPredRegime": {
-        "folder_name": "pt_vectors/sv_low_pred_regime",
+        "folder_name": "pt_vectors/sv_low_pred_regime_lanczos_normalization",
         "sub_exp_folder": "perturb_data",
         "integration_time": 0.01,
         "n_vectors": 20,
@@ -48,10 +48,10 @@
         ]
     },
     "TestRun3": {
-        "folder_name": "pt_vectors/test1_sv_low_pred",
+        "folder_name": "pt_vectors/temp_test_n_vectors5",
         "sub_exp_folder": "perturb_data",
         "integration_time": 0.01,
-        "n_vectors": 20,
+        "n_vectors": 5,
         "n_lanczos_iterations": 1,
         "n_model_iterations": 1,
         "vector_offset": 0.01,

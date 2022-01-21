@@ -1,6 +1,7 @@
 import sys
 
 sys.path.append("../../")
+import colorama as col
 import re
 import pathlib as pl
 from collections import OrderedDict
@@ -281,3 +282,46 @@ def sort_paths_according_to_header_dicts(
         sort_index.append(enum_path[0])
 
     return sorted_parths, sort_index
+
+
+def get_analysis_file(args: dict, type: str = None) -> pl.Path:
+    anal_dir: pl.Path = get_analysis_dir(args, type)
+
+    if cfg.MODEL == Models.SHELL_MODEL:
+        files = lib_file_utils.get_file_names_in_path(
+            path=anal_dir,
+            search_pattern=f"*ny_n{args['ny_n']}*sdim{args['sdim']}*kexp{args['diff_exponent']}*.csv",
+        )
+    elif cfg.MODEL == Models.LORENTZ63:
+        print(
+            f"{col.Fore.RED}Analysis file search not implemented for the {cfg.MODEL} yet{col.Fore.RESET}"
+        )
+
+    if len(files) > 1:
+        raise ImportError(
+            f"More than one analysis file found that satisfies the type ({type}) and model parameters"
+        )
+
+    file_path = anal_dir / files[0]
+
+    return file_path
+
+
+def get_analysis_dir(args: dict, type: str) -> pl.Path:
+    anal_dirs = lib_file_utils.get_dirs_in_path(pl.Path(args["analysis_path"]))
+
+    # Get folder corresponding to type
+    type_dirs: List[pl.Path] = [_dir for _dir in anal_dirs if type in _dir.name]
+
+    if cfg.MODEL == Models.SHELL_MODEL:
+        # Sort out dirs not having same sdim
+        for _dir in type_dirs:
+            if int(_dir.name.split("sdim")[-1]) != int(args["sdim"]):
+                type_dirs.remove(_dir)
+
+    if len(type_dirs) > 1:
+        raise ImportError(
+            f"More than one dir found that satisfies the type ({type}) and sdim ({args['sdim']})"
+        )
+
+    return type_dirs[0]

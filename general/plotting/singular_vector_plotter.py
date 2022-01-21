@@ -90,7 +90,7 @@ def plot_s_values(args, axes: plt.Axes = None, plot_args=[]):
         args,
         header_dict=header_dicts[0],
         title_header="Singular value dist "
-        + f"{'normalized' if 'normalize' in plot_args else ''}| shell model \n",
+        + f"{'normalized' if 'normalize' in plot_args else ''}\n",
     )
 
     # axes[0].legend()
@@ -158,61 +158,24 @@ def plot_s_vectors_units(args, axes: plt.Axes = None, plot_args: list = []):
     s_vector_title = g_plt_utils.generate_title(
         args,
         header_dict=header_dicts[0],
-        title_header="Normalized SV units | shell model \n",
+        title_header="Normalized SV units \n",
     )
     fig.suptitle(s_vector_title)
     fig.supxlabel("SV index")
     fig.supylabel("Shell index")
 
 
-def plot_s_vectors_average(args, axes: plt.Axes = None, plot_args: list = []):
+def plot_s_vectors_average(args, axes: plt.Axes = None):
+
+    # Prepare plot_kwargs
+    plot_kwargs: dict = {
+        "xlabel": "SV index",
+        "ylabel": "Shell index",
+        "title_header": "Averaged SVs",
+    }
 
     # Import breed vectors
-    (
-        singular_vector_units,
-        singular_values,
-        _,
-        _,
-        header_dicts,
-    ) = pt_import.import_perturb_vectors(
-        args, raw_perturbations=True, dtype=sparams.dtype
-    )
-
-    # Normalize
-    singular_vector_units = g_utils.normalize_array(
-        singular_vector_units, norm_value=1, axis=2
-    )
-
-    # Prepare axes
-    if axes is None:
-        axes = plt.axes()
-
-    mean_abs_singular_vector_units = np.mean(np.abs(singular_vector_units), axis=0)
-
-    sb.heatmap(
-        mean_abs_singular_vector_units.T,
-        ax=axes,
-        cbar_kws={
-            "pad": 0.1,
-        },
-        vmin=0,
-        vmax=0.5,
-    )
-    axes.invert_yaxis()
-    axes.invert_xaxis()
-    plt.xticks(rotation=0)
-    axes.yaxis.tick_right()
-    axes.yaxis.set_label_position("right")
-    axes.set_xlabel("SV index")
-    axes.set_ylabel("Shell index")
-
-    # Generate title
-    s_vector_title = g_plt_utils.generate_title(
-        args,
-        header_dict=header_dicts[0],
-        title_header="Averaged normalized SVs | shell model \n",
-    )
-    axes.set_title(s_vector_title)
+    g_plt_data.plot2D_average_vectors(args, axes=axes, plot_kwargs=plot_kwargs)
 
 
 def plot3D_s_vectors_average(args, axes: plt.Axes = None, plot_args: list = []):
@@ -268,7 +231,7 @@ def plot3D_s_vectors_average(args, axes: plt.Axes = None, plot_args: list = []):
     s_vector_title = g_plt_utils.generate_title(
         args,
         header_dict=header_dicts[0],
-        title_header="Averaged normalized SVs | shell model \n",
+        title_header="Averaged normalized SVs \n",
     )
     axes.set_title(s_vector_title)
 
@@ -333,7 +296,7 @@ def plot_s_vector_ortho(args, axes=None):
     s_vector_title = g_plt_utils.generate_title(
         args,
         header_dict=header_dicts[0],
-        title_header="Orthogonality between SVs | shell model \n",
+        title_header="Orthogonality between SVs \n",
     )
     fig.suptitle(s_vector_title)
     fig.supxlabel("SV index")
@@ -377,7 +340,7 @@ def plot_s_vector_ortho_average(args, axes=None):
         cmap="Reds",
         vmin=0,
         vmax=1,
-        # annot=True,
+        annot=True,
         fmt=".1f",
         annot_kws={"fontsize": 8},
         cbar_kws=dict(use_gridspec=True, label="Orthogonality"),
@@ -389,7 +352,7 @@ def plot_s_vector_ortho_average(args, axes=None):
     s_vector_title = g_plt_utils.generate_title(
         args,
         header_dict=header_dicts[0],
-        title_header="Averaged orthogonality between SVs | shell model \n",
+        title_header="Averaged orthogonality between SVs \n",
     )
     fig.suptitle(s_vector_title)
     fig.supxlabel("SV index")

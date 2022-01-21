@@ -37,6 +37,7 @@ import perturbation_runner as pt_runner
 # Get parameters for model
 if cfg.MODEL == Models.SHELL_MODEL:
     import shell_model_experiments.utils.util_funcs as sh_utils
+    import shell_model_experiments.utils.runner_utils as sh_r_utils
     from shell_model_experiments.params.params import PAR as PAR_SH
     from shell_model_experiments.params.params import ParamsStructType
 
@@ -67,8 +68,12 @@ def main(args):
     # Validate the start time method
     ut_exp_val.validate_start_time_method(exp_setup=exp_setup)
 
-    # Generate start times
-    start_times, num_possible_units = r_utils.generate_start_times(exp_setup, args)
+    # Only generate start times if not requesting regime start
+    if args["regime_start"] is None:
+        # Generate start times
+        start_times, num_possible_units = r_utils.generate_start_times(exp_setup, args)
+    elif cfg.MODEL == Models.SHELL_MODEL:
+        start_times, num_possible_units, _ = sh_r_utils.get_regime_start_times(args)
 
     processes = []
     # Prepare arguments

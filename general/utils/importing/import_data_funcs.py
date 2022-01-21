@@ -5,7 +5,8 @@ import itertools as it
 import json
 import pathlib as pl
 import re
-
+import math
+import colorama as col
 import config as cfg
 import general.utils.custom_decorators as dec
 import general.utils.exceptions as g_exceptions
@@ -183,12 +184,22 @@ def imported_sorted_perturbation_info(folder_name, args, search_pattern="*.csv")
     )
     perturb_header_dicts = [perturb_header_dicts[i] for i in ascending_sort_index]
 
-    # Truncate at n_files
+    _offset = args["file_offset"] if "file_offset" in args else 0
+    # Truncate at n_files and file_offset
     if args["n_files"] < np.inf:
-        perturb_file_names = perturb_file_names[: args["n_files"]]
-        perturb_time_pos_list = perturb_time_pos_list[: args["n_files"]]
-        perturb_time_pos_list_legend = perturb_time_pos_list_legend[: args["n_files"]]
-        perturb_header_dicts = perturb_header_dicts[: args["n_files"]]
+        perturb_file_names = perturb_file_names[_offset : args["n_files"] + _offset]
+        perturb_time_pos_list = perturb_time_pos_list[
+            _offset : args["n_files"] + _offset
+        ]
+        perturb_time_pos_list_legend = perturb_time_pos_list_legend[
+            _offset : args["n_files"] + _offset
+        ]
+        perturb_header_dicts = perturb_header_dicts[_offset : args["n_files"] + _offset]
+    else:
+        perturb_file_names = perturb_file_names[_offset:]
+        perturb_time_pos_list = perturb_time_pos_list[_offset:]
+        perturb_time_pos_list_legend = perturb_time_pos_list_legend[_offset:]
+        perturb_header_dicts = perturb_header_dicts[_offset:]
 
     return (
         perturb_time_pos_list,
@@ -266,6 +277,23 @@ def import_ref_data(args=None):
     if len(args["specific_ref_records"]) == 1 and args["specific_ref_records"][0] < 0:
         records_to_import = ref_files_sort_index
         print("\n Importing all reference data records\n")
+    elif args["ref_end_time"] > 0:
+        # Calculate how many ref records to import
+        start_rec_number = math.floor(
+            args["ref_start_time"] / cfg.GLOBAL_PARAMS.record_max_time
+        )
+        end_rec_number = math.ceil(
+            args["ref_end_time"] / cfg.GLOBAL_PARAMS.record_max_time
+        )
+
+        num_records = end_rec_number - start_rec_number
+        records_to_import = [i + start_rec_number for i in range(num_records)]
+
+        print(
+            "\n Importing all/subset of data in listed reference data records: ",
+            records_to_import,
+            "\n",
+        )
     else:
         records_to_import = args["specific_ref_records"]
         print("\n Importing listed reference data records: ", records_to_import, "\n")
@@ -275,10 +303,20 @@ def import_ref_data(args=None):
 
         endpoint = args["endpoint"] if "endpoint" in args else False
 
-        data_in, header_dict = import_data(
-            file_name,
-            start_line=int(args["ref_start_time"] * params.tts),
-            max_lines=int(
+        # Only use ref_start_time information when importing first ref record
+        start_line = (
+            int(
+                (args["ref_start_time"] % cfg.GLOBAL_PARAMS.record_max_time)
+                * params.tts
+            )
+            if i == 0
+            else 0
+        )
+
+        # If only importing one reference file, estimate max_line from ref_end_time
+        # and ref_start_time
+        if len(records_to_import) == 1:
+            max_line = int(
                 round(
                     (args["ref_end_time"] - args["ref_start_time"]) * params.tts
                     + (args["ref_start_time"] == 0)
@@ -286,6 +324,26 @@ def import_ref_data(args=None):
                     0,
                 )
             )
+        else:
+            # Only use ref_end_time information if importing last record out of multiple
+            max_line = (
+                int(
+                    round(
+                        (args["ref_end_time"] % cfg.GLOBAL_PARAMS.record_max_time)
+                        * params.tts
+                        + (args["ref_start_time"] == 0)
+                        + endpoint,
+                        0,
+                    )
+                )
+                if i + 1 == len(records_to_import)
+                else None
+            )
+
+        data_in, header_dict = import_data(
+            file_name,
+            start_line=start_line,
+            max_lines=max_line
             if args["ref_end_time"] > args["ref_start_time"]
             else None,
         )
@@ -489,7 +547,9 @@ def import_perturbation_velocities(
     )
 
 
-def import_start_u_profiles(args: dict = None) -> Tuple[np.ndarray, List[int], dict]:
+def import_start_u_profiles(
+    args: dict = None, start_times: list = []
+) -> Tuple[np.ndarray, List[int], dict]:
     """Import all u profiles to start perturbations from
 
     Parameters
@@ -501,7 +561,8 @@ def import_start_u_profiles(args: dict = None) -> Tuple[np.ndarray, List[int], d
     -------
     tuple
         (
-            u_init_profiles : The initial velocity profiles
+            u_init_profiles : np.ndarray((params.sdim + 2 * params.bd_size, n_profiles * n_runs_per_profile))
+                The initial velocity profiles
             positions : The index position of the profiles
             ref_header_dict : The header dictionary of the reference data file
         )
@@ -512,8 +573,14 @@ def import_start_u_profiles(args: dict = None) -> Tuple[np.ndarray, List[int], d
         Raised if an unknown key is used to store the time_to_run information
         in the reference header
     """
-    n_profiles = args["n_profiles"]
-    n_runs_per_profile = args["n_runs_per_profile"]
+    len_start_times = len(start_times)
+    if args["start_times"] is not None and len_start_times > 0:
+        print(
+            f"{col.Fore.RED}In import_start_u_profiles: Both args['start_times'] and kwarg start_times specified. start_times overrides args['start_times']{col.Fore.RESET}"
+        )
+
+    n_profiles = args["n_profiles"] if len_start_times == 0 else len_start_times
+    n_runs_per_profile = args["n_runs_per_profile"] if len_start_times == 0 else 1
 
     # Check if ref path exists
     ref_file_path = pl.Path(args["datapath"], "ref_data")
@@ -521,7 +588,7 @@ def import_start_u_profiles(args: dict = None) -> Tuple[np.ndarray, List[int], d
     # Get ref info text file
     ref_header_dict = import_info_file(ref_file_path)
 
-    if args["start_times"] is None:
+    if args["start_times"] is None and len(start_times) == 0:
         print(
             f"\nImporting {n_profiles} velocity profiles randomly positioned "
             + "in reference datafile(s)\n"
@@ -553,14 +620,17 @@ def import_start_u_profiles(args: dict = None) -> Tuple[np.ndarray, List[int], d
             dtype=np.int64,
         )
     else:
+        if len_start_times > 0:
+            _temp_start_times = start_times
+        else:
+            _temp_start_times = args["start_times"]
+
         print(
             f"\nImporting {n_profiles} velocity profiles positioned as "
             + "requested in reference datafile\n"
         )
         # Make sure to round and convert to int in a proper way
-        positions = np.round(np.array(args["start_times"]) * params.tts).astype(
-            np.int64
-        )
+        positions = np.round(np.array(_temp_start_times) * params.tts).astype(np.int64)
 
     print(
         "\nPositions of perturbation start: ",

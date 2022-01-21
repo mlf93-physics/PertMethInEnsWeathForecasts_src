@@ -110,10 +110,9 @@ def sv_generator(
                     )
 
                 #  Rescale perturbations
-                lanczos_outarray = pt_utils.rescale_perturbations(
-                    u_atl_out[np.newaxis, :], copy_args, raw_perturbations=True
-                )
-
+                # lanczos_outarray = pt_utils.rescale_perturbations(
+                #     u_atl_out[np.newaxis, :], copy_args, raw_perturbations=True
+                # )
             # Update arrays for the lanczos algorithm
             propagated_vector[:, :] = np.reshape(u_atl_out, (params.sdim, 1))
             input_vector[:, :] = u_init_perturb[sparams.u_slice, np.newaxis]
@@ -122,6 +121,11 @@ def sv_generator(
             lanczos_outarray, tridiag_matrix, input_vector_matrix = next(
                 lanczos_iterator
             )
+
+            # NOTE: Uncomment this to enable normalization of lanczos vectors -
+            # produces orthogonal lanczos vectors. lanczos_outarray =
+            # g_utils.normalize_array( lanczos_outarray,
+            #     norm_value=params.seeked_error_norm, axis=0 )
             lanczos_outarray = np.pad(
                 lanczos_outarray,
                 pad_width=((params.bd_size, params.bd_size), (0, 0)),

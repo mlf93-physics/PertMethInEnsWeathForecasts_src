@@ -861,7 +861,7 @@ def plot_error_energy_spectrum_vs_time_2D(args: dict = None, axes: plt.Axes = No
     # error_mean_spectra[np.where(error_mean_spectra == np.nan)] = 0.0
     # error_mean_spectra[0, :] = error_spectra[0, 0, :]
 
-    cmap_list = g_plt_utils.get_non_repeating_colors(n_colors=n_divisions)
+    cmap_list, _ = g_plt_utils.get_non_repeating_colors(n_colors=n_divisions)
     axes.set_prop_cycle("color", cmap_list)
     axes.xaxis.set_major_locator(mpl_ticker.MaxNLocator(integer=True))
 

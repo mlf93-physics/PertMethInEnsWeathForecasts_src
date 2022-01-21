@@ -244,6 +244,7 @@ def import_perturb_vectors(
         Raised if the function is unable to infer the number of vector files to
         import from args
     """
+
     # Infer the number of files
     if "n_units" in args:
         if args["n_units"] < np.inf:
@@ -319,12 +320,12 @@ def import_perturb_vectors(
         else:
             vector_units[i, :, :] = vector_unit
 
-        # Take real part if in Lorentz model - only zeros present in imag part
-        if cfg.MODEL == Models.LORENTZ63:
-            vector_units = vector_units.real
-
         if i + 1 >= args["n_files"]:
             break
+
+    # Take real part if in Lorentz model - only zeros present in imag part
+    if cfg.MODEL == Models.LORENTZ63:
+        vector_units = vector_units.real
 
     if not raw_perturbations:
         # u_init_profiles is reshaped to fit shape (n_units, n_runs_per_profile, sdim)
