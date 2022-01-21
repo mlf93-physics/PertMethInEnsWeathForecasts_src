@@ -217,7 +217,7 @@ def import_profiles_for_nm_analysis(args: dict = None) -> Tuple[np.ndarray, dict
 
 def import_perturb_vectors(
     args: dict, raw_perturbations: bool = False, dtype=None
-) -> Tuple[np.ndarray, np.ndarray, List[int], List[dict]]:
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray, List[int], List[dict]]:
     """Import units of perturbation vectors, e.g. BVs or SVs
 
     Parameters
@@ -229,11 +229,16 @@ def import_perturb_vectors(
     -------
     Tuple[np.ndarray, np.ndarray, list, list]
         (
-            vector_units : The perturbation vectors stored as units.
-                           Shape: (n_units, n_vectors, sdim)
-            u_init_profiles : The ref velocity profiles at evaluation time
-            eval_pos : The index position of the evaluation time
-            perturb_header_dicts : List of header dicts of the vector units
+            vector_units : np.ndarray((n_units, n_vectors, sdim))
+                The perturbation vectors stored as units.
+            characteristic_values : np.ndarray((n_units, n_vectors))
+                The characteristic values for the vectors, e.g. singular values
+            u_init_profiles : np.ndarray((n_units, n_vectors, sdim))
+                The ref velocity profiles at evaluation time
+            eval_pos : List
+                The index position of the evaluation time
+            perturb_header_dicts : List
+                List of header dicts of the vector units
         )
 
     Raises

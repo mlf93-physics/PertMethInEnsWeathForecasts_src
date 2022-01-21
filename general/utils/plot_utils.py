@@ -72,6 +72,36 @@ def get_custom_cmap(
     return cmap, norm
 
 
+def set_color_cycle_for_vectors(
+    axes: plt.Axes, vector_type: str = "sv", n_vectors: int = 0
+):
+    if "sv" == vector_type:
+        cmap_list, cmap = get_non_repeating_colors(
+            n_colors=n_vectors,
+            cmap=plt.cm.Blues_r,
+            vmin=0.2,
+            vmax=0.7,
+        )
+        axes.set_prop_cycle("color", cmap_list)
+    elif "bv_eof" == vector_type:
+        cmap_list, cmap = get_non_repeating_colors(
+            n_colors=n_vectors,
+            cmap=plt.cm.Oranges_r,
+            vmin=0.2,
+            vmax=0.7,
+        )
+        axes.set_prop_cycle("color", cmap_list)
+    elif "bv" == vector_type:
+        cmap_list, cmap = get_non_repeating_colors(
+            n_colors=n_vectors,
+            cmap=plt.cm.Greens_r,
+            vmin=0.2,
+            vmax=0.7,
+        )
+        axes.set_prop_cycle("color", cmap_list)
+    return cmap
+
+
 def save_interactive_fig(fig, path, name):
     out_path = pl.Path(path, f"{name}.fig.pickle")
 

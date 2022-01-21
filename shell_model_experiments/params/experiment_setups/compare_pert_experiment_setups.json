@@ -1,20 +1,24 @@
 {
-    "TestRun0": {
+    "SequentialRun1": {
         "general": {
-            "folder_name": "compare_pert_test_seeked_error1e-2-high_pred",
+            "folder_name": "compare_sequential_vector_runs",
             "vector_folder": "vectors",
             "perturbation_folder": "perturbations",
             "sub_exp_folder": "perturb_data",
             "eval_times": [
-                11.5
+                11.15
             ],
-            "n_units": 6,
+            "n_units": 30,
             "unit_offset": 0.01
         },
         "bv_gen_setup": {
             "integration_time": 0.01,
             "n_cycles": 4,
-            "n_vectors": 8
+            "n_vectors": 20
+        },
+        "bv_eof_gen_setup": {
+            "sub_exp_folder": "perturb_data",
+            "n_vectors": 20
         },
         "sv_gen_setup": {
             "integration_time": 0.01,
@@ -62,7 +66,7 @@
             "eval_times": [
                 11.22
             ],
-            "n_units": 30,
+            "n_units": 6,
             "unit_offset": 0.01
         },
         "bv_gen_setup": {

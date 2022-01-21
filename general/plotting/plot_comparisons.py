@@ -107,30 +107,11 @@ def plt_pert_components(args: dict, axes: plt.Axes = None):
         #     )
 
         # Prepare cmap for SVs
-        if "sv" in folder:
-            cmap_list, cmap = g_plt_utils.get_non_repeating_colors(
-                n_colors=norm_mean_vectors.shape[1],
-                cmap=plt.cm.Blues_r,
-                vmin=0.2,
-                vmax=0.7,
-            )
-            axes.set_prop_cycle("color", cmap_list)
-        elif "bv_eof" in folder:
-            cmap_list, cmap = g_plt_utils.get_non_repeating_colors(
-                n_colors=norm_mean_vectors.shape[1],
-                cmap=plt.cm.Oranges_r,
-                vmin=0.2,
-                vmax=0.7,
-            )
-            axes.set_prop_cycle("color", cmap_list)
-        elif "bv" in folder:
-            cmap_list, cmap = g_plt_utils.get_non_repeating_colors(
-                n_colors=norm_mean_vectors.shape[1],
-                cmap=plt.cm.Greens_r,
-                vmin=0.2,
-                vmax=0.7,
-            )
-            axes.set_prop_cycle("color", cmap_list)
+        cmap = g_plt_utils.set_color_cycle_for_vectors(
+            axes,
+            vector_type=folder_path.name.split("_vectors")[0],
+            n_vectors=norm_mean_vectors.shape[1],
+        )
 
         vector_lines = axes.plot(
             shell_index,
@@ -490,6 +471,115 @@ def plot_exp_growth_rate_comparison(args: dict):
         )
 
 
+def plot_characteristic_value_vs_time(args: dict, axes: plt.Axes = None):
+    if len(args["vectors"]) == 0:
+        raise ValueError("--vectors argument mandatory for this plot")
+
+    e_utils.update_compare_exp_folders(args)
+
+    # Prepare axes
+    if axes is None:
+        axes = plt.axes()
+
+    vector_folders = [folder for folder in args["exp_folders"] if "vectors" in folder]
+
+    # Import perturb vectors and plot
+    for i, folder in enumerate(vector_folders):
+        folder_path = pl.Path(folder)
+        if re.match(fr"bv(\d+_vectors|_vectors)", folder_path.name):
+            raw_perturbations = False
+        else:
+            raw_perturbations = True
+
+        args["exp_folder"] = folder
+        (
+            _,
+            characteristic_values,
+            _,
+            eval_pos,
+            header_dicts,
+        ) = pt_import.import_perturb_vectors(args, raw_perturbations=raw_perturbations)
+
+        normed_characteristic_values = characteristic_values / np.max(
+            characteristic_values
+        )  # g_utils.normalize_array(
+        #     characteristic_values, norm_value=1, axis=1
+        # )
+
+        if args["display_type"] == "all":
+            array_to_plot: np.ndarray = normed_characteristic_values.real
+        elif args["display_type"] == "quantile":
+            quantiled_char_values = np.quantile(
+                normed_characteristic_values, [1 / 4, 1 / 2, 3 / 4], axis=1
+            )
+            # Lower quantile
+            # lower_boolean = (
+            #     normed_characteristic_values <= quantiled_char_values[0, :][:, np.newaxis]
+            # )
+            # n_lower_values = np.unique(np.sum(lower_boolean, axis=1))
+            # if n_lower_values.size > 1:
+            #     raise ValueError("More than one unique value in lower_boolean array")
+
+            # lower_quantile = normed_characteristic_values[lower_boolean].reshape(
+            #     (-1, n_lower_values[0])
+            # )
+
+            # # Middle quantile
+            # middle_boolean = np.logical_and(
+            #     quantiled_char_values[1, :][:, np.newaxis] >= normed_characteristic_values,
+            #     normed_characteristic_values > quantiled_char_values[0, :][:, np.newaxis],
+            # )
+            # n_middle_values = np.unique(np.sum(middle_boolean, axis=1))
+            # if n_middle_values.size > 1:
+            #     raise ValueError("More than one unique value in middle_boolean array")
+
+            # middle_quantile = normed_characteristic_values[middle_boolean].reshape(
+            #     (-1, n_middle_values[0])
+            # )
+
+            # # Upper quantile
+            # upper_boolean = (
+            #     normed_characteristic_values > quantiled_char_values[1, :][:, np.newaxis]
+            # )
+            # n_upper_values = np.unique(np.sum(upper_boolean, axis=1))
+            # if n_upper_values.size > 1:
+            #     raise ValueError("More than one unique value in upper_boolean array")
+            # upper_quantile = normed_characteristic_values[upper_boolean].reshape(
+            #     (-1, n_upper_values[0])
+            # )
+
+            array_to_plot = np.empty((args["n_profiles"], 3), dtype=np.float64)
+            array_to_plot[:, 0] = quantiled_char_values[2, :].real
+            array_to_plot[:, 1] = quantiled_char_values[1, :].real
+            array_to_plot[:, 2] = quantiled_char_values[0, :].real
+        elif args["display_type"] == "specific":
+            array_to_plot = np.empty((args["n_profiles"], 3), dtype=np.float64)
+            array_to_plot[:, 0] = normed_characteristic_values[:, 0].real
+            array_to_plot[:, 1] = normed_characteristic_values[:, 9].real
+            array_to_plot[:, 2] = normed_characteristic_values[:, -1].real
+        else:
+            raise ValueError(
+                f"Invalid display_type choice; display_type={args['display_type']}"
+            )
+
+        # Prepare cmap for SVs
+        cmap = g_plt_utils.set_color_cycle_for_vectors(
+            axes,
+            vector_type=folder_path.name.split("_vectors")[0],
+            n_vectors=array_to_plot.shape[1],
+        )
+
+        axes.plot(
+            np.array(eval_pos, dtype=np.float64) * params.stt,
+            array_to_plot,
+            label=folder_path.name,
+        )
+
+        axes.set_xlabel("Time")
+        axes.set_ylabel("Normalized char. value")
+        axes.set_yscale("log")
+
+
 if __name__ == "__main__":
     cfg.init_licence()
 
@@ -519,6 +609,8 @@ if __name__ == "__main__":
         plot_error_norm_comparison(args)
     elif "exp_growth_rate_compare" in args["plot_type"]:
         plot_exp_growth_rate_comparison(args)
+    elif "char_values_compare" in args["plot_type"]:
+        plot_characteristic_value_vs_time(args)
     else:
         raise ValueError("No valid plot type given as input argument")
 

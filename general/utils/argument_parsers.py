@@ -548,6 +548,12 @@ class StandardPlottingArgParser:
                 + " is relevant",
             )
 
+        sub_parser = self._parser.add_subparsers()
+        plot_kwargs_parser: argparse.ArgumentParser = sub_parser.add_parser(
+            "plot_kwargs"
+        )
+        plot_kwargs_parser.add_argument("--display_type", type=str)
+
 
 class VerificationArgParser:
     def __init__(self):
