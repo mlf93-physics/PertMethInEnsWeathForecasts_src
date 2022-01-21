@@ -70,7 +70,7 @@ def main(args: dict, exp_setup: dict = None):
     # Get number of existing blocks
     n_existing_units = lib_file_utils.count_existing_files_or_dirs(
         search_path=pl.Path(args["datapath"], exp_setup["folder_name"]),
-        search_pattern="breed_vector*.csv",
+        search_pattern="breeding_vector*.csv",
     )
 
     # Validate the start time method

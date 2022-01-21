@@ -56,6 +56,10 @@ elif cfg.MODEL == Models.LORENTZ63:
 
 
 def plt_pert_components(args: dict, axes: plt.Axes = None):
+
+    if len(args["vectors"]) == 0:
+        raise ValueError("--vectors argument mandatory for this plot")
+
     e_utils.update_compare_exp_folders(args)
 
     # Prepare axes
@@ -357,8 +361,9 @@ def plot_error_norm_comparison(args: dict):
                 linestyle = LINESTYLES[digits_in_name]
 
         else:
-            color = cmap_list[i]
+            color = cmap_list[color_counter]
             linestyle = None
+            color_counter += 1
 
         g_plt_data.plot_error_norm_vs_time(
             args,
@@ -417,7 +422,9 @@ def plot_exp_growth_rate_comparison(args: dict):
     len_folders = len(args["exp_folders"])
 
     cmap_list = plt.rcParams["axes.prop_cycle"].by_key()["color"]
-    # cmap_list, _ = g_plt_utils.get_non_repeating_colors(n_colors=len_folders)
+    # cmap_list, _ = g_plt_utils.get_non_repeating_colors(
+    #     n_colors=len_folders, cmap=plt.cm.Oranges_r, vmin=0.2, vmax=0.8
+    # )
     # cmap_list[0] = "k"
     axes = plt.axes()
 

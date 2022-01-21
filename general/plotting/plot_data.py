@@ -1,12 +1,15 @@
 import pathlib as pl
 import numpy as np
 import matplotlib.pyplot as plt
+import seaborn as sb
 from general.utils.module_import.type_import import *
 import general.utils.importing.import_data_funcs as g_import
 import general.utils.plot_utils as g_plt_utils
 import general.analyses.analyse_data as g_a_data
 import general.utils.util_funcs as g_utils
+import general.utils.importing.import_perturbation_data as pt_import
 from general.plotting.plot_params import *
+from matplotlib.colors import LogNorm
 from general.params.experiment_licences import Experiments as EXP
 from general.params.model_licences import Models
 import config as cfg
@@ -334,3 +337,85 @@ def plot_energy(
                 )
 
     return axes
+
+
+def plot2D_average_vectors(
+    args, axes: plt.Axes = None, rel_mean_vector: bool = False, plot_kwargs: dict = {}
+):
+    (
+        vector_units,
+        characteristic_values,
+        _,
+        _,
+        header_dicts,
+    ) = pt_import.import_perturb_vectors(
+        args, raw_perturbations=True, dtype=np.complex128
+    )
+
+    # Normalize
+    vector_units = g_utils.normalize_array(vector_units, norm_value=1, axis=2)
+
+    # Prepare axes
+    if axes is None:
+        axes = plt.axes()
+
+    mean_abs_vector_units = np.mean(np.abs(vector_units), axis=0)
+
+    if rel_mean_vector:
+        mean_abs_vector_units = (
+            mean_abs_vector_units
+            - np.mean(mean_abs_vector_units, axis=0)[np.newaxis, :]
+        )
+
+    plot2D_vectors(mean_abs_vector_units, args, header_dicts, axes=axes, **plot_kwargs)
+
+
+def plot2D_vectors(
+    vector_units: np.ndarray,
+    args: dict,
+    header_dicts: List[dict],
+    axes: plt.Axes = None,
+    annot: bool = False,
+    vmin: float = None,
+    vmax: float = None,
+    cmap="Reds",
+    log_cmap: bool = False,
+    xlabel: str = "x index",
+    ylabel: str = "y index",
+    title_header: str = "DEFAULT TITLE",
+):
+
+    # Prepare axes
+    if axes is None:
+        axes = plt.axes()
+
+    sb.heatmap(
+        vector_units.T,
+        ax=axes,
+        cmap=cmap,
+        cbar_kws={
+            "pad": 0.1,
+        },
+        annot=annot,
+        fmt=".1f",
+        annot_kws={"fontsize": 8},
+        vmin=vmin,
+        vmax=vmax,
+        norm=LogNorm() if log_cmap else None,
+    )
+
+    axes.invert_yaxis()
+    axes.invert_xaxis()
+    plt.xticks(rotation=0)
+    axes.yaxis.tick_right()
+    axes.yaxis.set_label_position("right")
+    axes.set_xlabel(xlabel)
+    axes.set_ylabel(ylabel)
+
+    # Generate title
+    vector_title = g_plt_utils.generate_title(
+        args,
+        header_dict=header_dicts[0],
+        title_header=title_header,
+    )
+    axes.set_title(vector_title)

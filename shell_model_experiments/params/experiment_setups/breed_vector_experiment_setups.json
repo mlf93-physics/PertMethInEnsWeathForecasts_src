@@ -20,13 +20,13 @@
             5.5
         ]
     },
-    "TestRun2": {
-        "folder_name": "pt_vectors/shell_model_breed_vectors_6cycles_it0.04",
+    "TestRun20BV": {
+        "folder_name": "pt_vectors/test_nBVs20",
         "sub_exp_folder": "perturb_data",
-        "integration_time": 0.04,
-        "n_cycles": 6,
-        "n_vectors": 8,
-        "vector_offset": 0.04,
+        "integration_time": 0.01,
+        "n_cycles": 4,
+        "n_vectors": 20,
+        "vector_offset": 0.01,
         "eval_times": [
             4.5
         ]
