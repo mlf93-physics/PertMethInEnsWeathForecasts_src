@@ -99,6 +99,17 @@ def set_color_cycle_for_vectors(
             vmax=0.7,
         )
         axes.set_prop_cycle("color", cmap_list)
+    elif "nm" == vector_type:
+        cmap_list, cmap = get_non_repeating_colors(
+            n_colors=n_vectors,
+            cmap=plt.cm.Purples_r,
+            vmin=0.2,
+            vmax=0.7,
+        )
+        axes.set_prop_cycle("color", cmap_list)
+    else:
+        raise ValueError(f"No color settings for vector_type={vector_type}")
+
     return cmap
 
 

@@ -311,7 +311,7 @@ def plot_energy(
     axes.set_title(title)
 
     if "exp_folder" in args:
-        if args["exp_folder"] is not None:
+        if args["exp_folder"] is not None and args["mark_pert_start"]:
             _, perturb_files = g_utils.get_exp_files_and_names(
                 args, type=plot_kwargs["exp_file_type"]
             )

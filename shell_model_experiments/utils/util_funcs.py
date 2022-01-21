@@ -177,3 +177,12 @@ def format_params_to_string():
     string: str = ", ".join(map(lambda item: f"{item[0]}={item[1]}", attr_list))
 
     return string
+
+
+def get_kolm_sinai_entropy(e_value_collection: np.ndarray, axis: int = 0) -> float:
+    """Calculate Kolmogorov-Sinai entropy, i.e. sum of positive e values"""
+
+    positive_e_values_only = np.copy(e_value_collection)
+    positive_e_values_only[positive_e_values_only <= 0] = 0 + 0j
+    kolm_sinai_entropy = np.sum(positive_e_values_only.real, axis=axis)
+    return kolm_sinai_entropy

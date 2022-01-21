@@ -537,10 +537,7 @@ def plot_2D_eigen_mode_analysis(args=None):
 
     e_value_collection = np.array(e_value_collection, dtype=np.complex128).T
 
-    # Calculate Kolmogorov-Sinai entropy, i.e. sum of positive e values
-    positive_e_values_only = np.copy(e_value_collection)
-    positive_e_values_only[positive_e_values_only <= 0] = 0 + 0j
-    kolm_sinai_entropy = np.sum(positive_e_values_only.real, axis=0)
+    kolm_sinai_entropy = sh_utils.get_kolm_sinai_entropy(e_value_collection)
 
     # Plot normalised sum of eigenvalues
     plt.figure()

@@ -553,6 +553,7 @@ class StandardPlottingArgParser:
             "plot_kwargs"
         )
         plot_kwargs_parser.add_argument("--display_type", type=str)
+        plot_kwargs_parser.add_argument("--mark_pert_start", action="store_true")
 
 
 class VerificationArgParser:

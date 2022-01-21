@@ -41,6 +41,7 @@ if cfg.MODEL == Models.SHELL_MODEL:
     import shell_model_experiments.plotting.plot_data as sh_plot
     import shell_model_experiments.utils.util_funcs as sh_utils
     import shell_model_experiments.utils.special_params as sh_sparams
+    import shell_model_experiments.perturbations.normal_modes as sh_nm_estimator
     from shell_model_experiments.params.params import PAR as PAR_SH
     from shell_model_experiments.params.params import ParamsStructType
 
@@ -49,6 +50,7 @@ if cfg.MODEL == Models.SHELL_MODEL:
 elif cfg.MODEL == Models.LORENTZ63:
     import lorentz63_experiments.params.params as l63_params
     import lorentz63_experiments.params.special_params as l63_sparams
+    import lorentz63_experiments.perturbations.normal_modes as l63_nm_estimator
     import lorentz63_experiments.plotting.plot_data as l63_plot
 
     params = l63_params
@@ -495,7 +497,7 @@ def plot_characteristic_value_vs_time(args: dict, axes: plt.Axes = None):
         (
             _,
             characteristic_values,
-            _,
+            u_init_profiles,
             eval_pos,
             header_dicts,
         ) = pt_import.import_perturb_vectors(args, raw_perturbations=raw_perturbations)
@@ -506,78 +508,146 @@ def plot_characteristic_value_vs_time(args: dict, axes: plt.Axes = None):
         #     characteristic_values, norm_value=1, axis=1
         # )
 
-        if args["display_type"] == "all":
-            array_to_plot: np.ndarray = normed_characteristic_values.real
-        elif args["display_type"] == "quantile":
-            quantiled_char_values = np.quantile(
-                normed_characteristic_values, [1 / 4, 1 / 2, 3 / 4], axis=1
+        array_to_plot = prepare_char_values_to_plot(args, normed_characteristic_values)
+
+        # Only make eval_times array once
+        if i == 0:
+            eval_times = np.array(eval_pos, dtype=np.float64) * params.stt
+
+        vector_type = folder_path.name.split("_vectors")[0]
+        subplot_routine_characteristic_value_vs_time(
+            axes, array_to_plot, eval_times, vector_type
+        )
+
+    if "nm" in args["perturbations"]:
+        # Prepare u_init_profiles
+        u_init_profiles = u_init_profiles[
+            :,
+            np.s_[
+                0 : args["n_profiles"]
+                * args["n_runs_per_profile"] : args["n_runs_per_profile"]
+            ],
+        ]
+
+        # Get eigen values
+        if cfg.MODEL == Models.SHELL_MODEL:
+            _, _, e_value_collection = sh_nm_estimator.find_normal_modes(
+                u_init_profiles,
+                args,
+                dev_plot_active=False,
+                local_ny=header_dicts[0]["ny"],
             )
-            # Lower quantile
-            # lower_boolean = (
-            #     normed_characteristic_values <= quantiled_char_values[0, :][:, np.newaxis]
-            # )
-            # n_lower_values = np.unique(np.sum(lower_boolean, axis=1))
-            # if n_lower_values.size > 1:
-            #     raise ValueError("More than one unique value in lower_boolean array")
-
-            # lower_quantile = normed_characteristic_values[lower_boolean].reshape(
-            #     (-1, n_lower_values[0])
-            # )
-
-            # # Middle quantile
-            # middle_boolean = np.logical_and(
-            #     quantiled_char_values[1, :][:, np.newaxis] >= normed_characteristic_values,
-            #     normed_characteristic_values > quantiled_char_values[0, :][:, np.newaxis],
-            # )
-            # n_middle_values = np.unique(np.sum(middle_boolean, axis=1))
-            # if n_middle_values.size > 1:
-            #     raise ValueError("More than one unique value in middle_boolean array")
-
-            # middle_quantile = normed_characteristic_values[middle_boolean].reshape(
-            #     (-1, n_middle_values[0])
-            # )
-
-            # # Upper quantile
-            # upper_boolean = (
-            #     normed_characteristic_values > quantiled_char_values[1, :][:, np.newaxis]
-            # )
-            # n_upper_values = np.unique(np.sum(upper_boolean, axis=1))
-            # if n_upper_values.size > 1:
-            #     raise ValueError("More than one unique value in upper_boolean array")
-            # upper_quantile = normed_characteristic_values[upper_boolean].reshape(
-            #     (-1, n_upper_values[0])
-            # )
-
-            array_to_plot = np.empty((args["n_profiles"], 3), dtype=np.float64)
-            array_to_plot[:, 0] = quantiled_char_values[2, :].real
-            array_to_plot[:, 1] = quantiled_char_values[1, :].real
-            array_to_plot[:, 2] = quantiled_char_values[0, :].real
-        elif args["display_type"] == "specific":
-            array_to_plot = np.empty((args["n_profiles"], 3), dtype=np.float64)
-            array_to_plot[:, 0] = normed_characteristic_values[:, 0].real
-            array_to_plot[:, 1] = normed_characteristic_values[:, 9].real
-            array_to_plot[:, 2] = normed_characteristic_values[:, -1].real
-        else:
-            raise ValueError(
-                f"Invalid display_type choice; display_type={args['display_type']}"
+        elif cfg.MODEL == Models.LORENTZ63:
+            _, _, _, e_value_collection = l63_nm_estimator.find_normal_modes(
+                u_init_profiles,
+                args,
+                n_profiles=args["n_profiles"],
             )
 
-        # Prepare cmap for SVs
-        cmap = g_plt_utils.set_color_cycle_for_vectors(
+        e_value_collection = np.array(e_value_collection, dtype=np.complex128)
+        kolm_sinai_entropy = sh_utils.get_kolm_sinai_entropy(e_value_collection, axis=1)
+        cumsum_char_values = np.cumsum(e_value_collection.real, axis=1)
+        normed_characteristic_values = (
+            cumsum_char_values
+            / np.max(cumsum_char_values)
+            # / kolm_sinai_entropy[:, np.newaxis]
+        )
+
+        array_to_plot = prepare_char_values_to_plot(
+            args, normed_characteristic_values[:, : args["n_runs_per_profile"]]
+        )
+
+        # nm_axes = axes.twinx()
+        subplot_routine_characteristic_value_vs_time(
             axes,
-            vector_type=folder_path.name.split("_vectors")[0],
-            n_vectors=array_to_plot.shape[1],
-        )
-
-        axes.plot(
-            np.array(eval_pos, dtype=np.float64) * params.stt,
             array_to_plot,
-            label=folder_path.name,
+            eval_times,
+            vector_type="nm",
+        )
+        # nm_axes.set_ylabel("Cummulative char. value")
+        # nm_axes.set_ylim(0, 1)
+        # nm_axes.legend()
+
+    axes.set_xlabel("Time")
+    axes.set_ylabel("Normalized char. value")
+    axes.set_yscale("log")
+
+    title = g_plt_utils.generate_title(
+        args,
+        header_dict=header_dicts[0],
+        title_header="Characteristic values vs time",
+        title_suffix=f"display: {args['display_type']} real",
+        detailed=False,
+    )
+    axes.set_title(title)
+    axes.legend()
+
+    return eval_times
+
+
+def subplot_routine_characteristic_value_vs_time(
+    axes, array_to_plot, eval_times, vector_type="sv"
+):
+    # Prepare cmap for vectors
+    _ = g_plt_utils.set_color_cycle_for_vectors(
+        axes,
+        vector_type=vector_type,
+        n_vectors=array_to_plot.shape[1],
+    )
+
+    lines = axes.plot(
+        eval_times,
+        array_to_plot,
+    )
+    lines[0].set_linestyle("dashed")
+    lines[1].set_label(vector_type)
+    lines[-1].set_linestyle("dashed")
+
+
+def prepare_char_values_to_plot(args, normed_characteristic_values):
+    if args["display_type"] == "all":
+        array_to_plot: np.ndarray = normed_characteristic_values.real
+    elif args["display_type"] == "quantile":
+        quantiled_char_values = np.quantile(
+            normed_characteristic_values, [1 / 4, 1 / 2, 3 / 4], axis=1
+        )
+        array_to_plot = np.empty((args["n_profiles"], 5), dtype=np.float64)
+        array_to_plot[:, 0] = normed_characteristic_values[:, 0].real
+        array_to_plot[:, 1] = quantiled_char_values[2, :].real
+        array_to_plot[:, 2] = quantiled_char_values[1, :].real
+        array_to_plot[:, 3] = quantiled_char_values[0, :].real
+        array_to_plot[:, 4] = normed_characteristic_values[:, -1].real
+    elif args["display_type"] == "specific":
+        array_to_plot = np.empty((args["n_profiles"], 3), dtype=np.float64)
+        array_to_plot[:, 0] = normed_characteristic_values[:, 0].real
+        array_to_plot[:, 1] = normed_characteristic_values[:, 9].real
+        array_to_plot[:, 2] = normed_characteristic_values[:, -1].real
+    else:
+        raise ValueError(
+            f"Invalid display_type choice; display_type={args['display_type']}"
         )
 
-        axes.set_xlabel("Time")
-        axes.set_ylabel("Normalized char. value")
-        axes.set_yscale("log")
+    return array_to_plot
+
+
+def plot_char_value_vs_time_with_ref_flow(args: dict, axes: np.ndarray = None):
+
+    if axes is None:
+        fig, axes = plt.subplots(nrows=2, ncols=1, sharex=True)
+
+    eval_times = plot_characteristic_value_vs_time(args, axes=axes[0])
+
+    args["ref_start_time"] = np.min(eval_times)
+    args["ref_end_time"] = np.max(eval_times)
+
+    if cfg.MODEL == Models.SHELL_MODEL:
+        sh_plot.plot_energy(
+            args,
+            axes=axes[1],
+            plot_args=[],
+        )
+    elif cfg.MODEL == Models.LORENTZ63:
+        l63_plot.plot_energy(args, axes=axes[1])
 
 
 if __name__ == "__main__":
@@ -610,7 +680,7 @@ if __name__ == "__main__":
     elif "exp_growth_rate_compare" in args["plot_type"]:
         plot_exp_growth_rate_comparison(args)
     elif "char_values_compare" in args["plot_type"]:
-        plot_characteristic_value_vs_time(args)
+        plot_char_value_vs_time_with_ref_flow(args)
     else:
         raise ValueError("No valid plot type given as input argument")
 

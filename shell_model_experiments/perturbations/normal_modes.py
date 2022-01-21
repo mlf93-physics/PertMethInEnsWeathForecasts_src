@@ -83,19 +83,13 @@ def find_normal_modes(
 
         e_values, e_vectors = np.linalg.eig(J_matrix)
 
+        sort_index = np.argsort(e_values.real)[::-1]
+        e_vectors = e_vectors[:, sort_index]
+        e_values = e_values[sort_index]
+        e_vector_matrix[:, i] = e_vectors[:, 0]
+
         e_vector_collection.append(e_vectors)
         e_value_collection.append(e_values)
-
-        # positive_e_values_indices = np.argwhere(e_values.real > 0)
-        chosen_e_value_index = np.argmax(e_values.real)
-
-        e_vector_matrix[:, i] = e_vectors[:, chosen_e_value_index]
-
-        # if dev_plot_active:
-        #     print('Largest positive eigenvalue', e_values[chosen_e_value_index])
-
-        #     dev_plot_eigen_mode_analysis(e_values, J_matrix, e_vectors,
-        #         header=header, perturb_pos=perturb_positions[i])
 
     return e_vector_matrix, e_vector_collection, e_value_collection
 
