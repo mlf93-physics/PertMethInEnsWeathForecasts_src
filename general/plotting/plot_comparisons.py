@@ -182,7 +182,7 @@ def plt_pert_components(args: dict, axes: plt.Axes = None):
     axes.set_xlabel("Shell index, i")
     axes.set_ylabel("$\\langle|v_i|\\rangle$")
     axes.set_yscale("log")
-    # axes.set_ylim(1e-4, None)
+    axes.set_ylim(1e-4, 1)
     axes.set_title(title)
     axes.legend()
 
@@ -453,7 +453,7 @@ def plot_exp_growth_rate_comparison(args: dict):
             color=color,  # cmap_list[i],
             # zorder=zorder,
             linestyle=linestyle,
-            anal_type="instant",
+            anal_type="mean",
             plot_args=[],
             title_suffix=str(folder_path.parent),
         )
@@ -545,11 +545,11 @@ def plot_characteristic_value_vs_time(args: dict, axes: plt.Axes = None):
             )
 
         e_value_collection = np.array(e_value_collection, dtype=np.complex128)
-        kolm_sinai_entropy = sh_utils.get_kolm_sinai_entropy(e_value_collection, axis=1)
-        cumsum_char_values = np.cumsum(e_value_collection.real, axis=1)
+        # kolm_sinai_entropy = sh_utils.get_kolm_sinai_entropy(e_value_collection, axis=1)
+        # cumsum_char_values = np.cumsum(e_value_collection.real, axis=1)
         normed_characteristic_values = (
-            cumsum_char_values
-            / np.max(cumsum_char_values)
+            e_value_collection.real
+            / np.max(e_value_collection.real)
             # / kolm_sinai_entropy[:, np.newaxis]
         )
 

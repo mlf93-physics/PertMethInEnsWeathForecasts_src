@@ -508,7 +508,7 @@ def get_rand_field_perturbations(
             rand_field_diffs[:, i] = (
                 u_data_rand_field1[sparams.u_slice, i]
                 - u_data_rand_field2[sparams.u_slice, i]
-            ) / norm_mean_u_data.ravel()
+            )  # / norm_mean_u_data.ravel()
 
     elif cfg.MODEL == Models.LORENTZ63:
         # Calculate rand_field diffs

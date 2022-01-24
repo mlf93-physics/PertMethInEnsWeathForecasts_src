@@ -5,10 +5,10 @@ Example
 python plotting/plot_perturbations.py --plot_type=<>
 
 """
-
 import sys
 
 sys.path.append("..")
+import pathlib as pl
 import matplotlib.pyplot as plt
 from lorentz63_experiments.params.params import *
 import general.utils.arg_utils as a_utils
@@ -27,7 +27,7 @@ cfg.GLOBAL_PARAMS.record_max_time = 3000
 def plot_pert_vectors(args, axes: plt.Axes = None):
 
     if axes is None:
-        axes = plt.axes()
+        fig, axes = plt.subplots(nrows=1, ncols=1)
 
     e_utils.update_compare_exp_folders(args)
 
@@ -129,7 +129,10 @@ def plot_pert_vectors(args, axes: plt.Axes = None):
     )
 
     title = g_plt_utils.generate_title(
-        args, title_header="Perturbation Vectors", detailed=False
+        args,
+        title_header="Perturbation Vectors",
+        detailed=False,
+        title_suffix=f"time={perturb_positions[0] * stt:.2f}",
     )
 
     axes.set_xlabel("x")
@@ -141,6 +144,14 @@ def plot_pert_vectors(args, axes: plt.Axes = None):
     plt.ticklabel_format(axis="x", style="sci", scilimits=(0, 0))
     plt.ticklabel_format(axis="y", style="sci", scilimits=(0, 0))
     axes.legend(loc="center right", bbox_to_anchor=(1.35, 0.5))
+
+    g_plt_utils.save_figure(
+        subpath=pl.Path(
+            "lorentz63_experiments/compare_perturbations/perturbation_vectors_offset0.01_series/"
+        ),
+        file_name=f"compare_perturbation_vectors_time{perturb_positions[0] * stt:.2f}",
+        fig=fig,
+    )
 
 
 if __name__ == "__main__":

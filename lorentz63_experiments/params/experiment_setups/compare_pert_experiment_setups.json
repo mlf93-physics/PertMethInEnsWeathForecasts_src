@@ -32,34 +32,35 @@
     },
     "CompareRunTTR0.1": {
         "general": {
-            "folder_name": "compare_pert_ttr1.0_n_units1000_bv_bv_eof_ncycles2_nvectors20",
+            "folder_name": "compare_pert_ttr0.1_offset0.01",
             "vector_folder": "vectors",
             "perturbation_folder": "perturbations",
             "sub_exp_folder": "perturb_data",
             "eval_times": [
-                10
+                6003.5
             ],
-            "n_units": 1000,
-            "unit_offset": 1.0
+            "n_units": 10,
+            "unit_offset": 0.01,
+            "vector_offset": 0.01
         },
         "bv_gen_setup": {
             "sub_exp_folder": "perturb_data",
-            "integration_time": 0.05,
-            "n_cycles": 2,
-            "n_vectors": 20
+            "integration_time": 0.1,
+            "n_cycles": 4,
+            "n_vectors": 8
         },
         "bv_eof_gen_setup": {
             "sub_exp_folder": "perturb_data",
             "n_vectors": 3
         },
         "sv_gen_setup": {
-            "integration_time": 1.0,
+            "integration_time": 0.1,
             "n_vectors": 3,
             "n_lanczos_iterations": 1,
             "n_model_iterations": 1
         },
         "pert_setup": {
-            "time_to_run": 1.0
+            "time_to_run": 0.1
         }
     },
     "TestRun2": {

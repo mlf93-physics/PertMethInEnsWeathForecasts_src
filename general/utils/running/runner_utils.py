@@ -114,8 +114,8 @@ def generate_start_times(exp_setup: dict, args: dict):
         else:
             raise ValueError("Could not infer time_to_run from experiment setup")
 
-        # Determine precision of time
-        _precision = decimal.Decimal(str(_time_to_run)).as_tuple().exponent
+        # Determine precision of time using offset_var
+        _precision = decimal.Decimal(str(exp_setup[offset_var])).as_tuple().exponent
 
         num_possible_units = int(
             (ref_header_dict["time_to_run"] - _time_offset) // exp_setup[offset_var]

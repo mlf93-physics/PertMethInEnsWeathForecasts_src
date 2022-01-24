@@ -552,8 +552,19 @@ class StandardPlottingArgParser:
         plot_kwargs_parser: argparse.ArgumentParser = sub_parser.add_parser(
             "plot_kwargs"
         )
-        plot_kwargs_parser.add_argument("--display_type", type=str)
-        plot_kwargs_parser.add_argument("--mark_pert_start", action="store_true")
+        plot_kwargs_parser.add_argument(
+            "--display_type", type=str, help="Used to determine how a plot is displayed"
+        )
+        plot_kwargs_parser.add_argument(
+            "--mark_pert_start",
+            action="store_true",
+            help="Used to mark perturbation start times on e.g. energy plot",
+        )
+        plot_kwargs_parser.add_argument(
+            "--ref_highlight",
+            action="store_true",
+            help="L63: Used to make a highlight plot of a specific area of the attractor",
+        )
 
 
 class VerificationArgParser:

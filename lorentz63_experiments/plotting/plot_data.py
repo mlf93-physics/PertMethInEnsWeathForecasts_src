@@ -49,31 +49,69 @@ def plot_attractor(args, ax=None):
 
     # split_attractor_in_wings(u_data, axes=ax)
 
+    if "ref_highlight" in args:
+        if args["ref_highlight"]:
+            plot_style = "r-"
+            linewidth = 2
+
+            # Add start_point
+            ax.plot3D(
+                u_data[0, 0],
+                u_data[0, 1],
+                u_data[0, 2],
+                "ro",
+                zorder=10,
+            )
+    else:
+        plot_style = "k-"
+        linewidth = 0.5
+
     # Plot
     ax.plot3D(
         u_data[:, 0],
         u_data[:, 1],
         u_data[:, 2],
-        "k-",
+        plot_style,
         alpha=1,
-        linewidth=0.5,
+        linewidth=linewidth,
+        zorder=10,
     )
-    ax.plot3D(
-        u_data[wing_indices1, 0],
-        u_data[wing_indices1, 1],
-        u_data[wing_indices1, 2],
-        "b.",
-        alpha=0.5,
-        # linewidth=0.5,
-    )
-    ax.plot3D(
-        u_data[wing_indices2, 0],
-        u_data[wing_indices2, 1],
-        u_data[wing_indices2, 2],
-        "r.",
-        alpha=0.5,
-        # linewidth=0.5,
-    )
+
+    if "ref_highlight" in args:
+        if args["ref_highlight"]:
+            # Plot some of the attractor in the background
+            args["ref_start_time"] = args["ref_start_time"] - 50
+            args["ref_end_time"] = args["ref_end_time"] + 50
+            time, u_data, header_dict = g_import.import_ref_data(args=args)
+
+            plot_style = "k-"
+
+            ax.plot3D(
+                u_data[:, 0],
+                u_data[:, 1],
+                u_data[:, 2],
+                plot_style,
+                alpha=1,
+                linewidth=0.5,
+                zorder=0,
+            )
+
+    # ax.plot3D(
+    #     u_data[wing_indices1, 0],
+    #     u_data[wing_indices1, 1],
+    #     u_data[wing_indices1, 2],
+    #     "b.",
+    #     alpha=0.5,
+    #     # linewidth=0.5,
+    # )
+    # ax.plot3D(
+    #     u_data[wing_indices2, 0],
+    #     u_data[wing_indices2, 1],
+    #     u_data[wing_indices2, 2],
+    #     "r.",
+    #     alpha=0.5,
+    #     # linewidth=0.5,
+    # )
 
     ax.set_xlabel("x")
     ax.set_ylabel("y")
@@ -357,11 +395,11 @@ if __name__ == "__main__":
     if "time_to_run" in args:
         args["Nt"] = int(args["time_to_run"] / dt * sample_rate)
 
-    if "attractor_plot" in args["plot_type"]:
+    if "attractor" in args["plot_type"]:
         plot_attractor(args)
-    elif "velocity_plot" in args["plot_type"]:
+    elif "velocity" in args["plot_type"]:
         plot_velocities(args)
-    elif "energy_plot" in args["plot_type"]:
+    elif "energy" in args["plot_type"]:
         plot_energy(args)
     elif "error_norm" in args["plot_type"]:
         plot_error_norm_vs_time(args)

@@ -59,7 +59,7 @@
     },
     "CompareLowPredRegime0.01": {
         "general": {
-            "folder_name": "compare_bvs",
+            "folder_name": "compare_bvs_low_pred",
             "vector_folder": "vectors",
             "perturbation_folder": "perturbations",
             "sub_exp_folder": "perturb_data",
@@ -90,24 +90,24 @@
     },
     "CompareHighPredRegime0.01": {
         "general": {
-            "folder_name": "compare_pert_high_pred_regimes",
+            "folder_name": "compare_bvs_high_pred",
             "vector_folder": "vectors",
             "perturbation_folder": "perturbations",
             "sub_exp_folder": "perturb_data",
             "eval_times": [
                 11.5
             ],
-            "n_units": 100,
+            "n_units": 90,
             "unit_offset": 0.01
         },
         "bv_gen_setup": {
             "integration_time": 0.01,
             "n_cycles": 4,
-            "n_vectors": 8
+            "n_vectors": 20
         },
         "bv_eof_gen_setup": {
             "sub_exp_folder": "perturb_data",
-            "n_vectors": 3
+            "n_vectors": 20
         },
         "sv_gen_setup": {
             "integration_time": 0.01,
