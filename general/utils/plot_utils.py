@@ -199,7 +199,7 @@ def generate_title(
                 + f', time={header_dict["time_to_run"]}, '
             )
 
-    model_addon = f"{str(cfg.MODEL)}"
+    model_addon = f"{str(cfg.MODEL)}, "
 
     # Add prefixes
     title = title_header + " | " + model_addon + title
