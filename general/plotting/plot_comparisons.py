@@ -388,6 +388,95 @@ def plot_error_norm_comparison(args: dict):
         l63_plot.plot_energy(args, axes=axes[1])
 
 
+def plot_RMSE_and_spread_comparison(args: dict):
+    fig, axes = plt.subplots(nrows=1, ncols=1, sharex=True)
+
+    args["endpoint"] = True
+
+    e_utils.update_compare_exp_folders(args)
+
+    cmap_list = plt.rcParams["axes.prop_cycle"].by_key()["color"]
+
+    line_counter = 0
+    perturb_type_old = ""
+    color_counter = 0
+    perturb_type_u_store = []
+    len_folders = len(args["exp_folders"])
+    pert_type_change_counter = 0
+
+    for i, folder in enumerate(args["exp_folders"]):
+        folder_path = pl.Path(folder)
+        perturb_type = folder_path.name.split("_perturbations")[0]
+        perturb_type = "".join(i for i in perturb_type if not i.isdigit())
+
+        # Try to get next folder
+        try:
+            next_folder_path = pl.Path(args["exp_folders"][i + 1])
+            next_perturb_type = next_folder_path.name.split("_perturbations")[0]
+            next_perturb_type = "".join(i for i in next_perturb_type if not i.isdigit())
+        except IndexError:
+            next_folder_path = None
+            next_perturb_type = None
+
+        # Set exp_folder
+        args["exp_folder"] = folder
+
+        (
+            u_stores,
+            perturb_time_pos_list,
+            perturb_time_pos_list_legend,
+            header_dicts,
+            u_ref_stores,
+        ) = g_import.import_perturbation_velocities(
+            args, search_pattern="*perturb*.csv"
+        )
+
+        perturb_type_u_store.append(u_stores)
+
+        if next_perturb_type != perturb_type or i + 1 == len_folders:
+            perturb_type_u_store_array = np.array(
+                perturb_type_u_store, dtype=sparams.dtype
+            )
+
+            # plt.plot(np.linalg.norm(perturb_type_u_store_array[0, 15, :, :], axis=1))
+
+            n_profiles = np.unique(perturb_time_pos_list).size
+            print("n_profiles", n_profiles)
+
+            if perturb_type_u_store_array.shape[1] != n_profiles:
+                # Reshape array to separate profiles
+                perturb_type_u_store_array = np.reshape(
+                    perturb_type_u_store_array,
+                    (-1, n_profiles, int(header_dicts[0]["N_data"]), params.sdim),
+                )
+                # Transpose to have n_profiles at index 0
+                perturb_type_u_store_array = np.transpose(
+                    perturb_type_u_store_array, [1, 0, 2, 3]
+                )
+            print("perturb_type_u_store_array", perturb_type_u_store_array.shape)
+            print("perturb_time_pos_list", perturb_time_pos_list)
+            # plt.plot(np.linalg.norm(perturb_type_u_store_array[5, 1, :, :], axis=1))
+            # plt.show()
+
+            perturb_type_u_store = []
+
+            g_plt_data.plot_RMSE_and_spread(
+                perturb_type_u_store_array,
+                args,
+                header_dict=header_dicts[0],
+                axes=axes,
+                label=perturb_type,
+            )
+
+    #     lines: list = list(axes.get_lines())
+    #     lines[line_counter].set_label(str(pl.Path(folder).name))
+
+    #     len_lines = len(lines)
+    #     line_counter += len_lines - line_counter
+
+    # axes.legend()
+
+
 def plot_exp_growth_rate_comparison(args: dict):
     """Plots a comparison of the exponential growth rates vs time for the different
     perturbation methods
@@ -677,6 +766,8 @@ if __name__ == "__main__":
         plt_BV_LYAP_vector_comparison(args)
     elif "error_norm_compare" in args["plot_type"]:
         plot_error_norm_comparison(args)
+    elif "rmse_spread_compare" in args["plot_type"]:
+        plot_RMSE_and_spread_comparison(args)
     elif "exp_growth_rate_compare" in args["plot_type"]:
         plot_exp_growth_rate_comparison(args)
     elif "char_values_compare" in args["plot_type"]:

@@ -280,6 +280,66 @@ def plot_error_norm_vs_time(
     return axes
 
 
+def plot_RMSE_and_spread(
+    data_array: np.ndarray,
+    args: dict = None,
+    header_dict: List[dict] = None,
+    axes: plt.Axes = None,
+    exp_setup=None,
+    linestyle: str = "-",
+    linewidth: float = 2,
+    zorder: float = 0.0,
+    cmap_list: Union[None, list] = None,
+    legend_on: bool = True,
+    label: str = "",
+    detailed_title: bool = False,
+):
+
+    rmse_vs_time, spread_vs_time = g_a_data.analyse_RMSE_and_spread_vs_time(
+        data_array, args=args
+    )
+
+    time_array = np.linspace(
+        0,
+        header_dict["time_to_run"],
+        int(header_dict["time_to_run"] * params.tts) + args["endpoint"] * 1,
+        dtype=np.float64,
+        endpoint=args["endpoint"],
+    )
+
+    rmse_plot = axes.plot(
+        time_array,
+        rmse_vs_time,
+        linestyle=linestyle,
+        linewidth=linewidth,
+        zorder=zorder,
+        label=label,
+    )
+
+    axes.plot(
+        time_array,
+        spread_vs_time,
+        linestyle="dashed",
+        zorder=zorder,
+        color=rmse_plot[0].get_color(),
+    )
+
+    title = g_plt_utils.generate_title(
+        args,
+        header_dict=header_dict,
+        title_header="Average RMSE and ensemble spread vs time",
+        detailed=detailed_title,
+    )
+
+    axes.set_xlabel("Time")
+    axes.set_ylabel("RMSE and ensemble spread")
+    axes.set_title(title)
+
+    if legend_on:
+        axes.legend()
+    axes.set_yscale("log")
+
+
 def plot_energy(
     args,
     axes=None,

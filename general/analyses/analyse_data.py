@@ -1,17 +1,23 @@
 import config as cfg
-import lorentz63_experiments.params.params as l63_params
 import general.utils.util_funcs as g_utils
 import general.utils.importing.import_data_funcs as g_import
 import numpy as np
 from general.params.model_licences import Models
 from general.utils.module_import.type_import import *
-from shell_model_experiments.params.params import PAR as PAR_SH
-from shell_model_experiments.params.params import ParamsStructType
 
 # Get parameters for model
 if cfg.MODEL == Models.SHELL_MODEL:
+    from shell_model_experiments.params.params import PAR as PAR_SH
+    from shell_model_experiments.params.params import ParamsStructType
+    import shell_model_experiments.utils.special_params as sh_sparams
+
+    sparams = sh_sparams
     params = PAR_SH
 elif cfg.MODEL == Models.LORENTZ63:
+    import lorentz63_experiments.params.params as l63_params
+    import lorentz63_experiments.params.special_params as l63_sparams
+
+    sparams = l63_sparams
     params = l63_params
 
 
@@ -81,6 +87,39 @@ def analyse_error_spread_vs_time_mean_of_norm(u_stores, args=None):
     error_spread = np.sqrt(np.mean(error_spread, axis=0))
 
     return error_spread
+
+
+def analyse_RMSE_and_spread_vs_time(data_array: np.ndarray, args: dict):
+    """Analyse the RMSE of the ensemble mean and the spread of the ensemble members
+    around the mean
+
+    Parameters
+    ----------
+    data_array : np.ndarray((n_runs_per_profile, n_profiles, n_datapoints, sdim))
+        The data array containing data for multiple ensembles made from same perturbation type
+    args : dict
+        Run-time arguments
+
+    Returns
+    -------
+    [type]
+        [description]
+    """
+    print("data_array norm", np.linalg.norm(data_array[:, 0, 0, :], axis=1))
+    print("data_array", data_array.shape)
+    ens_mean = np.mean(data_array, axis=0)
+
+    print("ens_mean", ens_mean.shape)
+    print("ens_mean norm", np.linalg.norm(ens_mean[0, 0, :]))
+
+    spread_array = np.std(data_array - np.expand_dims(ens_mean, axis=0), axis=0)
+    mean_spread_array = np.abs(np.mean(np.mean(spread_array, axis=2), axis=0))
+
+    mean_RMSE_array = np.sqrt(
+        np.mean(np.mean(ens_mean * ens_mean.conj(), axis=0), axis=1).real
+    )
+
+    return mean_RMSE_array, mean_spread_array
 
 
 def analyse_mean_exp_growth_rate_vs_time(
