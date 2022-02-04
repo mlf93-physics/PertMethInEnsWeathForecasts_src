@@ -136,6 +136,15 @@ def analyse_mean_exp_growth_rate_vs_time(
         An array consisting of one or more error norm vs time dataseries
     args : dict, optional
         Run-time arguments, by default None
+
+    Returns
+    -------
+    Tuple[np.ndarray, np.ndarray]
+    (
+        mean_growth_rate : The average exponential growth rate across all profiles
+        profile_mean_growth_rates : The average exponential growth rate for each profile individually
+    )
+
     """
     n_datapoints, n_perturbations = error_norm_vs_time.shape
     growth_rates = np.empty((n_datapoints - 1, n_perturbations), dtype=np.float64)
@@ -173,7 +182,7 @@ def analyse_mean_exp_growth_rate_vs_time(
     # Average all profiles
     mean_growth_rate = np.mean(profile_mean_growth_rates, axis=1)
 
-    return mean_growth_rate
+    return mean_growth_rate, profile_mean_growth_rates
 
 
 def execute_mean_exp_growth_rate_vs_time_analysis(

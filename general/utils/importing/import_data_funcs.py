@@ -410,6 +410,7 @@ def import_perturbation_velocities(
                 raise g_exceptions.InvalidRuntimeArgument(argument="shell_cutoff")
 
     u_stores = []
+    u_ref_stores = []
     returned_perturb_header_dicts = []
 
     if args["datapath"] is None:
@@ -527,10 +528,10 @@ def import_perturbation_velocities(
 
         # If perturb positions are the same for all perturbations, return
         # ref_data_in too
-        if np.unique(perturb_time_pos_list).size == 1:
-            u_ref_stores = [ref_data_in[:, 1:]]
-        else:
-            u_ref_stores = None
+        # if np.unique(perturb_time_pos_list).size == 1:
+        u_ref_stores.append(ref_data_in[:, 1:])
+        # else:
+        #     u_ref_stores = None
 
         if args["n_files"] is not None:
             if iperturb_file + 1 - args["file_offset"] >= args["n_files"]:

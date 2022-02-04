@@ -9,21 +9,133 @@ import sys
 
 sys.path.append("..")
 import pathlib as pl
+import math
 import matplotlib.pyplot as plt
 from lorentz63_experiments.params.params import *
 import general.utils.arg_utils as a_utils
+from general.utils.module_import.type_import import *
 from general.plotting.plot_params import *
 import general.utils.running.runner_utils as r_utils
 import general.utils.experiments.exp_utils as e_utils
 import general.utils.importing.import_data_funcs as g_import
 import general.utils.plot_utils as g_plt_utils
-import general.utils.util_funcs as g_utils
+import general.analyses.analyse_data as g_anal
 import general.utils.argument_parsers as a_parsers
 import general.utils.user_interface as g_ui
 from libs.libutils import type_utils as lib_type_utils
 import config as cfg
 
 cfg.GLOBAL_PARAMS.record_max_time = 3000
+
+
+def plot_mean_exp_growth_rate_distribution(args: dict):
+    """Plot the distribution of the exp growth rates across the L63 attractor
+
+    Due to the way the import of data is set up, you need to run with sv or bv_eof
+    preceeding any other perturbations, i.e. -pt sv rd instead of -pt rd
+
+    Parameters
+    ----------
+    args : dict
+        Run-time arguments
+    """
+
+    e_utils.update_compare_exp_folders(args)
+
+    len_folders = len(args["exp_folders"])
+    num_subplot_rows = math.floor(len_folders / 2) + 1
+    num_subplot_cols = math.ceil(len_folders / num_subplot_rows)
+
+    # fig: plt.Figure = plt.figure()
+    fig, axes = plt.subplots(
+        num_subplot_cols,
+        num_subplot_rows,
+        subplot_kw=dict(projection="3d"),
+    )
+    axes = axes.ravel()
+
+    # args["n_files"] = args["n_profiles"]
+
+    max_exp_growth_rate = -np.inf
+    min_exp_growth_rate = np.inf
+    save_u_ref_stores = None
+
+    for i, folder in enumerate(args["exp_folders"]):
+        # Set exp_folder
+        args["exp_folder"] = folder
+
+        (
+            u_stores,
+            perturb_time_pos_list,
+            perturb_time_pos_list_legend,
+            header_dicts,
+            u_ref_stores,
+        ) = g_import.import_perturbation_velocities(
+            args, search_pattern="*perturb*.csv"
+        )
+        if i == 0:
+            save_u_ref_stores = np.array(u_ref_stores)
+
+        (
+            _,
+            profile_mean_growth_rates,
+        ) = g_anal.execute_mean_exp_growth_rate_vs_time_analysis(
+            args, u_stores, header_dicts=header_dicts, anal_type="mean"
+        )
+
+        temp_max_exp_growth_rate = np.max(profile_mean_growth_rates[-1, :])
+        temp_min_exp_growth_rate = np.min(profile_mean_growth_rates[-1, :])
+        max_exp_growth_rate = (
+            temp_max_exp_growth_rate
+            if temp_max_exp_growth_rate > max_exp_growth_rate
+            else max_exp_growth_rate
+        )
+        min_exp_growth_rate = (
+            temp_min_exp_growth_rate
+            if temp_min_exp_growth_rate < min_exp_growth_rate
+            else min_exp_growth_rate
+        )
+
+        # Prepare cmap and norm
+        cmap, norm = g_plt_utils.get_custom_cmap(
+            vmin=min_exp_growth_rate,
+            vmax=max_exp_growth_rate,
+            vcenter=(max_exp_growth_rate + min_exp_growth_rate) / 2,
+            cmap_handle=plt.cm.jet,
+        )
+
+        scatter_plot = axes[i].scatter(
+            save_u_ref_stores[:, 0, 0],
+            save_u_ref_stores[:, 0, 1],
+            save_u_ref_stores[:, 0, 2],
+            c=profile_mean_growth_rates[-1, :],
+            alpha=0.4,
+            zorder=5,
+            marker=".",
+            norm=norm,
+            cmap=cmap,
+        )
+        axes[i].set_title(pl.Path(folder).name.split("_perturbations")[0])
+        axes[i].xaxis.set_ticklabels([])
+        axes[i].yaxis.set_ticklabels([])
+        axes[i].zaxis.set_ticklabels([])
+
+    fig.subplots_adjust(right=0.8)
+    cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
+    fig.colorbar(scatter_plot, cax=cbar_ax)
+
+    # Remove leftover axes
+    for j in range(i + 1, len(axes)):
+        axes[j].remove()
+
+    title = g_plt_utils.generate_title(
+        args,
+        header_dict=header_dicts[0],
+        title_header="Mean exp. growth rate distribution",
+        detailed=False,
+        title_suffix=pl.Path(folder).parent.name,
+    )
+    fig.suptitle(title)
 
 
 def plot_pert_vectors3D(args: dict, axes: plt.Axes = None):
@@ -377,6 +489,8 @@ if __name__ == "__main__":
         plot_pert_vectors2D(args)
     elif "pert_vectors3D" in args["plot_type"]:
         plot_pert_vectors3D(args)
+    elif "growth_rate_dist":
+        plot_mean_exp_growth_rate_distribution(args)
     else:
         raise ValueError(f"No plot method present for plot_type={args['plot_type']}")
 
