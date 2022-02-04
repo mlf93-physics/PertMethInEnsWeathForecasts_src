@@ -316,13 +316,13 @@ def plot_RMSE_and_spread(
         label=label,
     )
 
-    axes.plot(
-        time_array,
-        spread_vs_time,
-        linestyle="dashed",
-        zorder=zorder,
-        color=rmse_plot[0].get_color(),
-    )
+    # axes.plot(
+    #     time_array,
+    #     spread_vs_time,
+    #     linestyle="dashed",
+    #     zorder=zorder,
+    #     color=rmse_plot[0].get_color(),
+    # )
 
     title = g_plt_utils.generate_title(
         args,

@@ -406,8 +406,8 @@ def plot_RMSE_and_spread_comparison(args: dict):
 
     for i, folder in enumerate(args["exp_folders"]):
         folder_path = pl.Path(folder)
-        perturb_type = folder_path.name.split("_perturbations")[0]
-        perturb_type = "".join(i for i in perturb_type if not i.isdigit())
+        perturb_type_w_digits = folder_path.name.split("_perturbations")[0]
+        perturb_type = "".join(i for i in perturb_type_w_digits if not i.isdigit())
 
         # Try to get next folder
         try:
@@ -433,40 +433,31 @@ def plot_RMSE_and_spread_comparison(args: dict):
 
         perturb_type_u_store.append(u_stores)
 
-        if next_perturb_type != perturb_type or i + 1 == len_folders:
-            perturb_type_u_store_array = np.array(
-                perturb_type_u_store, dtype=sparams.dtype
-            )
+        # if next_perturb_type != perturb_type or i + 1 == len_folders:
+        perturb_type_u_store_array = np.array(perturb_type_u_store, dtype=sparams.dtype)
 
-            # plt.plot(np.linalg.norm(perturb_type_u_store_array[0, 15, :, :], axis=1))
+        # plt.plot(np.linalg.norm(perturb_type_u_store_array[0, 14, :, :], axis=1))
 
-            n_profiles = np.unique(perturb_time_pos_list).size
-            print("n_profiles", n_profiles)
+        n_profiles = np.unique(perturb_time_pos_list).size
 
-            if perturb_type_u_store_array.shape[1] != n_profiles:
-                # Reshape array to separate profiles
-                perturb_type_u_store_array = np.reshape(
-                    perturb_type_u_store_array,
-                    (-1, n_profiles, int(header_dicts[0]["N_data"]), params.sdim),
-                )
-                # Transpose to have n_profiles at index 0
-                perturb_type_u_store_array = np.transpose(
-                    perturb_type_u_store_array, [1, 0, 2, 3]
-                )
-            print("perturb_type_u_store_array", perturb_type_u_store_array.shape)
-            print("perturb_time_pos_list", perturb_time_pos_list)
-            # plt.plot(np.linalg.norm(perturb_type_u_store_array[5, 1, :, :], axis=1))
-            # plt.show()
-
-            perturb_type_u_store = []
-
-            g_plt_data.plot_RMSE_and_spread(
+        if perturb_type_u_store_array.shape[1] != n_profiles:
+            # Reshape array to separate profiles
+            perturb_type_u_store_array = np.reshape(
                 perturb_type_u_store_array,
-                args,
-                header_dict=header_dicts[0],
-                axes=axes,
-                label=perturb_type,
+                (-1, n_profiles, int(header_dicts[0]["N_data"]), params.sdim),
             )
+        # plt.plot(np.linalg.norm(perturb_type_u_store_array[4, 1, :, :], axis=1))
+        # plt.show()
+
+        perturb_type_u_store = []
+
+        g_plt_data.plot_RMSE_and_spread(
+            perturb_type_u_store_array,
+            args,
+            header_dict=header_dicts[0],
+            axes=axes,
+            label=perturb_type_w_digits,
+        )
 
     #     lines: list = list(axes.get_lines())
     #     lines[line_counter].set_label(str(pl.Path(folder).name))
