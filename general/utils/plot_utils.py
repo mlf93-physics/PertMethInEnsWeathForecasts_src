@@ -215,7 +215,9 @@ def generate_title(
     title = title.rstrip(", ")
 
     # Wrap title
-    title = "\n".join(textwrap.wrap(title, 60))
+    title = "\n".join(
+        textwrap.wrap(title, 60, break_long_words=False, break_on_hyphens=False)
+    )
 
     return title
 

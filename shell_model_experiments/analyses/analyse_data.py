@@ -20,6 +20,27 @@ from shell_model_experiments.params.params import PAR, ParamsStructType
 cfg.GLOBAL_PARAMS.ref_run = False
 
 
+def get_eddy_turnovertime(u_store):
+    """Get eddy turnovertime from shell velocity data
+
+    Parameters
+    ----------
+    u_store : np.ndarray
+        The shell velocity data
+
+    Returns
+    -------
+    np.ndarray
+        The mean eddy turnover time
+    """
+    # Calculate mean eddy turnover time
+    mean_u_norm = np.mean(np.sqrt(u_store * np.conj(u_store)).real, axis=0)
+    mean_eddy_turnover = 2 * np.pi / (PAR.k_vec_temp * mean_u_norm)
+    print("mean_eddy_turnover", mean_eddy_turnover)
+
+    return mean_eddy_turnover
+
+
 def get_mean_energy(u_data: np.ndarray) -> np.ndarray:
     """Get mean energy from velocity data
 
