@@ -404,6 +404,11 @@ def plot_RMSE_and_spread_comparison(args: dict):
     len_folders = len(args["exp_folders"])
     pert_type_change_counter = 0
 
+    if not args["rmse_spread"]:
+        cmap_list, _ = g_plt_utils.get_non_repeating_colors(n_colors=len_folders)
+    else:
+        cmap_list = None
+
     for i, folder in enumerate(args["exp_folders"]):
         folder_path = pl.Path(folder)
         perturb_type_w_digits = folder_path.name.split("_perturbations")[0]
@@ -432,9 +437,17 @@ def plot_RMSE_and_spread_comparison(args: dict):
         )
 
         perturb_type_u_store.append(u_stores)
-
-        # if next_perturb_type != perturb_type or i + 1 == len_folders:
-        perturb_type_u_store_array = np.array(perturb_type_u_store, dtype=sparams.dtype)
+        if args["rmse_spread"]:
+            if next_perturb_type != perturb_type or i + 1 == len_folders:
+                perturb_type_u_store_array = np.array(
+                    perturb_type_u_store, dtype=sparams.dtype
+                )
+            else:
+                continue
+        else:
+            perturb_type_u_store_array = np.array(
+                perturb_type_u_store, dtype=sparams.dtype
+            )
 
         # plt.plot(np.linalg.norm(perturb_type_u_store_array[0, 14, :, :], axis=1))
 
@@ -456,7 +469,8 @@ def plot_RMSE_and_spread_comparison(args: dict):
             args,
             header_dict=header_dicts[0],
             axes=axes,
-            label=perturb_type_w_digits,
+            label=perturb_type_w_digits if args["rmse_spread"] else perturb_type,
+            color=cmap_list[i] if cmap_list is not None else None,
         )
 
     #     lines: list = list(axes.get_lines())

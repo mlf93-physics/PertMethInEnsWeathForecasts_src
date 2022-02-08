@@ -153,6 +153,10 @@ def plot_error_norm_vs_time(
         error_norm_vs_time,
         error_norm_mean_vs_time,
     ) = g_a_data.analyse_error_norm_vs_time(u_stores, args=args)
+
+    # reshaped_error_norm_vs_time = np.reshape(error_norm_vs_time, (-1, 6, 20))
+    # ens_mean_vs_time = np.mean(reshaped_error_norm_vs_time, axis=2)
+
     if args["plot_mode"] == "detailed":
         error_spread_vs_time = g_a_data.analyse_error_spread_vs_time_mean_of_norm(
             u_stores, args=args
@@ -221,6 +225,7 @@ def plot_error_norm_vs_time(
         linewidth=linewidth,
         zorder=zorder,
     )
+    # axes.plot(time_array[:, np.s_[0:121:20]], ens_mean_vs_time, zorder=20, color="k")
 
     # Set unique linestyle
     if "unique_linestyle" in plot_args:
@@ -289,7 +294,7 @@ def plot_RMSE_and_spread(
     linestyle: str = "-",
     linewidth: float = 2,
     zorder: float = 0.0,
-    cmap_list: Union[None, list] = None,
+    color=None,
     legend_on: bool = True,
     label: str = "",
     detailed_title: bool = False,
@@ -314,15 +319,17 @@ def plot_RMSE_and_spread(
         linewidth=linewidth,
         zorder=zorder,
         label=label,
+        color=color,
     )
 
-    # axes.plot(
-    #     time_array,
-    #     spread_vs_time,
-    #     linestyle="dashed",
-    #     zorder=zorder,
-    #     color=rmse_plot[0].get_color(),
-    # )
+    if args["rmse_spread"]:
+        axes.plot(
+            time_array,
+            spread_vs_time,
+            linestyle="dashed",
+            zorder=zorder,
+            color=rmse_plot[0].get_color(),
+        )
 
     title = g_plt_utils.generate_title(
         args,
@@ -337,7 +344,7 @@ def plot_RMSE_and_spread(
 
     if legend_on:
         axes.legend()
-    axes.set_yscale("log")
+    # axes.set_yscale("log")
 
 
 def plot_energy(

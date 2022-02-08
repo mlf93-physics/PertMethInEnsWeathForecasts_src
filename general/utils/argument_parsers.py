@@ -557,13 +557,21 @@ class StandardPlottingArgParser:
         )
         plot_kwargs_parser.add_argument(
             "--mark_pert_start",
-            action="store_true",
+            default=False,
+            type=bool,
             help="Used to mark perturbation start times on e.g. energy plot",
         )
         plot_kwargs_parser.add_argument(
             "--ref_highlight",
-            action="store_true",
+            default=False,
+            type=bool,
             help="L63: Used to make a highlight plot of a specific area of the attractor",
+        )
+
+        plot_kwargs_parser.add_argument(
+            "--rmse_spread",
+            action="store_true",
+            help="Used to enable plotting spread together with RMSE instead of only RMSE",
         )
 
 

@@ -172,7 +172,7 @@ def rd_pert_experiment(args: dict, local_exp_setup: dict):
     processes = []
 
     # Prepare arguments for perturbation run
-    args["n_runs_per_profile"] = 3
+    args["n_runs_per_profile"] = local_exp_setup["n_runs_per_profile"]
     args["pert_mode"] = "rd"
     args["out_exp_folder"] = pl.Path(
         local_exp_setup["folder_name"],
@@ -203,7 +203,7 @@ def nm_pert_experiment(args: dict, local_exp_setup: dict):
     processes = []
 
     # Prepare arguments for perturbation run
-    args["n_runs_per_profile"] = 3
+    args["n_runs_per_profile"] = local_exp_setup["n_runs_per_profile"]
     args["n_profiles"] = local_exp_setup["n_units"]
     args["pert_mode"] = "nm"
     args["out_exp_folder"] = pl.Path(
@@ -235,7 +235,7 @@ def bv_pert_experiment(args: dict, local_exp_setup: dict):
     processes = []
 
     # Prepare arguments for perturbation run
-    args["n_runs_per_profile"] = 4
+    args["n_runs_per_profile"] = local_exp_setup["n_vectors"]
     args["pert_mode"] = "bv"
     args["pert_vector_folder"] = pl.Path(
         local_exp_setup["folder_name"], local_exp_setup["vector_folder"]
@@ -346,7 +346,7 @@ def rf_pert_experiment(args: dict, local_exp_setup: dict):
     processes = []
 
     # Prepare arguments for perturbation run
-    args["n_runs_per_profile"] = 1
+    args["n_runs_per_profile"] = local_exp_setup["n_runs_per_profile"]
     args["n_profiles"] = local_exp_setup["n_units"]
     args["pert_mode"] = "rf"
     args["out_exp_folder"] = pl.Path(
@@ -397,21 +397,29 @@ def execute_pert_experiments(args: dict, exp_setup: dict):
 
     # Execute experiments
     if "bv" in args["perturbations"] or "all" in args["perturbations"]:
-        bv_pert_experiment(copy.deepcopy(args), local_exp_setup)
+        bv_pert_experiment(
+            copy.deepcopy(args), local_exp_setup | exp_setup["bv_gen_setup"]
+        )
     if "bv_eof" in args["perturbations"] or "all" in args["perturbations"]:
         bv_eof_pert_experiment(
             copy.deepcopy(args), local_exp_setup | exp_setup["bv_eof_gen_setup"]
         )
     if "rd" in args["perturbations"] or "all" in args["perturbations"]:
-        rd_pert_experiment(copy.deepcopy(args), local_exp_setup)
+        rd_pert_experiment(
+            copy.deepcopy(args), local_exp_setup | exp_setup["rd_pert_setup"]
+        )
     if "nm" in args["perturbations"] or "all" in args["perturbations"]:
-        nm_pert_experiment(copy.deepcopy(args), local_exp_setup)
+        nm_pert_experiment(
+            copy.deepcopy(args), local_exp_setup | exp_setup["nm_pert_setup"]
+        )
     if "sv" in args["perturbations"] or "all" in args["perturbations"]:
         sv_pert_experiment(
             copy.deepcopy(args), local_exp_setup | exp_setup["sv_gen_setup"]
         )
     if "rf" in args["perturbations"] or "all" in args["perturbations"]:
-        rf_pert_experiment(copy.deepcopy(args), local_exp_setup)
+        rf_pert_experiment(
+            copy.deepcopy(args), local_exp_setup | exp_setup["rf_pert_setup"]
+        )
 
 
 def main(args: dict):

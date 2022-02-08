@@ -107,8 +107,11 @@ def analyse_RMSE_and_spread_vs_time(data_array: np.ndarray, args: dict):
     """
     ens_mean = np.mean(data_array, axis=0)
 
-    # spread_array = np.std(data_array - np.expand_dims(ens_mean, axis=0), axis=0)
-    mean_spread_array = None  # np.abs(np.mean(np.mean(spread_array, axis=2), axis=0))
+    if args["rmse_spread"]:
+        spread_array = np.std(data_array - np.expand_dims(ens_mean, axis=0), axis=0)
+        mean_spread_array = np.abs(np.mean(np.mean(spread_array, axis=2), axis=0))
+    else:
+        mean_spread_array = None
 
     mean_RMSE_array = np.sqrt(
         np.mean(np.mean(ens_mean * ens_mean.conj(), axis=2), axis=0).real
