@@ -28,6 +28,7 @@ import general.utils.saving.save_utils as g_save_utils
 import general.utils.saving.save_vector_funcs as v_save
 import general.utils.user_interface as g_ui
 import general.utils.util_funcs as g_utils
+import general.utils.process_utils as pr_utils
 from libs.libutils import file_utils as lib_file_utils
 import numpy as np
 from general.params.model_licences import Models
@@ -51,19 +52,33 @@ elif cfg.MODEL == Models.LORENTZ63:
 cfg.GLOBAL_PARAMS.ref_run = False
 
 
-def main(args):
-    # Set exp_setup path
-    exp_file_path = pl.Path(
-        "./params/experiment_setups/lyapunov_vector_experiment_setups.json"
-    )
-    # Get the current experiment setup
-    exp_setup = exp_utils.get_exp_setup(exp_file_path, args)
+def main(args: dict, exp_setup: dict = None):
+    """Run the LYAPUNOV VECTOR experiment to generate lyapunov vectors based on the
+    reference records
+
+    Parameters
+    ----------
+    args : dict
+        Run-time arguments
+    exp_setup : dict, optional
+        The experiment setup, by default None
+    """
+    if exp_setup is None:
+        # Set exp_setup path
+        exp_file_path = pl.Path(
+            "./params/experiment_setups/lyapunov_vector_experiment_setups.json"
+        )
+        # Get the current experiment setup
+        exp_setup = exp_utils.get_exp_setup(exp_file_path, args)
 
     # Get number of existing blocks
     n_existing_units = lib_file_utils.count_existing_files_or_dirs(
         search_path=pl.Path(args["datapath"], exp_setup["folder_name"]),
         search_pattern="lyapunov_vector*.csv",
     )
+
+    # Add submodel attribute
+    cfg.MODEL.submodel = "TL"
 
     # Validate the start time method
     ut_exp_val.validate_start_time_method(exp_setup=exp_setup)
@@ -109,18 +124,19 @@ def main(args):
             copy_args, exp_setup=exp_setup, u_ref=u_ref
         )
 
-        if len(processes) > 0:
-            # Run specified number of cycles
-            pr_utils.main_run(
-                processes,
-                args=copy_args,
-            )
+        # Reset exp_folder
+        args["out_exp_folder"] = exp_setup["folder_name"]
 
-        else:
-            print("No processes to run - check if units already exists")
+        pr_utils.run_pert_processes(args, exp_setup, processes)
 
         # Prepare Lyapunov vector data to be saved
         data_out = np.array(data_out_list)
+
+        # Normalize
+        data_out = g_utils.normalize_array(
+            data_out, norm_value=params.seeked_error_norm, axis=1
+        )
+
         # Set out folder
         args["out_exp_folder"] = pl.Path(exp_setup["folder_name"])
         # Save lyapunov vectors
@@ -131,15 +147,6 @@ def main(args):
             args=args,
             exp_setup=exp_setup,
         )
-
-    # Reset exp_folder
-    args["out_exp_folder"] = exp_setup["folder_name"]
-    # Save exp setup to exp folder
-    g_save.save_exp_info(exp_setup, args)
-
-    if args["erda_run"]:
-        path = pl.Path(args["datapath"], exp_setup["folder_name"])
-        g_save_utils.compress_dir(path)
 
 
 if __name__ == "__main__":
@@ -160,9 +167,6 @@ if __name__ == "__main__":
         sh_utils.update_dependent_params(params)
         sh_utils.set_params(params, parameter="sdim", value=args["sdim"])
         sh_utils.update_arrays(params)
-
-    # Add submodel attribute
-    cfg.MODEL.submodel = "TL"
 
     # Add ny argument
     if cfg.MODEL == Models.SHELL_MODEL:

@@ -52,7 +52,10 @@ def plot_mean_exp_growth_rate_distribution(args: dict):
         num_subplot_rows,
         subplot_kw=dict(projection="3d"),
     )
-    axes = axes.ravel()
+    if isinstance(axes, np.ndarray):
+        axes = axes.ravel()
+    else:
+        axes = [axes]
 
     # args["n_files"] = args["n_profiles"]
 

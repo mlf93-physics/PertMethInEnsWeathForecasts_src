@@ -243,7 +243,7 @@ def perturbation_runner(
                     model=f"{cfg.MODEL.submodel} {cfg.MODEL}",
                 )
 
-    if not args["skip_save_data"]:
+    if not args["skip_save_data"] and not args["save_no_pert"]:
         pt_save.save_perturbation_data(
             data_out,
             perturb_position=perturb_positions[run_count // args["n_runs_per_profile"]],
@@ -365,7 +365,7 @@ def main_setup(
         args=args,
     )
 
-    if not args["skip_save_data"]:
+    if not args["skip_save_data"] and not args["save_no_pert"]:
         g_save.save_perturb_info(args=args, exp_setup=exp_setup)
 
     return processes, data_out_list, perturb_positions, u_profiles_perturbed

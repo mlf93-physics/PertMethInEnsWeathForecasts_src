@@ -139,7 +139,14 @@ def main(args: dict, exp_setup: dict = None):
                 copy_args["start_times"][0] += copy_args["time_to_run"]
 
                 # The rescaled data is used to start off cycle 1+
-                rescaled_data = pt_utils.rescale_perturbations(data_out_list, copy_args)
+                rescaled_data = pt_utils.rescale_perturbations(
+                    data_out_list,
+                    copy_args,
+                    raw_perturbations=j + 1
+                    == exp_setup[
+                        "n_cycles"
+                    ],  # Rescale to raw perturbations if last time
+                )
                 # Update perturb_positions
                 perturb_positions += int(exp_setup["integration_time"] * params.tts)
         else:

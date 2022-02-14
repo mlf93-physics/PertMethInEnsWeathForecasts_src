@@ -1,0 +1,30 @@
+{
+    "CompareRun01": {
+        "general": {
+            "folder_name": "compare_vecs_bv_lv",
+            "vector_folder": "vectors",
+            "perturbation_folder": "perturbations",
+            "sub_exp_folder": "perturb_data",
+            "eval_times": [
+                6001
+            ],
+            "n_units": 10,
+            "unit_offset": 0.1
+        },
+        "bv_gen_setup": {
+            "integration_time": 0.1,
+            "n_cycles": 4,
+            "n_vectors": 8
+        },
+        "bv_eof_gen_setup": {
+            "sub_exp_folder": "perturb_data",
+            "n_vectors": 3
+        },
+        "sv_gen_setup": {
+            "integration_time": 0.1,
+            "n_vectors": 3,
+            "n_lanczos_iterations": 1,
+            "n_model_iterations": 1
+        }
+    }
+}

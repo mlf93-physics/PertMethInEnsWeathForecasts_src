@@ -1,3 +1,6 @@
+import sys
+
+sys.path.append("../../")
 import re
 import pathlib as pl
 import json
@@ -79,7 +82,7 @@ def update_compare_exp_folders(args):
             for item in args["perturbations"]:
                 _exp_folders.extend(
                     [
-                        str(pl.Path(_dirs[i].parent.name, _dirs[i].name))
+                        str(pl.Path(args["exp_folder"], _dirs[i].name))
                         for i in range(len_folders)
                         if re.match(
                             fr"{item}(\d+_perturbations|_perturbations)", _dirs[i].name
@@ -89,7 +92,7 @@ def update_compare_exp_folders(args):
             for item in args["vectors"]:
                 _exp_folders.extend(
                     [
-                        str(pl.Path(*_dirs[i].parts[-3:]))
+                        str(pl.Path(args["exp_folder"], *_dirs[i].parts[-2:]))
                         for i in range(len_folders)
                         if re.match(fr"{item}(\d+_vectors|_vectors)", _dirs[i].name)
                     ]

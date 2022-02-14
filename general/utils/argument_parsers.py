@@ -262,6 +262,7 @@ class PerturbationArgSetup:
     def setup_parser(self):
         # Add optional arguments
         self._parser.add_argument("--endpoint", action="store_true")
+        self._parser.add_argument("--save_no_pert", action="store_true")
         pert_mode_group = self._parser.add_mutually_exclusive_group(
             required=cfg.LICENCE
             in [EXP.NORMAL_PERTURBATION, EXP.HYPER_DIFFUSIVITY, EXP.BREEDING_VECTORS]
