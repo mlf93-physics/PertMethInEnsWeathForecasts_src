@@ -45,17 +45,17 @@ def check_dimension(header_func: callable) -> callable:
             if cfg.MODEL == Models.SHELL_MODEL:
                 # Check if dimension in header dict matches dimension in params
                 try:
-                    if header_dict["sdim"] != PAR_SH.sdim:
-                        sh_utils.set_params(PAR_SH, sdim=header_dict["sdim"])
+                    if header_dict["sdim"] != params.sdim:
+                        sh_utils.set_params(params, sdim=header_dict["sdim"])
                         print(
                             f"{col.Fore.GREEN}INFO: sdim param updated to match header_dict{col.Fore.RESET}\n"
                         )
                         # Update arrays
-                        sh_utils.update_arrays(PAR_SH)
+                        sh_utils.update_arrays(params)
 
                 except KeyError:
                     print(
-                        f"{col.Fore.RED}sdim not found in header_dict. Using sdim={PAR_SH.sdim} from parameter struct{col.Fore.RESET}"
+                        f"{col.Fore.RED}sdim not found in header_dict. Using sdim={params.sdim} from parameter struct{col.Fore.RESET}"
                     )
 
                 wrapper.dimension_checked = True

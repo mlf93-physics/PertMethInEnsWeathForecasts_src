@@ -44,6 +44,17 @@ elif cfg.MODEL == Models.LORENTZ63:
 g_plt_config.setup_plotting_defaults()
 
 
+def plot_lyapunov_vectors_average(args: dict, axes: plt.Axes = None):
+    # Prepare plot_kwargs
+    plot_kwargs: dict = {
+        "xlabel": "LV index",
+        "ylabel": "Shell index",
+        "title_header": "Averaged LVs",
+    }
+
+    g_plt_data.plot2D_average_vectors(args, axes=axes, plot_kwargs=plot_kwargs)
+
+
 def plot_tlm_solution(args, axes=None):
     if axes is None:
         _, axes = plt.subplots(nrows=2, ncols=1, sharex=True)
@@ -208,6 +219,8 @@ if __name__ == "__main__":
         plot_tlm_solution_orthogonality_vs_time(args)
     elif "tlm_error_norm_and_orth" in args["plot_type"]:
         plot_tlm_solution_and_orthogonality(args)
+    elif "lv_average" in args["plot_type"]:
+        plot_lyapunov_vectors_average(args)
     else:
         raise ValueError("No valid plot type given as input argument")
 

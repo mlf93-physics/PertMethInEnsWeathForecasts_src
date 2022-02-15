@@ -119,9 +119,6 @@ def main(args: dict, exp_setup: dict = None):
         )
         args = g_utils.adjust_start_times_with_offset(args)
 
-        # Import reference data
-        u_ref, _, ref_header_dict = g_import.import_start_u_profiles(args=args)
-
         # Copy args in order not override in forecast processes
         copy_args = copy.deepcopy(args)
 
@@ -132,6 +129,8 @@ def main(args: dict, exp_setup: dict = None):
         rescaled_data = None
         perturb_positions = None
         for j in range(exp_setup["n_cycles"]):
+            # Import reference data
+            u_ref, _, ref_header_dict = g_import.import_start_u_profiles(args=copy_args)
 
             if copy_args["save_last_pert"] and (j + 1) == exp_setup["n_cycles"]:
                 copy_args["skip_save_data"] = False
@@ -149,19 +148,37 @@ def main(args: dict, exp_setup: dict = None):
                 pr_utils.main_run(
                     processes,
                 )
-                # Offset time to prepare for next run and import of reference data
-                # for rescaling
-                copy_args["start_times"][0] += copy_args["time_to_run"]
 
-                # The rescaled data is used to start off cycle 1+
-                rescaled_data = pt_utils.rescale_perturbations(
-                    data_out_list,
-                    copy_args,
-                    raw_perturbations=True,
+                # rescaled_data = g_utils.normalize_array(
+                #     np.array(data_out_list, dtype=sparams.dtype).T,
+                #     norm_value=params.seeked_error_norm,
+                #     axis=0,
+                # )
+
+                # Orthogonalise vectors
+                rescaled_data = np.array(data_out_list, dtype=sparams.dtype).T
+                rescaled_data, r = np.linalg.qr(rescaled_data)
+
+                # Pad array if necessary
+                rescaled_data = np.pad(
+                    rescaled_data,
+                    pad_width=((params.bd_size, params.bd_size), (0, 0)),
+                    mode="constant",
                 )
+
                 # Update perturb_positions
                 perturb_positions += int(exp_setup["integration_time"] * params.tts)
-
+                # Offset time to prepare for next run and import of reference data
+                # for TLM
+                copy_args["start_times"][0] += exp_setup["integration_time"]
+                # print("rescaled_data", rescaled_data)
+                # print("norm", np.linalg.norm(rescaled_data, axis=0))
+                rescaled_data = g_utils.normalize_array(
+                    rescaled_data, norm_value=params.seeked_error_norm, axis=0
+                )
+                # print("rescaled_data", rescaled_data)
+                # print("norm", np.linalg.norm(rescaled_data, axis=0))
+                # input()
         # Set out folder
         args["out_exp_folder"] = pl.Path(exp_setup["folder_name"])
         # Save lyapunov vectors
