@@ -239,36 +239,39 @@ def plt_BV_LYAP_vector_comparison(args):
         num_subplot_cols = 1
         num_subplot_rows = 1
 
-    fig1, axes1 = plt.subplots(
-        num_subplot_rows, num_subplot_cols, sharex=True, sharey=True
-    )
+    # fig1, axes1 = plt.subplots(
+    #     num_subplot_rows, num_subplot_cols, sharex=True, sharey=True
+    # )
     fig2, axes2 = plt.subplots(
         num_subplot_rows, num_subplot_cols, sharex=True, sharey=True
     )
 
     if args["n_profiles"] == 1:
-        axes1 = np.array(axes1)
+        # axes1 = np.array(axes1)
         axes2 = np.array(axes2)
 
-    axes1 = axes1.ravel()
+    # axes1 = axes1.ravel()
     axes2 = axes2.ravel()
 
     # Add cbar axes
     cbar_ax = fig2.add_axes([0.91, 0.3, 0.03, 0.4])
+    mean_orthogonality = np.empty(args["n_profiles"], dtype=np.float64)
 
     for i in range(args["n_profiles"]):
-        cmap_list, _ = g_plt_utils.get_non_repeating_colors(n_colors=n_vectors)
-        axes1[i].set_prop_cycle("color", cmap_list)
-        axes1[i].plot(lyapunov_vector_units[i, :, :].T.real, "--")
+        # cmap_list, _ = g_plt_utils.get_non_repeating_colors(n_colors=n_vectors)
+        # axes1[i].set_prop_cycle("color", cmap_list)
+        # axes1[i].plot(lyapunov_vector_units[i, :, :].T.real, "--")
 
-        # Reset color cycle
-        axes1[i].set_prop_cycle("color", cmap_list)
-        axes1[i].plot(breed_vector_units[i, :, :].T.real, "-")
-        axes1[i].set_title(f"unit {i}")
+        # # Reset color cycle
+        # axes1[i].set_prop_cycle("color", cmap_list)
+        # axes1[i].plot(breed_vector_units[i, :, :].T.real, "-")
+        # axes1[i].set_title(f"unit {i}")
 
         orthogonality_matrix = np.abs(
             breed_vector_units[i, :, :].conj() @ lyapunov_vector_units[i, :, :].T
         )
+
+        mean_orthogonality[i] = np.mean(orthogonality_matrix)
 
         # print(
         #     "orthogonality_matrix mean",
@@ -294,9 +297,11 @@ def plt_BV_LYAP_vector_comparison(args):
         axes2[i].set_ylabel("Breed vector index")
         axes2[i].set_title(f"unit {i}")
 
-    fig1.suptitle(f"Breed(-)/Lyapunov(--) vectors")
+    print("mean_orthogonality", np.mean(mean_orthogonality))
+
+    # fig1.suptitle(f"Breed(-)/Lyapunov(--) vectors")
     fig2.suptitle(f"Orthogonality between\nBreed/Lyapunov vectors")
-    fig2.tight_layout(rect=[0, 0, 0.9, 1])
+    # fig2.tight_layout(rect=[0, 0, 0.9, 1])
 
 
 def plot_error_norm_comparison(args: dict):

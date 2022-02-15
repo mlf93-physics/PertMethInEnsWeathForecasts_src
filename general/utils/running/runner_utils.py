@@ -92,13 +92,12 @@ def generate_start_times(exp_setup: dict, args: dict):
         if "start_times" in exp_setup:
             _time_offset = exp_setup["start_times"][0]
         elif "eval_times" in exp_setup:
-            if cfg.LICENCE == EXP.BREEDING_VECTORS:
+            if (
+                cfg.LICENCE == EXP.BREEDING_VECTORS
+                or cfg.LICENCE == EXP.LYAPUNOV_VECTORS
+            ):
                 _time_offset = get_bv_start_time(
                     eval_time=exp_setup["eval_times"][0], exp_setup=exp_setup
-                )
-            elif cfg.LICENCE == EXP.LYAPUNOV_VECTORS:
-                _time_offset = (
-                    exp_setup["eval_times"][0] - exp_setup["integration_time"]
                 )
             elif cfg.LICENCE == EXP.SINGULAR_VECTORS:
                 _time_offset = exp_setup["eval_times"][0]
@@ -114,8 +113,12 @@ def generate_start_times(exp_setup: dict, args: dict):
         else:
             raise ValueError("Could not infer time_to_run from experiment setup")
 
-        # Determine precision of time using offset_var
-        _precision = decimal.Decimal(str(exp_setup[offset_var])).as_tuple().exponent
+        # Determine precision of time using offset_var or integration_time
+        _precision1 = decimal.Decimal(str(exp_setup[offset_var])).as_tuple().exponent
+        _precision2 = (
+            decimal.Decimal(str(exp_setup["integration_time"])).as_tuple().exponent
+        )
+        _precision = min(_precision1, _precision2)
 
         num_possible_units = int(
             (ref_header_dict["time_to_run"] - _time_offset) // exp_setup[offset_var]
