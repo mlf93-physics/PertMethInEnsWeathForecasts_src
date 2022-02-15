@@ -418,7 +418,6 @@ def plot2D_average_vectors(
     ) = pt_import.import_perturb_vectors(
         args, raw_perturbations=True, dtype=np.complex128
     )
-
     # Normalize
     vector_units = g_utils.normalize_array(vector_units, norm_value=1, axis=2)
 

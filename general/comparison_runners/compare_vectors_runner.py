@@ -24,6 +24,7 @@ import general.utils.user_interface as g_ui
 import general.utils.util_funcs as g_utils
 from general.params.experiment_licences import Experiments as exp
 from general.params.model_licences import Models
+from general.runners.breed_vector_runner import main as bv_runner
 from general.runners.lyapunov_vector_runner import main as lv_runner
 from general.runners.singular_vector_lanczos_runner import main as sv_runner
 from libs.libutils import type_utils as lib_type_utils
@@ -64,15 +65,20 @@ def generate_bvs(args: dict, exp_setup: dict):
 
     # Get subset of experiment setup
     local_exp_setup = exp_setup["general"] | exp_setup["bv_gen_setup"]
-    local_exp_setup["folder_name"] = str(
-        pl.Path(
-            local_exp_setup["folder_name"],
-            local_exp_setup["vector_folder"],
-            "bv_vectors",
-        )
-    )
 
-    bv_runner(args, local_exp_setup)
+    for iw in local_exp_setup["iws"]:
+        iw_str: str = lib_type_utils.zpad_string(str(iw), n_zeros=2)
+        # Set local exp values
+        local_exp_setup["folder_name"] = str(
+            pl.Path(
+                exp_setup["general"]["folder_name"],
+                exp_setup["general"]["vector_folder"],
+                f"bv_vectors_iw{iw_str}",
+            )
+        )
+        local_exp_setup["integration_time"] = iw * params.dt
+
+        bv_runner(args, local_exp_setup)
 
 
 def generate_lvs(args: dict, exp_setup: dict):
@@ -96,13 +102,13 @@ def generate_lvs(args: dict, exp_setup: dict):
     local_exp_setup = exp_setup["general"] | exp_setup["lv_gen_setup"]
     local_exp_setup["folder_name"] = str(
         pl.Path(
-            local_exp_setup["folder_name"],
-            local_exp_setup["vector_folder"],
+            exp_setup["general"]["folder_name"],
+            exp_setup["general"]["vector_folder"],
             "lv_vectors",
         )
     )
 
-    lv_runner(args, local_exp_setup)
+    lv_runner(args, exp_setup=local_exp_setup)
 
 
 def generate_svs(args: dict, exp_setup: dict):
@@ -122,16 +128,20 @@ def generate_svs(args: dict, exp_setup: dict):
 
     # Get subset of experiment setup
     local_exp_setup = exp_setup["general"] | exp_setup["sv_gen_setup"]
-    # Set local exp values
-    local_exp_setup["folder_name"] = str(
-        pl.Path(
-            local_exp_setup["folder_name"],
-            local_exp_setup["vector_folder"],
-            "sv_vectors",
-        )
-    )
 
-    sv_runner(args, exp_setup=local_exp_setup)
+    for iw in local_exp_setup["iws"]:
+        iw_str: str = lib_type_utils.zpad_string(str(iw), n_zeros=2)
+        # Set local exp values
+        local_exp_setup["folder_name"] = str(
+            pl.Path(
+                exp_setup["general"]["folder_name"],
+                exp_setup["general"]["vector_folder"],
+                f"sv_vectors_iw{iw_str}",
+            )
+        )
+        local_exp_setup["integration_time"] = iw * params.dt
+
+        sv_runner(args, exp_setup=local_exp_setup)
 
 
 def generate_vectors(args: dict, exp_setup: dict):
@@ -148,6 +158,8 @@ def generate_vectors(args: dict, exp_setup: dict):
 
     if "bv" in args["vectors"] or "all" in args["vectors"]:
         generate_bvs(copy.deepcopy(args), exp_setup)
+    if "lv" in args["vectors"] or "all" in args["vectors"]:
+        generate_lvs(copy.deepcopy(args), exp_setup)
     if "sv" in args["vectors"] or "all" in args["vectors"]:
         generate_svs(copy.deepcopy(args), exp_setup)
 

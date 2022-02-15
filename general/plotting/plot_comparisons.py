@@ -23,6 +23,7 @@ import general.utils.importing.import_data_funcs as g_import
 import general.utils.importing.import_perturbation_data as pt_import
 import general.utils.importing.import_utils as g_imp_utils
 import general.utils.plot_utils as g_plt_utils
+import general.analyses.plot_analyses as g_plt_anal
 from general.plotting.plot_params import *
 from general.utils.module_import.type_import import *
 import general.utils.user_interface as g_ui
@@ -185,6 +186,86 @@ def plt_pert_components(args: dict, axes: plt.Axes = None):
     axes.set_ylim(1e-4, 1)
     axes.set_title(title)
     axes.legend()
+
+
+def import_multiple_vector_dirs(
+    args, raw_perturbations=True, retrieve_header_key: str = ""
+):
+
+    header_values = {}
+    if len(retrieve_header_key) > 0:
+        header_values = {retrieve_header_key: []}
+
+    all_vector_units = np.zeros(
+        (
+            len(args["exp_folders"]),
+            args["n_profiles"],
+            args["n_runs_per_profile"],
+            params.sdim,
+        )
+    )
+
+    for i, folder in enumerate(args["exp_folders"]):
+        args["exp_folder"] = folder
+        (
+            vector_units,
+            _,
+            _,
+            _,
+            vec_header_dicts,
+        ) = pt_import.import_perturb_vectors(args, raw_perturbations=raw_perturbations)
+
+        if len(retrieve_header_key) > 0:
+            header_values[retrieve_header_key].append(
+                vec_header_dicts[0][retrieve_header_key]
+            )
+
+        all_vector_units[i, :, :, :] = vector_units
+
+    return all_vector_units, header_values
+
+
+def plt_vec_compared_to_lv(args):
+
+    # Get bv folders
+    args["vectors"] = ["bv"]
+    e_utils.update_compare_exp_folders(args)
+    retrieve_header_key = "time_to_run"
+
+    # Import data
+    bv_vector_folder_units, bv_header_values = import_multiple_vector_dirs(
+        args, raw_perturbations=False, retrieve_header_key=retrieve_header_key
+    )
+
+    # Get lv folders
+    args["vectors"] = ["lv"]
+    e_utils.update_compare_exp_folders(args)
+
+    args["exp_folder"] = args["exp_folders"][0]
+    (
+        lv_vector_units,
+        _,
+        _,
+        _,
+        lv_vec_header_dicts,
+    ) = pt_import.import_perturb_vectors(args, raw_perturbations=True)
+
+    bv_lv_orthogonality = np.zeros(
+        (
+            len(bv_header_values[retrieve_header_key]),
+            args["n_profiles"],
+            args["n_runs_per_profile"],
+        )
+    )
+
+    for i, value in enumerate(bv_header_values[retrieve_header_key]):
+        for j in range(args["n_profiles"]):
+            bv_lv_orthogonality[i, j, :] = g_plt_anal.orthogonality_to_vector(
+                lv_vector_units[j, 0, :], bv_vector_folder_units[i, j, :, :]
+            )
+
+    mean_bv_lv_orthogonality = np.mean(np.abs(bv_lv_orthogonality), axis=2)
+    print("mean_bv_lv_orthogonality", mean_bv_lv_orthogonality)
 
 
 def plt_BV_LYAP_vector_comparison(args):
@@ -782,6 +863,8 @@ if __name__ == "__main__":
         plot_exp_growth_rate_comparison(args)
     elif "char_values_compare" in args["plot_type"]:
         plot_char_value_vs_time_with_ref_flow(args)
+    elif "vec_compare_to_lv" in args["plot_type"]:
+        plt_vec_compared_to_lv(args)
     else:
         raise ValueError("No valid plot type given as input argument")
 

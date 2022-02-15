@@ -7,9 +7,6 @@ python ../general/runners/lyapunov_vector_runner.py --exp_setup=TestRun4 --n_uni
 """
 
 from pyinstrument import Profiler
-
-profiler = Profiler()
-profiler.start()
 import sys
 
 sys.path.append("..")
@@ -33,8 +30,7 @@ import general.utils.process_utils as pr_utils
 from libs.libutils import file_utils as lib_file_utils
 import numpy as np
 from general.params.model_licences import Models
-
-import perturbation_runner as pt_runner
+import general.runners.perturbation_runner as pt_runner
 
 # Get parameters for model
 if cfg.MODEL == Models.SHELL_MODEL:
@@ -157,7 +153,11 @@ def main(args: dict, exp_setup: dict = None):
 
                 # Orthogonalise vectors
                 rescaled_data = np.array(data_out_list, dtype=sparams.dtype).T
-                rescaled_data, r = np.linalg.qr(rescaled_data)
+                rescaled_data, r_matrix = np.linalg.qr(rescaled_data)
+                # lyapunov_exps = np.diagonal(r_matrix @ rescaled_data)
+                # sorted_index = np.argsort(lyapunov_exps)[::-1]
+                # lyapunov_exps = lyapunov_exps[sorted_index]
+                # rescaled_data[:, :] = rescaled_data[:, sorted_index]
 
                 # Pad array if necessary
                 rescaled_data = np.pad(
@@ -171,19 +171,15 @@ def main(args: dict, exp_setup: dict = None):
                 # Offset time to prepare for next run and import of reference data
                 # for TLM
                 copy_args["start_times"][0] += exp_setup["integration_time"]
-                # print("rescaled_data", rescaled_data)
-                # print("norm", np.linalg.norm(rescaled_data, axis=0))
                 rescaled_data = g_utils.normalize_array(
                     rescaled_data, norm_value=params.seeked_error_norm, axis=0
                 )
-                # print("rescaled_data", rescaled_data)
-                # print("norm", np.linalg.norm(rescaled_data, axis=0))
-                # input()
         # Set out folder
         args["out_exp_folder"] = pl.Path(exp_setup["folder_name"])
         # Save lyapunov vectors
         v_save.save_vector_unit(
             rescaled_data[sparams.u_slice, :].T,
+            # characteristic_values=lyapunov_exps,
             perturb_position=int(round(start_times[i] * params.tts)),
             unit=i,
             args=args,
@@ -218,6 +214,9 @@ if __name__ == "__main__":
         args["ny"] = sh_utils.ny_from_ny_n_and_forcing(
             args["forcing"], args["ny_n"], args["diff_exponent"]
         )
+
+    profiler = Profiler()
+    profiler.start()
 
     main(args)
 
