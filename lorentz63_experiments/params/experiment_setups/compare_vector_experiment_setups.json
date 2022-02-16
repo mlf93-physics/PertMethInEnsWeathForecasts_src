@@ -1,21 +1,22 @@
 {
     "CompareITRun01": {
         "general": {
-            "folder_name": "compare_vecs_to_lv",
+            "folder_name": "compare_vecs_bv_lv_ncycles4",
             "vector_folder": "vectors",
             "perturbation_folder": "perturbations",
             "sub_exp_folder": "perturb_data",
             "eval_times": [
                 1000
             ],
-            "n_units": 10,
+            "n_units": 100,
             "iws": [
-                2,
-                4,
-                8,
-                16,
+                6,
+                10,
+                12,
+                14,
                 32,
-                64
+                96,
+                128
             ],
             "unit_offset": 1.0
         },

@@ -224,7 +224,7 @@ def import_multiple_vector_dirs(
     return all_vector_units, header_values
 
 
-def plt_vec_compared_to_lv(args):
+def plt_vec_compared_to_lv(args, axes: plt.Axes = None):
 
     save_exp_folder = args["exp_folder"]
 
@@ -297,13 +297,41 @@ def plt_vec_compared_to_lv(args):
         np.mean(np.abs(bv_lv_orthogonality), axis=2), axis=1
     )
 
-    mean_sv_lv_orthogonality = np.mean(
-        np.mean(np.abs(sv_lv_orthogonality), axis=2), axis=1
+    mean_sv_lv_orthogonality = np.mean(np.abs(sv_lv_orthogonality), axis=1)
+
+    # Prepare axes
+    if axes is None:
+        axes = plt.axes()
+
+
+    # Plot orthogonality vs iw
+    axes.plot(
+        sorted(bv_header_values[retrieve_header_key]),
+        mean_bv_lv_orthogonality,
+        label="BV vs LV1",
     )
 
-    # Print orthogonality values
-    print("mean_bv_lv_orthogonality", mean_bv_lv_orthogonality)
-    print("mean_sv_lv_orthogonality", mean_sv_lv_orthogonality)
+    sv_vs_lv_lines = axes.plot(
+        sorted(bv_header_values[retrieve_header_key]),
+        mean_sv_lv_orthogonality,
+    )
+    for i, line in enumerate(sv_vs_lv_lines):
+        line.set_label(
+            f"SV{i} vs LV1",
+        )
+
+    axes.set_xlabel("Integration window (IW)")
+    axes.set_ylabel("Absolute orthogonality")
+    axes.legend()
+
+    title = g_plt_utils.generate_title(
+        args,
+        header_dict=lv_vec_header_dicts[0],
+        title_header="Absolute orthogonality vs IW",
+        title_suffix=f"$n_{{units}}$={args['n_profiles']}",
+        detailed=False,
+    )
+    axes.set_title(title)
 
 
 def plt_BV_LYAP_vector_comparison(args):
