@@ -264,7 +264,9 @@ def plt_vec_compared_to_lv(args):
                 lv_vector_units[j, 0, :], bv_vector_folder_units[i, j, :, :]
             )
 
-    mean_bv_lv_orthogonality = np.mean(np.abs(bv_lv_orthogonality), axis=2)
+    mean_bv_lv_orthogonality = np.mean(
+        np.mean(np.abs(bv_lv_orthogonality), axis=2), axis=1
+    )
     print("mean_bv_lv_orthogonality", mean_bv_lv_orthogonality)
 
 
@@ -288,7 +290,7 @@ def plt_BV_LYAP_vector_comparison(args):
         _,
         _,
         breed_vec_header_dicts,
-    ) = pt_import.import_perturb_vectors(args, raw_perturbations=True)
+    ) = pt_import.import_perturb_vectors(args, raw_perturbations=False)
     # breed_vector_units = np.squeeze(breed_vector_units, axis=0)
     # Normalize vectors
     breed_vector_units = g_utils.normalize_array(

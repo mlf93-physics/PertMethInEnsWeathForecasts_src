@@ -153,18 +153,18 @@ def main(args: dict, exp_setup: dict = None):
 
                 # Orthogonalise vectors
                 rescaled_data = np.array(data_out_list, dtype=sparams.dtype).T
-                rescaled_data, r_matrix = np.linalg.qr(rescaled_data)
+                # rescaled_data, r_matrix = np.linalg.qr(rescaled_data)
                 # lyapunov_exps = np.diagonal(r_matrix @ rescaled_data)
                 # sorted_index = np.argsort(lyapunov_exps)[::-1]
                 # lyapunov_exps = lyapunov_exps[sorted_index]
                 # rescaled_data[:, :] = rescaled_data[:, sorted_index]
 
                 # Pad array if necessary
-                rescaled_data = np.pad(
-                    rescaled_data,
-                    pad_width=((params.bd_size, params.bd_size), (0, 0)),
-                    mode="constant",
-                )
+                # rescaled_data = np.pad(
+                #     rescaled_data,
+                #     pad_width=((params.bd_size, params.bd_size), (0, 0)),
+                #     mode="constant",
+                # )
 
                 # Update perturb_positions
                 perturb_positions += int(exp_setup["integration_time"] * params.tts)
