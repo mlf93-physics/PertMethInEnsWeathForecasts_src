@@ -39,7 +39,7 @@ def orthogonality_to_vector(
 
     Parameters
     ----------
-    reference_vector : np.ndarray((dim, n_vectors))
+    reference_vector : np.ndarray((n_vectors, dim))
         The reference vector
     matrix_of_vectors : np.ndarray
         The trial vectors
@@ -54,12 +54,11 @@ def orthogonality_to_vector(
     reference_vector = g_utils.normalize_array(
         reference_vector.ravel(), norm_value=1, axis=0
     )
-    matrix_of_vectors = g_utils.normalize_array(matrix_of_vectors, norm_value=1, axis=0)
-
+    matrix_of_vectors = g_utils.normalize_array(matrix_of_vectors, norm_value=1, axis=1)
     # Calculate orthogonality
     orthogonality = [
-        reference_vector.dot(matrix_of_vectors[:, i].conj())
-        for i in range(matrix_of_vectors.shape[1])
+        reference_vector.dot(matrix_of_vectors[i, :].conj())
+        for i in range(matrix_of_vectors.shape[0])
     ]
 
     return orthogonality

@@ -1,13 +1,13 @@
 {
     "TestRun0": {
-        "folder_name": "pt_vectors/breed_vectors_it0.2_test",
+        "folder_name": "pt_vectors/breed_vectors_it0.02_test_new",
         "sub_exp_folder": "perturb_data",
-        "integration_time": 0.2,
-        "n_cycles": 100,
+        "integration_time": 0.02,
+        "n_cycles": 40,
         "n_vectors": 8,
         "vector_offset": 10.0,
         "eval_times": [
-            2000
+            1000
         ]
     },
     "TestRun1": {

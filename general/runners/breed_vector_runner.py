@@ -142,10 +142,6 @@ def main(args: dict, exp_setup: dict = None):
                 rescaled_data = pt_utils.rescale_perturbations(
                     data_out_list,
                     copy_args,
-                    # raw_perturbations=j + 1
-                    # == exp_setup[
-                    #     "n_cycles"
-                    # ],  # Rescale to raw perturbations if last time
                 )
                 # Update perturb_positions
                 perturb_positions += int(exp_setup["integration_time"] * params.tts)

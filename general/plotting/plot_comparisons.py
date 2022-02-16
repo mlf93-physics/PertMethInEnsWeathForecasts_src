@@ -189,7 +189,10 @@ def plt_pert_components(args: dict, axes: plt.Axes = None):
 
 
 def import_multiple_vector_dirs(
-    args, raw_perturbations=True, retrieve_header_key: str = ""
+    args,
+    raw_perturbations=True,
+    retrieve_header_key: str = "",
+    dtype=np.float64,
 ):
 
     header_values = {}
@@ -207,13 +210,9 @@ def import_multiple_vector_dirs(
 
     for i, folder in enumerate(args["exp_folders"]):
         args["exp_folder"] = folder
-        (
-            vector_units,
-            _,
-            _,
-            _,
-            vec_header_dicts,
-        ) = pt_import.import_perturb_vectors(args, raw_perturbations=raw_perturbations)
+        (vector_units, _, _, _, vec_header_dicts,) = pt_import.import_perturb_vectors(
+            args, raw_perturbations=raw_perturbations, dtype=dtype
+        )
 
         if len(retrieve_header_key) > 0:
             header_values[retrieve_header_key].append(
@@ -227,6 +226,8 @@ def import_multiple_vector_dirs(
 
 def plt_vec_compared_to_lv(args):
 
+    save_exp_folder = args["exp_folder"]
+
     # Get bv folders
     args["vectors"] = ["bv"]
     e_utils.update_compare_exp_folders(args)
@@ -237,6 +238,23 @@ def plt_vec_compared_to_lv(args):
         args, raw_perturbations=False, retrieve_header_key=retrieve_header_key
     )
 
+    # Reset exp_folder
+    args["exp_folder"] = save_exp_folder
+    # Get sv folders
+    args["vectors"] = ["sv"]
+    e_utils.update_compare_exp_folders(args)
+    retrieve_header_key = "time_to_run"
+
+    # Import data
+    sv_vector_folder_units, sv_header_values = import_multiple_vector_dirs(
+        args,
+        raw_perturbations=True,
+        retrieve_header_key=retrieve_header_key,
+        dtype=np.complex128,
+    )
+
+    # Reset exp_folder
+    args["exp_folder"] = save_exp_folder
     # Get lv folders
     args["vectors"] = ["lv"]
     e_utils.update_compare_exp_folders(args)
@@ -258,16 +276,34 @@ def plt_vec_compared_to_lv(args):
         )
     )
 
+    sv_lv_orthogonality = np.zeros(
+        (
+            len(bv_header_values[retrieve_header_key]),
+            args["n_profiles"],
+            args["n_runs_per_profile"],
+        )
+    )
+
     for i, value in enumerate(bv_header_values[retrieve_header_key]):
         for j in range(args["n_profiles"]):
             bv_lv_orthogonality[i, j, :] = g_plt_anal.orthogonality_to_vector(
                 lv_vector_units[j, 0, :], bv_vector_folder_units[i, j, :, :]
             )
+            sv_lv_orthogonality[i, j, :] = g_plt_anal.orthogonality_to_vector(
+                lv_vector_units[j, 0, :], sv_vector_folder_units[i, j, :, :]
+            )
 
     mean_bv_lv_orthogonality = np.mean(
         np.mean(np.abs(bv_lv_orthogonality), axis=2), axis=1
     )
+
+    mean_sv_lv_orthogonality = np.mean(
+        np.mean(np.abs(sv_lv_orthogonality), axis=2), axis=1
+    )
+
+    # Print orthogonality values
     print("mean_bv_lv_orthogonality", mean_bv_lv_orthogonality)
+    print("mean_sv_lv_orthogonality", mean_sv_lv_orthogonality)
 
 
 def plt_BV_LYAP_vector_comparison(args):

@@ -105,4 +105,3 @@ def update_compare_exp_folders(args):
                 )
 
             args["exp_folders"] = sorted(_exp_folders)
-            print('args["exp_folders"]', args["exp_folders"])
