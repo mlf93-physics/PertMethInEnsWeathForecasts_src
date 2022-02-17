@@ -581,7 +581,7 @@ def import_start_u_profiles(
         )
 
     n_profiles = args["n_profiles"] if len_start_times == 0 else len_start_times
-    n_runs_per_profile = args["n_runs_per_profile"] if len_start_times == 0 else 1
+    n_runs_per_profile = args["n_runs_per_profile"]  # if len_start_times == 0 else 1
 
     # Check if ref path exists
     ref_file_path = pl.Path(args["datapath"], "ref_data")

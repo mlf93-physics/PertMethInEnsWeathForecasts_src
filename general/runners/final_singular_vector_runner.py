@@ -86,49 +86,53 @@ def main(args: dict, exp_setup: dict = None):
         exp_setup["vector_offset"] if "vector_offset" in exp_setup else None
     )
     args["endpoint"] = True
-    args["n_profiles"] = args["n_units"]
+    # args["n_profiles"] = args["n_units"]
     args["n_runs_per_profile"] = exp_setup["n_vectors"]
 
-    # Calculate the desired number of units
-    for i in range(
-        n_existing_units,
-        min(args["n_units"] + n_existing_units, num_possible_units),
-    ):
-        # Update start times
-        args["start_times"] = [start_times[i]]
-        # Set exp folder (folder is reset before save of exp info)
-        args["out_exp_folder"] = pl.Path(
-            exp_setup["folder_name"], exp_setup["sub_exp_folder"]
+    # Update start times
+    # args["start_times"] = [start_times[i]]
+    # Set exp folder (folder is reset before save of exp info)
+    args["out_exp_folder"] = pl.Path(
+        exp_setup["folder_name"], exp_setup["sub_exp_folder"]
+    )
+    # args = g_utils.adjust_start_times_with_offset(args)
+
+    # Copy args in order not override in forecast processes
+    copy_args = copy.deepcopy(args)
+
+    if copy_args["save_last_pert"]:
+        copy_args["skip_save_data"] = True
+
+    processes, data_out_list, perturb_positions, _ = pt_runner.main_setup(
+        copy_args,
+        exp_setup=exp_setup,
+    )
+
+    if len(processes) > 0:
+        # Run specified number of cycles
+        pr_utils.main_run(
+            processes,
         )
-        args = g_utils.adjust_start_times_with_offset(args)
 
-        # Copy args in order not override in forecast processes
-        copy_args = copy.deepcopy(args)
+    # Set out folder
+    args["out_exp_folder"] = pl.Path(exp_setup["folder_name"])
 
-        if copy_args["save_last_pert"]:
-            copy_args["skip_save_data"] = True
+    data_out = np.array(data_out_list, dtype=sparams.dtype)
+    data_out = g_utils.normalize_array(
+        data_out, norm_value=params.seeked_error_norm, axis=1
+    )
 
-        processes, data_out_list, perturb_positions, _ = pt_runner.main_setup(
-            copy_args,
-            exp_setup=exp_setup,
-        )
-
-        if len(processes) > 0:
-            # Run specified number of cycles
-            pr_utils.main_run(
-                processes,
-            )
-
-        # Set out folder
-        args["out_exp_folder"] = pl.Path(exp_setup["folder_name"])
-
-        data_out = np.array(data_out_list, dtype=sparams.dtype)
-        data_out = g_utils.normalize_array(
-            data_out, norm_value=params.seeked_error_norm, axis=1
-        )
+    for i in range(args["n_profiles"]):
         # Save lyapunov vectors
         v_save.save_vector_unit(
-            data_out,
+            data_out[
+                np.s_[
+                    args["n_runs_per_profile"]
+                    * i : (i + 1)
+                    * args["n_runs_per_profile"] : 1
+                ],
+                :,
+            ],
             perturb_position=int(round(start_times[i] * params.tts)),
             unit=i,
             args=args,

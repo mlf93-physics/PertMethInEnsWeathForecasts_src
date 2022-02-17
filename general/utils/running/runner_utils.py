@@ -209,7 +209,7 @@ def prepare_perturbations(
     # Only import start profiles beforehand if not using bv, bv_eof or sv perturbations,
     # i.e. also when running in singel_shell_perturb mode
 
-    if args["pert_mode"] not in ["bv", "bv_eof", "sv"]:
+    if args["pert_mode"] not in ["bv", "bv_eof", "sv", "fsv"]:
         (
             u_init_profiles,
             perturb_positions,
@@ -289,6 +289,23 @@ def prepare_perturbations(
                 _,
             ) = pt_import.import_perturb_vectors(
                 args, raw_perturbations=True, dtype=np.complex128
+            )
+            # Reshape perturb_vectors
+            perturb_vectors = np.reshape(
+                np.transpose(perturb_vectors, axes=(2, 0, 1)),
+                (params.sdim, args["n_profiles"] * args["n_runs_per_profile"]),
+            )
+
+        elif "fsv" in args["pert_mode"]:
+            print("\nRunning with FINAL SINGULAR VECTOR perturbations\n")
+            (
+                perturb_vectors,
+                _,
+                u_init_profiles,
+                perturb_positions,
+                _,
+            ) = pt_import.import_perturb_vectors(
+                args, raw_perturbations=True, dtype=sparams.dtype
             )
             # Reshape perturb_vectors
             perturb_vectors = np.reshape(
