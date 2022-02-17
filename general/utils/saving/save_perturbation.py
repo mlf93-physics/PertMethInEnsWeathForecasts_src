@@ -43,6 +43,8 @@ def save_perturbation_data(
         prefix = f"hyper_perturb{perturb_count}_"
     elif cfg.LICENCE == EXP.SINGULAR_VECTORS:
         prefix = f"singular_vector_perturb{perturb_count}_"
+    elif cfg.LICENCE == EXP.FINAL_SINGULAR_VECTORS:
+        prefix = f"final_singular_vector_perturb{perturb_count}_"
     elif cfg.LICENCE == EXP.VERIFICATION:
         prefix = f"verification_perturb{perturb_count}_"
     else:

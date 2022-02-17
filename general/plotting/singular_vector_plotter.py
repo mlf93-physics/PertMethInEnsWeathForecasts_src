@@ -314,7 +314,7 @@ def plot_s_vector_ortho_average(args, axes=None):
         _,
         header_dicts,
     ) = pt_import.import_perturb_vectors(
-        args, raw_perturbations=True, dtype=sparams.dtype
+        args, raw_perturbations=True, dtype=np.complex128
     )
 
     # Normalize

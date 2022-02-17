@@ -1,3 +1,4 @@
+import re
 import pathlib as pl
 import sys
 from general.params.experiment_licences import Experiments, Experiment
@@ -35,8 +36,11 @@ def detect_exp_licence() -> Experiment:
     elif "lyapunov_vector_runner" == root_file_name:
         licence = exp.LYAPUNOV_VECTORS
 
-    elif "singular_vector" in root_file_name:
+    elif bool(re.match(r"singular_vector\w+", root_file_name)):
         licence = exp.SINGULAR_VECTORS
+
+    elif bool(re.match(r"final_singular_vector\w+", root_file_name)):
+        licence = exp.FINAL_SINGULAR_VECTORS
 
     elif "compare" in root_file_name:
         licence = exp.COMPARISON

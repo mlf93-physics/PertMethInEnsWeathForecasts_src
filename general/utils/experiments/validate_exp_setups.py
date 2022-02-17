@@ -23,6 +23,7 @@ def validate_start_time_method(exp_setup: dict = {}):
         cfg.LICENCE == EXP.BREEDING_VECTORS
         or cfg.LICENCE == EXP.LYAPUNOV_VECTORS
         or cfg.LICENCE == EXP.SINGULAR_VECTORS
+        or cfg.LICENCE == EXP.FINAL_SINGULAR_VECTORS
     ):
         offset_var = "vector_offset"
     else:
@@ -61,7 +62,7 @@ def validate_start_time_method(exp_setup: dict = {}):
                         exp_variable=f"eval_time = {exp_setup['eval_times'][0]};"
                         + f" integration_time = {exp_setup['integration_time']}",
                     )
-            elif cfg.LICENCE == EXP.SINGULAR_VECTORS:
+            elif cfg.LICENCE == EXP.FINAL_SINGULAR_VECTORS:
                 if exp_setup["eval_times"][0] - exp_setup["integration_time"] < 0:
                     raise g_exceptions.ExperimentSetupError(
                         "Too long integration time compared to the chosen evaluation time",

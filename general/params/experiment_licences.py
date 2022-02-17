@@ -16,4 +16,5 @@ class Experiments:
     LYAPUNOV_VECTORS = Experiment(id=6, name="LYAPUNOV_VECTORS")
     HYPER_DIFFUSIVITY = Experiment(id=7, name="HYPER_DIFFUSIVITY")
     COMPARISON = Experiment(id=8, name="COMPARISON")
+    FINAL_SINGULAR_VECTORS = Experiment(id=9, name="FINAL_SINGULAR_VECTORS")
     VERIFICATION = Experiment(id=10, name="VERIFICATION")

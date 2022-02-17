@@ -41,6 +41,7 @@ import general.utils.user_interface as g_ui
 import general.utils.running.runner_utils as r_utils
 import general.utils.process_utils as pr_utils
 import general.utils.util_funcs as g_utils
+import general.utils.importing.import_data_funcs as g_import
 import numpy as np
 from general.params.experiment_licences import Experiments as EXP
 from general.params.model_licences import Models
@@ -256,6 +257,7 @@ def perturbation_runner(
         cfg.LICENCE == EXP.BREEDING_VECTORS
         or cfg.LICENCE == EXP.LYAPUNOV_VECTORS
         or cfg.LICENCE == EXP.SINGULAR_VECTORS
+        or cfg.LICENCE == EXP.FINAL_SINGULAR_VECTORS
     ):
         # For the ATL model, time goes backwards, i.e. first datapoint in data_out
         # stores the result of the last integration.
@@ -339,8 +341,13 @@ def main_setup(
     if u_profiles_perturbed is None:  # or perturb_positions is None:
 
         raw_perturbations = False
-        # Get only raw_perturbations if licence is LYAPUNOV_VECTORS
-        if cfg.LICENCE == EXP.LYAPUNOV_VECTORS or cfg.LICENCE == EXP.SINGULAR_VECTORS:
+        # Get only raw_perturbations if licence is LYAPUNOV_VECTORS,
+        # SINGULAR_VECTORS or FINAL_SINGULAR_VECTORS
+        if (
+            cfg.LICENCE == EXP.LYAPUNOV_VECTORS
+            or cfg.LICENCE == EXP.SINGULAR_VECTORS
+            or cfg.LICENCE == EXP.FINAL_SINGULAR_VECTORS
+        ):
             raw_perturbations = True
 
         (
@@ -348,6 +355,13 @@ def main_setup(
             perturb_positions,
             exec_all_runs_per_profile,
         ) = r_utils.prepare_perturbations(args, raw_perturbations=raw_perturbations)
+
+        if cfg.LICENCE == EXP.FINAL_SINGULAR_VECTORS:
+            # Import reference data based on perturb positions
+            u_ref, _, _ = g_import.import_start_u_profiles(
+                args=args,
+                start_times=np.array(perturb_positions, dtype=np.int32) * params.stt,
+            )
 
     # Detect if other perturbations exist in the perturbation_folder and calculate
     # perturbation count to start at

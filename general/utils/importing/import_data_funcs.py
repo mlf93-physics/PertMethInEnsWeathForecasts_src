@@ -677,7 +677,6 @@ def import_start_u_profiles(
                 _counter += 1
             elif n_runs_per_profile > 1:
                 indices = np.s_[_counter : _counter + n_runs_per_profile : 1]
-
                 u_init_profiles[sparams.u_slice, indices] = np.repeat(
                     np.reshape(
                         temp_u_init_profile[1:], (temp_u_init_profile[1:].size, 1)

@@ -121,13 +121,29 @@ def generate_svs(args: dict, exp_setup: dict):
     exp_setup : dict
         Experiment setup
     """
-    print(f"{col.Fore.GREEN}SV GENERATION{col.Fore.RESET}")
+    print(f"{col.Fore.GREEN}INITIAL TIME SV GENERATION{col.Fore.RESET}")
 
     # Update licence
     cfg.LICENCE = exp.SINGULAR_VECTORS
 
     # Get subset of experiment setup
     local_exp_setup = exp_setup["general"] | exp_setup["sv_gen_setup"]
+
+    # for iw in local_exp_setup["iws"]:
+    #     iw_str: str = lib_type_utils.zpad_string(str(iw), n_zeros=2)
+    #     # Set local exp values
+    #     local_exp_setup["folder_name"] = str(
+    #         pl.Path(
+    #             exp_setup["general"]["folder_name"],
+    #             exp_setup["general"]["vector_folder"],
+    #             f"sv_vectors_iw{iw_str}",
+    #         )
+    #     )
+    #     local_exp_setup["integration_time"] = iw * params.dt
+
+    #     sv_runner(args, exp_setup=local_exp_setup)
+
+    print(f"{col.Fore.GREEN}FINAL TIME SV GENERATION{col.Fore.RESET}")
 
     for iw in local_exp_setup["iws"]:
         iw_str: str = lib_type_utils.zpad_string(str(iw), n_zeros=2)
@@ -136,12 +152,10 @@ def generate_svs(args: dict, exp_setup: dict):
             pl.Path(
                 exp_setup["general"]["folder_name"],
                 exp_setup["general"]["vector_folder"],
-                f"sv_vectors_iw{iw_str}",
+                f"fsv_vectors_iw{iw_str}",
             )
         )
         local_exp_setup["integration_time"] = iw * params.dt
-
-        sv_runner(args, exp_setup=local_exp_setup)
 
 
 def generate_vectors(args: dict, exp_setup: dict):

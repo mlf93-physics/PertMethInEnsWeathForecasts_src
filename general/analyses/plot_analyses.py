@@ -20,8 +20,6 @@ def orthogonality_of_vectors(matrix_of_vectors):
     """
     n_vectors = matrix_of_vectors.shape[0]
 
-    # print("matrix_of_vectors", matrix_of_vectors.shape)
-    # input()
     # Calculate orthogonality of all combinations
     orthonormality = [x.dot(y.conj()) for x, y in it.combinations(matrix_of_vectors, 2)]
 

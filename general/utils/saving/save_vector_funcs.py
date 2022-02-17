@@ -62,8 +62,10 @@ def save_vector_unit(
             perturb_position
             + exp_setup["n_cycles"] * exp_setup["integration_time"] * params.tts
         )
-    elif cfg.LICENCE == EXP.SINGULAR_VECTORS or EXP.BREEDING_EOF_VECTORS:
+    elif cfg.LICENCE == EXP.SINGULAR_VECTORS or cfg.LICENCE == EXP.BREEDING_EOF_VECTORS:
         val_pos = int(perturb_position)
+    elif cfg.LICENCE == EXP.FINAL_SINGULAR_VECTORS:
+        val_pos = int(perturb_position + exp_setup["integration_time"] * params.tts)
 
     if perturb_position is not None:
         perturb_header_extra = (
