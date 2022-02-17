@@ -255,20 +255,34 @@ def plt_vec_compared_to_lv(args, axes: plt.Axes = None):
 
     # Reset exp_folder
     args["exp_folder"] = save_exp_folder
+    # Get fsv folders
+    args["vectors"] = ["fsv"]
+    e_utils.update_compare_exp_folders(args)
+    retrieve_header_key = "time_to_run"
+
+    # Import data
+    fsv_vector_folder_units, fsv_header_values = import_multiple_vector_dirs(
+        args,
+        raw_perturbations=True,
+        retrieve_header_key=retrieve_header_key,
+        dtype=sparams.dtype,
+    )
+
+    # Reset exp_folder
+    args["exp_folder"] = save_exp_folder
     # Get lv folders
     args["vectors"] = ["lv"]
     e_utils.update_compare_exp_folders(args)
 
-    args["exp_folder"] = args["exp_folders"][0]
-    (
-        lv_vector_units,
-        _,
-        _,
-        _,
-        lv_vec_header_dicts,
-    ) = pt_import.import_perturb_vectors(args, raw_perturbations=True)
+    # Import data
+    lv_vector_folder_units, lv_header_values = import_multiple_vector_dirs(
+        args,
+        raw_perturbations=True,
+        retrieve_header_key=retrieve_header_key,
+        dtype=sparams.dtype,
+    )
 
-    bv_lv_orthogonality = np.zeros(
+    bv_lv_orthogonality = np.empty(
         (
             len(bv_header_values[retrieve_header_key]),
             args["n_profiles"],
@@ -276,21 +290,26 @@ def plt_vec_compared_to_lv(args, axes: plt.Axes = None):
         )
     )
 
-    sv_lv_orthogonality = np.zeros(
+    sv_lv_orthogonality = np.empty(
         (
-            len(bv_header_values[retrieve_header_key]),
+            len(sv_header_values[retrieve_header_key]),
             args["n_profiles"],
             args["n_runs_per_profile"],
         )
     )
+    fsv_lv_orthogonality = np.copy(sv_lv_orthogonality)
 
-    for i, value in enumerate(bv_header_values[retrieve_header_key]):
+    for i, value in enumerate(sv_header_values[retrieve_header_key]):
         for j in range(args["n_profiles"]):
             bv_lv_orthogonality[i, j, :] = g_plt_anal.orthogonality_to_vector(
-                lv_vector_units[j, 0, :], bv_vector_folder_units[i, j, :, :]
+                lv_vector_folder_units[0, j, 0, :], bv_vector_folder_units[i, j, :, :]
             )
             sv_lv_orthogonality[i, j, :] = g_plt_anal.orthogonality_to_vector(
-                lv_vector_units[j, 0, :], sv_vector_folder_units[i, j, :, :]
+                lv_vector_folder_units[0, j, 0, :], sv_vector_folder_units[i, j, :, :]
+            )
+
+            fsv_lv_orthogonality[i, j, :] = g_plt_anal.orthogonality_to_vector(
+                lv_vector_folder_units[i, j, 0, :], fsv_vector_folder_units[i, j, :, :]
             )
 
     mean_bv_lv_orthogonality = np.mean(
@@ -298,11 +317,11 @@ def plt_vec_compared_to_lv(args, axes: plt.Axes = None):
     )
 
     mean_sv_lv_orthogonality = np.mean(np.abs(sv_lv_orthogonality), axis=1)
+    mean_fsv_lv_orthogonality = np.mean(np.abs(fsv_lv_orthogonality), axis=1)
 
     # Prepare axes
     if axes is None:
         axes = plt.axes()
-
 
     # Plot orthogonality vs iw
     axes.plot(
@@ -312,12 +331,21 @@ def plt_vec_compared_to_lv(args, axes: plt.Axes = None):
     )
 
     sv_vs_lv_lines = axes.plot(
-        sorted(bv_header_values[retrieve_header_key]),
+        sorted(sv_header_values[retrieve_header_key]),
         mean_sv_lv_orthogonality,
     )
-    for i, line in enumerate(sv_vs_lv_lines):
-        line.set_label(
-            f"SV{i} vs LV1",
+    fsv_vs_lv_lines = axes.plot(
+        sorted(fsv_header_values[retrieve_header_key]),
+        mean_fsv_lv_orthogonality,
+    )
+
+    # Set labels
+    for i, lines in enumerate(zip(sv_vs_lv_lines, fsv_vs_lv_lines)):
+        lines[0].set_label(
+            f"ISV{i} vs LV1",
+        )
+        lines[1].set_label(
+            f"FSV{i} vs LV1",
         )
 
     axes.set_xlabel("Integration window (IW)")
@@ -326,7 +354,7 @@ def plt_vec_compared_to_lv(args, axes: plt.Axes = None):
 
     title = g_plt_utils.generate_title(
         args,
-        header_dict=lv_vec_header_dicts[0],
+        # header_dict=lv_vec_header_dicts[0],
         title_header="Absolute orthogonality vs IW",
         title_suffix=f"$n_{{units}}$={args['n_profiles']}",
         detailed=False,

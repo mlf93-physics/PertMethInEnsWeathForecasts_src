@@ -27,6 +27,7 @@ from general.params.model_licences import Models
 from general.runners.breed_vector_runner import main as bv_runner
 from general.runners.lyapunov_vector_runner import main as lv_runner
 from general.runners.singular_vector_lanczos_runner import main as sv_runner
+from general.runners.final_singular_vector_runner import main as fsv_runner
 from libs.libutils import type_utils as lib_type_utils
 
 # Get parameters for model
@@ -100,19 +101,27 @@ def generate_lvs(args: dict, exp_setup: dict):
 
     # Get subset of experiment setup
     local_exp_setup = exp_setup["general"] | exp_setup["lv_gen_setup"]
-    local_exp_setup["folder_name"] = str(
-        pl.Path(
-            exp_setup["general"]["folder_name"],
-            exp_setup["general"]["vector_folder"],
-            "lv_vectors",
+
+    stored_eval_times = copy.copy(local_exp_setup["eval_times"])
+
+    # Calculate lv valid at eval time + all end times
+    for iw in [0, *local_exp_setup["iws"]]:
+        iw_str: str = lib_type_utils.zpad_string(str(iw), n_zeros=2)
+        local_exp_setup["folder_name"] = str(
+            pl.Path(
+                exp_setup["general"]["folder_name"],
+                exp_setup["general"]["vector_folder"],
+                f"lv_vectors_val{iw_str}",
+            )
         )
-    )
 
-    lv_runner(args, exp_setup=local_exp_setup)
+        local_exp_setup["eval_times"][0] = stored_eval_times[0] + iw * params.dt
+
+        lv_runner(args, exp_setup=local_exp_setup)
 
 
-def generate_svs(args: dict, exp_setup: dict):
-    """Generate the SVs according to the exp setup
+def generate_initial_svs(args: dict, exp_setup: dict):
+    """Generate the initial SVs according to the exp setup
 
     Parameters
     ----------
@@ -129,21 +138,49 @@ def generate_svs(args: dict, exp_setup: dict):
     # Get subset of experiment setup
     local_exp_setup = exp_setup["general"] | exp_setup["sv_gen_setup"]
 
-    # for iw in local_exp_setup["iws"]:
-    #     iw_str: str = lib_type_utils.zpad_string(str(iw), n_zeros=2)
-    #     # Set local exp values
-    #     local_exp_setup["folder_name"] = str(
-    #         pl.Path(
-    #             exp_setup["general"]["folder_name"],
-    #             exp_setup["general"]["vector_folder"],
-    #             f"sv_vectors_iw{iw_str}",
-    #         )
-    #     )
-    #     local_exp_setup["integration_time"] = iw * params.dt
+    for iw in local_exp_setup["iws"]:
+        iw_str: str = lib_type_utils.zpad_string(str(iw), n_zeros=2)
+        # Set local exp values
+        local_exp_setup["folder_name"] = str(
+            pl.Path(
+                exp_setup["general"]["folder_name"],
+                exp_setup["general"]["vector_folder"],
+                f"sv_vectors_iw{iw_str}",
+            )
+        )
+        local_exp_setup["integration_time"] = iw * params.dt
 
-    #     sv_runner(args, exp_setup=local_exp_setup)
+        sv_runner(args, exp_setup=local_exp_setup)
+
+
+def generate_final_svs(args: dict, exp_setup: dict):
+    """Generate the final SVs according to the exp setup
+
+    Parameters
+    ----------
+    args : dict
+        Run-time arguments
+    exp_setup : dict
+        Experiment setup
+    """
 
     print(f"{col.Fore.GREEN}FINAL TIME SV GENERATION{col.Fore.RESET}")
+
+    # Update licence
+    cfg.LICENCE = exp.FINAL_SINGULAR_VECTORS
+
+    # Get subset of experiment setup
+    local_exp_setup = exp_setup["general"] | exp_setup["fsv_gen_setup"]
+    # Set pert_vector_folder to be able to get sv vectors for perturbations
+    args["pert_vector_folder"] = pl.Path(
+        exp_setup["general"]["folder_name"],
+        exp_setup["general"]["vector_folder"],
+    )
+
+    stored_eval_times = copy.copy(local_exp_setup["eval_times"])
+
+    # Set local args
+    args["n_profiles"] = local_exp_setup["n_units"]
 
     for iw in local_exp_setup["iws"]:
         iw_str: str = lib_type_utils.zpad_string(str(iw), n_zeros=2)
@@ -156,6 +193,12 @@ def generate_svs(args: dict, exp_setup: dict):
             )
         )
         local_exp_setup["integration_time"] = iw * params.dt
+        # Update eval_time
+        local_exp_setup["eval_times"][0] = stored_eval_times[0] + iw * params.dt
+        # Set exp_folder to get relevant sv vectors
+        args["exp_folder"] = f"sv_vectors_iw{iw_str}"
+
+        fsv_runner(args, exp_setup=local_exp_setup)
 
 
 def generate_vectors(args: dict, exp_setup: dict):
@@ -175,7 +218,9 @@ def generate_vectors(args: dict, exp_setup: dict):
     if "lv" in args["vectors"] or "all" in args["vectors"]:
         generate_lvs(copy.deepcopy(args), exp_setup)
     if "sv" in args["vectors"] or "all" in args["vectors"]:
-        generate_svs(copy.deepcopy(args), exp_setup)
+        generate_initial_svs(copy.deepcopy(args), exp_setup)
+    if "fsv" in args["vectors"] or "all" in args["vectors"]:
+        generate_final_svs(copy.deepcopy(args), exp_setup)
 
 
 def main(args: dict):
