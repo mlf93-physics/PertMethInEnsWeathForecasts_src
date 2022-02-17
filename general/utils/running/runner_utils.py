@@ -50,6 +50,15 @@ def get_bv_start_time(
     return start_time
 
 
+def get_adj_lv_start_time(
+    eval_time: Union[float, np.ndarray] = None, exp_setup: dict = None
+):
+    _temp_offset = exp_setup["n_cycles"] * exp_setup["integration_time"]
+
+    start_time = eval_time + _temp_offset
+    return start_time
+
+
 def generate_start_times(exp_setup: dict, args: dict):
     """Generate start times and calculate the number of possible units from
     the relevant run-time variables and variables from the experiment setup
@@ -82,6 +91,7 @@ def generate_start_times(exp_setup: dict, args: dict):
     elif (
         cfg.LICENCE == EXP.BREEDING_VECTORS
         or cfg.LICENCE == EXP.LYAPUNOV_VECTORS
+        or cfg.LICENCE == EXP.ADJ_LYAPUNOV_VECTORS
         or cfg.LICENCE == EXP.SINGULAR_VECTORS
         or cfg.LICENCE == EXP.FINAL_SINGULAR_VECTORS
     ):
@@ -98,6 +108,10 @@ def generate_start_times(exp_setup: dict, args: dict):
                 or cfg.LICENCE == EXP.LYAPUNOV_VECTORS
             ):
                 _time_offset = get_bv_start_time(
+                    eval_time=exp_setup["eval_times"][0], exp_setup=exp_setup
+                )
+            elif cfg.LICENCE == EXP.ADJ_LYAPUNOV_VECTORS:
+                _time_offset = get_adj_lv_start_time(
                     eval_time=exp_setup["eval_times"][0], exp_setup=exp_setup
                 )
             elif cfg.LICENCE == EXP.SINGULAR_VECTORS:

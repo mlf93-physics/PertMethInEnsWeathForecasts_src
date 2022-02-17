@@ -8,7 +8,7 @@
             "eval_times": [
                 1000
             ],
-            "n_units": 400,
+            "n_units": 500,
             "iws": [
                 2,
                 4,

@@ -256,6 +256,7 @@ def perturbation_runner(
     if (
         cfg.LICENCE == EXP.BREEDING_VECTORS
         or cfg.LICENCE == EXP.LYAPUNOV_VECTORS
+        or cfg.LICENCE == EXP.ADJ_LYAPUNOV_VECTORS
         or cfg.LICENCE == EXP.SINGULAR_VECTORS
         or cfg.LICENCE == EXP.FINAL_SINGULAR_VECTORS
     ):
@@ -345,6 +346,7 @@ def main_setup(
         # SINGULAR_VECTORS or FINAL_SINGULAR_VECTORS
         if (
             cfg.LICENCE == EXP.LYAPUNOV_VECTORS
+            or cfg.LICENCE == EXP.ADJ_LYAPUNOV_VECTORS
             or cfg.LICENCE == EXP.SINGULAR_VECTORS
             or cfg.LICENCE == EXP.FINAL_SINGULAR_VECTORS
         ):

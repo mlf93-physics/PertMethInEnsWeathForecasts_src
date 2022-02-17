@@ -1,0 +1,13 @@
+{
+    "TestRun1": {
+        "folder_name": "pt_vectors/test_adj_lyapunov",
+        "sub_exp_folder": "perturb_data",
+        "integration_time": 20,
+        "n_cycles": 1,
+        "n_vectors": 1,
+        "vector_offset": 10,
+        "eval_times": [
+            1000
+        ]
+    }
+}

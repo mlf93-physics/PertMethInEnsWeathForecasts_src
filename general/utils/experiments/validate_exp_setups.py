@@ -22,6 +22,7 @@ def validate_start_time_method(exp_setup: dict = {}):
     elif (
         cfg.LICENCE == EXP.BREEDING_VECTORS
         or cfg.LICENCE == EXP.LYAPUNOV_VECTORS
+        or cfg.LICENCE == EXP.ADJ_LYAPUNOV_VECTORS
         or cfg.LICENCE == EXP.SINGULAR_VECTORS
         or cfg.LICENCE == EXP.FINAL_SINGULAR_VECTORS
     ):

@@ -33,8 +33,11 @@ def detect_exp_licence() -> Experiment:
     elif "lorentz_block_runner" == root_file_name:
         licence = exp.LORENTZ_BLOCK
 
-    elif "lyapunov_vector_runner" == root_file_name:
+    elif bool(re.match(r"lyapunov_vector\w+", root_file_name)):
         licence = exp.LYAPUNOV_VECTORS
+
+    elif bool(re.match(r"adj_lyapunov_vector\w+", root_file_name)):
+        licence = exp.ADJ_LYAPUNOV_VECTORS
 
     elif bool(re.match(r"singular_vector\w+", root_file_name)):
         licence = exp.SINGULAR_VECTORS

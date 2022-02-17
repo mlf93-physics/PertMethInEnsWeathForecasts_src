@@ -39,6 +39,8 @@ def save_perturbation_data(
         prefix = f"breed_perturb{perturb_count}_"
     elif cfg.LICENCE == EXP.LYAPUNOV_VECTORS:
         prefix = f"lyapunov_perturb{perturb_count}_"
+    elif cfg.LICENCE == EXP.ADJ_LYAPUNOV_VECTORS:
+        prefix = f"adj_lyapunov_perturb{perturb_count}_"
     elif cfg.LICENCE == EXP.HYPER_DIFFUSIVITY:
         prefix = f"hyper_perturb{perturb_count}_"
     elif cfg.LICENCE == EXP.SINGULAR_VECTORS:
