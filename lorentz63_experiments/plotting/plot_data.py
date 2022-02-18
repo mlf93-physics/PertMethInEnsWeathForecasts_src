@@ -15,6 +15,7 @@ from mpl_toolkits.mplot3d.art3d import Line3DCollection
 import matplotlib.cm as cm
 import matplotlib.colors as mpl_colors
 import matplotlib.pyplot as plt
+import seaborn as sb
 from lorentz63_experiments.params.params import *
 import lorentz63_experiments.analyses.normal_mode_analysis as nm_analysis
 import lorentz63_experiments.utils.util_funcs as l_utils
@@ -29,7 +30,7 @@ import config as cfg
 cfg.GLOBAL_PARAMS.record_max_time = 3000
 
 
-def plot_attractor(args, ax=None):
+def plot_attractor(args, ax=None, alpha=1):
     """Plot the 3D attractor of the reference data
 
     Parameters
@@ -72,7 +73,7 @@ def plot_attractor(args, ax=None):
         u_data[:, 1],
         u_data[:, 2],
         plot_style,
-        alpha=1,
+        alpha=alpha,
         linewidth=linewidth,
         zorder=10,
     )
@@ -156,14 +157,14 @@ def plot_velocities(args):
     # Import reference data
     time, u_data, header_dict = g_import.import_ref_data(args=args)
 
-    fig, axes = plt.subplots(nrows=3, ncols=1, sharex=True)
+    fig, axes = plt.subplots(nrows=1, ncols=1, sharex=True, figsize=(6, 2))
 
-    for i, ax in enumerate(axes):
-        ax.plot(time, u_data[:, i], "k-")
-        ax.set_xlabel("Time")
-        ax.set_ylabel("Velocity")
+    # for i, ax in enumerate(axes):
+    axes.plot(time - time[0], u_data[:, 0], "k-")
+    axes.set_xlabel("Time")
+    axes.set_ylabel("x")
 
-    plt.suptitle("Velocities vs time")
+    # plt.suptitle("Velocities vs time")
 
 
 def plot_energy(args, axes=None):
@@ -212,14 +213,22 @@ def plot_normal_mode_dist(args):
     # Setup axes
     fig1 = plt.figure()
     ax1 = plt.axes(projection="3d")
+    ax1.xaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+    ax1.yaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+    ax1.zaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
 
-    max_e_value = np.max(e_values.real)
-    min_e_value = np.min(e_values.real)
+    max_e_value = np.max(e_values.imag)
+    min_e_value = np.min(e_values.imag)
 
     # Prepare cmap and norm
-    cmap, norm = g_plt_utils.get_custom_cmap(vmin=min_e_value, vmax=max_e_value)
+    cmap, norm = g_plt_utils.get_custom_cmap(
+        vmin=min_e_value,
+        vmax=max_e_value,
+        vcenter=(max_e_value + min_e_value) / 2,
+        cmap_handle=plt.cm.coolwarm_r,
+    )
     # Plot attractor
-    plot_attractor(args, ax=ax1)
+    plot_attractor(args, ax=ax1, alpha=0.5)
 
     # Plot
     scatter_plot = ax1.scatter(
@@ -239,11 +248,15 @@ def plot_normal_mode_dist(args):
     )
 
     ax1.set_title(e_value_dist_title)
+    ax1.grid(False)
     fig1.colorbar(scatter_plot)
 
     fig2 = plt.figure()
     ax2 = plt.axes(projection="3d")
-    plot_attractor(args, ax=ax2)
+    ax2.xaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+    ax2.yaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+    ax2.zaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+    plot_attractor(args, ax=ax2, alpha=0.2)
     qplot = ax2.quiver(
         u_profiles[0, :],
         u_profiles[1, :],
@@ -254,7 +267,10 @@ def plot_normal_mode_dist(args):
         norm=norm,
         cmap=cmap,
         normalize=True,
+        alpha=1,
         length=2,
+        linewidths=1.0,
+        zorder=10,
     )
 
     e_vector_dist_title = g_plt_utils.generate_title(
@@ -264,10 +280,11 @@ def plot_normal_mode_dist(args):
         title_suffix=f"$N_{{points}}$={args['n_profiles']}",
     )
 
-    ax2.set_title(e_vector_dist_title)
+    # ax2.set_title(e_vector_dist_title)
+    ax2.grid(False)
 
     # Set quiver colors
-    qplot.set_array(np.concatenate((e_values.real, np.repeat(e_values.real, 2))))
+    qplot.set_array(np.concatenate((e_values.imag, np.repeat(e_values.imag, 2))))
     # Set colorbar
     fig2.colorbar(qplot)
 

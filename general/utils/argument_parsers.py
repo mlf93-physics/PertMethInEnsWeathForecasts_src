@@ -21,7 +21,7 @@ from general.params.model_licences import Models
 import config as cfg
 
 # Global variables
-V_CHOICES = ["bv", "bv_eof", "sv", "fsv", "lv", "all"]
+V_CHOICES = ["bv", "bv_eof", "sv", "fsv", "lv", "alv", "all"]
 PT_CHOICES = ["bv", "bv_eof", "rd", "nm", "sv", "rf", "lv", "all"]
 
 # Instantiate ArgumentParser

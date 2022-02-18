@@ -1,28 +1,15 @@
 {
     "CompareITRun01": {
         "general": {
-            "folder_name": "compare_vecs_fsv_lv_ncycles4",
+            "folder_name": "compare_sv_to_lv_and_alv_ncycles4_iw2_to_544_n_units100",
             "vector_folder": "vectors",
             "perturbation_folder": "perturbations",
             "sub_exp_folder": "perturb_data",
             "eval_times": [
                 1000
             ],
-            "n_units": 500,
-            "iws": [
-                2,
-                4,
-                6,
-                8,
-                10,
-                12,
-                14,
-                16,
-                32,
-                64,
-                96,
-                128
-            ],
+            "n_units": 400,
+            "iws": [],
             "unit_offset": 1.0
         },
         "bv_gen_setup": {

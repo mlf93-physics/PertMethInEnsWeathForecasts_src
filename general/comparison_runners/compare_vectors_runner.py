@@ -14,18 +14,16 @@ import copy
 import pathlib as pl
 import colorama as col
 import config as cfg
-import general.runners.perturbation_runner as pt_runner
 import general.utils.argument_parsers as a_parsers
 import general.utils.arg_utils as a_utils
 import general.utils.experiments.exp_utils as exp_utils
-import general.utils.process_utils as pr_utils
 import general.utils.running.runner_utils as r_utils
 import general.utils.user_interface as g_ui
-import general.utils.util_funcs as g_utils
 from general.params.experiment_licences import Experiments as exp
 from general.params.model_licences import Models
 from general.runners.breed_vector_runner import main as bv_runner
 from general.runners.lyapunov_vector_runner import main as lv_runner
+from general.runners.adj_lyapunov_vector_runner import main as adj_lv_runner
 from general.runners.singular_vector_lanczos_runner import main as sv_runner
 from general.runners.final_singular_vector_runner import main as fsv_runner
 from libs.libutils import type_utils as lib_type_utils
@@ -118,6 +116,44 @@ def generate_lvs(args: dict, exp_setup: dict):
         local_exp_setup["eval_times"][0] = stored_eval_times[0] + iw * params.dt
 
         lv_runner(args, exp_setup=local_exp_setup)
+
+
+def generate_adj_lvs(args: dict, exp_setup: dict):
+    """Generate the adjoint LVs according to the exp setup
+
+    Parameters
+    ----------
+    args : dict
+        Run-time arguments
+    exp_setup : dict
+        Experiment setup
+    """
+    print(f"{col.Fore.GREEN}ADJ LV GENERATION{col.Fore.RESET}")
+    # Update licence
+    cfg.LICENCE = exp.ADJ_LYAPUNOV_VECTORS
+
+    # Set local args params
+    args["pert_mode"] = "rd"
+
+    # Get subset of experiment setup
+    local_exp_setup = exp_setup["general"] | exp_setup["lv_gen_setup"]
+
+    stored_eval_times = copy.copy(local_exp_setup["eval_times"])
+
+    # Calculate lv valid at eval time + all end times
+    for iw in [0, *local_exp_setup["iws"]]:
+        iw_str: str = lib_type_utils.zpad_string(str(iw), n_zeros=2)
+        local_exp_setup["folder_name"] = str(
+            pl.Path(
+                exp_setup["general"]["folder_name"],
+                exp_setup["general"]["vector_folder"],
+                f"alv_vectors_val{iw_str}",
+            )
+        )
+
+        local_exp_setup["eval_times"][0] = stored_eval_times[0] + iw * params.dt
+
+        adj_lv_runner(args, exp_setup=local_exp_setup)
 
 
 def generate_initial_svs(args: dict, exp_setup: dict):
@@ -217,6 +253,8 @@ def generate_vectors(args: dict, exp_setup: dict):
         generate_bvs(copy.deepcopy(args), exp_setup)
     if "lv" in args["vectors"] or "all" in args["vectors"]:
         generate_lvs(copy.deepcopy(args), exp_setup)
+    if "alv" in args["vectors"] or "all" in args["vectors"]:
+        generate_adj_lvs(copy.deepcopy(args), exp_setup)
     if "sv" in args["vectors"] or "all" in args["vectors"]:
         generate_initial_svs(copy.deepcopy(args), exp_setup)
     if "fsv" in args["vectors"] or "all" in args["vectors"]:

@@ -142,7 +142,7 @@ def imported_sorted_perturbation_info(folder_name, args, search_pattern="*.csv")
                     # ATL perturbation against reference file import
                     _temp_time_pos = _temp_time_pos - int(
                         round(
-                            perturb_header_dict["Nt"]
+                            perturb_header_dict["time_to_run"]
                             * perturb_header_dict["sample_rate"]
                         )
                     )

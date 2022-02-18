@@ -227,126 +227,158 @@ def import_multiple_vector_dirs(
 def plt_vec_compared_to_lv(args, axes: plt.Axes = None):
 
     save_exp_folder = args["exp_folder"]
-
-    # Get bv folders
-    args["vectors"] = ["bv"]
-    e_utils.update_compare_exp_folders(args)
+    save_vectors: List[str] = args["vectors"]
     retrieve_header_key = "time_to_run"
 
-    # Import data
-    bv_vector_folder_units, bv_header_values = import_multiple_vector_dirs(
-        args, raw_perturbations=False, retrieve_header_key=retrieve_header_key
-    )
+    if "lv" not in save_vectors:
+        raise ValueError("lv should be selected for this plot")
 
-    # Reset exp_folder
-    args["exp_folder"] = save_exp_folder
-    # Get sv folders
-    args["vectors"] = ["sv"]
-    e_utils.update_compare_exp_folders(args)
-    retrieve_header_key = "time_to_run"
+    # Initialise dicts
+    vector_folder_units_dict: dict = {}
+    header_values_dict: dict = {}
+    orthogonality_dict: dict = {}  # Orthogonality rel LV
+    adj_orthogonality_dict: dict = {}  # Orthogonality rel adj LV or forward LV
+    mean_vector_lv_orthogonality_dict = {}
+    mean_vector_adj_lv_orthogonality_dict = {}
 
-    # Import data
-    sv_vector_folder_units, sv_header_values = import_multiple_vector_dirs(
-        args,
-        raw_perturbations=True,
-        retrieve_header_key=retrieve_header_key,
-        dtype=np.complex128,
-    )
-
-    # Reset exp_folder
-    args["exp_folder"] = save_exp_folder
-    # Get fsv folders
-    args["vectors"] = ["fsv"]
-    e_utils.update_compare_exp_folders(args)
-    retrieve_header_key = "time_to_run"
-
-    # Import data
-    fsv_vector_folder_units, fsv_header_values = import_multiple_vector_dirs(
-        args,
-        raw_perturbations=True,
-        retrieve_header_key=retrieve_header_key,
-        dtype=sparams.dtype,
-    )
-
-    # Reset exp_folder
-    args["exp_folder"] = save_exp_folder
-    # Get lv folders
-    args["vectors"] = ["lv"]
-    e_utils.update_compare_exp_folders(args)
-
-    # Import data
-    lv_vector_folder_units, lv_header_values = import_multiple_vector_dirs(
-        args,
-        raw_perturbations=True,
-        retrieve_header_key=retrieve_header_key,
-        dtype=sparams.dtype,
-    )
-
-    bv_lv_orthogonality = np.empty(
-        (
-            len(bv_header_values[retrieve_header_key]),
-            args["n_profiles"],
-            args["n_runs_per_profile"],
+    for vector in save_vectors:
+        # Reset exp_folder
+        args["exp_folder"] = save_exp_folder
+        # Get folder units
+        vector_folder_units, header_values = prepare_vector_folder_units(
+            args,
+            vector=vector,
+            raw_perturbations=not vector == "bv",
+            dtype=np.complex128 if vector == "sv" else sparams.dtype,
+            retrieve_header_key=retrieve_header_key,
+            zero_iw_only=(vector == "lv" or vector == "alv")
+            and "fsv" not in save_vectors,
         )
-    )
+        vector_folder_units_dict[vector] = vector_folder_units
+        header_values_dict[vector] = header_values
 
-    sv_lv_orthogonality = np.empty(
-        (
-            len(sv_header_values[retrieve_header_key]),
-            args["n_profiles"],
-            args["n_runs_per_profile"],
-        )
-    )
-    fsv_lv_orthogonality = np.copy(sv_lv_orthogonality)
+        if vector not in ["lv", "alv"]:
+            orthogonality_dict[vector] = np.empty(
+                (
+                    len(header_values[retrieve_header_key]),
+                    args["n_profiles"],
+                    args["n_runs_per_profile"],
+                )
+            )
+            adj_orthogonality_dict[vector] = np.copy(orthogonality_dict[vector])
 
-    for i, value in enumerate(sv_header_values[retrieve_header_key]):
+    # Get first key in header_values_dict
+    header_val_dict_keys = list(header_values_dict.keys())
+    first_key: str = header_val_dict_keys[0]
+    iw_values: List[float] = sorted(header_values_dict[first_key][retrieve_header_key])
+
+    # Calculate orthogonality between vectors
+    for i, value in enumerate(iw_values):
         for j in range(args["n_profiles"]):
-            bv_lv_orthogonality[i, j, :] = g_plt_anal.orthogonality_to_vector(
-                lv_vector_folder_units[0, j, 0, :], bv_vector_folder_units[i, j, :, :]
-            )
-            sv_lv_orthogonality[i, j, :] = g_plt_anal.orthogonality_to_vector(
-                lv_vector_folder_units[0, j, 0, :], sv_vector_folder_units[i, j, :, :]
-            )
+            for k, vector in enumerate(save_vectors):
+                if vector in ["lv", "alv"]:
+                    continue
 
-            fsv_lv_orthogonality[i, j, :] = g_plt_anal.orthogonality_to_vector(
-                lv_vector_folder_units[i, j, 0, :], fsv_vector_folder_units[i, j, :, :]
+                if vector in ["bv", "sv"]:
+                    orthogonality_dict[vector][
+                        i, j, :
+                    ] = g_plt_anal.orthogonality_to_vector(
+                        vector_folder_units_dict["lv"][0, j, 0, :],
+                        vector_folder_units_dict[vector][i, j, :, :],
+                    )
+                    if "alv" in save_vectors:
+                        adj_orthogonality_dict[vector][
+                            i, j, :
+                        ] = g_plt_anal.orthogonality_to_vector(
+                            vector_folder_units_dict["alv"][0, j, 0, :],
+                            vector_folder_units_dict[vector][i, j, :, :],
+                        )
+
+                if vector in ["fsv"]:
+                    orthogonality_dict[vector][
+                        i, j, :
+                    ] = g_plt_anal.orthogonality_to_vector(
+                        vector_folder_units_dict["lv"][i, j, 0, :],
+                        vector_folder_units_dict[vector][i, j, :, :],
+                    )
+                    if "alv" in save_vectors:
+                        adj_orthogonality_dict[vector][
+                            i, j, :
+                        ] = g_plt_anal.orthogonality_to_vector(
+                            vector_folder_units_dict["alv"][i, j, 0, :],
+                            vector_folder_units_dict[vector][i, j, :, :],
+                        )
+
+    # Average orthogonality
+    for vector in save_vectors:
+        if vector in ["lv", "alv"]:
+            continue
+
+        if vector in ["fsv", "sv"]:
+            mean_vector_lv_orthogonality_dict[vector] = np.mean(
+                np.abs(orthogonality_dict[vector]), axis=1
             )
-
-    mean_bv_lv_orthogonality = np.mean(
-        np.mean(np.abs(bv_lv_orthogonality), axis=2), axis=1
-    )
-
-    mean_sv_lv_orthogonality = np.mean(np.abs(sv_lv_orthogonality), axis=1)
-    mean_fsv_lv_orthogonality = np.mean(np.abs(fsv_lv_orthogonality), axis=1)
+            if "alv" in save_vectors:
+                mean_vector_adj_lv_orthogonality_dict[vector] = np.mean(
+                    np.abs(adj_orthogonality_dict[vector]), axis=1
+                )
+        if vector in ["bv"]:
+            mean_vector_lv_orthogonality_dict[vector] = np.mean(
+                np.mean(np.abs(orthogonality_dict[vector]), axis=2), axis=1
+            )
+            if "alv" in save_vectors:
+                mean_vector_adj_lv_orthogonality_dict[vector] = np.mean(
+                    np.mean(np.abs(adj_orthogonality_dict[vector]), axis=2), axis=1
+                )
 
     # Prepare axes
     if axes is None:
-        axes = plt.axes()
+        axes: plt.Axes = plt.axes()
 
     # Plot orthogonality vs iw
-    axes.plot(
-        sorted(bv_header_values[retrieve_header_key]),
-        mean_bv_lv_orthogonality,
-        label="BV vs LV1",
-    )
+    for vector in save_vectors:
+        if vector == "bv":
+            lines: List[plt.Line2D] = axes.plot(
+                iw_values,
+                mean_vector_lv_orthogonality_dict[vector],
+                label=f"{vector.upper()} vs LV1",
+            )
+            if "alv" in save_vectors:
+                axes.plot(
+                    iw_values,
+                    mean_vector_adj_lv_orthogonality_dict[vector],
+                    label=f"{vector.upper()} vs ALV1",
+                    color=lines[0].get_color(),
+                    linestyle="dashed",
+                )
 
-    sv_vs_lv_lines = axes.plot(
-        sorted(sv_header_values[retrieve_header_key]),
-        mean_sv_lv_orthogonality,
-    )
-    fsv_vs_lv_lines = axes.plot(
-        sorted(fsv_header_values[retrieve_header_key]),
-        mean_fsv_lv_orthogonality,
-    )
-
-    # Set labels
-    for i, lines in enumerate(zip(sv_vs_lv_lines, fsv_vs_lv_lines)):
-        lines[0].set_label(
-            f"ISV{i} vs LV1",
-        )
-        lines[1].set_label(
-            f"FSV{i} vs LV1",
-        )
+        if "sv" in vector:
+            vector_vs_lv_lines = axes.plot(
+                iw_values,
+                mean_vector_lv_orthogonality_dict[vector],
+            )
+            if "alv" in save_vectors:
+                vector_vs_alv_lines = axes.plot(
+                    iw_values,
+                    mean_vector_adj_lv_orthogonality_dict[vector],
+                    linestyle="dashed",
+                )
+                line_objs = zip(vector_vs_lv_lines, vector_vs_alv_lines)
+            else:
+                line_objs = zip(vector_vs_lv_lines)
+            # Set labels
+            vector_string: str = (
+                ("I" + vector.upper()) if vector == "sv" else vector.upper()
+            )
+            for i, line_objs in enumerate(line_objs):
+                line_objs[0].set_label(
+                    f"{vector_string}{i} vs LV1",
+                )
+                if "alv" in save_vectors:
+                    line_objs[1].set_label(
+                        f"{vector_string}{i} vs ALV1",
+                    )
+                    line_objs[1].set_color(line_objs[0].get_color())
 
     axes.set_xlabel("Integration window (IW)")
     axes.set_ylabel("Absolute orthogonality")
@@ -360,6 +392,32 @@ def plt_vec_compared_to_lv(args, axes: plt.Axes = None):
         detailed=False,
     )
     axes.set_title(title)
+
+
+def prepare_vector_folder_units(
+    args,
+    vector: str = "bv",
+    raw_perturbations=True,
+    dtype=sparams.dtype,
+    retrieve_header_key: str = "",
+    zero_iw_only: bool = False,
+):
+
+    args["vectors"] = [vector]
+    e_utils.update_compare_exp_folders(args)
+
+    if zero_iw_only:
+        args["exp_folders"] = [args["exp_folders"][0]]
+
+    # Import data
+    vector_folder_units, header_values = import_multiple_vector_dirs(
+        args,
+        raw_perturbations=raw_perturbations,
+        retrieve_header_key=retrieve_header_key,
+        dtype=dtype,
+    )
+
+    return vector_folder_units, header_values
 
 
 def plt_BV_LYAP_vector_comparison(args):
