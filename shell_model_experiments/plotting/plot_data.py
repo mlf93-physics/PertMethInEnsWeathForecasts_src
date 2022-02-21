@@ -540,21 +540,30 @@ def plot_2D_eigen_mode_analysis(args=None):
     kolm_sinai_entropy = sh_utils.get_kolm_sinai_entropy(e_value_collection)
 
     # Plot normalised sum of eigenvalues
-    plt.figure()
-    plt.plot(
-        np.cumsum(e_value_collection.real, axis=0) / kolm_sinai_entropy,
+    axes = plt.axes()
+    axes.plot(
+        np.log2(PAR.k_vec_temp),
+        np.mean(
+            np.cumsum(e_value_collection.real, axis=0) / kolm_sinai_entropy, axis=1
+        ),
         linestyle="-",
         marker=".",
     )
-    plt.xlabel("Lyaponov index")
-    plt.ylabel("$\sum_{i=0}^j \\lambda_j$ / H")
-    plt.ylim(-3, 1.5)
-    plt.legend(perturb_time_pos_list)
-    plt.title(
-        f'Cummulative eigenvalues; f={header_dict["f"]}'
-        + f', $n_f$={int(header_dict["n_f"])}, $\\nu$={header_dict["ny"]:.2e}'
-        + f', time={header_dict["time_to_run"]}s'
+    axes.set_xlabel("Lyaponov index")
+    axes.set_ylabel("$\sum_{i=0}^j \\lambda_j$ / H")
+    axes.set_ylim(-3, 1.5)
+    axes.set_xlim(0, 20)
+    # axes.legend(perturb_time_pos_list)
+    axes.xaxis.set_major_locator(mpl_ticker.MaxNLocator(integer=True))
+
+    title = g_plt_utils.generate_title(
+        args,
+        header_dict=header_dict,
+        title_header="Cummulative eigenvalues",
+        title_suffix=f'N_tot={args["n_profiles"]*args["n_runs_per_profile"]}, ',
     )
+
+    # plt.title(title)
 
 
 def plot_3D_eigen_mode_anal_comparison(args: dict = None):
@@ -627,8 +636,13 @@ def plot_3D_eigen_mode_analysis(
     axes[0].set_zlabel("$<|v_i^j|^2>$")
     axes[0].set_zlim(0, 1)
     axes[0].view_init(elev=27.0, azim=-21)
-
-    figs[0].colorbar(surf_plot, ax=axes[0])
+    axes[0].xaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+    axes[0].yaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+    axes[0].zaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+    axes[0].xaxis.set_major_locator(mpl_ticker.MaxNLocator(integer=True))
+    axes[0].yaxis.set_major_locator(mpl_ticker.MaxNLocator(integer=True))
+    axes[0].grid(False)
+    figs[0].colorbar(surf_plot, ax=axes[0], pad=0.15, fraction=0.025)
 
     title = g_plt_utils.generate_title(
         args,
