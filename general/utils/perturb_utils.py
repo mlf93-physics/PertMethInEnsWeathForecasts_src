@@ -294,10 +294,18 @@ def lanczos_vector_algorithm(
                 from all iterations
         )
     """
-    beta_j = 0
-    tridiag_matrix = np.zeros((n_iterations, n_iterations), dtype=sparams.dtype)
-    input_vector_matrix = np.zeros((params.sdim, n_iterations), dtype=sparams.dtype)
-    iteration = 0
+    beta_j: float = 0
+    tridiag_matrix: np.ndarray = np.zeros(
+        (n_iterations, n_iterations), dtype=sparams.dtype
+    )
+    input_vector_matrix: np.ndarray = np.zeros(
+        (params.sdim, n_iterations), dtype=sparams.dtype
+    )
+    omega_vector_matrix: np.ndarray = np.zeros(
+        (params.sdim, n_iterations), dtype=sparams.dtype
+    )
+    omega_j: np.ndarray = np.zeros((params.sdim, 1), dtype=sparams.dtype)
+    iteration: int = 0
 
     def iterator(
         beta_j: float = 0,
@@ -329,12 +337,22 @@ def lanczos_vector_algorithm(
         tridiag_matrix[iteration, iteration] = alpha_j
 
         # Calculate omega_j (on first iteration beta_j == 0)
-        omega_j = (
+        omega_j[:, :] = (
             omega_j_temp
             - alpha_j * input_vector_j
             - beta_j
             * np.reshape(input_vector_matrix[:, iteration - 1], (params.sdim, 1))
         )
+
+        # Orthogonalise omega_j vector against all preceeding vectors
+        if iteration > 0:
+            # Temporarily insert omega_j in omega_vector_matrix to prepare orthogonalisation
+            omega_vector_matrix[:, iteration] = omega_j[:, 0]
+            # Perform QR decomposition
+            q_matrix, r_matrix = np.linalg.qr(omega_vector_matrix[:, : (iteration + 1)])
+            # Get omega_j
+            omega_j[:, 0] = q_matrix[:, iteration]
+            omega_vector_matrix[:, iteration] = omega_j[:, 0]
 
         # Update beta_j
         beta_j = np.linalg.norm(omega_j)
@@ -345,7 +363,8 @@ def lanczos_vector_algorithm(
                 iteration, iteration - 1
             ] = beta_j
         if beta_j != 0:
-            output_vector = omega_j / beta_j
+            output_vector: np.ndarray = omega_j / beta_j
+            omega_vector_matrix[:, iteration] = output_vector[:, 0]
         else:
             print("hello1, implementation lacking")
 
