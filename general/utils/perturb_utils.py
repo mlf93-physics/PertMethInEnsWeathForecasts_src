@@ -346,6 +346,8 @@ def lanczos_vector_algorithm(
 
         # Orthogonalise omega_j vector against all preceeding vectors
         if iteration > 0:
+            # Get norm of omega_j
+            omega_j_norm = np.linalg.norm(omega_j[:, 0])
             # Temporarily insert omega_j in omega_vector_matrix to prepare orthogonalisation
             omega_vector_matrix[:, iteration] = omega_j[:, 0]
             # Perform QR decomposition
@@ -353,6 +355,8 @@ def lanczos_vector_algorithm(
             # Get omega_j
             omega_j[:, 0] = q_matrix[:, iteration]
             omega_vector_matrix[:, iteration] = omega_j[:, 0]
+        else:
+            omega_vector_matrix[:, iteration] = input_vector_j[:, 0]
 
         # Update beta_j
         beta_j = np.linalg.norm(omega_j)
@@ -361,10 +365,9 @@ def lanczos_vector_algorithm(
             # Save beta_j to matrix
             tridiag_matrix[iteration - 1, iteration] = tridiag_matrix[
                 iteration, iteration - 1
-            ] = beta_j
+            ] = omega_j_norm
         if beta_j != 0:
             output_vector: np.ndarray = omega_j / beta_j
-            omega_vector_matrix[:, iteration] = output_vector[:, 0]
         else:
             print("hello1, implementation lacking")
 
@@ -407,7 +410,7 @@ def calculate_svs(
     # Get eigenvectors from tridiag_matrix.
     e_values, e_vectors = np.linalg.eig(tridiag_matrix)
     # Take sqrt to get singular values of L
-    s_values = np.sqrt(e_values.astype(np.complex128))
+    s_values = e_values.astype(np.complex128)  # np.sqrt(e_values.astype(np.complex128))
     # Sort e_values and e_vectors
     sort_index = np.argsort(s_values)[::-1]
     s_values = s_values[sort_index]

@@ -87,7 +87,7 @@ def sv_generator(
             for _ in range(exp_setup["n_model_iterations"]):
                 if cfg.MODEL == Models.SHELL_MODEL:
                     _, u_atl_out, u_init_perturb = sh_tl_atl_model(
-                        lanczos_outarray.ravel(),
+                        lanczos_outarray.ravel().conj(),
                         u_ref,
                         data_out,
                         copy_args,

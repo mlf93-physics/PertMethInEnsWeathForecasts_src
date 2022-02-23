@@ -1,6 +1,6 @@
 {
     "TestRun0": {
-        "folder_name": "pt_vectors/sv_test_selective_orthogonalisation",
+        "folder_name": "pt_vectors/sv_test_orthogonalisation",
         "sub_exp_folder": "perturb_data",
         "integration_time": 0.1,
         "n_lanczos_iterations": 1,
