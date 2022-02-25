@@ -36,7 +36,7 @@ profiler = Profiler()
 
 def verify_lanczos_algorithm():
     # Define parameters
-    # params.sdim = 10
+    params.sdim = 6
     # params.seeked_error_norm = 1
     n_vectors = params.sdim
     n_runs = 100
@@ -60,14 +60,17 @@ def verify_lanczos_algorithm():
     for i in range(n_runs):
         # Initiate the Lanczos arrays and algorithm
         propagated_vector: np.ndarray((params.sdim, 1)) = np.zeros(
-            (params.sdim, 1), dtype=sparams.dtype
+            params.sdim, dtype=sparams.dtype
         )
-        input_vector: np.ndarray((params.sdim, 1)) = np.zeros(
-            (params.sdim, 1), dtype=sparams.dtype
+        lanczos_vector_matrix: np.ndarray = np.zeros(
+            (params.sdim, n_vectors), dtype=sparams.dtype
         )
+        # Set initial vector
+        lanczos_vector_matrix[:, 0] = np.random.rand(params.sdim)
+
         lanczos_iterator = pt_utils.lanczos_vector_algorithm(
             propagated_vector=propagated_vector,
-            input_vector_j=input_vector,
+            lanczos_vector_matrix=lanczos_vector_matrix,
             n_iterations=n_vectors,
         )
         out_vector = np.random.rand(params.sdim).astype(sparams.dtype)
@@ -75,19 +78,17 @@ def verify_lanczos_algorithm():
             g_utils.normalize_array(out_vector, norm_value=1), (params.sdim, 1)
         )
 
-        for _ in range(n_vectors):
+        for j in range(n_vectors):
             # Update arrays for the lanczos algorithm
-            propagated_vector[:, :] = symmetric_matrix @ out_vector
-            input_vector[:, :] = out_vector
-            out_vector, tridiag_matrix, input_vector_matrix = next(lanczos_iterator)
+            propagated_vector[:] = symmetric_matrix @ lanczos_vector_matrix[:, j]
+            tridiag_matrix = next(lanczos_iterator)
 
         # Calculate SVs from eigen vectors of tridiag_matrix
         sv_matrix, s_values = pt_utils.calculate_svs(
-            tridiag_matrix, input_vector_matrix
+            tridiag_matrix, lanczos_vector_matrix
         )
-
         sv_matrix_store[i, :, :] = sv_matrix
-        s_values_store[i, :] = s_values ** 2
+        s_values_store[i, :] = s_values
 
     # Prepare plotting
     fig, axes = plt.subplots(nrows=2, ncols=2)

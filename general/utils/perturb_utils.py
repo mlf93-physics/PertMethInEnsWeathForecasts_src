@@ -325,28 +325,28 @@ def lanczos_vector_algorithm(
         """
         # if iteration > 0:
         # propagated_vector_norm = np.linalg.norm(propagated_vector)
-        # q_matrix, r_matrix = np.linalg.qr(
-        #     np.concatenate(
-        #         [
-        #             lanczos_vector_matrix[:, : (iteration + 1)]
-        #             if iteration > 0
-        #             else lanczos_vector_matrix[:, 0][:, np.newaxis],
-        #             propagated_vector,
-        #         ],
-        #         axis=1,
-        #     )
+        # concat_matrix = np.concatenate(
+        #     [
+        #         lanczos_vector_matrix[:, : (iteration + 1)],
+        #         # if iteration > 0
+        #         # else lanczos_vector_matrix[:, 0][:, np.newaxis],
+        #         propagated_vector[:, np.newaxis],
+        #     ],
+        #     axis=1,
         # )
-        # propagated_vector[:, 0] = q_matrix[:, -1] * propagated_vector_norm
+        # print("concat_matrix", concat_matrix)
+        # q_matrix, r_matrix = np.linalg.qr(concat_matrix)
+        # print("q_matrix", q_matrix)
+        # propagated_vector[:] = q_matrix[:, -1] * propagated_vector_norm
 
-        omega_j_temp = propagated_vector
-        alpha_j = omega_j_temp.T.conj() @ lanczos_vector_matrix[:, iteration]
+        alpha_j = propagated_vector.T.conj() @ lanczos_vector_matrix[:, iteration]
 
         # Save alpha_j to tridiag_matrix
         tridiag_matrix[iteration, iteration] = alpha_j
 
         # Calculate omega_j (on first iteration beta_j == 0)
         omega_j[:] = (
-            omega_j_temp
+            propagated_vector
             - alpha_j * lanczos_vector_matrix[:, iteration]
             - beta_j * lanczos_vector_matrix[:, iteration - 1]
         )
@@ -354,17 +354,22 @@ def lanczos_vector_algorithm(
         # Orthogonalise omega_j vector against all preceeding vectors
         # if iteration > 0:
         #     # Get norm of omega_j
-        #     omega_j_norm = np.linalg.norm(omega_j[:, 0])
-        #     # Temporarily insert omega_j in omega_vector_matrix to prepare orthogonalisation
-        #     omega_vector_matrix[:, iteration] = lanczos_vector_prev[:, 0]
+        #     omega_j_norm = np.linalg.norm(omega_j)
+        #     # Concatenate vectors
+        #     concat_matrix = np.concatenate(
+        #         [
+        #             lanczos_vector_matrix[:, :(iteration)],
+        #             omega_j[:, np.newaxis],
+        #         ],
+        #         axis=1,
+        #     )
         #     # Perform QR decomposition
-        #     q_matrix, r_matrix = np.linalg.qr(omega_vector_matrix[:, : (iteration + 1)])
+        #     q_matrix, r_matrix = np.linalg.qr(concat_matrix)
         #     # Get omega_j
-        #     omega_j[:, 0] = q_matrix[:, iteration] * omega_j_norm
+        #     omega_j[:] = q_matrix[:, iteration] * omega_j_norm
         #     omega_vector_matrix[:, iteration] = omega_j[:, 0]
         #     beta_j = omega_j_norm
         # else:
-        #     omega_vector_matrix[:, iteration] = lanczos_vector_prev[:, 0]
         # Update beta_j
         beta_j = np.linalg.norm(omega_j)
 
@@ -376,6 +381,12 @@ def lanczos_vector_algorithm(
         if beta_j != 0:
             if (iteration + 1) < n_iterations:
                 lanczos_vector_matrix[:, iteration + 1] = omega_j / beta_j
+                # print("lanczos_vector_matrix pre", lanczos_vector_matrix)
+                # q_matrix, r_matrix = np.linalg.qr(
+                #     lanczos_vector_matrix[:, : (iteration + 2)]
+                # )
+                # lanczos_vector_matrix[:, : (iteration + 2)] = q_matrix
+                # print("lanczos_vector_matrix post", lanczos_vector_matrix)
         else:
             print("Norm of omega_j vector reached 0. Exiting")
             exit()
