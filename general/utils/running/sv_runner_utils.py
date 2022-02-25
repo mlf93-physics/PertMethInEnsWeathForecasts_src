@@ -1,6 +1,7 @@
 import config as cfg
 import general.utils.perturb_utils as pt_utils
 from general.params.model_licences import Models
+import general.analyses.plot_analyses as g_plt_anal
 import numpy as np
 
 # Get parameters for model
@@ -37,13 +38,13 @@ def sv_generator(
     data_out: np.ndarray,
 ):
     # Initiate rescaled_perturbations
-    lanczos_outarray = None
+    lanczos_vector_next = None
 
     # Initiate the Lanczos arrays and algorithm
     propagated_vector: np.ndarray((params.sdim, 1)) = np.zeros(
         (params.sdim, 1), dtype=sparams.dtype
     )
-    input_vector: np.ndarray((params.sdim, 1)) = np.zeros(
+    lanczos_vector_prev: np.ndarray((params.sdim, 1)) = np.zeros(
         (params.sdim, 1), dtype=sparams.dtype
     )
 
@@ -73,12 +74,12 @@ def sv_generator(
 
     # Average over multiple iterations of the lanczos algorithm
     for _ in range(exp_setup["n_lanczos_iterations"]):
-        # Start out by running on u_old, but hereafter lanczos_outarray will be
+        # Start out by running on u_old, but hereafter lanczos_vector_next will be
         # updated by the lanczos_iterator
-        lanczos_outarray = u_old
+        lanczos_vector_next = u_old
         lanczos_iterator = pt_utils.lanczos_vector_algorithm(
             propagated_vector=propagated_vector,
-            input_vector_j=input_vector,
+            lanczos_vector_prev=lanczos_vector_prev,
             n_iterations=exp_setup["n_vectors"],
         )
         # Calculate the desired number of SVs
@@ -87,7 +88,7 @@ def sv_generator(
             for _ in range(exp_setup["n_model_iterations"]):
                 if cfg.MODEL == Models.SHELL_MODEL:
                     _, u_atl_out, u_init_perturb = sh_tl_atl_model(
-                        lanczos_outarray.ravel().conj(),
+                        lanczos_vector_next.ravel(),
                         u_ref,
                         data_out,
                         copy_args,
@@ -101,7 +102,7 @@ def sv_generator(
                 elif cfg.MODEL == Models.LORENTZ63:
                     # Run TL model followed by ATL model
                     _, u_atl_out, u_init_perturb = l63_tl_atl_model(
-                        lanczos_outarray.ravel(),
+                        lanczos_vector_next.ravel(),
                         u_ref,
                         jacobian_matrix,
                         lorentz_matrix,
@@ -110,31 +111,35 @@ def sv_generator(
                     )
 
                 #  Rescale perturbations
-                # lanczos_outarray = pt_utils.rescale_perturbations(
+                # lanczos_vector_next = pt_utils.rescale_perturbations(
                 #     u_atl_out[np.newaxis, :], copy_args, raw_perturbations=True
                 # )
             # Update arrays for the lanczos algorithm
             propagated_vector[:, :] = np.reshape(u_atl_out, (params.sdim, 1))
-            input_vector[:, :] = u_init_perturb[sparams.u_slice, np.newaxis]
+            lanczos_vector_prev[:, :] = u_init_perturb[sparams.u_slice, np.newaxis]
 
             # Iterate the Lanczos algorithm one step
-            lanczos_outarray, tridiag_matrix, input_vector_matrix = next(
+            lanczos_vector_next, tridiag_matrix, lanczos_vector_matrix = next(
                 lanczos_iterator
             )
 
             # NOTE: Uncomment this to enable normalization of lanczos vectors -
-            # produces orthogonal lanczos vectors. lanczos_outarray =
-            # g_utils.normalize_array( lanczos_outarray,
+            # produces orthogonal lanczos vectors. lanczos_vector_next =
+            # g_utils.normalize_array( lanczos_vector_next,
             #     norm_value=params.seeked_error_norm, axis=0 )
-            lanczos_outarray = np.pad(
-                lanczos_outarray,
+            lanczos_vector_next = np.pad(
+                lanczos_vector_next,
                 pad_width=((params.bd_size, params.bd_size), (0, 0)),
                 mode="constant",
             )
 
+        # Calculate orthogonality between Lanczos vectors
+        orthogonality = g_plt_anal.orthogonality_of_vectors(lanczos_vector_matrix)
+        print("orthogonality", orthogonality)
+
         # Calculate SVs from eigen vectors of tridiag_matrix
         temp_sv_matrix, temp_s_values = pt_utils.calculate_svs(
-            tridiag_matrix, input_vector_matrix
+            tridiag_matrix, lanczos_vector_matrix
         )
 
         # Add to arrays to perform averaging

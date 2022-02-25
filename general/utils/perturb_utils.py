@@ -258,7 +258,7 @@ def generate_nm_perturbations(
 
 def lanczos_vector_algorithm(
     propagated_vector: np.ndarray((params.sdim, 1), dtype=sparams.dtype) = None,
-    input_vector_j: np.ndarray((params.sdim, 1), dtype=sparams.dtype) = None,
+    lanczos_vector_prev: np.ndarray((params.sdim, 1), dtype=sparams.dtype) = None,
     n_iterations: int = 0,
 ):
     """Execute the Lanczos algorithm to find eigenvectors and -values of the L*L
@@ -273,7 +273,7 @@ def lanczos_vector_algorithm(
     ----------
     propagated_vector : np.ndarray, optional
         The propagated vector w defined as w = L*L v, by default None
-    input_vector_j : np.ndarray, optional
+    lanczos_vector_prev : np.ndarray, optional
         The input vector, v, which is propagated into w, by default None
     n_iterations : int, optional
         The number of iterations of the Lanczos algorithm, by default 0.
@@ -289,7 +289,7 @@ def lanczos_vector_algorithm(
             tridiag_matrix : np.ndarray
                 The tri-diagonal matrix which can be used to solve the eigenvalue
                 problem of L*L.
-            input_vector_matrix : np.ndarray
+            lanczos_vector_matrix : np.ndarray
                 The matrix with columns equal to all input vectors (Lanczos vectors)
                 from all iterations
         )
@@ -298,7 +298,7 @@ def lanczos_vector_algorithm(
     tridiag_matrix: np.ndarray = np.zeros(
         (n_iterations, n_iterations), dtype=sparams.dtype
     )
-    input_vector_matrix: np.ndarray = np.zeros(
+    lanczos_vector_matrix: np.ndarray = np.zeros(
         (params.sdim, n_iterations), dtype=sparams.dtype
     )
     omega_vector_matrix: np.ndarray = np.zeros(
@@ -330,34 +330,31 @@ def lanczos_vector_algorithm(
                     The new value for the Beta variable
             )
         """
-        omega_j_temp = propagated_vector
-        alpha_j = (omega_j_temp.T.conj() @ input_vector_j)[0, 0]
+        omega_j_temp = propagated_vector - beta_j * np.reshape(
+            lanczos_vector_matrix[:, iteration - 1], (params.sdim, 1)
+        )
+        alpha_j = (omega_j_temp.T.conj() @ lanczos_vector_prev)[0, 0]
 
         # Save alpha_j to tridiag_matrix
         tridiag_matrix[iteration, iteration] = alpha_j
 
         # Calculate omega_j (on first iteration beta_j == 0)
-        omega_j[:, :] = (
-            omega_j_temp
-            - alpha_j * input_vector_j
-            - beta_j
-            * np.reshape(input_vector_matrix[:, iteration - 1], (params.sdim, 1))
-        )
+        omega_j[:, :] = omega_j_temp - alpha_j * lanczos_vector_prev
 
         # Orthogonalise omega_j vector against all preceeding vectors
-        if iteration > 0:
-            # Get norm of omega_j
-            omega_j_norm = np.linalg.norm(omega_j[:, 0])
-            # Temporarily insert omega_j in omega_vector_matrix to prepare orthogonalisation
-            omega_vector_matrix[:, iteration] = omega_j[:, 0]
-            # Perform QR decomposition
-            q_matrix, r_matrix = np.linalg.qr(omega_vector_matrix[:, : (iteration + 1)])
-            # Get omega_j
-            omega_j[:, 0] = q_matrix[:, iteration]
-            omega_vector_matrix[:, iteration] = omega_j[:, 0]
-        else:
-            omega_vector_matrix[:, iteration] = input_vector_j[:, 0]
-
+        # if iteration > 0:
+        #     # Get norm of omega_j
+        #     omega_j_norm = np.linalg.norm(omega_j[:, 0])
+        #     # Temporarily insert omega_j in omega_vector_matrix to prepare orthogonalisation
+        #     omega_vector_matrix[:, iteration] = lanczos_vector_prev[:, 0]
+        #     # Perform QR decomposition
+        #     q_matrix, r_matrix = np.linalg.qr(omega_vector_matrix[:, : (iteration + 1)])
+        #     # Get omega_j
+        #     omega_j[:, 0] = q_matrix[:, iteration] * omega_j_norm
+        #     omega_vector_matrix[:, iteration] = omega_j[:, 0]
+        #     beta_j = omega_j_norm
+        # else:
+        #     omega_vector_matrix[:, iteration] = lanczos_vector_prev[:, 0]
         # Update beta_j
         beta_j = np.linalg.norm(omega_j)
 
@@ -365,22 +362,29 @@ def lanczos_vector_algorithm(
             # Save beta_j to matrix
             tridiag_matrix[iteration - 1, iteration] = tridiag_matrix[
                 iteration, iteration - 1
-            ] = omega_j_norm
+            ] = beta_j
         if beta_j != 0:
             output_vector: np.ndarray = omega_j / beta_j
         else:
-            print("hello1, implementation lacking")
+            print("Norm of omega_j vector reached 0. Exiting")
+            exit()
 
         return output_vector, beta_j
 
     while True:
         output_vector, beta_j = iterator(beta_j, iteration)
-        input_vector_matrix[:, iteration] = input_vector_j.ravel()
+        lanczos_vector_matrix[:, iteration] = lanczos_vector_prev.ravel()
+
+        if iteration > 0:
+            q_matrix, r_matrix = np.linalg.qr(
+                lanczos_vector_matrix[:, : (iteration + 1)]
+            )
+            lanczos_vector_matrix[:, : (iteration + 1)] = q_matrix
 
         # Update iteration
         iteration += 1
 
-        yield output_vector, tridiag_matrix, input_vector_matrix
+        yield output_vector, tridiag_matrix, lanczos_vector_matrix
 
 
 def calculate_svs(

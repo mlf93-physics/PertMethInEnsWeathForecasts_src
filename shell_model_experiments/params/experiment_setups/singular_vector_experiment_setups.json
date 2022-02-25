@@ -24,13 +24,13 @@
         ]
     },
     "LowPredRegime": {
-        "folder_name": "pt_vectors/sv_low_pred_regime_orthogonal_test_running_on_adjoint_input_qr_factor",
+        "folder_name": "pt_vectors/sv_low_pred_regime_orthogonal_test",
         "sub_exp_folder": "perturb_data",
-        "integration_time": 0.01,
+        "integration_time": 0.005,
         "n_vectors": 20,
         "n_lanczos_iterations": 1,
         "n_model_iterations": 1,
-        "vector_offset": 0.01,
+        "vector_offset": 0.005,
         "start_times": [
             11.22
         ]
