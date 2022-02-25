@@ -129,9 +129,9 @@ def sv_generator(
 
         # Calculate orthogonality between Lanczos vectors
         orthogonality = g_plt_anal.orthogonality_of_vectors(lanczos_vector_matrix)
-        print("orthogonality", orthogonality)
-        print("tridiag_matrix", tridiag_matrix)
-        print("lanczos_vector_matrix", lanczos_vector_matrix)
+        # print("orthogonality", orthogonality)
+        # print("tridiag_matrix", tridiag_matrix)
+        # print("lanczos_vector_matrix", lanczos_vector_matrix)
 
         # Calculate SVs from eigen vectors of tridiag_matrix
         temp_sv_matrix, temp_s_values = pt_utils.calculate_svs(

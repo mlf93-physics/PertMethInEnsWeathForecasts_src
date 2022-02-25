@@ -339,7 +339,7 @@ def lanczos_vector_algorithm(
         # print("q_matrix", q_matrix)
         # propagated_vector[:] = q_matrix[:, -1] * propagated_vector_norm
 
-        alpha_j = propagated_vector.T.conj() @ lanczos_vector_matrix[:, iteration]
+        alpha_j = np.vdot(propagated_vector, lanczos_vector_matrix[:, iteration]).real
 
         # Save alpha_j to tridiag_matrix
         tridiag_matrix[iteration, iteration] = alpha_j
@@ -350,6 +350,13 @@ def lanczos_vector_algorithm(
             - alpha_j * lanczos_vector_matrix[:, iteration]
             - beta_j * lanczos_vector_matrix[:, iteration - 1]
         )
+
+        # Orthogonalize:
+        for i in range(iteration):
+            projection = np.vdot(omega_j, lanczos_vector_matrix[:, i])
+            if projection == 0.0:
+                continue
+            omega_j[:] -= projection * lanczos_vector_matrix[:, i]
 
         # Orthogonalise omega_j vector against all preceeding vectors
         # if iteration > 0:

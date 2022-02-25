@@ -7,6 +7,7 @@ import seaborn as sb
 from pyinstrument import Profiler
 import numpy as np
 import general.utils.perturb_utils as pt_utils
+import general.analyses.plot_analyses as g_plt_anal
 import general.utils.util_funcs as g_utils
 import shell_model_experiments.utils.util_funcs as sh_utils
 import general.utils.argument_parsers as a_parsers
@@ -36,7 +37,7 @@ profiler = Profiler()
 
 def verify_lanczos_algorithm():
     # Define parameters
-    params.sdim = 6
+    params.sdim = 20
     # params.seeked_error_norm = 1
     n_vectors = params.sdim
     n_runs = 100
@@ -56,6 +57,7 @@ def verify_lanczos_algorithm():
     # Prepare storage of sv vectors and -values
     sv_matrix_store = np.zeros((n_runs, params.sdim, n_vectors), dtype=sparams.dtype)
     s_values_store = np.zeros((n_runs, n_vectors), dtype=np.complex128)
+    ortho_lanczos = np.zeros((params.sdim, n_vectors), dtype=sparams.dtype)
 
     for i in range(n_runs):
         # Initiate the Lanczos arrays and algorithm
@@ -66,16 +68,15 @@ def verify_lanczos_algorithm():
             (params.sdim, n_vectors), dtype=sparams.dtype
         )
         # Set initial vector
-        lanczos_vector_matrix[:, 0] = np.random.rand(params.sdim)
+        lanczos_vector_matrix[:, 0] = np.random.rand(params.sdim).astype(sparams.dtype)
+        lanczos_vector_matrix[:, 0] = g_utils.normalize_array(
+            lanczos_vector_matrix[:, 0], norm_value=1
+        )
 
         lanczos_iterator = pt_utils.lanczos_vector_algorithm(
             propagated_vector=propagated_vector,
             lanczos_vector_matrix=lanczos_vector_matrix,
             n_iterations=n_vectors,
-        )
-        out_vector = np.random.rand(params.sdim).astype(sparams.dtype)
-        out_vector = np.reshape(
-            g_utils.normalize_array(out_vector, norm_value=1), (params.sdim, 1)
         )
 
         for j in range(n_vectors):
@@ -89,6 +90,10 @@ def verify_lanczos_algorithm():
         )
         sv_matrix_store[i, :, :] = sv_matrix
         s_values_store[i, :] = s_values
+
+        ortho_lanczos += g_plt_anal.orthogonality_of_vectors(lanczos_vector_matrix)
+
+    ortho_lanczos /= n_runs
 
     # Prepare plotting
     fig, axes = plt.subplots(nrows=2, ncols=2)
@@ -138,6 +143,8 @@ if __name__ == "__main__":
     # verif_arg_setup = a_parsers.VerificationArgParser()
     # verif_arg_setup.setup_parser()
     # args = verif_arg_setup.args
+
+    np.random.seed(0)
 
     if cfg.MODEL == Models.SHELL_MODEL:
         # Initiate and update variables and arrays
