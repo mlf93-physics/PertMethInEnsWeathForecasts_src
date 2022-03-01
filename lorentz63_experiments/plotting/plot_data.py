@@ -376,7 +376,7 @@ def plot_characteristic_periods(args: dict, axes: plt.Axes = None):
     # Import reference data
     time, u_data, ref_header_dict = g_import.import_ref_data(args=args)
     # variable = 1 / 2 * np.sum(u_data ** 2, axis=1)
-    variable = u_data[:, 1]
+    variable = u_data[:, 2]
 
     spectrum = np.fft.fft(variable)
     power_spec = np.abs(spectrum) ** 2

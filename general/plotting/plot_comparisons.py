@@ -260,6 +260,7 @@ def plt_vec_compared_to_lv(args, axes: plt.Axes = None):
         if vector not in ["lv", "alv"]:
             orthogonality_dict[vector] = np.empty(
                 (
+                    args["n_lvs_to_compare"],
                     len(header_values[retrieve_header_key]),
                     args["n_profiles"],
                     args["n_runs_per_profile"],
@@ -267,47 +268,48 @@ def plt_vec_compared_to_lv(args, axes: plt.Axes = None):
             )
             adj_orthogonality_dict[vector] = np.copy(orthogonality_dict[vector])
 
-    # Get first key in header_values_dict
-    header_val_dict_keys = list(header_values_dict.keys())
-    first_key: str = header_val_dict_keys[0]
+    # Get first key (vector) in header_values_dict not being lv or alv
+    header_val_dict_keys: list = list(header_values_dict.keys())
+    first_key: str = list(filter(lambda x: "lv" not in x, header_val_dict_keys))[0]
     iw_values: List[float] = sorted(header_values_dict[first_key][retrieve_header_key])
 
-    # Calculate orthogonality between vectors
-    for i, value in enumerate(iw_values):
-        for j in range(args["n_profiles"]):
-            for k, vector in enumerate(save_vectors):
-                if vector in ["lv", "alv"]:
-                    continue
+    # Calculate orthogonality between vectors, i.e. between all BVs, SVs and LVs (multiple LV)
+    for n in range(args["n_lvs_to_compare"]):
+        for i, value in enumerate(iw_values):
+            for j in range(args["n_profiles"]):
+                for k, vector in enumerate(save_vectors):
+                    if vector in ["lv", "alv"]:
+                        continue
 
-                if vector in ["bv", "sv"]:
-                    orthogonality_dict[vector][
-                        i, j, :
-                    ] = g_plt_anal.orthogonality_to_vector(
-                        vector_folder_units_dict["lv"][0, j, 0, :],
-                        vector_folder_units_dict[vector][i, j, :, :],
-                    )
-                    if "alv" in save_vectors:
-                        adj_orthogonality_dict[vector][
-                            i, j, :
+                    if vector in ["bv", "sv"]:
+                        orthogonality_dict[vector][
+                            n, i, j, :
                         ] = g_plt_anal.orthogonality_to_vector(
-                            vector_folder_units_dict["alv"][0, j, 0, :],
+                            vector_folder_units_dict["lv"][0, j, n, :],
                             vector_folder_units_dict[vector][i, j, :, :],
                         )
+                        if "alv" in save_vectors:
+                            adj_orthogonality_dict[vector][
+                                n, i, j, :
+                            ] = g_plt_anal.orthogonality_to_vector(
+                                vector_folder_units_dict["alv"][0, j, n, :],
+                                vector_folder_units_dict[vector][i, j, :, :],
+                            )
 
-                if vector in ["fsv"]:
-                    orthogonality_dict[vector][
-                        i, j, :
-                    ] = g_plt_anal.orthogonality_to_vector(
-                        vector_folder_units_dict["lv"][i, j, 0, :],
-                        vector_folder_units_dict[vector][i, j, :, :],
-                    )
-                    if "alv" in save_vectors:
-                        adj_orthogonality_dict[vector][
-                            i, j, :
+                    if vector in ["fsv"]:
+                        orthogonality_dict[vector][
+                            n, i, j, :
                         ] = g_plt_anal.orthogonality_to_vector(
-                            vector_folder_units_dict["alv"][i, j, 0, :],
+                            vector_folder_units_dict["lv"][i, j, n, :],
                             vector_folder_units_dict[vector][i, j, :, :],
                         )
+                        if "alv" in save_vectors:
+                            adj_orthogonality_dict[vector][
+                                n, i, j, :
+                            ] = g_plt_anal.orthogonality_to_vector(
+                                vector_folder_units_dict["alv"][i, j, n, :],
+                                vector_folder_units_dict[vector][i, j, :, :],
+                            )
 
     # Average orthogonality
     for vector in save_vectors:
@@ -316,19 +318,19 @@ def plt_vec_compared_to_lv(args, axes: plt.Axes = None):
 
         if vector in ["fsv", "sv"]:
             mean_vector_lv_orthogonality_dict[vector] = np.mean(
-                np.abs(orthogonality_dict[vector]), axis=1
+                np.abs(orthogonality_dict[vector]), axis=2
             )
             if "alv" in save_vectors:
                 mean_vector_adj_lv_orthogonality_dict[vector] = np.mean(
-                    np.abs(adj_orthogonality_dict[vector]), axis=1
+                    np.abs(adj_orthogonality_dict[vector]), axis=2
                 )
         if vector in ["bv"]:
             mean_vector_lv_orthogonality_dict[vector] = np.mean(
-                np.mean(np.abs(orthogonality_dict[vector]), axis=2), axis=1
+                np.mean(np.abs(orthogonality_dict[vector]), axis=3), axis=2
             )
             if "alv" in save_vectors:
                 mean_vector_adj_lv_orthogonality_dict[vector] = np.mean(
-                    np.mean(np.abs(adj_orthogonality_dict[vector]), axis=2), axis=1
+                    np.mean(np.abs(adj_orthogonality_dict[vector]), axis=3), axis=2
                 )
 
     # Prepare axes
@@ -337,21 +339,34 @@ def plt_vec_compared_to_lv(args, axes: plt.Axes = None):
 
     # Plot orthogonality vs iw
     for vector in save_vectors:
+        # Plot BVs vs LVs
         if vector == "bv":
-            lines: List[plt.Line2D] = axes.plot(
+            vector_vs_lv_lines: List[plt.Line2D] = axes.plot(
                 iw_values,
-                mean_vector_lv_orthogonality_dict[vector],
-                label=f"{vector.upper()} vs LV1",
+                mean_vector_lv_orthogonality_dict[vector].T,
             )
             if "alv" in save_vectors:
-                axes.plot(
+                vector_vs_alv_lines = axes.plot(
                     iw_values,
                     mean_vector_adj_lv_orthogonality_dict[vector],
-                    label=f"{vector.upper()} vs ALV1",
-                    color=lines[0].get_color(),
                     linestyle="dashed",
                 )
+                line_objs = zip(vector_vs_lv_lines, vector_vs_alv_lines)
+            else:
+                line_objs = zip(vector_vs_lv_lines)
 
+            # Set labels and colors
+            for i, line_obj in enumerate(line_objs):
+                line_obj[0].set_label(
+                    f"{vector.upper()} vs LV{i}",
+                )
+                if "alv" in save_vectors:
+                    line_obj[1].set_label(
+                        f"{vector.upper()} vs ALV{i}",
+                    )
+                    line_obj[1].set_color(line_obj[0].get_color())
+
+        # Plot SVs vs LVs
         if "sv" in vector:
             vector_vs_lv_lines = axes.plot(
                 iw_values,
@@ -366,7 +381,8 @@ def plt_vec_compared_to_lv(args, axes: plt.Axes = None):
                 line_objs = zip(vector_vs_lv_lines, vector_vs_alv_lines)
             else:
                 line_objs = zip(vector_vs_lv_lines)
-            # Set labels
+
+            # Set labels and colors
             vector_string: str = (
                 ("I" + vector.upper()) if vector == "sv" else vector.upper()
             )
@@ -381,13 +397,13 @@ def plt_vec_compared_to_lv(args, axes: plt.Axes = None):
                     line_objs[1].set_color(line_objs[0].get_color())
 
     axes.set_xlabel("Integration window (IW)")
-    axes.set_ylabel("Absolute orthogonality")
+    axes.set_ylabel("Absolute projectibility")
     axes.legend()
 
     title = g_plt_utils.generate_title(
         args,
         # header_dict=lv_vec_header_dicts[0],
-        title_header="Absolute orthogonality vs IW",
+        title_header="Projectibility vs IW",
         title_suffix=f"$n_{{units}}$={args['n_profiles']}",
         detailed=False,
     )

@@ -8,6 +8,7 @@ figures/
 doc/build/
 doc/source/code_doc/
 shell_model_experiments/experimental/turbulence_music/sounds
+example_scripts/
 
 # File types
 **/*.code-workspace

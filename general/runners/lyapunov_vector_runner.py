@@ -153,33 +153,34 @@ def main(args: dict, exp_setup: dict = None):
 
                 # Orthogonalise vectors
                 rescaled_data = np.array(data_out_list, dtype=sparams.dtype).T
-                # rescaled_data, r_matrix = np.linalg.qr(rescaled_data)
-                # lyapunov_exps = np.diagonal(r_matrix @ rescaled_data)
+                rescaled_data, r_matrix = np.linalg.qr(rescaled_data)
+                lyapunov_exps = np.diagonal(r_matrix @ rescaled_data)
                 # sorted_index = np.argsort(lyapunov_exps)[::-1]
                 # lyapunov_exps = lyapunov_exps[sorted_index]
                 # rescaled_data[:, :] = rescaled_data[:, sorted_index]
 
                 # Pad array if necessary
-                # rescaled_data = np.pad(
-                #     rescaled_data,
-                #     pad_width=((params.bd_size, params.bd_size), (0, 0)),
-                #     mode="constant",
-                # )
+                rescaled_data = np.pad(
+                    rescaled_data,
+                    pad_width=((params.bd_size, params.bd_size), (0, 0)),
+                    mode="constant",
+                )
 
                 # Update perturb_positions
                 perturb_positions += int(exp_setup["integration_time"] * params.tts)
                 # Offset time to prepare for next run and import of reference data
                 # for TLM
                 copy_args["start_times"][0] += exp_setup["integration_time"]
-                rescaled_data = g_utils.normalize_array(
-                    rescaled_data, norm_value=params.seeked_error_norm, axis=0
-                )
+                # Normalization should not be necessary after QR decomp.
+                # rescaled_data = g_utils.normalize_array(
+                #     rescaled_data, norm_value=params.seeked_error_norm, axis=0
+                # )
         # Set out folder
         args["out_exp_folder"] = pl.Path(exp_setup["folder_name"])
         # Save lyapunov vectors
         v_save.save_vector_unit(
             rescaled_data[sparams.u_slice, :].T,
-            # characteristic_values=lyapunov_exps,
+            characteristic_values=lyapunov_exps,
             perturb_position=int(round(start_times[i] * params.tts)),
             unit=i,
             args=args,

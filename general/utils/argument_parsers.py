@@ -455,6 +455,12 @@ class ComparisonPlottingArgParser:
 
     def setup_parser(self):
         self._parser.add_argument("--exp_folders", nargs="+", default=None, type=str)
+        self._parser.add_argument(
+            "-nlvs",
+            "--n_lvs_to_compare",
+            type=int,
+            help="Used to enable plotting spread together with RMSE instead of only RMSE",
+        )
 
 
 class StandardPlottingArgParser:

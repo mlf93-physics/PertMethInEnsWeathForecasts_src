@@ -1,9 +1,9 @@
 {
     "TestRun1": {
-        "folder_name": "pt_vectors/shell_model_lyapunov_vectors_test1",
+        "folder_name": "pt_vectors/shell_model_lyapunov_vectors_ttr0.1",
         "sub_exp_folder": "perturb_data",
-        "integration_time": 0.01,
-        "n_cycles": 10,
+        "integration_time": 0.1,
+        "n_cycles": 1,
         "n_vectors": 20,
         "vector_offset": 1,
         "eval_times": [

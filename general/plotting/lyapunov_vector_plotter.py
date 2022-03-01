@@ -41,7 +41,7 @@ elif cfg.MODEL == Models.LORENTZ63:
     params = l63_params
 
 # Setup plotting defaults
-g_plt_config.setup_plotting_defaults()
+# g_plt_config.setup_plotting_defaults()
 
 
 def plot_lyapunov_vectors_average(args: dict, axes: plt.Axes = None):

@@ -66,7 +66,7 @@ def generate_bvs(args: dict, exp_setup: dict):
     local_exp_setup = exp_setup["general"] | exp_setup["bv_gen_setup"]
 
     for iw in local_exp_setup["iws"]:
-        iw_str: str = lib_type_utils.zpad_string(str(iw), n_zeros=2)
+        iw_str: str = lib_type_utils.zpad_string(str(iw), n_zeros=3)
         # Set local exp values
         local_exp_setup["folder_name"] = str(
             pl.Path(
@@ -103,8 +103,8 @@ def generate_lvs(args: dict, exp_setup: dict):
     stored_eval_times = copy.copy(local_exp_setup["eval_times"])
 
     # Calculate lv valid at eval time + all end times
-    for iw in [0, *local_exp_setup["iws"]]:
-        iw_str: str = lib_type_utils.zpad_string(str(iw), n_zeros=2)
+    for iw in [*local_exp_setup["iws"]]:
+        iw_str: str = lib_type_utils.zpad_string(str(iw), n_zeros=3)
         local_exp_setup["folder_name"] = str(
             pl.Path(
                 exp_setup["general"]["folder_name"],
@@ -142,7 +142,7 @@ def generate_adj_lvs(args: dict, exp_setup: dict):
 
     # Calculate lv valid at eval time + all end times
     for iw in [0, *local_exp_setup["iws"]]:
-        iw_str: str = lib_type_utils.zpad_string(str(iw), n_zeros=2)
+        iw_str: str = lib_type_utils.zpad_string(str(iw), n_zeros=3)
         local_exp_setup["folder_name"] = str(
             pl.Path(
                 exp_setup["general"]["folder_name"],
@@ -175,7 +175,7 @@ def generate_initial_svs(args: dict, exp_setup: dict):
     local_exp_setup = exp_setup["general"] | exp_setup["sv_gen_setup"]
 
     for iw in local_exp_setup["iws"]:
-        iw_str: str = lib_type_utils.zpad_string(str(iw), n_zeros=2)
+        iw_str: str = lib_type_utils.zpad_string(str(iw), n_zeros=3)
         # Set local exp values
         local_exp_setup["folder_name"] = str(
             pl.Path(
@@ -219,7 +219,7 @@ def generate_final_svs(args: dict, exp_setup: dict):
     args["n_profiles"] = local_exp_setup["n_units"]
 
     for iw in local_exp_setup["iws"]:
-        iw_str: str = lib_type_utils.zpad_string(str(iw), n_zeros=2)
+        iw_str: str = lib_type_utils.zpad_string(str(iw), n_zeros=3)
         # Set local exp values
         local_exp_setup["folder_name"] = str(
             pl.Path(
