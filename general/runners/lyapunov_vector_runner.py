@@ -154,7 +154,7 @@ def main(args: dict, exp_setup: dict = None):
                 # Orthogonalise vectors
                 rescaled_data = np.array(data_out_list, dtype=sparams.dtype).T
                 rescaled_data, r_matrix = np.linalg.qr(rescaled_data)
-                lyapunov_exps = np.diagonal(r_matrix @ rescaled_data)
+                # lyapunov_exps = np.diagonal(r_matrix @ rescaled_data)
                 # sorted_index = np.argsort(lyapunov_exps)[::-1]
                 # lyapunov_exps = lyapunov_exps[sorted_index]
                 # rescaled_data[:, :] = rescaled_data[:, sorted_index]
@@ -180,7 +180,7 @@ def main(args: dict, exp_setup: dict = None):
         # Save lyapunov vectors
         v_save.save_vector_unit(
             rescaled_data[sparams.u_slice, :].T,
-            characteristic_values=lyapunov_exps,
+            # characteristic_values=lyapunov_exps,
             perturb_position=int(round(start_times[i] * params.tts)),
             unit=i,
             args=args,

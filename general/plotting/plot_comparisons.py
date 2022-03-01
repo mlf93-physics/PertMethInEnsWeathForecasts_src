@@ -285,14 +285,18 @@ def plt_vec_compared_to_lv(args, axes: plt.Axes = None):
                         orthogonality_dict[vector][
                             n, i, j, :
                         ] = g_plt_anal.orthogonality_to_vector(
-                            vector_folder_units_dict["lv"][0, j, n, :],
+                            vector_folder_units_dict["lv"][
+                                0, j, n, :
+                            ],  # 0 in first index is for using only LV evaluated at time 0
                             vector_folder_units_dict[vector][i, j, :, :],
                         )
                         if "alv" in save_vectors:
                             adj_orthogonality_dict[vector][
                                 n, i, j, :
                             ] = g_plt_anal.orthogonality_to_vector(
-                                vector_folder_units_dict["alv"][0, j, n, :],
+                                vector_folder_units_dict["alv"][
+                                    0, j, n, :
+                                ],  # 0 in first index is for using only LV evaluated at time 0
                                 vector_folder_units_dict[vector][i, j, :, :],
                             )
 
@@ -368,33 +372,34 @@ def plt_vec_compared_to_lv(args, axes: plt.Axes = None):
 
         # Plot SVs vs LVs
         if "sv" in vector:
-            vector_vs_lv_lines = axes.plot(
-                iw_values,
-                mean_vector_lv_orthogonality_dict[vector],
-            )
-            if "alv" in save_vectors:
-                vector_vs_alv_lines = axes.plot(
+            for j in range(args["n_lvs_to_compare"]):
+                vector_vs_lv_lines = axes.plot(
                     iw_values,
-                    mean_vector_adj_lv_orthogonality_dict[vector],
-                    linestyle="dashed",
-                )
-                line_objs = zip(vector_vs_lv_lines, vector_vs_alv_lines)
-            else:
-                line_objs = zip(vector_vs_lv_lines)
-
-            # Set labels and colors
-            vector_string: str = (
-                ("I" + vector.upper()) if vector == "sv" else vector.upper()
-            )
-            for i, line_objs in enumerate(line_objs):
-                line_objs[0].set_label(
-                    f"{vector_string}{i} vs LV1",
+                    mean_vector_lv_orthogonality_dict[vector][j, :, :],
                 )
                 if "alv" in save_vectors:
-                    line_objs[1].set_label(
-                        f"{vector_string}{i} vs ALV1",
+                    vector_vs_alv_lines = axes.plot(
+                        iw_values,
+                        mean_vector_adj_lv_orthogonality_dict[vector][j, :, :],
+                        linestyle="dashed",
                     )
-                    line_objs[1].set_color(line_objs[0].get_color())
+                    line_objs = zip(vector_vs_lv_lines, vector_vs_alv_lines)
+                else:
+                    line_objs = zip(vector_vs_lv_lines)
+
+                # Set labels and colors
+                vector_string: str = (
+                    ("I" + vector.upper()) if vector == "sv" else vector.upper()
+                )
+                for i, line_objs in enumerate(line_objs):
+                    line_objs[0].set_label(
+                        f"{vector_string}{i} vs LV{j}",
+                    )
+                    if "alv" in save_vectors:
+                        line_objs[1].set_label(
+                            f"{vector_string}{i} vs ALV{j}",
+                        )
+                        line_objs[1].set_color(line_objs[0].get_color())
 
     axes.set_xlabel("Integration window (IW)")
     axes.set_ylabel("Absolute projectibility")

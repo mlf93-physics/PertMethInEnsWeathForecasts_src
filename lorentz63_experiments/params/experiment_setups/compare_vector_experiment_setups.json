@@ -1,7 +1,7 @@
 {
     "CompareITRun01": {
         "general": {
-            "folder_name": "compare_bv_to_lv_ncycles4_iw2_to_64_n_units100",
+            "folder_name": "compare_vecs_bv_to_lv_ncycles4_iw2_to_64_n_units100",
             "vector_folder": "vectors",
             "perturbation_folder": "perturbations",
             "sub_exp_folder": "perturb_data",
@@ -10,8 +10,15 @@
             ],
             "n_units": 100,
             "iws": [
+                2,
+                4,
+                8,
+                16,
+                32,
+                64,
                 80,
-                112,
+                96,
+                128,
                 144,
                 160,
                 176
@@ -23,8 +30,8 @@
             "n_vectors": 8
         },
         "lv_gen_setup": {
-            "integration_time": 2,
-            "n_cycles": 10,
+            "integration_time": 20,
+            "n_cycles": 1,
             "n_vectors": 3
         },
         "sv_gen_setup": {
