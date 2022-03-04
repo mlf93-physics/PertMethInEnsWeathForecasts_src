@@ -230,9 +230,6 @@ def plt_vec_compared_to_lv(args, axes: plt.Axes = None):
     save_vectors: List[str] = args["vectors"]
     retrieve_header_key = "time_to_run"
 
-    if "lv" not in save_vectors:
-        raise ValueError("lv should be selected for this plot")
-
     # Initialise dicts
     vector_folder_units_dict: dict = {}
     header_values_dict: dict = {}
@@ -282,14 +279,15 @@ def plt_vec_compared_to_lv(args, axes: plt.Axes = None):
                         continue
 
                     if vector in ["bv", "sv"]:
-                        orthogonality_dict[vector][
-                            n, i, j, :
-                        ] = g_plt_anal.orthogonality_to_vector(
-                            vector_folder_units_dict["lv"][
-                                0, j, n, :
-                            ],  # 0 in first index is for using only LV evaluated at time 0
-                            vector_folder_units_dict[vector][i, j, :, :],
-                        )
+                        if "lv" in save_vectors:
+                            orthogonality_dict[vector][
+                                n, i, j, :
+                            ] = g_plt_anal.orthogonality_to_vector(
+                                vector_folder_units_dict["lv"][
+                                    0, j, n, :
+                                ],  # 0 in first index is for using only LV evaluated at time 0
+                                vector_folder_units_dict[vector][i, j, :, :],
+                            )
                         if "alv" in save_vectors:
                             adj_orthogonality_dict[vector][
                                 n, i, j, :
@@ -301,12 +299,13 @@ def plt_vec_compared_to_lv(args, axes: plt.Axes = None):
                             )
 
                     if vector in ["fsv"]:
-                        orthogonality_dict[vector][
-                            n, i, j, :
-                        ] = g_plt_anal.orthogonality_to_vector(
-                            vector_folder_units_dict["lv"][i, j, n, :],
-                            vector_folder_units_dict[vector][i, j, :, :],
-                        )
+                        if "lv" in save_vectors:
+                            orthogonality_dict[vector][
+                                n, i, j, :
+                            ] = g_plt_anal.orthogonality_to_vector(
+                                vector_folder_units_dict["lv"][i, j, n, :],
+                                vector_folder_units_dict[vector][i, j, :, :],
+                            )
                         if "alv" in save_vectors:
                             adj_orthogonality_dict[vector][
                                 n, i, j, :
@@ -321,17 +320,19 @@ def plt_vec_compared_to_lv(args, axes: plt.Axes = None):
             continue
 
         if vector in ["fsv", "sv"]:
-            mean_vector_lv_orthogonality_dict[vector] = np.mean(
-                np.abs(orthogonality_dict[vector]), axis=2
-            )
+            if "lv" in save_vectors:
+                mean_vector_lv_orthogonality_dict[vector] = np.mean(
+                    np.abs(orthogonality_dict[vector]), axis=2
+                )
             if "alv" in save_vectors:
                 mean_vector_adj_lv_orthogonality_dict[vector] = np.mean(
                     np.abs(adj_orthogonality_dict[vector]), axis=2
                 )
         if vector in ["bv"]:
-            mean_vector_lv_orthogonality_dict[vector] = np.mean(
-                np.mean(np.abs(orthogonality_dict[vector]), axis=3), axis=2
-            )
+            if "lv" in save_vectors:
+                mean_vector_lv_orthogonality_dict[vector] = np.mean(
+                    np.mean(np.abs(orthogonality_dict[vector]), axis=3), axis=2
+                )
             if "alv" in save_vectors:
                 mean_vector_adj_lv_orthogonality_dict[vector] = np.mean(
                     np.mean(np.abs(adj_orthogonality_dict[vector]), axis=3), axis=2
@@ -345,57 +346,75 @@ def plt_vec_compared_to_lv(args, axes: plt.Axes = None):
     for vector in save_vectors:
         # Plot BVs vs LVs
         if vector == "bv":
-            vector_vs_lv_lines: List[plt.Line2D] = axes.plot(
-                iw_values,
-                mean_vector_lv_orthogonality_dict[vector].T,
-            )
+            vector_vs_lines: list = []
+            if "lv" in save_vectors:
+                vector_vs_lv_lines: List[plt.Line2D] = axes.plot(
+                    iw_values,
+                    mean_vector_lv_orthogonality_dict[vector].T,
+                )
+                vector_vs_lines.append(vector_vs_lv_lines)
             if "alv" in save_vectors:
                 vector_vs_alv_lines = axes.plot(
                     iw_values,
                     mean_vector_adj_lv_orthogonality_dict[vector],
                     linestyle="dashed",
                 )
-                line_objs = zip(vector_vs_lv_lines, vector_vs_alv_lines)
-            else:
-                line_objs = zip(vector_vs_lv_lines)
+                vector_vs_lines.append(vector_vs_alv_lines)
+
+            line_objs = zip(*vector_vs_lv_lines)
 
             # Set labels and colors
-            for i, line_obj in enumerate(line_objs):
-                line_obj[0].set_label(
-                    f"{vector.upper()} vs LV{i}",
-                )
-                if "alv" in save_vectors:
-                    line_obj[1].set_label(
+            for i, line_objs in enumerate(line_objs):
+                if "lv" in save_vectors:
+                    line_objs[0].set_label(
+                        f"{vector.upper()} vs LV{i}",
+                    )
+                if "alv" in save_vectors and len(line_objs) == 1:
+                    line_objs[0].set_label(
                         f"{vector.upper()} vs ALV{i}",
                     )
-                    line_obj[1].set_color(line_obj[0].get_color())
+                else:
+                    line_objs[1].set_label(
+                        f"{vector.upper()} vs ALV{i}",
+                    )
+                    line_objs[1].set_color(line_objs[0].get_color())
 
         # Plot SVs vs LVs
         if "sv" in vector:
             for j in range(args["n_lvs_to_compare"]):
-                vector_vs_lv_lines = axes.plot(
-                    iw_values,
-                    mean_vector_lv_orthogonality_dict[vector][j, :, :],
-                )
+                vector_vs_lines: list = []
+                if "lv" in save_vectors:
+                    vector_vs_lv_lines = axes.plot(
+                        iw_values,
+                        mean_vector_lv_orthogonality_dict[vector][j, :, :],
+                    )
+                    vector_vs_lines.append(vector_vs_lv_lines)
                 if "alv" in save_vectors:
                     vector_vs_alv_lines = axes.plot(
                         iw_values,
                         mean_vector_adj_lv_orthogonality_dict[vector][j, :, :],
                         linestyle="dashed",
                     )
-                    line_objs = zip(vector_vs_lv_lines, vector_vs_alv_lines)
-                else:
-                    line_objs = zip(vector_vs_lv_lines)
+                    vector_vs_lines.append(vector_vs_alv_lines)
+
+                line_objs = zip(*vector_vs_lines)
 
                 # Set labels and colors
                 vector_string: str = (
                     ("I" + vector.upper()) if vector == "sv" else vector.upper()
                 )
                 for i, line_objs in enumerate(line_objs):
-                    line_objs[0].set_label(
-                        f"{vector_string}{i} vs LV{j}",
-                    )
-                    if "alv" in save_vectors:
+                    if "lv" in save_vectors:
+                        line_objs[0].set_label(
+                            f"{vector_string}{i} vs LV{j}",
+                        )
+                    if "alv" in save_vectors and len(line_objs) == 1:
+                        line_objs[0].set_label(
+                            f"{vector_string}{i} vs ALV{j}",
+                        )
+                        # Reset linestyle
+                        line_objs[0].set_linestyle("solid")
+                    else:
                         line_objs[1].set_label(
                             f"{vector_string}{i} vs ALV{j}",
                         )

@@ -30,8 +30,8 @@
             "n_vectors": 8
         },
         "lv_gen_setup": {
-            "integration_time": 20,
-            "n_cycles": 1,
+            "integration_time": 2,
+            "n_cycles": 10,
             "n_vectors": 3
         },
         "sv_gen_setup": {

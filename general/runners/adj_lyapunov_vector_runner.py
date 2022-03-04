@@ -126,7 +126,12 @@ def main(args: dict, exp_setup: dict = None):
         perturb_positions = None
         for j in range(exp_setup["n_cycles"]):
             # Import reference data
-            u_ref, _, ref_header_dict = g_import.import_start_u_profiles(args=copy_args)
+            ref_copy_args = copy.deepcopy(copy_args)
+            ref_copy_args["start_times"][0] -= exp_setup["integration_time"]
+
+            u_ref, positions, ref_header_dict = g_import.import_start_u_profiles(
+                args=ref_copy_args
+            )
 
             if copy_args["save_last_pert"] and (j + 1) == exp_setup["n_cycles"]:
                 copy_args["skip_save_data"] = False
@@ -145,18 +150,9 @@ def main(args: dict, exp_setup: dict = None):
                     processes,
                 )
 
-                # rescaled_data = g_utils.normalize_array(
-                #     np.array(data_out_list, dtype=sparams.dtype).T,
-                #     norm_value=params.seeked_error_norm,
-                #     axis=0,
-                # )
                 # Orthogonalise vectors
                 rescaled_data = np.array(data_out_list, dtype=sparams.dtype).T
                 rescaled_data, r_matrix = np.linalg.qr(rescaled_data)
-                # lyapunov_exps = np.diagonal(r_matrix @ rescaled_data)
-                # sorted_index = np.argsort(lyapunov_exps)[::-1]
-                # lyapunov_exps = lyapunov_exps[sorted_index]
-                # rescaled_data[:, :] = rescaled_data[:, sorted_index]
 
                 # Pad array if necessary
                 rescaled_data = np.pad(
@@ -170,16 +166,15 @@ def main(args: dict, exp_setup: dict = None):
                 # Offset time to prepare for next run and import of reference data
                 # for TLM
                 copy_args["start_times"][0] -= exp_setup["integration_time"]
-                # Normalization should not be necessary after QR decomp.
-                # rescaled_data = g_utils.normalize_array(
-                #     rescaled_data, norm_value=params.seeked_error_norm, axis=0
-                # )
+                # Normalization
+                rescaled_data = g_utils.normalize_array(
+                    rescaled_data, norm_value=params.seeked_error_norm, axis=0
+                )
         # Set out folder
         args["out_exp_folder"] = pl.Path(exp_setup["folder_name"])
         # Save lyapunov vectors
         v_save.save_vector_unit(
             rescaled_data[sparams.u_slice, :].T,
-            # characteristic_values=lyapunov_exps,
             perturb_position=int(round(start_times[i] * params.tts)),
             unit=i,
             args=args,
