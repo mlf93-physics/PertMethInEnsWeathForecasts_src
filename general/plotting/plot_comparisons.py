@@ -246,7 +246,9 @@ def plt_vec_compared_to_lv(args, axes: plt.Axes = None):
             args,
             vector=vector,
             raw_perturbations=not vector == "bv",
-            dtype=np.complex128 if vector == "sv" else sparams.dtype,
+            dtype=np.complex128
+            if "sv" in vector
+            else sparams.dtype,  # Both sv's and fsv's
             retrieve_header_key=retrieve_header_key,
             zero_iw_only=(vector == "lv" or vector == "alv")
             and "fsv" not in save_vectors,
@@ -364,22 +366,25 @@ def plt_vec_compared_to_lv(args, axes: plt.Axes = None):
             line_objs = zip(*vector_vs_lv_lines)
 
             # Set labels and colors
-            for i, line_objs in enumerate(line_objs):
+            for i, line_obj in enumerate(line_objs):
                 if "lv" in save_vectors:
-                    line_objs[0].set_label(
+                    line_obj[0].set_label(
                         f"{vector.upper()} vs LV{i}",
                     )
-                if "alv" in save_vectors and len(line_objs) == 1:
-                    line_objs[0].set_label(
-                        f"{vector.upper()} vs ALV{i}",
-                    )
-                else:
-                    line_objs[1].set_label(
-                        f"{vector.upper()} vs ALV{i}",
-                    )
-                    line_objs[1].set_color(line_objs[0].get_color())
+                if "alv" in save_vectors:
+                    if len(line_obj) == 1:
+                        line_obj[0].set_label(
+                            f"{vector.upper()} vs ALV{i}",
+                        )
+                        # Reset linestyle
+                        line_obj[0].set_linestyle("solid")
+                    else:
+                        line_obj[1].set_label(
+                            f"{vector.upper()} vs ALV{i}",
+                        )
+                        line_obj[1].set_color(line_obj[0].get_color())
 
-        # Plot SVs vs LVs
+        # Plot SVs/FSVs vs LVs
         if "sv" in vector:
             for j in range(args["n_lvs_to_compare"]):
                 vector_vs_lines: list = []
@@ -403,22 +408,24 @@ def plt_vec_compared_to_lv(args, axes: plt.Axes = None):
                 vector_string: str = (
                     ("I" + vector.upper()) if vector == "sv" else vector.upper()
                 )
-                for i, line_objs in enumerate(line_objs):
+                for i, line_obj in enumerate(line_objs):
+
                     if "lv" in save_vectors:
-                        line_objs[0].set_label(
+                        line_obj[0].set_label(
                             f"{vector_string}{i} vs LV{j}",
                         )
-                    if "alv" in save_vectors and len(line_objs) == 1:
-                        line_objs[0].set_label(
-                            f"{vector_string}{i} vs ALV{j}",
-                        )
-                        # Reset linestyle
-                        line_objs[0].set_linestyle("solid")
-                    else:
-                        line_objs[1].set_label(
-                            f"{vector_string}{i} vs ALV{j}",
-                        )
-                        line_objs[1].set_color(line_objs[0].get_color())
+                    if "alv" in save_vectors:
+                        if len(line_obj) == 1:
+                            line_obj[0].set_label(
+                                f"{vector_string}{i} vs ALV{j}",
+                            )
+                            # Reset linestyle
+                            line_obj[0].set_linestyle("solid")
+                        else:
+                            line_obj[1].set_label(
+                                f"{vector_string}{i} vs ALV{j}",
+                            )
+                            line_obj[1].set_color(line_obj[0].get_color())
 
     axes.set_xlabel("Integration window (IW)")
     axes.set_ylabel("Absolute projectibility")

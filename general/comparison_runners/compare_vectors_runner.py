@@ -25,7 +25,7 @@ from general.runners.breed_vector_runner import main as bv_runner
 from general.runners.lyapunov_vector_runner import main as lv_runner
 from general.runners.adj_lyapunov_vector_runner import main as adj_lv_runner
 from general.runners.singular_vector_lanczos_runner import main as sv_runner
-from ku_project.general.runners.tl_final_singular_vector_runner import (
+from ku_project.general.runners.final_singular_vector_lanczos_runner import (
     main as fsv_runner,
 )
 from libs.libutils import type_utils as lib_type_utils
@@ -234,7 +234,7 @@ def generate_final_svs(args: dict, exp_setup: dict):
         # Update eval_time
         local_exp_setup["eval_times"][0] = stored_eval_times[0] + iw * params.dt
         # Set exp_folder to get relevant sv vectors
-        args["exp_folder"] = f"sv_vectors_iw{iw_str}"
+        args["exp_folder"] = f"fsv_vectors_iw{iw_str}"
 
         fsv_runner(args, exp_setup=local_exp_setup)
 

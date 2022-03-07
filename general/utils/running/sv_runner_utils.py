@@ -14,6 +14,7 @@ if cfg.MODEL == Models.SHELL_MODEL:
     import shell_model_experiments.utils.util_funcs as ut_funcs
     from shell_model_experiments.sabra_model.sabra_model_combinations import (
         sh_tl_atl_model,
+        sh_atl_tl_model,
     )
 
     params = PAR_SH
@@ -87,22 +88,40 @@ def sv_generator(
             # Run specified number of model iterations
             for _ in range(exp_setup["n_model_iterations"]):
                 if cfg.MODEL == Models.SHELL_MODEL:
-                    _, u_atl_out, _ = sh_tl_atl_model(
-                        np.pad(
-                            lanczos_vector_matrix[:, i],
-                            pad_width=params.bd_size,  # , params.bd_size), (0, 0)),
-                            mode="constant",
-                        ),
-                        u_ref,
-                        data_out,
-                        copy_args,
-                        J_matrix,
-                        diagonal0,
-                        diagonal1,
-                        diagonal2,
-                        diagonal_1,
-                        diagonal_2,
-                    )
+                    if cfg.LICENCE == EXP.SINGULAR_VECTORS:
+                        _, u_atl_out, _ = sh_tl_atl_model(
+                            np.pad(
+                                lanczos_vector_matrix[:, i],
+                                pad_width=params.bd_size,  # , params.bd_size), (0, 0)),
+                                mode="constant",
+                            ),
+                            u_ref,
+                            data_out,
+                            copy_args,
+                            J_matrix,
+                            diagonal0,
+                            diagonal1,
+                            diagonal2,
+                            diagonal_1,
+                            diagonal_2,
+                        )
+                    elif cfg.LICENCE == EXP.FINAL_SINGULAR_VECTORS:
+                        _, u_atl_out, _ = sh_atl_tl_model(
+                            np.pad(
+                                lanczos_vector_matrix[:, i],
+                                pad_width=params.bd_size,  # , params.bd_size), (0, 0)),
+                                mode="constant",
+                            ),
+                            u_ref,
+                            data_out,
+                            copy_args,
+                            J_matrix,
+                            diagonal0,
+                            diagonal1,
+                            diagonal2,
+                            diagonal_1,
+                            diagonal_2,
+                        )
                 elif cfg.MODEL == Models.LORENTZ63:
                     if cfg.LICENCE == EXP.SINGULAR_VECTORS:
                         # Run TL model followed by ATL model

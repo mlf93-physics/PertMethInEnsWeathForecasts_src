@@ -128,7 +128,7 @@ def l63_atl_tl_model(
 
     # Run TL model
     l63_tl_model(
-        u_perturb,
+        u_atl_out,
         u_ref,
         lorentz_matrix,
         jacobian_matrix,
