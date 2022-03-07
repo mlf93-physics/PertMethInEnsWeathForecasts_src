@@ -1,0 +1,13 @@
+{
+    "LowPredRegime": {
+        "folder_name": "pt_vectors/test_adj_lyapunov_ncycles10",
+        "sub_exp_folder": "perturb_data",
+        "integration_time": 0.01,
+        "n_cycles": 10,
+        "n_vectors": 20,
+        "vector_offset": 1,
+        "eval_times": [
+            11.22
+        ]
+    }
+}
