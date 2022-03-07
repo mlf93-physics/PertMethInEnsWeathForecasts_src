@@ -53,10 +53,11 @@ def unit_runner(
 
     print(f"Running unit {run_count + 1}/{args['n_profiles']}")
 
-    if cfg.LICENCE == EXP.SINGULAR_VECTORS:
+    if cfg.LICENCE == EXP.SINGULAR_VECTORS or cfg.LICENCE == EXP.FINAL_SINGULAR_VECTORS:
         sv_matrix, s_values = sv_r_utils.sv_generator(
             exp_setup, args, u_ref, u_old, data_out
         )
+
         data_out_dict[run_count] = {
             "sv_matrix": sv_matrix,
             "s_values": s_values,
@@ -146,7 +147,7 @@ def main_setup(
 
     times_to_run, Nt_array = r_utils.prepare_run_times(args)
 
-    if cfg.LICENCE == EXP.SINGULAR_VECTORS:
+    if cfg.LICENCE == EXP.SINGULAR_VECTORS or cfg.LICENCE == EXP.FINAL_SINGULAR_VECTORS:
         raw_perturbations = True
 
         (

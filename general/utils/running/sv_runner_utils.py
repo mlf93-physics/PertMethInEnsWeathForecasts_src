@@ -1,6 +1,7 @@
 import config as cfg
 import general.utils.perturb_utils as pt_utils
 from general.params.model_licences import Models
+from general.params.experiment_licences import Experiments as EXP
 import general.analyses.plot_analyses as g_plt_anal
 import numpy as np
 
@@ -24,6 +25,7 @@ elif cfg.MODEL == Models.LORENTZ63:
     import lorentz63_experiments.utils.util_funcs as ut_funcs
     from lorentz63_experiments.lorentz63_model.lorentz63_model_combinations import (
         l63_tl_atl_model,
+        l63_atl_tl_model,
     )
 
     params = l63_params
@@ -102,30 +104,39 @@ def sv_generator(
                         diagonal_2,
                     )
                 elif cfg.MODEL == Models.LORENTZ63:
-                    # Run TL model followed by ATL model
-                    _, u_atl_out, _ = l63_tl_atl_model(
-                        np.copy(lanczos_vector_matrix[:, i]),
-                        u_ref,
-                        jacobian_matrix,
-                        lorentz_matrix,
-                        data_out,
-                        copy_args,
-                    )
+                    if cfg.LICENCE == EXP.SINGULAR_VECTORS:
+                        # Run TL model followed by ATL model
+                        _, u_atl_out, _ = l63_tl_atl_model(
+                            np.copy(lanczos_vector_matrix[:, i]),
+                            u_ref,
+                            jacobian_matrix,
+                            lorentz_matrix,
+                            data_out,
+                            copy_args,
+                        )
+                    elif cfg.LICENCE == EXP.FINAL_SINGULAR_VECTORS:
+                        # Run TL model followed by ATL model
+                        u_tl_out, _, _ = l63_atl_tl_model(
+                            np.copy(lanczos_vector_matrix[:, i]),
+                            u_ref,
+                            jacobian_matrix,
+                            lorentz_matrix,
+                            data_out,
+                            copy_args,
+                        )
 
                 #  Rescale perturbations
                 # lanczos_vector_next = pt_utils.rescale_perturbations(
                 #     u_atl_out[np.newaxis, :], copy_args, raw_perturbations=True
                 # )
             # Update array for the lanczos algorithm
-            propagated_vector[:] = u_atl_out
+            if cfg.LICENCE == EXP.SINGULAR_VECTORS:
+                propagated_vector[:] = u_atl_out
+            elif cfg.LICENCE == EXP.FINAL_SINGULAR_VECTORS:
+                propagated_vector[:] = u_tl_out
 
             # Iterate the Lanczos algorithm one step
             tridiag_matrix = next(lanczos_iterator)
-
-            # NOTE: Uncomment this to enable normalization of lanczos vectors -
-            # produces orthogonal lanczos vectors. lanczos_vector_next =
-            # g_utils.normalize_array( lanczos_vector_next,
-            #     norm_value=params.seeked_error_norm, axis=0 )
 
         # Calculate orthogonality between Lanczos vectors
         orthogonality = g_plt_anal.orthogonality_of_vectors(lanczos_vector_matrix)

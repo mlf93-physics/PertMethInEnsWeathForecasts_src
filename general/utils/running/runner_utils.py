@@ -289,8 +289,12 @@ def prepare_perturbations(
                 (params.sdim, args["n_profiles"] * args["n_runs_per_profile"]),
             )
 
-        elif "sv" in args["pert_mode"]:
-            print("\nRunning with SINGULAR VECTOR perturbations\n")
+        elif "sv" in args["pert_mode"] or "fsv" in args["pert_mode"]:
+            if "sv" in args["pert_mode"]:
+                print("\nRunning with SINGULAR VECTOR perturbations\n")
+            elif "fsv" in args["pert_mode"]:
+                print("\nRunning with FINAL SINGULAR VECTOR perturbations\n")
+
             (
                 perturb_vectors,
                 _,
@@ -299,23 +303,6 @@ def prepare_perturbations(
                 _,
             ) = pt_import.import_perturb_vectors(
                 args, raw_perturbations=True, dtype=np.complex128
-            )
-            # Reshape perturb_vectors
-            perturb_vectors = np.reshape(
-                np.transpose(perturb_vectors, axes=(2, 0, 1)),
-                (params.sdim, args["n_profiles"] * args["n_runs_per_profile"]),
-            )
-
-        elif "fsv" in args["pert_mode"]:
-            print("\nRunning with FINAL SINGULAR VECTOR perturbations\n")
-            (
-                perturb_vectors,
-                _,
-                u_init_profiles,
-                perturb_positions,
-                _,
-            ) = pt_import.import_perturb_vectors(
-                args, raw_perturbations=True, dtype=sparams.dtype
             )
             # Reshape perturb_vectors
             perturb_vectors = np.reshape(
