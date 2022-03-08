@@ -431,22 +431,25 @@ def plot_residence_time_in_wing(args):
     residence_times = np.abs(
         residence_times1
     )  # np.abs(np.concatenate([residence_times1, residence_times2]))
+    count, bins = np.histogram(residence_times)
+    pdf = count / np.sum(count)
+    cdf = np.cumsum(pdf)
 
     plt.figure()
-    plt.hist(residence_times, density=True)
+    plt.plot((bins[1:] + bins[:-1]) / 2, 1 - cdf)
     plt.yscale("log")
 
     title = g_plt_utils.generate_title(
         args,
         header_dict=ref_header_dict,
-        title_header="Wing residence time distribution",
+        title_header="Wing residence time CCDF",
     )
 
     plt.title(title)
     plt.xlabel("Residence time")
     plt.ylabel("Frequency")
 
-    # return
+    return
     plt.figure()
     plt.plot(time, u_data[:, 0])
     plt.plot(
