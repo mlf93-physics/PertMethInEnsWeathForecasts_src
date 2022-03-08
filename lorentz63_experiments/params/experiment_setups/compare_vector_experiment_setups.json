@@ -90,5 +90,51 @@
             "n_lanczos_iterations": 1,
             "n_model_iterations": 1
         }
+    },
+    "CompareITRun03": {
+        "general": {
+            "folder_name": "compare_vecs_to_lv_ncycles4_n_units100",
+            "vector_folder": "vectors",
+            "perturbation_folder": "perturbations",
+            "sub_exp_folder": "perturb_data",
+            "eval_times": [
+                1000
+            ],
+            "n_units": 100,
+            "iws": [
+                2,
+                4,
+                6,
+                8,
+                10,
+                12,
+                14,
+                16,
+                32,
+                64,
+                96,
+                128
+            ],
+            "unit_offset": 2.0
+        },
+        "bv_gen_setup": {
+            "n_cycles": 4,
+            "n_vectors": 8
+        },
+        "lv_gen_setup": {
+            "integration_time": 20,
+            "n_cycles": 1,
+            "n_vectors": 3
+        },
+        "sv_gen_setup": {
+            "n_vectors": 3,
+            "n_lanczos_iterations": 1,
+            "n_model_iterations": 1
+        },
+        "fsv_gen_setup": {
+            "n_vectors": 3,
+            "n_lanczos_iterations": 1,
+            "n_model_iterations": 1
+        }
     }
 }

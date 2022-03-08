@@ -310,14 +310,18 @@ def plt_vec_compared_to_lv(args, axes: plt.Axes = None):
                             orthogonality_dict[vector][
                                 n, i, j, :
                             ] = g_plt_anal.orthogonality_to_vector(
-                                vector_folder_units_dict["lv"][i, j, n, :],
+                                vector_folder_units_dict["lv"][
+                                    i + 1, j, n, :
+                                ],  # +1 in order to skip lv valid at time 0
                                 vector_folder_units_dict[vector][i, j, :, :],
                             )
                         if "alv" in save_vectors:
                             adj_orthogonality_dict[vector][
                                 n, i, j, :
                             ] = g_plt_anal.orthogonality_to_vector(
-                                vector_folder_units_dict["alv"][i, j, n, :],
+                                vector_folder_units_dict["alv"][
+                                    i + 1, j, n, :
+                                ],  # +1 in order to skip alv valid at time 0
                                 vector_folder_units_dict[vector][i, j, :, :],
                             )
 
@@ -368,7 +372,7 @@ def plt_vec_compared_to_lv(args, axes: plt.Axes = None):
                 )
                 vector_vs_lines.append(vector_vs_alv_lines)
 
-            line_objs = zip(*vector_vs_lv_lines)
+            line_objs = zip(*vector_vs_lines)
 
             # Set labels and colors
             for i, line_obj in enumerate(line_objs):
