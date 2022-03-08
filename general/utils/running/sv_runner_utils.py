@@ -106,7 +106,7 @@ def sv_generator(
                             diagonal_2,
                         )
                     elif cfg.LICENCE == EXP.FINAL_SINGULAR_VECTORS:
-                        _, u_atl_out, _ = sh_atl_tl_model(
+                        u_tl_out, _, _ = sh_atl_tl_model(
                             np.pad(
                                 lanczos_vector_matrix[:, i],
                                 pad_width=params.bd_size,  # , params.bd_size), (0, 0)),

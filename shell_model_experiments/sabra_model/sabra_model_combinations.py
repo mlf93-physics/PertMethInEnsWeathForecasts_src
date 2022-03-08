@@ -157,7 +157,7 @@ def sh_atl_tl_model(
 
     # Run ATL model one time step
     sh_atl_model(
-        u_perturb[:, np.newaxis],
+        u_perturb,
         u_ref,
         data_out,
         args["Nt"] + args["endpoint"] * 1,

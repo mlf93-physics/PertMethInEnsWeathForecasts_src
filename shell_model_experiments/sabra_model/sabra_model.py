@@ -181,6 +181,9 @@ def main(args=None):
         compress_out_name = f"ref_data_{stand_data_name}"
         g_save_utils.compress_dir(save_path, compress_out_name)
 
+    profiler.stop()
+    print(profiler.output_text())
+
 
 if __name__ == "__main__":
     cfg.init_licence()

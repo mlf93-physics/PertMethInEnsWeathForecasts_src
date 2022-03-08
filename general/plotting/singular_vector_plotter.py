@@ -402,9 +402,9 @@ if __name__ == "__main__":
         plot_s_vectors_average(args)
     elif "s_vectors_average_3D" in args["plot_type"]:
         plot3D_s_vectors_average(args)
-    elif "s_vector_ortho" in args["plot_type"]:
+    elif "s_vectors_ortho" in args["plot_type"]:
         plot_s_vector_ortho(args)
-    elif "s_vector_ortho_average" in args["plot_type"]:
+    elif "s_vectors_ortho_average" in args["plot_type"]:
         plot_s_vector_ortho_average(args)
     elif "sv_error_norm" in args["plot_type"]:
         plot_sv_error_norm(args)
