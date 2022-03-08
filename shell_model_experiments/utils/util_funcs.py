@@ -56,12 +56,12 @@ def ny_n_from_ny_and_forcing(forcing, ny, diff_exponent):
 
 
 @nb.njit(
-    # (nb.types.Array(nb.types.complex128, 1, "C", readonly=False))(
-    #     nb.types.Array(nb.types.complex128, 1, "C", readonly=False),
-    #     nb.typeof(PAR),
-    #     nb.types.float64,
-    #     nb.types.float64,
-    # ),
+    (nb.types.Array(nb.types.complex128, 1, "C", readonly=False))(
+        nb.types.Array(nb.types.complex128, 1, "C", readonly=False),
+        nb.typeof(PAR),
+        nb.types.float64,
+        nb.types.float64,
+    ),
     cache=cfg.NUMBA_CACHE,
 )
 def normal_diffusion(u_old, PAR, ny, diff_exponent):
@@ -73,12 +73,12 @@ def normal_diffusion(u_old, PAR, ny, diff_exponent):
 
 
 @nb.njit(
-    # (nb.types.Array(nb.types.complex128, 1, "C", readonly=False))(
-    #     nb.types.Array(nb.types.complex128, 1, "C", readonly=False),
-    #     nb.typeof(PAR),
-    #     nb.types.float64,
-    #     nb.types.float64,
-    # ),
+    (nb.types.Array(nb.types.complex128, 1, "C", readonly=False))(
+        nb.types.Array(nb.types.complex128, 1, "C", readonly=False),
+        nb.typeof(PAR),
+        nb.types.float64,
+        nb.types.float64,
+    ),
     cache=cfg.NUMBA_CACHE,
 )
 def infinit_hyper_diffusion(u_old, PAR, ny, diff_exponent):
@@ -87,10 +87,7 @@ def infinit_hyper_diffusion(u_old, PAR, ny, diff_exponent):
     return u_old
 
 
-@nb.njit(
-    # (nb.types.none)(nb.typeof(PAR)),
-    cache=cfg.NUMBA_CACHE
-)
+@nb.njit((nb.types.none)(nb.typeof(PAR)), cache=cfg.NUMBA_CACHE)
 def update_arrays(struct: ParamsStructType):
     """Update arrays based on other parameters
 
@@ -111,10 +108,10 @@ def update_arrays(struct: ParamsStructType):
 
 
 @nb.njit(
-    # [
-    #     (nb.types.none)(nb.typeof(PAR), nb.types.string, nb.types.float64),
-    #     (nb.types.none)(nb.typeof(PAR), nb.types.Omitted(None), nb.types.Omitted(None)),
-    # ],
+    [
+        (nb.types.none)(nb.typeof(PAR), nb.types.string, nb.types.float64),
+        (nb.types.none)(nb.typeof(PAR), nb.types.Omitted(None), nb.types.Omitted(None)),
+    ],
     cache=cfg.NUMBA_CACHE,
 )
 def set_params(struct: ParamsStructType, parameter: str = None, value: float = None):
@@ -136,7 +133,7 @@ def set_params(struct: ParamsStructType, parameter: str = None, value: float = N
 
 
 @nb.njit(
-    # (nb.types.none)(nb.typeof(PAR)),
+    (nb.types.none)(nb.typeof(PAR)),
     cache=cfg.NUMBA_CACHE,
 )
 def update_dependent_params(struct: ParamsStructType):

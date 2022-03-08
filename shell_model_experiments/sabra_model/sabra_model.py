@@ -33,28 +33,28 @@ profiler = Profiler()
 
 # @dec.diffusion_type_decorator
 @nb.njit(
-    # [
-    #     (nb.types.Array(nb.types.complex128, 1, "C", readonly=False))(
-    #         nb.typeof(ut_funcs.normal_diffusion),
-    #         nb.types.Array(nb.types.complex128, 1, "C", readonly=False),
-    #         nb.types.Array(nb.types.complex128, 2, "C", readonly=False),
-    #         nb.types.int64,
-    #         nb.types.float64,
-    #         nb.types.float64,
-    #         nb.types.float64,
-    #         nb.typeof(PAR),
-    #     ),
-    #     (nb.types.Array(nb.types.complex128, 1, "C", readonly=False))(
-    #         nb.typeof(ut_funcs.infinit_hyper_diffusion),
-    #         nb.types.Array(nb.types.complex128, 1, "C", readonly=False),
-    #         nb.types.Array(nb.types.complex128, 2, "C", readonly=False),
-    #         nb.types.int64,
-    #         nb.types.float64,
-    #         nb.types.float64,
-    #         nb.types.float64,
-    #         nb.typeof(PAR),
-    #     ),
-    # ],
+    [
+        (nb.types.Array(nb.types.complex128, 1, "C", readonly=False))(
+            nb.typeof(ut_funcs.normal_diffusion),
+            nb.types.Array(nb.types.complex128, 1, "C", readonly=False),
+            nb.types.Array(nb.types.complex128, 2, "C", readonly=False),
+            nb.types.int64,
+            nb.types.float64,
+            nb.types.float64,
+            nb.types.float64,
+            nb.typeof(PAR),
+        ),
+        (nb.types.Array(nb.types.complex128, 1, "C", readonly=False))(
+            nb.typeof(ut_funcs.infinit_hyper_diffusion),
+            nb.types.Array(nb.types.complex128, 1, "C", readonly=False),
+            nb.types.Array(nb.types.complex128, 2, "C", readonly=False),
+            nb.types.int64,
+            nb.types.float64,
+            nb.types.float64,
+            nb.types.float64,
+            nb.typeof(PAR),
+        ),
+    ],
     cache=cfg.NUMBA_CACHE,
 )
 def run_model(
