@@ -24,25 +24,25 @@
         ]
     },
     "LowPredRegime": {
-        "folder_name": "pt_vectors/sv_low_pred_regime_test",
+        "folder_name": "pt_vectors/sv_low_pred_regime_test_it0.0001",
         "sub_exp_folder": "perturb_data",
-        "integration_time": 0.01,
+        "integration_time": 0.0001,
         "n_vectors": 20,
         "n_lanczos_iterations": 1,
         "n_model_iterations": 1,
-        "vector_offset": 0.01,
+        "vector_offset": 0.0001,
         "start_times": [
-            11.22
+            2
         ]
     },
     "HighPredRegime": {
-        "folder_name": "pt_vectors/sv_high_pred_regime_test",
+        "folder_name": "pt_vectors/sv_high_pred_regime_test_it0.0005",
         "sub_exp_folder": "perturb_data",
-        "integration_time": 0.01,
+        "integration_time": 0.0005,
         "n_vectors": 20,
         "n_lanczos_iterations": 1,
         "n_model_iterations": 1,
-        "vector_offset": 0.01,
+        "vector_offset": 0.0005,
         "start_times": [
             5.5
         ]
