@@ -11,11 +11,11 @@ import config as cfg
 
 
 @njit(
-    (types.Array(types.complex128, 1, "C", readonly=False))(
-        types.Array(types.complex128, 1, "C", readonly=True),
-        types.float64,
-        typeof(PAR),
-    ),
+    # (types.Array(types.complex128, 1, "C", readonly=False))(
+    #     types.Array(types.complex128, 1, "C", readonly=True),
+    #     types.float64,
+    #     typeof(PAR),
+    # ),
     cache=cfg.NUMBA_CACHE,
 )
 def derivative_evaluator(
@@ -55,11 +55,11 @@ def derivative_evaluator(
 
 
 @njit(
-    types.Array(types.complex128, 1, "C", readonly=False)(
-        types.Array(types.complex128, 1, "C", readonly=False),
-        types.float64,
-        typeof(PAR),
-    ),
+    # types.Array(types.complex128, 1, "C", readonly=False)(
+    #     types.Array(types.complex128, 1, "C", readonly=False),
+    #     types.float64,
+    #     typeof(PAR),
+    # ),
     cache=cfg.NUMBA_CACHE,
 )
 def runge_kutta4(
@@ -100,19 +100,19 @@ def runge_kutta4(
 
 
 @njit(
-    types.Array(types.complex128, 1, "C", readonly=False)(
-        types.Array(types.complex128, 1, "C", readonly=True),
-        types.Array(types.complex128, 1, "C", readonly=True),
-        types.float64,
-        types.float64,
-        typeof(PAR),
-        types.Array(types.complex128, 2, "C", readonly=False),
-        types.Array(types.complex128, 1, "A", readonly=False),
-        types.Array(types.complex128, 1, "A", readonly=False),
-        types.Array(types.complex128, 1, "A", readonly=False),
-        types.Array(types.complex128, 1, "A", readonly=False),
-        types.Array(types.complex128, 1, "A", readonly=False),
-    ),
+    # types.Array(types.complex128, 1, "C", readonly=False)(
+    #     types.Array(types.complex128, 1, "C", readonly=True),
+    #     types.Array(types.complex128, 1, "C", readonly=True),
+    #     types.float64,
+    #     types.float64,
+    #     typeof(PAR),
+    #     types.Array(types.complex128, 2, "C", readonly=False),
+    #     types.Array(types.complex128, 1, "A", readonly=False),
+    #     types.Array(types.complex128, 1, "A", readonly=False),
+    #     types.Array(types.complex128, 1, "A", readonly=False),
+    #     types.Array(types.complex128, 1, "A", readonly=False),
+    #     types.Array(types.complex128, 1, "A", readonly=False),
+    # ),
     cache=cfg.NUMBA_CACHE,
 )
 def tl_derivative_evaluator(
@@ -185,20 +185,20 @@ def tl_derivative_evaluator(
 
 
 @njit(
-    types.UniTuple(types.Array(types.complex128, 1, "C", readonly=False), 2,)(
-        types.Array(types.complex128, 1, "C", readonly=False),
-        types.Array(types.complex128, 1, "C", readonly=True),
-        types.float64,
-        types.float64,
-        types.float64,
-        typeof(PAR),
-        types.Array(types.complex128, 2, "C", readonly=False),
-        types.Array(types.complex128, 1, "A", readonly=False),
-        types.Array(types.complex128, 1, "A", readonly=False),
-        types.Array(types.complex128, 1, "A", readonly=False),
-        types.Array(types.complex128, 1, "A", readonly=False),
-        types.Array(types.complex128, 1, "A", readonly=False),
-    ),
+    # types.UniTuple(types.Array(types.complex128, 1, "C", readonly=False), 2,)(
+    #     types.Array(types.complex128, 1, "C", readonly=False),
+    #     types.Array(types.complex128, 1, "C", readonly=True),
+    #     types.float64,
+    #     types.float64,
+    #     types.float64,
+    #     typeof(PAR),
+    #     types.Array(types.complex128, 2, "C", readonly=False),
+    #     types.Array(types.complex128, 1, "A", readonly=False),
+    #     types.Array(types.complex128, 1, "A", readonly=False),
+    #     types.Array(types.complex128, 1, "A", readonly=False),
+    #     types.Array(types.complex128, 1, "A", readonly=False),
+    #     types.Array(types.complex128, 1, "A", readonly=False),
+    # ),
     cache=cfg.NUMBA_CACHE,
 )
 def tl_runge_kutta4(
@@ -327,19 +327,19 @@ def tl_runge_kutta4(
 
 
 @njit(
-    types.Array(types.complex128, 1, "C", readonly=False)(
-        types.Array(types.complex128, 1, "C", readonly=True),
-        types.Array(types.complex128, 1, "C", readonly=True),
-        types.float64,
-        types.float64,
-        typeof(PAR),
-        types.Array(types.complex128, 2, "C", readonly=False),
-        types.Array(types.complex128, 1, "A", readonly=False),
-        types.Array(types.complex128, 1, "A", readonly=False),
-        types.Array(types.complex128, 1, "A", readonly=False),
-        types.Array(types.complex128, 1, "A", readonly=False),
-        types.Array(types.complex128, 1, "A", readonly=False),
-    ),
+    # types.Array(types.complex128, 1, "C", readonly=False)(
+    #     types.Array(types.complex128, 1, "C", readonly=True),
+    #     types.Array(types.complex128, 1, "C", readonly=True),
+    #     types.float64,
+    #     types.float64,
+    #     typeof(PAR),
+    #     types.Array(types.complex128, 2, "C", readonly=False),
+    #     types.Array(types.complex128, 1, "A", readonly=False),
+    #     types.Array(types.complex128, 1, "A", readonly=False),
+    #     types.Array(types.complex128, 1, "A", readonly=False),
+    #     types.Array(types.complex128, 1, "A", readonly=False),
+    #     types.Array(types.complex128, 1, "A", readonly=False),
+    # ),
     cache=cfg.NUMBA_CACHE,
 )
 def atl_derivative_evaluator(
@@ -414,20 +414,20 @@ def atl_derivative_evaluator(
 
 
 @njit(
-    types.Array(types.complex128, 1, "C", readonly=False)(
-        types.Array(types.complex128, 1, "C", readonly=False),
-        types.Array(types.complex128, 1, "C", readonly=True),
-        types.float64,
-        types.float64,
-        types.float64,
-        typeof(PAR),
-        types.Array(types.complex128, 2, "C", readonly=False),
-        types.Array(types.complex128, 1, "A", readonly=False),
-        types.Array(types.complex128, 1, "A", readonly=False),
-        types.Array(types.complex128, 1, "A", readonly=False),
-        types.Array(types.complex128, 1, "A", readonly=False),
-        types.Array(types.complex128, 1, "A", readonly=False),
-    ),
+    # types.Array(types.complex128, 1, "C", readonly=False)(
+    #     types.Array(types.complex128, 1, "C", readonly=False),
+    #     types.Array(types.complex128, 1, "C", readonly=True),
+    #     types.float64,
+    #     types.float64,
+    #     types.float64,
+    #     typeof(PAR),
+    #     types.Array(types.complex128, 2, "C", readonly=False),
+    #     types.Array(types.complex128, 1, "A", readonly=False),
+    #     types.Array(types.complex128, 1, "A", readonly=False),
+    #     types.Array(types.complex128, 1, "A", readonly=False),
+    #     types.Array(types.complex128, 1, "A", readonly=False),
+    #     types.Array(types.complex128, 1, "A", readonly=False),
+    # ),
     cache=cfg.NUMBA_CACHE,
 )
 def atl_runge_kutta4(

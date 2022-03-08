@@ -115,17 +115,17 @@ def init_jacobian():
 
 
 @nb.njit(
-    (
-        nb.types.Array(nb.types.complex128, 1, "C", readonly=True),
-        nb.types.float64,
-        nb.types.float64,
-        nb.typeof(PAR),
-        nb.types.Array(nb.types.complex128, 1, "A", readonly=False),
-        nb.types.Array(nb.types.complex128, 1, "A", readonly=False),
-        nb.types.Array(nb.types.complex128, 1, "A", readonly=False),
-        nb.types.Array(nb.types.complex128, 1, "A", readonly=False),
-        nb.types.Array(nb.types.complex128, 1, "A", readonly=False),
-    ),
+    # (
+    #     nb.types.Array(nb.types.complex128, 1, "C", readonly=True),
+    #     nb.types.float64,
+    #     nb.types.float64,
+    #     nb.typeof(PAR),
+    #     nb.types.Array(nb.types.complex128, 1, "A", readonly=False),
+    #     nb.types.Array(nb.types.complex128, 1, "A", readonly=False),
+    #     nb.types.Array(nb.types.complex128, 1, "A", readonly=False),
+    #     nb.types.Array(nb.types.complex128, 1, "A", readonly=False),
+    #     nb.types.Array(nb.types.complex128, 1, "A", readonly=False),
+    # ),
     cache=cfg.NUMBA_CACHE,
 )
 def calc_jacobian(
@@ -175,18 +175,18 @@ def calc_jacobian(
 
 
 @nb.njit(
-    (
-        nb.types.Array(nb.types.complex128, 1, "C", readonly=True),
-        nb.types.float64,
-        nb.types.float64,
-        nb.typeof(PAR),
-        nb.types.Array(nb.types.complex128, 2, "C", readonly=False),
-        nb.types.Array(nb.types.complex128, 1, "A", readonly=False),
-        nb.types.Array(nb.types.complex128, 1, "A", readonly=False),
-        nb.types.Array(nb.types.complex128, 1, "A", readonly=False),
-        nb.types.Array(nb.types.complex128, 1, "A", readonly=False),
-        nb.types.Array(nb.types.complex128, 1, "A", readonly=False),
-    ),
+    # (
+    #     nb.types.Array(nb.types.complex128, 1, "C", readonly=True),
+    #     nb.types.float64,
+    #     nb.types.float64,
+    #     nb.typeof(PAR),
+    #     nb.types.Array(nb.types.complex128, 2, "C", readonly=False),
+    #     nb.types.Array(nb.types.complex128, 1, "A", readonly=False),
+    #     nb.types.Array(nb.types.complex128, 1, "A", readonly=False),
+    #     nb.types.Array(nb.types.complex128, 1, "A", readonly=False),
+    #     nb.types.Array(nb.types.complex128, 1, "A", readonly=False),
+    #     nb.types.Array(nb.types.complex128, 1, "A", readonly=False),
+    # ),
     cache=cfg.NUMBA_CACHE,
 )
 def calc_adjoint_jacobian(
