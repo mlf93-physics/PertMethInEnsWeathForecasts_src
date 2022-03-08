@@ -191,6 +191,7 @@ def plt_pert_components(args: dict, axes: plt.Axes = None):
 def import_multiple_vector_dirs(
     args,
     raw_perturbations=True,
+    force_no_ref_import=True,
     retrieve_header_key: str = "",
     dtype=np.float64,
 ):
@@ -211,7 +212,10 @@ def import_multiple_vector_dirs(
     for i, folder in enumerate(args["exp_folders"]):
         args["exp_folder"] = folder
         (vector_units, _, _, _, vec_header_dicts,) = pt_import.import_perturb_vectors(
-            args, raw_perturbations=raw_perturbations, dtype=dtype
+            args,
+            raw_perturbations=raw_perturbations,
+            dtype=dtype,
+            force_no_ref_import=force_no_ref_import,
         )
 
         if len(retrieve_header_key) > 0:
@@ -246,6 +250,7 @@ def plt_vec_compared_to_lv(args, axes: plt.Axes = None):
             args,
             vector=vector,
             raw_perturbations=not vector == "bv",
+            force_no_ref_import=not vector == "bv",
             dtype=np.complex128
             if "sv" in vector
             else sparams.dtype,  # Both sv's and fsv's
@@ -445,6 +450,7 @@ def prepare_vector_folder_units(
     args,
     vector: str = "bv",
     raw_perturbations=True,
+    force_no_ref_import=True,
     dtype=sparams.dtype,
     retrieve_header_key: str = "",
     zero_iw_only: bool = False,
@@ -460,6 +466,7 @@ def prepare_vector_folder_units(
     vector_folder_units, header_values = import_multiple_vector_dirs(
         args,
         raw_perturbations=raw_perturbations,
+        force_no_ref_import=force_no_ref_import,
         retrieve_header_key=retrieve_header_key,
         dtype=dtype,
     )

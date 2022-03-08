@@ -216,7 +216,10 @@ def import_profiles_for_nm_analysis(args: dict = None) -> Tuple[np.ndarray, dict
 
 
 def import_perturb_vectors(
-    args: dict, raw_perturbations: bool = False, dtype=None
+    args: dict,
+    raw_perturbations: bool = False,
+    dtype=None,
+    force_no_ref_import: bool = False,
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, List[int], List[dict]]:
     """Import units of perturbation vectors, e.g. BVs or SVs
 
@@ -224,6 +227,13 @@ def import_perturb_vectors(
     ----------
     args : dict
         Run-time arguments
+    raw_perturbations : bool
+        If relevant u_profiles should be subtracted the vectors (False) or not (True)
+    dtype
+        The datatype of the vectors to import
+    force_no_ref_import : bool
+        (True) Force function to not import start_u_profiles and return them.
+        KEEP IN MIND THAT THIS ALTERS THE NUMBER OF STATED RETURN VARIABLES
 
     Returns
     -------
@@ -296,11 +306,14 @@ def import_perturb_vectors(
     args["start_times"] = np.array(eval_pos) * params.stt
 
     # Import reference data
-    (
-        u_init_profiles,
-        _,
-        _,
-    ) = g_import.import_start_u_profiles(args=args)
+    if not force_no_ref_import:
+        (
+            u_init_profiles,
+            _,
+            _,
+        ) = g_import.import_start_u_profiles(args=args)
+    else:
+        u_init_profiles = None
 
     vector_units = np.empty(
         (args["n_files"], args["n_runs_per_profile"], params.sdim), dtype=np.complex128
