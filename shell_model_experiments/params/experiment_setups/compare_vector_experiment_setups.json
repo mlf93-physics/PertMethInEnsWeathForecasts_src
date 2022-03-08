@@ -1,0 +1,39 @@
+{
+    "CompareITRun01": {
+        "general": {
+            "folder_name": "compare_vecs_bv_to_lv_ncycles4_test1",
+            "vector_folder": "vectors",
+            "perturbation_folder": "perturbations",
+            "sub_exp_folder": "perturb_data",
+            "eval_times": [
+                8.95
+            ],
+            "n_units": 10,
+            "iws": [
+                1000,
+                2000,
+                3000
+            ],
+            "unit_offset": 1.0
+        },
+        "bv_gen_setup": {
+            "n_cycles": 4,
+            "n_vectors": 20
+        },
+        "lv_gen_setup": {
+            "integration_time": 0.01,
+            "n_cycles": 10,
+            "n_vectors": 20
+        },
+        "sv_gen_setup": {
+            "n_vectors": 20,
+            "n_lanczos_iterations": 1,
+            "n_model_iterations": 1
+        },
+        "fsv_gen_setup": {
+            "n_vectors": 20,
+            "n_lanczos_iterations": 1,
+            "n_model_iterations": 1
+        }
+    }
+}

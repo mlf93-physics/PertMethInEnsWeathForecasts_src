@@ -206,7 +206,8 @@ def import_multiple_vector_dirs(
             args["n_profiles"],
             args["n_runs_per_profile"],
             params.sdim,
-        )
+        ),
+        dtype=sparams.dtype,
     )
 
     for i, folder in enumerate(args["exp_folders"]):
@@ -268,7 +269,8 @@ def plt_vec_compared_to_lv(args, axes: plt.Axes = None):
                     len(header_values[retrieve_header_key]),
                     args["n_profiles"],
                     args["n_runs_per_profile"],
-                )
+                ),
+                dtype=sparams.dtype,
             )
             adj_orthogonality_dict[vector] = np.copy(orthogonality_dict[vector])
 

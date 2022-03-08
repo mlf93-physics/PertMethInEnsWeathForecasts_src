@@ -396,6 +396,76 @@ def plot_characteristic_periods(args: dict, axes: plt.Axes = None):
     axes.grid()
 
 
+def plot_residence_time_in_wing(args):
+    # Import reference data
+    time, u_data, ref_header_dict = g_import.import_ref_data(args=args)
+
+    wing_indices = u_data[:, 0] > 0
+
+    roll_array = np.roll(wing_indices, 1)
+    neg_to_pos_wing_boolean_array = np.logical_and(
+        np.logical_not(roll_array), wing_indices
+    )
+    pos_to_neg_wing_boolean_array = np.logical_and(
+        roll_array, np.logical_not(wing_indices)
+    )
+
+    # Convert indices to start times
+    wing_times = []
+    wing_times.append(time[np.where(neg_to_pos_wing_boolean_array)])
+    wing_times.append(time[np.where(pos_to_neg_wing_boolean_array)])
+
+    # Find largest first time
+    largest_first_time_index = np.argmin([wing_times[0][0], wing_times[1][0]])
+
+    # Calculate residence times
+    residence_times1 = (
+        wing_times[largest_first_time_index][1:]
+        - wing_times[abs(largest_first_time_index - 1)][:-1]
+    )
+    residence_times2 = (
+        wing_times[abs(largest_first_time_index - 1)][:-1]
+        - wing_times[largest_first_time_index][:-1]
+    )
+    # Concatenate residence times
+    residence_times = np.abs(
+        residence_times1
+    )  # np.abs(np.concatenate([residence_times1, residence_times2]))
+
+    plt.figure()
+    plt.hist(residence_times, density=True)
+    plt.yscale("log")
+
+    title = g_plt_utils.generate_title(
+        args,
+        header_dict=ref_header_dict,
+        title_header="Wing residence time distribution",
+    )
+
+    plt.title(title)
+    plt.xlabel("Residence time")
+    plt.ylabel("Frequency")
+
+    # return
+    plt.figure()
+    plt.plot(time, u_data[:, 0])
+    plt.plot(
+        wing_times[largest_first_time_index],
+        np.zeros(len(wing_times[largest_first_time_index])),
+        "x",
+        color="b",
+        label="index1",
+    )
+    plt.plot(
+        wing_times[abs(largest_first_time_index - 1)],
+        np.zeros(len(wing_times[abs(largest_first_time_index - 1)])),
+        "x",
+        color="r",
+        label="index2",
+    )
+    plt.legend()
+
+
 if __name__ == "__main__":
     cfg.init_licence()
 
@@ -426,5 +496,7 @@ if __name__ == "__main__":
         plot_energy_dist(args)
     elif "periods" in args["plot_type"]:
         plot_characteristic_periods(args)
+    elif "residence_time" in args["plot_type"]:
+        plot_residence_time_in_wing(args)
 
     g_plt_utils.save_or_show_plot(args)
