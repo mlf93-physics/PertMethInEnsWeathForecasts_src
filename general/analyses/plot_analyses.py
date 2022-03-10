@@ -21,7 +21,9 @@ def orthogonality_of_vectors(matrix_of_vectors):
     n_vectors = matrix_of_vectors.shape[0]
 
     # Calculate orthogonality of all combinations
-    orthonormality = [x.dot(y.conj()) for x, y in it.combinations(matrix_of_vectors, 2)]
+    orthonormality = [
+        x.dot(y.conj()).real for x, y in it.combinations(matrix_of_vectors, 2)
+    ]
 
     orthogonality_matrix = np.zeros((n_vectors, n_vectors))
     orthogonality_matrix[np.triu_indices(n_vectors, k=1)] = np.abs(orthonormality)
@@ -55,7 +57,7 @@ def orthogonality_to_vector(
     matrix_of_vectors = g_utils.normalize_array(matrix_of_vectors, norm_value=1, axis=1)
     # Calculate orthogonality
     orthogonality = [
-        reference_vector.dot(matrix_of_vectors[i, :].conj())
+        np.vdot(reference_vector, matrix_of_vectors[i, :]).real
         for i in range(matrix_of_vectors.shape[0])
     ]
 

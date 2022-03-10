@@ -291,7 +291,7 @@ def lanczos_vector_algorithm(
     """
     beta_j: float = 0
     tridiag_matrix: np.ndarray = np.zeros(
-        (n_iterations, n_iterations), dtype=sparams.dtype
+        (n_iterations, n_iterations), dtype=np.float64
     )
 
     omega_vector_matrix: np.ndarray = np.zeros(

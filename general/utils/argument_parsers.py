@@ -456,11 +456,21 @@ class ComparisonPlottingArgParser:
 
     def setup_parser(self):
         self._parser.add_argument("--exp_folders", nargs="+", default=None, type=str)
-        self._parser.add_argument(
+        lv_compare_group: argparse._MutuallyExclusiveGroup = (
+            self._parser.add_mutually_exclusive_group()
+        )
+        lv_compare_group.add_argument(
             "-nlvs",
             "--n_lvs_to_compare",
             type=int,
-            help="Used to enable plotting spread together with RMSE instead of only RMSE",
+            help="Used to plot vector comparison to a specific number of LVs/ALVs",
+        )
+        lv_compare_group.add_argument(
+            "-lvs",
+            "--lvs_to_compare",
+            nargs="+",
+            type=int,
+            help="Used to plot vector comparison to specific LVs/ALVs",
         )
 
 

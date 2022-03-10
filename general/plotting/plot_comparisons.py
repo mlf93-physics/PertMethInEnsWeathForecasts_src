@@ -243,6 +243,14 @@ def plt_vec_compared_to_lv(args, axes: plt.Axes = None):
     mean_vector_lv_orthogonality_dict = {}
     mean_vector_adj_lv_orthogonality_dict = {}
 
+    # Determine lv range
+    if args["lvs_to_compare"] is not None:
+        lv_range = [*args["lvs_to_compare"]]
+        n_lvs = len(lv_range)
+    elif args["n_lvs_to_compare"] is not None:
+        lv_range = range(args["n_lvs_to_compare"])
+        n_lvs = args["n_lvs_to_compare"]
+
     for vector in save_vectors:
         # Reset exp_folder
         args["exp_folder"] = save_exp_folder
@@ -265,7 +273,7 @@ def plt_vec_compared_to_lv(args, axes: plt.Axes = None):
         if vector not in ["lv", "alv"]:
             orthogonality_dict[vector] = np.empty(
                 (
-                    args["n_lvs_to_compare"],
+                    n_lvs,
                     len(header_values[retrieve_header_key]),
                     args["n_profiles"],
                     args["n_runs_per_profile"],
@@ -280,7 +288,7 @@ def plt_vec_compared_to_lv(args, axes: plt.Axes = None):
     iw_values: List[float] = sorted(header_values_dict[first_key][retrieve_header_key])
 
     # Calculate orthogonality between vectors, i.e. between all BVs, SVs and LVs (multiple LV)
-    for n in range(args["n_lvs_to_compare"]):
+    for n, lv_index in enumerate(lv_range):
         for i, value in enumerate(iw_values):
             for j in range(args["n_profiles"]):
                 for k, vector in enumerate(save_vectors):
@@ -293,7 +301,7 @@ def plt_vec_compared_to_lv(args, axes: plt.Axes = None):
                                 n, i, j, :
                             ] = g_plt_anal.orthogonality_to_vector(
                                 vector_folder_units_dict["lv"][
-                                    0, j, n, :
+                                    0, j, lv_index, :
                                 ],  # 0 in first index is for using only LV evaluated at time 0
                                 vector_folder_units_dict[vector][i, j, :, :],
                             )
@@ -302,7 +310,7 @@ def plt_vec_compared_to_lv(args, axes: plt.Axes = None):
                                 n, i, j, :
                             ] = g_plt_anal.orthogonality_to_vector(
                                 vector_folder_units_dict["alv"][
-                                    0, j, n, :
+                                    0, j, lv_index, :
                                 ],  # 0 in first index is for using only LV evaluated at time 0
                                 vector_folder_units_dict[vector][i, j, :, :],
                             )
@@ -313,7 +321,7 @@ def plt_vec_compared_to_lv(args, axes: plt.Axes = None):
                                 n, i, j, :
                             ] = g_plt_anal.orthogonality_to_vector(
                                 vector_folder_units_dict["lv"][
-                                    i + 1, j, n, :
+                                    i + 1, j, lv_index, :
                                 ],  # +1 in order to skip lv valid at time 0
                                 vector_folder_units_dict[vector][i, j, :, :],
                             )
@@ -322,7 +330,7 @@ def plt_vec_compared_to_lv(args, axes: plt.Axes = None):
                                 n, i, j, :
                             ] = g_plt_anal.orthogonality_to_vector(
                                 vector_folder_units_dict["alv"][
-                                    i + 1, j, n, :
+                                    i + 1, j, lv_index, :
                                 ],  # +1 in order to skip alv valid at time 0
                                 vector_folder_units_dict[vector][i, j, :, :],
                             )
@@ -359,6 +367,9 @@ def plt_vec_compared_to_lv(args, axes: plt.Axes = None):
     for vector in save_vectors:
         # Plot BVs vs LVs
         if vector == "bv":
+            # Get cmap
+            cmap_list, _ = g_plt_utils.get_non_repeating_colors(n_colors=n_lvs)
+            axes.set_prop_cycle("color", cmap_list)
             vector_vs_lines: list = []
             if "lv" in save_vectors:
                 vector_vs_lv_lines: List[plt.Line2D] = axes.plot(
@@ -397,18 +408,23 @@ def plt_vec_compared_to_lv(args, axes: plt.Axes = None):
 
         # Plot SVs/FSVs vs LVs
         if "sv" in vector:
-            for j in range(args["n_lvs_to_compare"]):
+            # Get cmap
+            cmap_list, _ = g_plt_utils.get_non_repeating_colors(
+                n_colors=args["n_runs_per_profile"]
+            )
+            axes.set_prop_cycle("color", cmap_list)
+            for n, lv_index in enumerate(lv_range):
                 vector_vs_lines: list = []
                 if "lv" in save_vectors:
                     vector_vs_lv_lines = axes.plot(
                         iw_values,
-                        mean_vector_lv_orthogonality_dict[vector][j, :, :],
+                        mean_vector_lv_orthogonality_dict[vector][n, :, :],
                     )
                     vector_vs_lines.append(vector_vs_lv_lines)
                 if "alv" in save_vectors:
                     vector_vs_alv_lines = axes.plot(
                         iw_values,
-                        mean_vector_adj_lv_orthogonality_dict[vector][j, :, :],
+                        mean_vector_adj_lv_orthogonality_dict[vector][n, :, :],
                         linestyle="dashed",
                     )
                     vector_vs_lines.append(vector_vs_alv_lines)
@@ -423,18 +439,18 @@ def plt_vec_compared_to_lv(args, axes: plt.Axes = None):
 
                     if "lv" in save_vectors:
                         line_obj[0].set_label(
-                            f"{vector_string}{i} vs LV{j}",
+                            f"{vector_string}{i} vs LV{lv_index}",
                         )
                     if "alv" in save_vectors:
                         if len(line_obj) == 1:
                             line_obj[0].set_label(
-                                f"{vector_string}{i} vs ALV{j}",
+                                f"{vector_string}{i} vs ALV{lv_index}",
                             )
                             # Reset linestyle
                             line_obj[0].set_linestyle("solid")
                         else:
                             line_obj[1].set_label(
-                                f"{vector_string}{i} vs ALV{j}",
+                                f"{vector_string}{i} vs ALV{lv_index}",
                             )
                             line_obj[1].set_color(line_obj[0].get_color())
 
