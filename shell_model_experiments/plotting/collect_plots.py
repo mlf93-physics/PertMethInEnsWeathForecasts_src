@@ -67,6 +67,15 @@ def make_spec_energy_howmoller_plot(args):
         )
 
 
+def make_lyapunov_anal_plot(args):
+    fig, axes = plt.subplots(
+        ncols=1, nrows=2, sharex=True, gridspec_kw={"height_ratios": [1, 3]}
+    )
+
+    sh_plot_data.plot_eigen_value_dist(args=args, axes=axes[0])
+    sh_plot_data.plot_2D_eigen_mode_analysis(args=args, axes=axes[1], fig=fig)
+
+
 if __name__ == "__main__":
     cfg.init_licence()
 
@@ -90,5 +99,7 @@ if __name__ == "__main__":
 
     if "spec_energy_howmoller" in args["plot_type"]:
         make_spec_energy_howmoller_plot(args)
+    if "lyapunov_anal" in args["plot_type"]:
+        make_lyapunov_anal_plot(args)
 
     g_plt_utils.save_or_show_plot(args)

@@ -26,6 +26,7 @@ import general.plotting.plot_config as plt_config
 import general.utils.user_interface as g_ui
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mpl_ticker
+import seaborn as sb
 import numpy as np
 import shell_model_experiments.utils.util_funcs as sh_utils
 import shell_model_experiments.analyses.analyse_data as sh_analysis
@@ -33,6 +34,8 @@ import shell_model_experiments.perturbations.normal_modes as sh_nm_estimator
 from mpl_toolkits import mplot3d
 from shell_model_experiments.params.params import ParamsStructType
 from shell_model_experiments.params.params import PAR
+
+SHELL_TICKS = np.concatenate([np.array([1]), np.arange(2, PAR.sdim + 1, 2)])
 
 
 def plot_energy_spectrum(
@@ -542,7 +545,11 @@ def plot_shell_error_vs_time(args=None):
         plt.title(title)
 
 
-def plot_2D_eigen_mode_analysis(args=None):
+def plot_eigen_value_dist(args=None, axes=None):
+
+    if axes is None:
+        axes = plt.axes()
+
     u_init_profiles, perturb_positions, header_dict = g_import.import_start_u_profiles(
         args=args
     )
@@ -571,7 +578,6 @@ def plot_2D_eigen_mode_analysis(args=None):
     kolm_sinai_entropy = sh_utils.get_kolm_sinai_entropy(e_value_collection)
 
     # Plot normalised sum of eigenvalues
-    axes = plt.axes()
     axes.plot(
         np.log2(PAR.k_vec_temp),
         np.mean(
@@ -595,6 +601,9 @@ def plot_2D_eigen_mode_analysis(args=None):
     )
 
     # plt.title(title)
+
+    if args["tolatex"]:
+        plt_config.adjust_axes_to_subplot(axes)
 
 
 def plot_3D_eigen_mode_anal_comparison(args: dict = None):
@@ -709,6 +718,78 @@ def plot_3D_eigen_mode_analysis(
         figs[1].colorbar(pcolorplot, ax=axes[1])
 
     pcolorplot.set_clim(0, 1)
+
+
+def plot_2D_eigen_mode_analysis(
+    args: dict = None,
+    right_handed: bool = False,
+    axes: plt.Axes = None,
+    fig: plt.Figure = None,
+):
+    if axes is None:
+        fig, axes = plt.figure(), plt.axes()
+
+    u_init_profiles, header_dict = pt_import.import_profiles_for_nm_analysis(args)
+
+    # Set diff_exponent
+    args["diff_exponent"] = header_dict["diff_exponent"]
+
+    _, e_vector_collection, e_value_collection = sh_nm_estimator.find_normal_modes(
+        u_init_profiles,
+        args,
+        dev_plot_active=False,
+        local_ny=header_dict["ny"],
+    )
+
+    for i in range(len(e_value_collection)):
+        sort_id = e_value_collection[i].argsort()[::-1]
+        e_vector_collection[i] = e_vector_collection[i][:, sort_id]
+
+    e_vector_collection = np.array(e_vector_collection)
+
+    # Make data.
+    # shells = np.arange(1, PAR.sdim + 1, 1)
+    # lyaponov_index = np.arange(1, PAR.sdim + 1, 1)
+    # lyaponov_index, shells = np.meshgrid(lyaponov_index, shells)
+
+    title = g_plt_utils.generate_title(
+        args,
+        header_dict=header_dict,
+        title_header="Eigenvectors vs shell numbers",
+        title_suffix=f'N_tot={args["n_profiles"]*args["n_runs_per_profile"]}, ',
+    )
+
+    pcolorplot = sb.heatmap(
+        np.mean(np.abs(e_vector_collection) ** 2, axis=0),
+        # yticklabels=list(SHELL_TICKS),
+        # xticklabels=list(SHELL_TICKS),
+        cmap="Reds",
+        cbar=True,
+        vmin=0,
+        vmax=1,
+        cbar_kws={"location": "bottom", "shrink": 0.5},
+    )
+    # pcolorplot = axes.pcolormesh(
+    #     np.mean(np.abs(e_vector_collection) ** 2, axis=0), cmap="Reds"
+    # )
+    axes.set_xlabel("Lyaponov index")
+    axes.set_ylabel("Shell number")
+    axes.set_title(title)
+    axes.invert_yaxis()
+
+    if right_handed:
+        axes.set_xlim(PAR.sdim, 0)
+        axes.yaxis.tick_right()
+        axes.yaxis.set_label_position("right")
+
+    axes.xaxis.set_major_locator(mpl_ticker.MaxNLocator(integer=True))
+    axes.yaxis.set_major_locator(mpl_ticker.MaxNLocator(integer=True))
+    # fig.colorbar(pcolorplot, pad=0.1, ax=axes, location="bottom", shrink=0.5)
+    # else:
+    # fig.colorbar(pcolorplot, ax=axes, location="bottom", shrink=0.5)
+
+    if args["tolatex"]:
+        plt_config.adjust_axes(axes)
 
 
 def plot_eigen_vector_comparison(args=None):
@@ -1350,7 +1431,7 @@ if __name__ == "__main__":
         plot_3D_eigen_mode_anal_comparison(args=args)
 
     if "eigen_mode_plot_2D" in args["plot_type"]:
-        plot_2D_eigen_mode_analysis(args=args)
+        plot_eigen_value_dist(args=args)
 
     if "eigen_vector_comp" in args["plot_type"]:
         plot_eigen_vector_comparison(args=args)
