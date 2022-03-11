@@ -150,17 +150,25 @@ def save_figure(
     else:
         plot_handle = fig
 
-    # Save png
-    plot_handle.savefig(full_path / (file_name + ".png"), dpi=400, format="png")
+    # Save pdf
+    plot_handle.savefig(
+        full_path / (file_name + ".pdf"),
+        format="pdf",
+        # backend="pgf",
+        bbox_inches="tight",
+    )
 
-    # # Save pgf
+    plot_handle.savefig(
+        full_path / (file_name + ".png"),
+        format="png",
+        dpi=100,
+        bbox_inches="tight",
+    )
     # plot_handle.savefig(
-    #     full_path / (file_name + ".pgf"),
-    #     dpi=400,
-    #     format="pgf",
+    #     full_path / (file_name + ".pgf"), format="pgf", bbox_inches="tight"
     # )
 
-    print(f"\nFigures (png, pgf) saved as {file_name} at figures/{str(subpath)}\n")
+    print(f"\nFigures (pdf, png) saved as {file_name} at figures/{str(subpath)}\n")
 
 
 def generate_title(
@@ -223,35 +231,35 @@ def generate_title(
 
 
 def save_or_show_plot(args: dict, tight_layout_rect: list = None):
-    if args["save_fig"]:
-        subpath = pl.Path("lorentz63_experiments/singular_vectors/test_perturbations2/")
+    # if args["save_fig"]:
+    #     subpath = pl.Path("lorentz63_experiments/singular_vectors/test_perturbations2/")
 
-        for i in plt.get_fignums():
-            fig = plt.figure(i)
-            file_name = "sv_perturbations_sv1"
+    #     for i in plt.get_fignums():
+    #         fig = plt.figure(i)
+    #         file_name = "sv_perturbations_sv1"
 
-            name = g_ui.get_name_input(
-                "Proposed name of figure: ", proposed_input=file_name
-            )
+    #         name = g_ui.get_name_input(
+    #             "Proposed name of figure: ", proposed_input=file_name
+    #         )
 
-            question = (
-                "\nConfirm that the figure is being saved to\n"
-                + f"path: {subpath}\n"
-                + f"name: {name}\n"
-            )
+    #         question = (
+    #             "\nConfirm that the figure is being saved to\n"
+    #             + f"path: {subpath}\n"
+    #             + f"name: {name}\n"
+    #         )
 
-            answer = g_ui.ask_user(question)
-            if answer:
-                save_figure(
-                    subpath=subpath,
-                    file_name=name,
-                    fig=fig,
-                    tight_layout_rect=tight_layout_rect,
-                )
-            else:
-                print("\nSaving the figure was aborted\n")
+    #         answer = g_ui.ask_user(question)
+    #         if answer:
+    #             save_figure(
+    #                 subpath=subpath,
+    #                 file_name=name,
+    #                 fig=fig,
+    #                 tight_layout_rect=tight_layout_rect,
+    #             )
+    #         else:
+    #             print("\nSaving the figure was aborted\n")
 
-    elif not args["noplot"]:
+    if not args["noplot"]:
         if not args["notight"]:
             plt.tight_layout()
         plt.show()

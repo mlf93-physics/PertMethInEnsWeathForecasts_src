@@ -365,7 +365,8 @@ def plot_energy(
     energy_vs_time = np.sum(u_data * np.conj(u_data), axis=1).real
     axes.plot(time.real, energy_vs_time, "k")
     axes.set_xlabel("Time")
-    axes.set_ylabel("Energy")
+    axes.set_ylabel("Total energy")
+    axes.set_xlim(args["ref_start_time"], args["ref_end_time"])
 
     header_dict = g_utils.handle_different_headers(header_dict)
 

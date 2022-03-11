@@ -259,7 +259,7 @@ def import_data(
     return data_in, header_dict
 
 
-def import_ref_data(args=None):
+def import_ref_data(args: dict=None) -> Tuple[np.ndarray, np.ndarray, dict]:
     """Import reference file consisting of multiple records"""
 
     ref_record_names = list(pl.Path(args["datapath"], "ref_data").glob("*.csv"))

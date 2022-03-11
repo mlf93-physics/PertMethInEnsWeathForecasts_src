@@ -67,6 +67,7 @@ class StandardArgSetup:
         self._parser.add_argument("-ttr", "--time_to_run", default=0.1, type=float)
         self._parser.add_argument("--burn_in_time", default=0.0, type=float)
         self._parser.add_argument("--seed_mode", action="store_true")
+        self._parser.add_argument("--noconfirm", action="store_true")
 
     def react_on_arguments(self):
         # Set seed if wished
@@ -542,6 +543,25 @@ class StandardPlottingArgParser:
             type=str,
             default=None,
             help="For plots using multiple different datapaths (e.g. different reference files)",
+        )
+        self._parser.add_argument(
+            "--tolatex",
+            action="store_true",
+            help="Used to prepare plot for latex report",
+        )
+
+        self._parser.add_argument(
+            "-lf",
+            "--latex_format",
+            choices=[
+                "normal",
+                "horizontal_panel",
+                "horizontal_panel_with_cbar",
+                "three_panel",
+                "quad_item",
+            ],
+            type=str,
+            help="Used to prepare plot for latex report",
         )
 
         # x, y limits

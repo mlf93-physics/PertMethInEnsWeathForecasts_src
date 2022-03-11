@@ -45,6 +45,9 @@ def get_name_input(formulation: str, proposed_input: str = ""):
 
 
 def confirm_run_setup(args: dict):
+    if args["noconfirm"]:
+        return
+
     print("CONFIRM SETUP TO RUN:\n")
     print(f"Model: {cfg.MODEL}")
     print(f"Licence: {cfg.LICENCE}")

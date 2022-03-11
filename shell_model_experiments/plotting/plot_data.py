@@ -22,6 +22,7 @@ import general.utils.argument_parsers as a_parsers
 import general.utils.importing.import_data_funcs as g_import
 import general.utils.importing.import_perturbation_data as pt_import
 import general.utils.plot_utils as g_plt_utils
+import general.plotting.plot_config as plt_config
 import general.utils.user_interface as g_ui
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mpl_ticker
@@ -35,13 +36,17 @@ from shell_model_experiments.params.params import PAR
 
 
 def plot_energy_spectrum(
-    u_data: np.ndarray,
-    header_dict: dict,
+    u_data: np.ndarray = None,
+    header_dict: dict = None,
     axes: plt.Axes = None,
     plot_arg_list: list = ["kolmogorov", "calculate"],
     plot_kwargs: dict = {},
     args: dict = {},
 ):
+    # Import reference data if not given as input
+    if u_data is None:
+        _, u_data, header_dict = g_import.import_ref_data(args=args)
+
     # Make axes if not present
     if axes is None:
         fig = plt.figure()
@@ -58,9 +63,9 @@ def plot_energy_spectrum(
     if "kolmogorov" in plot_arg_list:
         axes.plot(
             np.log2(PAR.k_vec_temp),
-            PAR.k_vec_temp ** (-2 / 3),
+            1e2 * PAR.k_vec_temp ** (-5 / 3),
             "k--",
-            label="$k^{{-2/3}}$",
+            label="$k^{{-5/3}}$",
         )
 
     label: str = (
@@ -90,13 +95,16 @@ def plot_energy_spectrum(
         mean_energy /= np.exp(slope * np.log2(PAR.k_vec_temp) + intercept)
         title_suffix += "rel. fit, "
 
+    mean_energy /= PAR.k_vec_temp
+
     # Plot energy spectrum
     axes.plot(k_vectors, mean_energy, label=label, color=color, linestyle=linestyle)
 
     # Axes setup
     axes.set_yscale("log")
-    axes.set_xlabel("k")
-    axes.set_ylabel("Energy")
+    axes.set_xlabel("Shell number, $n$")
+    axes.set_ylabel("Energy per shell")
+    axes.set_xlim(1, 20)
     axes.xaxis.set_major_locator(mpl_ticker.MaxNLocator(integer=True))
 
     # Limit y axis if necessary
@@ -107,7 +115,7 @@ def plot_energy_spectrum(
         if np.log(min_mean_energy) < -15:
             axes.set_ylim(1e-15, 10)
     else:
-        axes.set_ylim(1e-15, 10)
+        axes.set_ylim(1e-12, 1e2)
 
     # Title setup
     if "title" in plot_kwargs:
@@ -120,6 +128,17 @@ def plot_energy_spectrum(
             title_suffix=title_suffix,
         )
     axes.set_title(title)
+
+    if args["tolatex"]:
+        plt_config.adjust_axes(axes)
+
+        axes.set_yticks([1e-10, 1e-6, 1e-2, 1e2])
+
+        # if args["save_fig"]:
+        # g_plt_utils.save_figure(
+        #     subpath="thesis_figures/models/",
+        #     file_name="sh_energy_spectrum",
+        # )
 
 
 def plot_helicity_spectrum(
@@ -467,7 +486,19 @@ def plot_energy_per_shell(ax=None, omit=None, path=None, args=None):
 def plot_energy(args=None, axes=None, plot_args=["detailed_title"]):
 
     # plot_energy_spectrum(u_data, header_dict, args=args)
-    g_plt_data.plot_energy(args, axes=axes, plot_args=plot_args)
+    axes = g_plt_data.plot_energy(args, axes=axes, plot_args=plot_args)
+
+    if args["tolatex"]:
+        plt_config.adjust_axes(axes)
+        # plt_config.adjust_axes_to_subplot(axes)
+        plt_config.set_ytick_format(axes)
+
+        # if args["save_fig"]:
+        #     g_plt_utils.save_figure(
+        #         subpath="thesis_figures/models/",
+        #         file_name="sh_energy_vs_time",
+        #     )
+    return axes
 
 
 def plot_shell_error_vs_time(args=None):
@@ -1035,7 +1066,9 @@ def plot_error_vector_spectrum(args=None):
     plt.colorbar(pad=0.1)
 
 
-def plot_howmoller_diagram_u_energy(args=None, plt_args: list = ["rel_mean"]):
+def plot_howmoller_diagram_u_energy(
+    args=None, axes=None, fig=None, plt_args: list = ["rel_mean"]
+):
 
     # Import reference data
     time, u_data, header_dict = g_import.import_ref_data(args=args)
@@ -1044,7 +1077,8 @@ def plot_howmoller_diagram_u_energy(args=None, plt_args: list = ["rel_mean"]):
     time2D, shell2D = np.meshgrid(time.real, PAR.k_vec_temp)
     energy_array = (u_data * np.conj(u_data)).real.T
 
-    fig, axes = plt.subplots(nrows=1, ncols=1)
+    if axes is None:
+        fig, axes = plt.subplots(nrows=1, ncols=1)
 
     if "rel_mean" in plt_args:
         # Prepare energy rel mean
@@ -1075,8 +1109,11 @@ def plot_howmoller_diagram_u_energy(args=None, plt_args: list = ["rel_mean"]):
         levels=30,
     )
     pcm.negative_linestyle = "solid"
-    axes.set_ylabel("Shell number, n")
+    axes.set_ylabel("Shell number, $n$")
     axes.set_xlabel("Time")
+    axes.set_yticks([1, 10, 20])
+    axes.set_xlim(args["ref_start_time"], args["ref_end_time"])
+    # axes.yaxis.set_major_locator(mpl_ticker.MaxNLocator(integer=True))
 
     title_header = "Howmöller diagram for $|u|^2$"
     title_header += "- $\\langle|u|^2\\rangle_t$" if "rel_mean" in plt_args else ""
@@ -1088,9 +1125,21 @@ def plot_howmoller_diagram_u_energy(args=None, plt_args: list = ["rel_mean"]):
 
     axes.set_title(title)
 
-    cbar_label = "$|u|²$"
-    cbar_label += " - $\\langle|u|²\\rangle_t$" if "rel_mean" in plt_args else ""
-    fig.colorbar(pcm, ax=axes, pad=0.1, label=cbar_label)
+    # cbar_label = "$|u|²$"
+    # cbar_label += " - $\\langle|u|²\\rangle_t$" if "rel_mean" in plt_args else ""
+    cbar_label = "Shell energy anomaly"
+    fig.colorbar(
+        pcm, ax=axes, pad=0.25, label=cbar_label, shrink=0.5, location="bottom"
+    )
+
+    if args["tolatex"]:
+        plt_config.adjust_axes(axes)
+
+        # if args["save_fig"]:
+        #     g_plt_utils.save_figure(
+        #         subpath="thesis_figures/models/",
+        #         file_name="sh_howmoller_vs_time",
+        #     )
 
 
 def plot_howmoller_diagram_helicity(args=None, plt_args: list = ["rel_mean"]):
@@ -1243,6 +1292,8 @@ if __name__ == "__main__":
 
     g_ui.confirm_run_setup(args)
 
+    plt_config.adjust_default_fig_axes_settings(args)
+
     if "time_to_run" in args:
         args["Nt"] = int(args["time_to_run"] / PAR.dt * PAR.sample_rate)
 
@@ -1254,12 +1305,7 @@ if __name__ == "__main__":
         plot_energy_per_shell(args=args)
 
     if "energy_spectrum" in args["plot_type"]:
-        # Import reference data
-        _, _temp_u_data, _temp_header_dict = g_import.import_ref_data(args=args)
         plot_energy_spectrum(
-            _temp_u_data,
-            _temp_header_dict,
-            plot_arg_list=["kolmogorov", "calculate"],
             args=args,
         )
     if "vel_spectrum" in args["plot_type"]:

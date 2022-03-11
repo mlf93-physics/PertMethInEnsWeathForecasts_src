@@ -5,25 +5,51 @@ import matplotlib.ticker as mpl_ticker
 plt.rcParams["savefig.dpi"] = 300
 
 
-def setup_plotting_defaults():
-    print("Plotting with default settings")
-    plt.rcParams["figure.figsize"] = [16, 9]
+def three_panel_figure():
+    plt.rcParams["figure.figsize"] = [5.39749, 5.3]
 
 
-def latex_plot_settings():
-    print("Plotting with latex settings")
-    matplotlib.use("pgf")
+def horizontal_panel_figure():
+    plt.rcParams["figure.figsize"] = [5.39749, 1.5]
+
+
+def horizontal_panel_with_cbar_figure():
+    plt.rcParams["figure.figsize"] = [5.39749, 2.3]
+
+
+def default_figure_settings():
     matplotlib.rcParams.update(
         {
-            "pgf.texsystem": "pdflatex",
-            "font.family": "serif",
-            "text.usetex": True,
-            "pgf.rcfonts": False,
-            "figure.figsize": (4.7747, 3.5),
             "axes.titlesize": "medium",
             "axes.labelsize": "medium",
-            "xtick.labelsize": "medium",
-            "ytick.labelsize": "medium",
-            "lines.linewidth": 1,
+            "xtick.labelsize": "small",
+            "axes.spines.right": False,
+            "axes.spines.top": False,
+            "font.family": "serif",
+            "text.usetex": True,
         }
     )
+
+
+def adjust_axes(axes):
+    axes.set_title("")
+
+
+def adjust_axes_to_subplot(axes):
+    axes.set_xlabel("")
+    axes.set_xticklabels([])
+
+
+def set_ytick_format(axes, fmt="%.0f"):
+    axes.yaxis.set_major_formatter(mpl_ticker.FormatStrFormatter(fmt))
+
+
+def adjust_default_fig_axes_settings(args):
+    if args["tolatex"]:
+        default_figure_settings()
+        if args["latex_format"] == "horizontal_panel":
+            horizontal_panel_figure()
+        if args["latex_format"] == "horizontal_panel_with_cbar":
+            horizontal_panel_with_cbar_figure()
+        if args["latex_format"] == "three_panel":
+            three_panel_figure()
