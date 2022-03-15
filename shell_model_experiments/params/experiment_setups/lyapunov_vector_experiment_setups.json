@@ -7,17 +7,18 @@
         "n_vectors": 20,
         "vector_offset": 1,
         "eval_times": [
-            11.22
+            8.95
         ]
     },
     "TestRun2": {
-        "folder_name": "pt_vectors/shell_model_lyapunov_vectors_it2.0",
+        "folder_name": "pt_vectors/shell_model_lyapunov_vectors_ttr0.01_n_cycles1",
         "sub_exp_folder": "perturb_data",
-        "integration_time": 2.0,
-        "n_vectors": 8,
-        "vector_offset": 2.0,
-        "start_times": [
-            1
+        "integration_time": 0.01,
+        "n_cycles": 1,
+        "n_vectors": 20,
+        "vector_offset": 1,
+        "eval_times": [
+            8.95
         ]
     },
     "TestRun3": {

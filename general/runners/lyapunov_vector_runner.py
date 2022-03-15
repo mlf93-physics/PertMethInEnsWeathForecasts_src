@@ -124,6 +124,7 @@ def main(args: dict, exp_setup: dict = None):
         # Start off with None value in order to invoke random perturbations
         rescaled_data = None
         perturb_positions = None
+        lyapunov_exps = 0
         for j in range(exp_setup["n_cycles"]):
             # Import reference data
             u_ref, _, ref_header_dict = g_import.import_start_u_profiles(args=copy_args)
@@ -148,6 +149,10 @@ def main(args: dict, exp_setup: dict = None):
                 # Orthogonalise vectors
                 rescaled_data = np.array(data_out_list, dtype=sparams.dtype).T
                 rescaled_data, r_matrix = np.linalg.qr(rescaled_data)
+                lyapunov_exps += np.abs(np.diagonal(r_matrix))
+
+                # rescaled_matrix = r_matrix @ rescaled_data
+                # lyapunov_exps += np.linalg.eig(rescaled_matrix)[0]
 
                 # Pad array if necessary
                 rescaled_data = np.pad(
@@ -170,7 +175,7 @@ def main(args: dict, exp_setup: dict = None):
         # Save lyapunov vectors
         v_save.save_vector_unit(
             rescaled_data[sparams.u_slice, :].T,
-            # characteristic_values=lyapunov_exps,
+            characteristic_values=lyapunov_exps,
             perturb_position=int(round(start_times[i] * params.tts)),
             unit=i,
             args=args,

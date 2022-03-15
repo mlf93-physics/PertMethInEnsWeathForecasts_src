@@ -219,7 +219,7 @@ def prepare_perturbations(
     # Only import start profiles beforehand if not using bv, bv_eof or sv perturbations,
     # i.e. also when running in singel_shell_perturb mode
 
-    if args["pert_mode"] not in ["bv", "bv_eof", "sv", "fsv"]:
+    if args["pert_mode"] not in ["lv", "bv", "bv_eof", "sv", "fsv"]:
         (
             u_init_profiles,
             perturb_positions,
@@ -289,11 +289,13 @@ def prepare_perturbations(
                 (params.sdim, args["n_profiles"] * args["n_runs_per_profile"]),
             )
 
-        elif "sv" in args["pert_mode"] or "fsv" in args["pert_mode"]:
+        elif args["pert_mode"] in ["lv", "sv", "fsv"]:
             if "sv" in args["pert_mode"]:
                 print("\nRunning with SINGULAR VECTOR perturbations\n")
             elif "fsv" in args["pert_mode"]:
                 print("\nRunning with FINAL SINGULAR VECTOR perturbations\n")
+            elif "lv" in args["pert_mode"]:
+                print("\nRunning with LYAPUNOV VECTOR perturbations\n")
 
             (
                 perturb_vectors,

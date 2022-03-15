@@ -271,7 +271,7 @@ class PerturbationArgSetup:
         )
         pert_mode_group.add_argument(
             "--pert_mode",
-            choices=["rd", "nm", "bv", "bv_eof", "rf", "sv", "fsv"],
+            choices=["rd", "nm", "lv", "bv", "bv_eof", "rf", "sv", "fsv"],
             type=str,
         )
 

@@ -77,7 +77,7 @@ def calculate_perturbations(
                 )
 
             # Apply bv, bv_eof or sv perturbation
-            elif args["pert_mode"] in ["bv", "bv_eof", "sv", "fsv", "rf"]:
+            elif args["pert_mode"] in ["lv", "bv", "bv_eof", "sv", "fsv", "rf"]:
                 # Make perturbation vector
                 perturb = perturb_vectors[:, i]
 

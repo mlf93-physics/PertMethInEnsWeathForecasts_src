@@ -421,10 +421,21 @@ def plot2D_average_vectors(
     )
     # print("vector_units", vector_units.shape)
     # print("np.abs(characteristic_values)", np.abs(characteristic_values))
-    # sort_index = np.argsort(np.abs(characteristic_values), axis=1)[:, ::-1]
+    characteristic_values = np.abs(characteristic_values)
+    sort_index = np.argsort(characteristic_values, axis=1)[:, ::-1]
     # print("sort_index", sort_index)
-    # for i in range(vector_units.shape[0]):
-    #     vector_units[i, :, :] = vector_units[i, sort_index[i, :], :]
+    for i in range(vector_units.shape[0]):
+        vector_units[i, :, :] = vector_units[i, sort_index[i, :], :]
+        characteristic_values[i, :] = characteristic_values[i, sort_index[i, :]]
+
+    mean_lyapunov_exp = np.mean(characteristic_values, axis=0)
+    plt.figure()
+    # plt.plot(np.cumsum(mean_lyapunov_exp[1:]) / np.sum(mean_lyapunov_exp[1:]), ".")
+    plt.plot(mean_lyapunov_exp[1:] / np.max(mean_lyapunov_exp[1:]), ".")
+    # plt.title("Cummulative mean lyapunov exponents (normalized)")
+    plt.title("Mean lyapunov exponents (normalized)")
+    plt.figure()
+
     # Normalize
     vector_units = g_utils.normalize_array(vector_units, norm_value=1, axis=2)
 
