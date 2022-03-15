@@ -9,6 +9,10 @@ def three_panel_figure():
     plt.rcParams["figure.figsize"] = [5.39749, 5.3]
 
 
+def normal_figure():
+    plt.rcParams["figure.figsize"] = [5.39749, 4.5]
+
+
 def horizontal_panel_figure():
     plt.rcParams["figure.figsize"] = [5.39749, 1.5]
 
@@ -53,3 +57,5 @@ def adjust_default_fig_axes_settings(args):
             horizontal_panel_with_cbar_figure()
         if args["latex_format"] == "three_panel":
             three_panel_figure()
+        if args["latex_format"] == "normal":
+            normal_figure()

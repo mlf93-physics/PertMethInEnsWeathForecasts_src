@@ -265,6 +265,11 @@ def save_or_show_plot(args: dict, tight_layout_rect: list = None):
         plt.show()
 
 
+def add_subfig_labels(axs):
+    for ax, label in zip(axs, SUBFIG_LABELS):
+        ax.set_title(label, loc="center", fontsize="medium")
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-f", "--file_path", required=True, type=str)

@@ -56,9 +56,7 @@ def make_spec_energy_howmoller_plot(args):
 
     sh_plot_data.plot_howmoller_diagram_u_energy(args, axes=ax3, fig=fig)
 
-    labels = ["(a)", "(b)", "(c)"]
-    for ax, label in zip(axs, labels):
-        ax.set_title(label, loc="center", fontsize="medium")
+    g_plt_utils.add_subfig_labels(axs)
 
     if args["save_fig"]:
         g_plt_utils.save_figure(
@@ -74,6 +72,14 @@ def make_lyapunov_anal_plot(args):
 
     sh_plot_data.plot_eigen_value_dist(args=args, axes=axes[0])
     sh_plot_data.plot_2D_eigen_mode_analysis(args=args, axes=axes[1], fig=fig)
+
+    g_plt_utils.add_subfig_labels(axes)
+
+    if args["save_fig"]:
+        g_plt_utils.save_figure(
+            subpath="thesis_figures/models/",
+            file_name="sh_eigenmode_analysis",
+        )
 
 
 if __name__ == "__main__":

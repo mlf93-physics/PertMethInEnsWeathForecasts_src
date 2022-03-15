@@ -26,6 +26,7 @@ import general.plotting.plot_config as plt_config
 import general.utils.user_interface as g_ui
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mpl_ticker
+import matplotlib.colors as mpl_colors
 import seaborn as sb
 import numpy as np
 import shell_model_experiments.utils.util_funcs as sh_utils
@@ -35,7 +36,9 @@ from mpl_toolkits import mplot3d
 from shell_model_experiments.params.params import ParamsStructType
 from shell_model_experiments.params.params import PAR
 
-SHELL_TICKS = np.concatenate([np.array([1]), np.arange(2, PAR.sdim + 1, 2)])
+# SHELL_TICKS_COMPACT = np.concatenate([np.array([1]), np.arange(2, PAR.sdim + 1, 2)])
+SHELL_TICKS_COMPACT = np.arange(1, PAR.sdim, 2)
+SHELL_TICKS_FULL = np.arange(1, PAR.sdim + 1, 1)
 
 
 def plot_energy_spectrum(
@@ -579,16 +582,17 @@ def plot_eigen_value_dist(args=None, axes=None):
 
     # Plot normalised sum of eigenvalues
     axes.plot(
-        np.log2(PAR.k_vec_temp),
+        np.log2(PAR.k_vec_temp) - 0.5,
         np.mean(
             np.cumsum(e_value_collection.real, axis=0) / kolm_sinai_entropy, axis=1
         ),
-        linestyle="-",
-        marker=".",
+        "."
+        # linestyle="-",
+        # marker=".",
     )
-    axes.set_xlabel("Lyaponov index")
-    axes.set_ylabel("$\sum_{i=0}^j \\lambda_j$ / H")
-    axes.set_ylim(-3, 1.5)
+    axes.set_xlabel("Eigenmode index, $m$")
+    axes.set_ylabel("$\sum_{i=0}^m \\mu_m / H$")
+    axes.set_ylim(-2, 2)
     axes.set_xlim(0, 20)
     # axes.legend(perturb_time_pos_list)
     axes.xaxis.set_major_locator(mpl_ticker.MaxNLocator(integer=True))
@@ -759,21 +763,25 @@ def plot_2D_eigen_mode_analysis(
         title_suffix=f'N_tot={args["n_profiles"]*args["n_runs_per_profile"]}, ',
     )
 
+    mean_e_vectors = np.mean(np.abs(e_vector_collection) ** 2, axis=0)
+    eps = 1e-2
     pcolorplot = sb.heatmap(
-        np.mean(np.abs(e_vector_collection) ** 2, axis=0),
-        # yticklabels=list(SHELL_TICKS),
-        # xticklabels=list(SHELL_TICKS),
+        mean_e_vectors,
         cmap="Reds",
-        cbar=True,
+        mask=mean_e_vectors < eps,
         vmin=0,
         vmax=1,
-        cbar_kws={"location": "bottom", "shrink": 0.5},
+        cbar=True,
+        cbar_kws={
+            "location": "bottom",
+            "shrink": 0.5,
+            "label": "$\\langle|\\xi_{n,m}|^2 \\rangle$",
+        },
     )
-    # pcolorplot = axes.pcolormesh(
-    #     np.mean(np.abs(e_vector_collection) ** 2, axis=0), cmap="Reds"
-    # )
-    axes.set_xlabel("Lyaponov index")
-    axes.set_ylabel("Shell number")
+    pcolorplot.set_yticklabels(SHELL_TICKS_COMPACT, rotation=0)
+    pcolorplot.set_xticklabels(SHELL_TICKS_FULL)
+    axes.set_xlabel("Eigenmode index, $m$")
+    axes.set_ylabel("Shell number, $n$")
     axes.set_title(title)
     axes.invert_yaxis()
 
@@ -782,8 +790,8 @@ def plot_2D_eigen_mode_analysis(
         axes.yaxis.tick_right()
         axes.yaxis.set_label_position("right")
 
-    axes.xaxis.set_major_locator(mpl_ticker.MaxNLocator(integer=True))
-    axes.yaxis.set_major_locator(mpl_ticker.MaxNLocator(integer=True))
+    # axes.xaxis.set_major_locator(mpl_ticker.MaxNLocator(integer=True))
+    # axes.yaxis.set_major_locator(mpl_ticker.MaxNLocator(integer=True))
     # fig.colorbar(pcolorplot, pad=0.1, ax=axes, location="bottom", shrink=0.5)
     # else:
     # fig.colorbar(pcolorplot, ax=axes, location="bottom", shrink=0.5)
