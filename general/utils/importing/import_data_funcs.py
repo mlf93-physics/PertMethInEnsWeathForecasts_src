@@ -259,7 +259,7 @@ def import_data(
     return data_in, header_dict
 
 
-def import_ref_data(args: dict=None) -> Tuple[np.ndarray, np.ndarray, dict]:
+def import_ref_data(args: dict = None) -> Tuple[np.ndarray, np.ndarray, dict]:
     """Import reference file consisting of multiple records"""
 
     ref_record_names = list(pl.Path(args["datapath"], "ref_data").glob("*.csv"))
@@ -448,17 +448,20 @@ def import_perturbation_velocities(
 
         sum_pert_files = sum(
             [
-                len(ref_file_match[ref_file_index])
+                ref_file_match[ref_file_index].size
                 for ref_file_index in ref_file_match_keys_array[
                     : (ref_file_counter + 1)
                 ]
             ]
         )
-
+        # If starting on importing from the next ref file
         if iperturb_file + 1 > sum_pert_files:
+            # Bump counter
             ref_file_counter += 1
+            # Reset perturbation index
             perturb_index = 0
 
+        # Limit the number of perturbation files to import
         if iperturb_file < args["file_offset"]:
             perturb_index += 1
             continue
@@ -488,7 +491,7 @@ def import_perturbation_velocities(
             max_rows = (
                 int(perturb_header_dict["N_data"])
                 if counter == 0
-                else int(perturb_header_dict["N_data"]) - ref_data_in.shape[0]
+                else int(perturb_header_dict["N_data"]) - ref_data_in.shape[0] + 1
             )
             temp_ref_data_in, ref_header_dict = import_data(
                 ref_record_files_sorted[

@@ -24,6 +24,7 @@ import general.utils.user_interface as g_ui
 import general.utils.util_funcs as g_utils
 from general.params.experiment_licences import Experiments as exp
 from general.params.model_licences import Models
+from general.runners.lyapunov_vector_runner import main as lv_runner
 from general.runners.breed_vector_runner import main as bv_runner
 from general.analyses.breed_vector_eof_analysis import main as bv_eof_analyser
 from general.runners.singular_vector_lanczos_runner import main as sv_runner
@@ -44,6 +45,36 @@ elif cfg.MODEL == Models.LORENTZ63:
 
 # Set global params
 cfg.GLOBAL_PARAMS.ref_run = False
+
+
+def generate_lvs(args: dict, exp_setup: dict):
+    """Generate the LVs according to the exp setup
+
+    Parameters
+    ----------
+    args : dict
+        Run-time arguments
+    exp_setup : dict
+        Experiment setup
+    """
+    print(f"{col.Fore.GREEN}LV GENERATION{col.Fore.RESET}")
+    # Update licence
+    cfg.LICENCE = exp.LYAPUNOV_VECTORS
+
+    # Set local args params
+    args["pert_mode"] = "rd"
+
+    # Get subset of experiment setup
+    local_exp_setup = exp_setup["general"] | exp_setup["lv_gen_setup"]
+    local_exp_setup["folder_name"] = str(
+        pl.Path(
+            local_exp_setup["folder_name"],
+            local_exp_setup["vector_folder"],
+            "lv_vectors",
+        )
+    )
+
+    lv_runner(args, local_exp_setup)
 
 
 def generate_bvs(args: dict, exp_setup: dict):
@@ -148,13 +179,16 @@ def generate_vectors(args: dict, exp_setup: dict):
         Experiment setup
     """
     args["save_last_pert"] = True
+    args["save_no_pert"] = True
 
     if "bv" in args["vectors"] or "all" in args["vectors"]:
-        generate_bvs(copy.deepcopy(args), exp_setup)
+        generate_bvs(copy.deepcopy(args), copy.deepcopy(exp_setup))
+    if "lv" in args["vectors"] or "all" in args["vectors"]:
+        generate_lvs(copy.deepcopy(args), copy.deepcopy(exp_setup))
     if "bv_eof" in args["vectors"] or "all" in args["vectors"]:
-        generate_bv_eofs(copy.deepcopy(args), exp_setup)
+        generate_bv_eofs(copy.deepcopy(args), copy.deepcopy(exp_setup))
     if "sv" in args["vectors"] or "all" in args["vectors"]:
-        generate_svs(copy.deepcopy(args), exp_setup)
+        generate_svs(copy.deepcopy(args), copy.deepcopy(exp_setup))
 
 
 def rd_pert_experiment(args: dict, local_exp_setup: dict):
@@ -186,6 +220,50 @@ def rd_pert_experiment(args: dict, local_exp_setup: dict):
     processes.extend(temp_processes)
 
     pr_utils.run_pert_processes(copy_args, local_exp_setup, processes)
+
+
+def lv_pert_experiment(args: dict, local_exp_setup: dict):
+    """Run perturbations with lv as pert_mode
+
+    Parameters
+    ----------
+    args : dict
+        Local run-time arguments
+    local_exp_setup : dict
+        Local experiment setup
+    """
+    print(f"{col.Fore.GREEN}LV PERTURBATIONS{col.Fore.RESET}")
+
+    processes = []
+
+    # Prepare arguments for perturbation run
+    args[
+        "n_runs_per_profile"
+    ] = 1  # In order to separate LV0, LV1, LV2, ... out into separate folders
+    args["pert_vector_folder"] = pl.Path(
+        local_exp_setup["folder_name"], local_exp_setup["vector_folder"]
+    )
+    args["pert_mode"] = "lv"
+    args["exp_folder"] = "lv_vectors"
+    args["out_exp_folder"] = pl.Path(
+        local_exp_setup["folder_name"],
+        "lv_perturbations",
+    )
+
+    for i in range(local_exp_setup["n_vectors"]):
+        args["specific_start_vector"] = i
+        # Prepare vector str index
+        str_index = lib_type_utils.zpad_string(str(i), n_zeros=2)
+        args["out_exp_folder"] = pl.Path(
+            local_exp_setup["folder_name"],
+            f"lv{str_index}_perturbations",
+        )
+        # Copy args in order not override in forecast processes
+        copy_args = copy.deepcopy(args)
+
+        processes, _, _, _ = pt_runner.main_setup(copy_args)
+
+        pr_utils.run_pert_processes(copy_args, local_exp_setup, processes)
 
 
 def nm_pert_experiment(args: dict, local_exp_setup: dict):
@@ -396,6 +474,7 @@ def execute_pert_experiments(args: dict, exp_setup: dict):
         args["start_times"] = start_times[: args["n_profiles"]]
 
     # Execute experiments
+
     if "bv" in args["perturbations"] or "all" in args["perturbations"]:
         bv_pert_experiment(
             copy.deepcopy(args), local_exp_setup | exp_setup["bv_gen_setup"]
@@ -403,6 +482,10 @@ def execute_pert_experiments(args: dict, exp_setup: dict):
     if "bv_eof" in args["perturbations"] or "all" in args["perturbations"]:
         bv_eof_pert_experiment(
             copy.deepcopy(args), local_exp_setup | exp_setup["bv_eof_gen_setup"]
+        )
+    if "lv" in args["perturbations"] or "all" in args["perturbations"]:
+        lv_pert_experiment(
+            copy.deepcopy(args), local_exp_setup | exp_setup["lv_gen_setup"]
         )
     if "rd" in args["perturbations"] or "all" in args["perturbations"]:
         rd_pert_experiment(

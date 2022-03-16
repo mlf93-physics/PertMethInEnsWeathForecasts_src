@@ -61,7 +61,10 @@ def plot_exp_growth_rate_vs_time(
         u_ref_stores,
     ) = g_import.import_perturbation_velocities(args, search_pattern="*perturb*.csv")
 
-    mean_growth_rate = g_a_data.execute_mean_exp_growth_rate_vs_time_analysis(
+    (
+        mean_growth_rate,
+        profile_mean_growth_rates,
+    ) = g_a_data.execute_mean_exp_growth_rate_vs_time_analysis(
         args, u_stores, header_dicts=header_dicts, anal_type=anal_type
     )
 
@@ -421,7 +424,9 @@ def plot2D_average_vectors(
     )
     # print("vector_units", vector_units.shape)
     # print("np.abs(characteristic_values)", np.abs(characteristic_values))
-    characteristic_values = np.abs(characteristic_values)
+    characteristic_values = (
+        2 * 1 / header_dicts[0]["time_to_run"] * np.log(np.abs(characteristic_values))
+    )
     sort_index = np.argsort(characteristic_values, axis=1)[:, ::-1]
     # print("sort_index", sort_index)
     for i in range(vector_units.shape[0]):
@@ -429,11 +434,14 @@ def plot2D_average_vectors(
         characteristic_values[i, :] = characteristic_values[i, sort_index[i, :]]
 
     mean_lyapunov_exp = np.mean(characteristic_values, axis=0)
+    print("mean_lyapunov_exp", mean_lyapunov_exp)
     plt.figure()
     # plt.plot(np.cumsum(mean_lyapunov_exp[1:]) / np.sum(mean_lyapunov_exp[1:]), ".")
-    plt.plot(mean_lyapunov_exp[1:] / np.max(mean_lyapunov_exp[1:]), ".")
+    plt.plot(mean_lyapunov_exp, ".")  # / np.max(mean_lyapunov_exp[1:]), ".")
     # plt.title("Cummulative mean lyapunov exponents (normalized)")
-    plt.title("Mean lyapunov exponents (normalized)")
+    plt.title("Mean lyapunov exponents")
+    plt.ylabel("$\\mu_m$")
+    plt.xlabel("Lyapunov index, m")
     plt.figure()
 
     # Normalize

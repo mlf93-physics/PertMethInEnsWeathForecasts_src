@@ -12,7 +12,7 @@
     "TestRun1": {
         "folder_name": "pt_vectors/lorentz63_lyapunov_vectors_test_ncycles1",
         "sub_exp_folder": "perturb_data",
-        "integration_time": 2,
+        "integration_time": 20,
         "n_cycles": 1,
         "n_vectors": 3,
         "vector_offset": 10,
