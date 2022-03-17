@@ -11,7 +11,7 @@
         ]
     },
     "TestRun2": {
-        "folder_name": "pt_vectors/shell_model_lyapunov_vectors_ttr0.01_n_cycles1",
+        "folder_name": "pt_vectors/shell_model_lyapunov_vectors_ttr0.01_n_cycles1_regime_low",
         "sub_exp_folder": "perturb_data",
         "integration_time": 0.01,
         "n_cycles": 1,

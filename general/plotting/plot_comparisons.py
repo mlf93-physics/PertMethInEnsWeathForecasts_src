@@ -812,10 +812,10 @@ def plot_exp_growth_rate_comparison(args: dict):
     # Update number of folders after filtering
     len_folders = len(args["exp_folders"])
 
-    cmap_list = plt.rcParams["axes.prop_cycle"].by_key()["color"]
-    # cmap_list, _ = g_plt_utils.get_non_repeating_colors(
-    #     n_colors=len_folders, cmap=plt.cm.Oranges_r, vmin=0.2, vmax=0.8
-    # )
+    # cmap_list = plt.rcParams["axes.prop_cycle"].by_key()["color"]
+    cmap_list, _ = g_plt_utils.get_non_repeating_colors(
+        n_colors=args["n_runs_per_profile"]  # , vmin=0.2, vmax=0.8
+    )
     # cmap_list[0] = "k"
     axes = plt.axes()
 
@@ -858,10 +858,10 @@ def plot_exp_growth_rate_comparison(args: dict):
         g_plt_data.plot_exp_growth_rate_vs_time(
             args=args,
             axes=axes,
-            color=color,  # cmap_list[i],
+            color=cmap_list[i],
             # zorder=zorder,
             linestyle=linestyle,
-            anal_type="mean",
+            anal_type="instant",
             plot_args=[],
             title_suffix=str(folder_path.parent),
         )
@@ -908,7 +908,16 @@ def plot_characteristic_value_vs_time(args: dict, axes: plt.Axes = None):
             u_init_profiles,
             eval_pos,
             header_dicts,
-        ) = pt_import.import_perturb_vectors(args, raw_perturbations=raw_perturbations)
+        ) = pt_import.import_perturb_vectors(
+            args,
+            raw_perturbations=raw_perturbations,
+            dtype=np.complex128 if "sv" in folder_path.name else None,
+        )
+
+        # print(
+        #     "s values",
+        #     1 / header_dicts[0]["time_to_run"] * np.sqrt(characteristic_values),
+        # )
 
         normed_characteristic_values = characteristic_values / np.max(
             characteristic_values

@@ -77,7 +77,7 @@ def generate_bvs(args: dict, exp_setup: dict):
                 f"bv_vectors_iw{iw_str}",
             )
         )
-        local_exp_setup["integration_time"] = iw * params.dt
+        local_exp_setup["integration_time"] = iw * params.stt
 
         bv_runner(args, local_exp_setup)
 
@@ -115,7 +115,7 @@ def generate_lvs(args: dict, exp_setup: dict):
             )
         )
 
-        local_exp_setup["eval_times"][0] = stored_eval_times[0] + iw * params.dt
+        local_exp_setup["eval_times"][0] = stored_eval_times[0] + iw * params.stt
 
         lv_runner(args, exp_setup=local_exp_setup)
 
@@ -153,7 +153,7 @@ def generate_adj_lvs(args: dict, exp_setup: dict):
             )
         )
 
-        local_exp_setup["eval_times"][0] = stored_eval_times[0] + iw * params.dt
+        local_exp_setup["eval_times"][0] = stored_eval_times[0] + iw * params.stt
 
         adj_lv_runner(args, exp_setup=local_exp_setup)
 
@@ -186,7 +186,7 @@ def generate_initial_svs(args: dict, exp_setup: dict):
                 f"sv_vectors_iw{iw_str}",
             )
         )
-        local_exp_setup["integration_time"] = iw * params.dt
+        local_exp_setup["integration_time"] = iw * params.stt
 
         sv_runner(args, exp_setup=local_exp_setup)
 
@@ -230,9 +230,9 @@ def generate_final_svs(args: dict, exp_setup: dict):
                 f"fsv_vectors_iw{iw_str}",
             )
         )
-        local_exp_setup["integration_time"] = iw * params.dt
+        local_exp_setup["integration_time"] = iw * params.stt
         # Update eval_time
-        local_exp_setup["eval_times"][0] = stored_eval_times[0] + iw * params.dt
+        local_exp_setup["eval_times"][0] = stored_eval_times[0] + iw * params.stt
         # Set exp_folder to get relevant sv vectors
         args["exp_folder"] = f"fsv_vectors_iw{iw_str}"
 

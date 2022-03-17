@@ -1,14 +1,14 @@
 {
     "TestRun1": {
-        "folder_name": "pt_vectors/sv_lanczos_it0.01_test_selective_orthogonalisation",
+        "folder_name": "pt_vectors/sv_lanczos_it0.0001_test_s_values",
         "sub_exp_folder": "perturb_data",
-        "integration_time": 0.01,
+        "integration_time": 0.0001,
         "n_vectors": 20,
         "n_lanczos_iterations": 1,
         "n_model_iterations": 1,
         "vector_offset": 0.01,
         "start_times": [
-            11.22
+            8.95
         ]
     },
     "TestRun2": {

@@ -195,11 +195,11 @@ def execute_mean_exp_growth_rate_vs_time_analysis(
         error_norm_vs_time,
         error_norm_mean_vs_time,
     ) = analyse_error_norm_vs_time(u_stores, args=args)
-    mean_growth_rate = analyse_mean_exp_growth_rate_vs_time(
+    mean_growth_rate, profile_mean_growth_rates = analyse_mean_exp_growth_rate_vs_time(
         error_norm_vs_time, anal_type=anal_type, header_dicts=header_dicts
     )
 
-    return mean_growth_rate
+    return mean_growth_rate, profile_mean_growth_rates
 
 
 def calc_eof_vectors(

@@ -157,6 +157,15 @@ def plot_error_norm_vs_time(
         error_norm_mean_vs_time,
     ) = g_a_data.analyse_error_norm_vs_time(u_stores, args=args)
 
+    # print(
+    #     "error_norm_vs_time",
+    #     (
+    #         error_norm_vs_time[-1, :]
+    #         / error_norm_vs_time[0, :]
+    #         / header_dicts[0]["time_to_run"]
+    #     ).reshape((-1, args["n_runs_per_profile"])),
+    # )
+
     # reshaped_error_norm_vs_time = np.reshape(error_norm_vs_time, (-1, 6, 20))
     # ens_mean_vs_time = np.mean(reshaped_error_norm_vs_time, axis=2)
 
