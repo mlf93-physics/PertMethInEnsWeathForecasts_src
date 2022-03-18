@@ -19,6 +19,7 @@ import general.utils.running.runner_utils as r_utils
 import general.utils.experiments.exp_utils as e_utils
 import general.utils.importing.import_data_funcs as g_import
 import general.utils.plot_utils as g_plt_utils
+import general.plotting.plot_config as plt_config
 import general.analyses.analyse_data as g_anal
 import general.utils.argument_parsers as a_parsers
 import general.utils.user_interface as g_ui
@@ -255,6 +256,38 @@ def plot_pert_vectors3D(args: dict, axes: plt.Axes = None):
         zorder=0,
     )
 
+    # Import info on optimization time for SVs
+    sv_vector_folder = list(
+        filter(
+            lambda folder: folder if pl.Path(folder).name == "sv_vectors" else None,
+            args["exp_folders"],
+        )
+    )
+    fsv_vector_folder = list(
+        filter(
+            lambda folder: folder if pl.Path(folder).name == "fsv_vectors" else None,
+            args["exp_folders"],
+        )
+    )
+
+    if len(sv_vector_folder) == 1:
+        args["exp_folder"] = sv_vector_folder[0]
+        sv_exp_setup = g_import.import_exp_info_file(args)
+        sv_opt_samples = int(sv_exp_setup["integration_time"] * tts)
+    elif len(sv_vector_folder) > 1:
+        raise ValueError("Too many sv_vector folders found")
+    else:
+        sv_opt_samples = 20
+
+    if len(fsv_vector_folder) == 1:
+        args["exp_folder"] = fsv_vector_folder[0]
+        fsv_exp_setup = g_import.import_exp_info_file(args)
+        fsv_opt_samples = int(fsv_exp_setup["integration_time"] * tts)
+    elif len(fsv_vector_folder) > 1:
+        raise ValueError("Too many sv_vector folders found")
+    else:
+        fsv_opt_samples = 20
+
     # Plot perturbation start point
     axes.plot(
         u_data[dt_sample_offset, 0],
@@ -264,12 +297,16 @@ def plot_pert_vectors3D(args: dict, axes: plt.Axes = None):
         label="_nolegend_",
     )
 
-    # Plot preceding path of particle
-    part_dt = 20
+    axes.xaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+    axes.yaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+    axes.zaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+    axes.grid(False)
+
+    # Plot optimization time path of particle
     axes.plot(
-        u_data[dt_sample_offset - part_dt : dt_sample_offset + 1, 0],
-        u_data[dt_sample_offset - part_dt : dt_sample_offset + 1, 1],
-        u_data[dt_sample_offset - part_dt : dt_sample_offset + 1, 2],
+        u_data[dt_sample_offset : dt_sample_offset + sv_opt_samples + 1, 0],
+        u_data[dt_sample_offset : dt_sample_offset + sv_opt_samples + 1, 1],
+        u_data[dt_sample_offset : dt_sample_offset + sv_opt_samples + 1, 2],
         "k-",
         alpha=1,
         label="Particle path",
@@ -296,6 +333,22 @@ def plot_pert_vectors3D(args: dict, axes: plt.Axes = None):
     plt.ticklabel_format(axis="y", style="sci", scilimits=(0, 0))
     plt.ticklabel_format(axis="z", style="sci", scilimits=(0, 0))
     axes.legend(loc="center right", bbox_to_anchor=(1.35, 0.5))
+
+    if args["tolatex"]:
+        axes.get_legend().remove()
+        axes.ticklabel_format(style="plain")
+        plt_config.adjust_axes(axes)
+
+    if args["save_fig"]:
+        # g_plt_utils.save_figure(
+        #     subpath="thesis_figures/results_and_analyses/l63/",
+        #     file_name="pert_vectors_3D_v1",
+        # )
+        g_plt_utils.save_interactive_fig(
+            fig,
+            subpath="thesis_figures/results_and_analyses/l63/",
+            name="pert_vectors_3D_interactive",
+        )
 
 
 def prepare_pert_vectors_for_compare_plot(
@@ -484,6 +537,7 @@ if __name__ == "__main__":
     # Initiate arrays
     # initiate_sdim_arrays(args["sdim"])
     g_ui.confirm_run_setup(args)
+    plt_config.adjust_default_fig_axes_settings(args)
 
     if "time_to_run" in args:
         args["Nt"] = int(args["time_to_run"] / dt * sample_rate)

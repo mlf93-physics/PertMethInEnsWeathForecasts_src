@@ -113,8 +113,16 @@ def set_color_cycle_for_vectors(
     return cmap
 
 
-def save_interactive_fig(fig, path, name):
-    out_path = pl.Path(path, f"{name}.fig.pickle")
+def save_interactive_fig(fig, subpath=None, name="standard_filename"):
+    if subpath is None:
+        full_path = FIG_ROOT
+    else:
+        full_path = FIG_ROOT / subpath
+
+    if not os.path.isdir(full_path):
+        os.makedirs(full_path)
+
+    out_path = pl.Path(full_path, f"{name}.fig.pickle")
 
     with open(out_path, "wb") as file:
         pickle.dump(fig, file)
@@ -122,7 +130,9 @@ def save_interactive_fig(fig, path, name):
 
 def load_interactive_fig(args):
 
-    with open(args["file_path"], "rb") as file:
+    full_path = FIG_ROOT / args["file_path"]
+
+    with open(full_path, "rb") as file:
         fig = pickle.load(file)
         fig.show()
 
