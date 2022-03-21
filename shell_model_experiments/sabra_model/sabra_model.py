@@ -27,7 +27,7 @@ import general.utils.running.runner_utils as r_utils
 
 
 # Set global params
-cfg.GLOBAL_PARAMS.record_max_time = 30
+
 
 profiler = Profiler()
 

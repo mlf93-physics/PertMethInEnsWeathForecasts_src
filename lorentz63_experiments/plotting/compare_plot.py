@@ -26,8 +26,6 @@ import general.utils.user_interface as g_ui
 from libs.libutils import type_utils as lib_type_utils
 import config as cfg
 
-cfg.GLOBAL_PARAMS.record_max_time = 3000
-
 
 def plot_mean_exp_growth_rate_distribution(args: dict):
     """Plot the distribution of the exp growth rates across the L63 attractor
@@ -158,6 +156,7 @@ def plot_pert_vectors3D(args: dict, axes: plt.Axes = None):
         "bv": 8,
         "bv_eof": 3,
         "sv": 3,
+        "lv": 3,
         "rf": 500,
     }
     markerstyles_dict: dict = {
@@ -166,6 +165,7 @@ def plot_pert_vectors3D(args: dict, axes: plt.Axes = None):
         "bv": ["o", "p"],
         "bv_eof": ["<", ">"],
         "sv": ["+", "x"],
+        "lv": ["s", "p"],
         "rf": ".",
     }
 

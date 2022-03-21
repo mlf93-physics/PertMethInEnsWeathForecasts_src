@@ -812,10 +812,10 @@ def plot_exp_growth_rate_comparison(args: dict):
     # Update number of folders after filtering
     len_folders = len(args["exp_folders"])
 
-    # cmap_list = plt.rcParams["axes.prop_cycle"].by_key()["color"]
-    cmap_list, _ = g_plt_utils.get_non_repeating_colors(
-        n_colors=args["n_runs_per_profile"]  # , vmin=0.2, vmax=0.8
-    )
+    cmap_list = plt.rcParams["axes.prop_cycle"].by_key()["color"]
+    # cmap_list, _ = g_plt_utils.get_non_repeating_colors(
+    #     n_colors=args["n_runs_per_profile"]  # , vmin=0.2, vmax=0.8
+    # )
     # cmap_list[0] = "k"
     axes = plt.axes()
 
@@ -858,7 +858,7 @@ def plot_exp_growth_rate_comparison(args: dict):
         g_plt_data.plot_exp_growth_rate_vs_time(
             args=args,
             axes=axes,
-            color=cmap_list[i],
+            color=color,  # cmap_list[i],
             # zorder=zorder,
             linestyle=linestyle,
             anal_type="instant",

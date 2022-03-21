@@ -128,7 +128,7 @@
             "n_runs_per_profile": 3
         },
         "pert_setup": {
-            "time_to_run": 20.0
+            "time_to_run": 0.1
         }
     }
 }
