@@ -11,6 +11,7 @@ import config as cfg
 import general.utils.custom_decorators as dec
 import general.utils.exceptions as g_exceptions
 import general.utils.util_funcs as g_utils
+import general.utils.running.runner_utils as r_utils
 from libs.libutils import file_utils as lib_file_utils
 import numpy as np
 from general.params.model_licences import Models
@@ -588,53 +589,22 @@ def import_start_u_profiles(
 
     # Check if ref path exists
     ref_file_path = pl.Path(args["datapath"], "ref_data")
-
     # Get ref info text file
     ref_header_dict = import_info_file(ref_file_path)
 
-    if args["start_times"] is None and len(start_times) == 0:
-        print(
-            f"\nImporting {n_profiles} velocity profiles randomly positioned "
-            + "in reference datafile(s)\n"
-        )
-        if "time" in ref_header_dict:
-            ref_time_to_run = ref_header_dict["time"]
-        elif "time_to_run" in ref_header_dict:
-            ref_time_to_run = ref_header_dict["time_to_run"]
-        else:
-            raise KeyError("No valid key with time to run information")
-
-        n_data = int(ref_time_to_run * params.tts)
-
-        # Generate random start positions
-        # division = total #datapoints - burn_in #datapoints - #datapoints per perturbation
-        division_size = int(n_data // n_profiles - args["Nt"] * params.sample_rate)
-        if division_size < 0:
-            raise ValueError("division_size is negative")
-
-        rand_division_start = np.random.randint(
-            low=0, high=division_size, size=n_profiles
-        )
-        positions = np.array(
-            [
-                (division_size + args["Nt"] * params.sample_rate) * i
-                + rand_division_start[i]
-                for i in range(n_profiles)
-            ],
-            dtype=np.int64,
-        )
+    # If start_times not specified -> prepare random start times
+    if args["start_times"] is None and len_start_times == 0:
+        r_utils.get_random_start_times(args, n_profiles, ref_header_dict)
+        _temp_start_times = args["start_times"]
     else:
-        if len_start_times > 0:
-            _temp_start_times = start_times
-        else:
-            _temp_start_times = args["start_times"]
+        _temp_start_times = start_times
 
-        print(
-            f"\nImporting {n_profiles} velocity profiles positioned as "
-            + "requested in reference datafile\n"
-        )
-        # Make sure to round and convert to int in a proper way
-        positions = np.round(np.array(_temp_start_times) * params.tts).astype(np.int64)
+    print(
+        f"\nImporting {n_profiles} velocity profiles positioned as "
+        + "requested in reference datafile\n"
+    )
+    # Make sure to round and convert to int in a proper way
+    positions = np.round(np.array(_temp_start_times) * params.tts).astype(np.int64)
 
     print(
         "\nPositions of perturbation start: ",

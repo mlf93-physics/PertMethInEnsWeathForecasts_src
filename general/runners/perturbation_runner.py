@@ -272,8 +272,6 @@ def perturbation_runner(
 def prepare_processes(
     u_profiles_perturbed: np.ndarray,
     perturb_positions: List[int],
-    times_to_run: np.ndarray,
-    Nt_array: np.ndarray,
     n_perturbation_files: int,
     u_ref: np.ndarray = None,
     exec_all_runs_per_profile: Union[np.ndarray, None] = None,
@@ -291,9 +289,6 @@ def prepare_processes(
     # Append processes
     for count in iterator:
         profile_count = count // args["n_runs_per_profile"]
-
-        args["time_to_run"] = times_to_run[count]
-        args["Nt"] = Nt_array[count]
 
         # Copy args in order to avoid override between processes
         copy_args = copy.deepcopy(args)
@@ -335,8 +330,8 @@ def main_setup(
     u_ref=None,
 ):
 
-    times_to_run, Nt_array = r_utils.prepare_run_times(args)
     exec_all_runs_per_profile = None
+    args["Nt"] = int(round(args["time_to_run"] * params.tts))
 
     # If in 2. or higher breed cycle, the perturbation is given as input
     if u_profiles_perturbed is None:  # or perturb_positions is None:
@@ -373,8 +368,6 @@ def main_setup(
     processes, data_out_list = prepare_processes(
         u_profiles_perturbed,
         perturb_positions,
-        times_to_run,
-        Nt_array,
         n_perturbation_files,
         u_ref=u_ref,
         exec_all_runs_per_profile=exec_all_runs_per_profile,

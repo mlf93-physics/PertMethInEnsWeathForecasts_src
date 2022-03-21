@@ -156,25 +156,58 @@ def adjust_run_setup(args: dict):
         sys.stdout = open(os.devnull, "w")
 
 
-def prepare_run_times(
-    args: dict,
-) -> Tuple[np.ndarray, np.ndarray]:
+def get_random_start_times(args, n_profiles, ref_header_dict):
 
-    num_perturbations = args["n_runs_per_profile"] * args["n_profiles"]
-
-    if cfg.LICENCE != EXP.LORENTZ_BLOCK:
-        times_to_run = np.ones(num_perturbations) * args["time_to_run"]
-        Nt_array = np.round(times_to_run / params.dt).astype(np.int64)
+    # Get max time of ref record
+    if "time" in ref_header_dict:
+        ref_time_to_run = ref_header_dict["time"]
+    elif "time_to_run" in ref_header_dict:
+        ref_time_to_run = ref_header_dict["time_to_run"]
     else:
-        if len(args["start_times"]) > 1:
-            start_times = np.array(args["start_times"])
-        else:
-            start_times = np.ones(num_perturbations) * args["start_times"]
+        raise KeyError("No valid key with time to run information")
 
-        times_to_run = start_times[0] + args["time_to_run"] - start_times
-        Nt_array = (times_to_run / params.dt).astype(np.int64)
+    n_data = int(ref_time_to_run * params.tts)
 
-    return times_to_run, Nt_array
+    # Generate random start positions
+    # division = total #datapoints - burn_in #datapoints - #datapoints per perturbation
+    division_size = int(n_data // n_profiles - args["Nt"] * params.sample_rate)
+    if division_size < 0:
+        raise ValueError("division_size is negative")
+
+    rand_division_start = np.random.randint(low=0, high=division_size, size=n_profiles)
+    positions = np.array(
+        [
+            (division_size + args["Nt"] * params.sample_rate) * i
+            + rand_division_start[i]
+            for i in range(n_profiles)
+        ],
+        dtype=np.int64,
+    )
+
+    # Update start times
+    args["start_times"] = positions * params.stt
+    return args["start_times"]
+
+
+# def prepare_run_times(
+#     args: dict,
+# ) -> Tuple[np.ndarray, np.ndarray]:
+
+#     num_perturbations = args["n_runs_per_profile"] * args["n_profiles"]
+
+#     if cfg.LICENCE != EXP.LORENTZ_BLOCK:
+#         times_to_run = np.ones(num_perturbations) * args["time_to_run"]
+#         Nt_array = np.round(times_to_run / params.dt).astype(np.int64)
+#     else:
+#         if len(args["start_times"]) > 1:
+#             start_times = np.array(args["start_times"])
+#         else:
+#             start_times = np.ones(num_perturbations) * args["start_times"]
+
+#         times_to_run = start_times[0] + args["time_to_run"] - start_times
+#         Nt_array = (times_to_run / params.dt).astype(np.int64)
+
+#     return times_to_run, Nt_array
 
 
 def prepare_perturbations(

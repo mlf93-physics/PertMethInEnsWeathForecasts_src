@@ -86,23 +86,48 @@
             "time_to_run": 0.1
         }
     },
-    "TestRun2": {
+    "ComparePert3DplotWithAttractor": {
         "general": {
-            "folder_name": "compare_pert_ttr1.0_2",
+            "folder_name": "compare_pert_3dplot_with_attractor",
+            "vector_folder": "vectors",
+            "perturbation_folder": "perturbations",
+            "sub_exp_folder": "perturb_data",
             "eval_times": [
-                10
+                10001
             ],
-            "n_units": 10,
-            "unit_offset": 1.0
+            "n_units": 100
+        },
+        "lv_gen_setup": {
+            "integration_time": 20.0,
+            "n_cycles": 5,
+            "n_vectors": 3
         },
         "bv_gen_setup": {
-            "sub_exp_folder": "perturb_data",
-            "integration_time": 1.0,
+            "integration_time": 0.1,
             "n_cycles": 4,
             "n_vectors": 8
         },
+        "bv_eof_gen_setup": {
+            "sub_exp_folder": "perturb_data",
+            "n_vectors": 3
+        },
+        "sv_gen_setup": {
+            "integration_time": 0.1,
+            "n_vectors": 3,
+            "n_lanczos_iterations": 1,
+            "n_model_iterations": 1
+        },
+        "rd_pert_setup": {
+            "n_runs_per_profile": 3
+        },
+        "nm_pert_setup": {
+            "n_runs_per_profile": 3
+        },
+        "rf_pert_setup": {
+            "n_runs_per_profile": 3
+        },
         "pert_setup": {
-            "time_to_run": 1.0
+            "time_to_run": 20.0
         }
-    }
+    },
 }

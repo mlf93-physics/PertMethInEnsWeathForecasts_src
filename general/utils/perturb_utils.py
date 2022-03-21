@@ -512,7 +512,7 @@ def get_rand_field_perturbations(
         )
 
     elif cfg.MODEL == Models.LORENTZ63:
-        args["ref_end_time"] = 3000
+        args["ref_end_time"] = 10000
 
         _, u_data, _ = g_import.import_ref_data(args=args)
 

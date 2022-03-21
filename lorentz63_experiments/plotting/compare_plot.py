@@ -340,15 +340,15 @@ def plot_pert_vectors3D(args: dict, axes: plt.Axes = None):
         plt_config.adjust_axes(axes)
 
     if args["save_fig"]:
-        # g_plt_utils.save_figure(
-        #     subpath="thesis_figures/results_and_analyses/l63/",
-        #     file_name="pert_vectors_3D_v1",
-        # )
-        g_plt_utils.save_interactive_fig(
-            fig,
+        g_plt_utils.save_figure(
             subpath="thesis_figures/results_and_analyses/l63/",
-            name="pert_vectors_3D_interactive",
+            file_name="pert_vectors_3D_v1",
         )
+        # g_plt_utils.save_interactive_fig(
+        #     fig,
+        #     subpath="thesis_figures/results_and_analyses/l63/",
+        #     name="pert_vectors_3D_interactive",
+        # )
 
 
 def prepare_pert_vectors_for_compare_plot(
@@ -357,7 +357,6 @@ def prepare_pert_vectors_for_compare_plot(
 ):
     perturbations_store = {}
     vector_folders = [folder for folder in args["exp_folders"] if "vectors" in folder]
-
     # Import perturb vectors
     for i, folder in enumerate(vector_folders):
         raw_perturbations = True

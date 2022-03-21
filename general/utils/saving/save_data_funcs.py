@@ -63,7 +63,7 @@ def save_data(
     if cfg.GLOBAL_PARAMS.ref_run:
         # Generate path if not existing
         expected_path = lib_file_utils.generate_dir(
-            pl.Path("data", stand_data_name, "ref_data")
+            pl.Path(args["ref_data_out"], stand_data_name, "ref_data")
         )
 
         prefix = "ref_"
@@ -122,7 +122,7 @@ def save_reference_info(args):
 
     # Generate path if not existing
     expected_path = lib_file_utils.generate_dir(
-        pl.Path("data", stand_data_name, "ref_data")
+        pl.Path(args["ref_data_out"], stand_data_name, "ref_data")
     )
 
     ref_data_info_path = f"{expected_path}/ref_data_info_{stand_data_name}.txt"

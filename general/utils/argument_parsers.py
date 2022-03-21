@@ -62,6 +62,9 @@ class StandardArgSetup:
         # Add general arguments
         self._parser.add_argument("-dp", "--datapath", type=str, default=datapath)
         self._parser.add_argument(
+            "--ref_data_out", type=str, default="./data/thesis_data"
+        )
+        self._parser.add_argument(
             "--analysis_path", type=str, default="./data/analysed_data/"
         )
         self._parser.add_argument("-ttr", "--time_to_run", default=0.1, type=float)
@@ -298,15 +301,15 @@ class PerturbationArgSetup:
                 )
 
         # Test if start_times is set when pert_mode in ["rd", "nm"]
-        if (
-            self.args["pert_mode"] in ["rd", "nm", "rf"]
-            and self.args["start_times"] is None
-            and self.args["regime_start"] is None
-        ):
-            if cfg.LICENCE not in [EXP.VERIFICATION]:
-                self._parser.error(
-                    "--start_times or --regime_start argument is required when pert_mode is 'rd' or 'nm'"
-                )
+        # if (
+        #     self.args["pert_mode"] in ["rd", "nm", "rf"]
+        #     and self.args["start_times"] is None
+        #     and self.args["regime_start"] is None
+        # ):
+        #     if cfg.LICENCE not in [EXP.VERIFICATION]:
+        #         self._parser.error(
+        #             "--start_times or --regime_start argument is required when pert_mode is 'rd' or 'nm'"
+        #         )
 
 
 class MultiPerturbationArgSetup:
