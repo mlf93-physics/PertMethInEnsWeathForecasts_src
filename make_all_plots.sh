@@ -8,3 +8,9 @@ python ./plotting/collect_plots.py --plot_type=spec_energy_howmoller --ref_end_t
 
 echo "Making sh_eigenmode_analysis plot"
 python ./plotting/collect_plots.py --plot_type=lyapunov_anal --n_profiles=100 --tolatex --save_fig --noplot --noconfirm
+
+# L63 plots
+
+echo "Make 3D pert method visualization"
+python plotting/compare_plot.py --n_profiles=1 --plot_type=pert_vectors3D --exp_folder=compare_pert_3dplot_with_attractor -v bv_eof bv sv lv -pt rd nm rf  --seed_mode --file_offset=0 --tolatex -lf two_quads --save_fig --save_fig_name=pert_vectors_3D_v1 --noplot plot_kwargs --elev=2 --azim=-118
+python plotting/compare_plot.py --n_profiles=1 --plot_type=pert_vectors3D --exp_folder=compare_pert_3dplot_with_attractor -v bv_eof bv sv lv -pt rd nm rf  --seed_mode --file_offset=0 --tolatex -lf two_quads --save_fig --save_fig_name=pert_vectors_3D_v2 --noplot plot_kwargs --elev=9 --azim=-32

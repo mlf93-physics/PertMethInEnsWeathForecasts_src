@@ -544,6 +544,9 @@ class StandardPlottingArgParser:
         self._parser.add_argument("-nt", "--notight", action="store_true")
         self._parser.add_argument("-s", "--save_fig", action="store_true")
         self._parser.add_argument(
+            "--save_fig_name", type=str, help="Name of file to save figure to"
+        )
+        self._parser.add_argument(
             "--datapaths",
             nargs="+",
             type=str,
@@ -565,6 +568,8 @@ class StandardPlottingArgParser:
                 "horizontal_panel_with_cbar",
                 "three_panel",
                 "quad_item",
+                "two_vertical_panel",
+                "two_quads",
             ],
             type=str,
             help="Used to prepare plot for latex report",
@@ -618,6 +623,18 @@ class StandardPlottingArgParser:
             "--rmse_spread",
             action="store_true",
             help="Used to enable plotting spread together with RMSE instead of only RMSE",
+        )
+        plot_kwargs_parser.add_argument(
+            "--elev",
+            type=float,
+            default=6,
+            help="Elevation in 3D plot",
+        )
+        plot_kwargs_parser.add_argument(
+            "--azim",
+            type=float,
+            default=-100,
+            help="Azimuthal angle in 3D plot",
         )
 
 

@@ -13,6 +13,10 @@ def normal_figure():
     plt.rcParams["figure.figsize"] = [5.39749, 4.5]
 
 
+def two_quads():
+    plt.rcParams["figure.figsize"] = [5.39749 / 2, 5.39749 / 2]
+
+
 def horizontal_panel_figure():
     plt.rcParams["figure.figsize"] = [5.39749, 1.5]
 
@@ -59,3 +63,5 @@ def adjust_default_fig_axes_settings(args):
             three_panel_figure()
         if args["latex_format"] == "normal":
             normal_figure()
+        if args["latex_format"] == "two_quads":
+            two_quads()

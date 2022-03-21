@@ -187,7 +187,7 @@ def plot_pert_vectors3D(args: dict, axes: plt.Axes = None):
         perturbations *= 300
 
         if mode in args["vectors"]:
-            color = color_list[i]
+            color = METHOD_COLORS[mode]
             for j in range(n_runs_per_profile_dict[mode]):
                 axes.quiver(
                     u_data[dt_sample_offset, 0],
@@ -198,8 +198,8 @@ def plot_pert_vectors3D(args: dict, axes: plt.Axes = None):
                     perturbations[2, j],
                     label=mode + "_" + lib_type_utils.zpad_string(str(j), n_zeros=2),
                     zorder=10,
-                    linestyle=LINESTYLES[j],
-                    linewidth=2,
+                    linestyle=LINESTYLES[j] if mode != "bv" else LINESTYLES[0],
+                    linewidth=1.5,
                     # marker=markerstyles_dict[mode][j],
                     color=color,
                 )
@@ -240,8 +240,9 @@ def plot_pert_vectors3D(args: dict, axes: plt.Axes = None):
                 alpha=0.4,  # if mode in ["rd", "nm", "rf"] else 1.0,
                 zorder=5,
                 marker=markerstyles_dict[mode],
-                facecolors=color_list[i],
-                color=color_list[i],
+                facecolors=METHOD_COLORS[mode],
+                color=METHOD_COLORS[mode],
+                linewidth=0.1,
             )
 
     # Plot attractor
@@ -329,6 +330,8 @@ def plot_pert_vectors3D(args: dict, axes: plt.Axes = None):
     axes.set_xlim(xlim)
     axes.set_ylim(ylim)
     axes.set_zlim(zlim)
+    # Set view
+    axes.view_init(elev=args["elev"], azim=args["azim"])
     plt.ticklabel_format(axis="x", style="sci", scilimits=(0, 0))
     plt.ticklabel_format(axis="y", style="sci", scilimits=(0, 0))
     plt.ticklabel_format(axis="z", style="sci", scilimits=(0, 0))
@@ -342,7 +345,7 @@ def plot_pert_vectors3D(args: dict, axes: plt.Axes = None):
     if args["save_fig"]:
         g_plt_utils.save_figure(
             subpath="thesis_figures/results_and_analyses/l63/",
-            file_name="pert_vectors_3D_v1",
+            file_name=args["save_fig_name"],
         )
         # g_plt_utils.save_interactive_fig(
         #     fig,
