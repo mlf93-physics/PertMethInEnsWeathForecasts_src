@@ -22,6 +22,7 @@ import general.utils.process_utils as pr_utils
 import general.utils.running.runner_utils as r_utils
 import general.utils.user_interface as g_ui
 import general.utils.util_funcs as g_utils
+import general.utils.importing.import_data_funcs as g_import
 from general.params.experiment_licences import Experiments as exp
 from general.params.model_licences import Models
 from general.runners.lyapunov_vector_runner import main as lv_runner
@@ -466,9 +467,19 @@ def execute_pert_experiments(args: dict, exp_setup: dict):
     # Only generate start times if not requesting regime start
     if args["regime_start"] is None:
         # Generate start times
-        args["start_times"] = local_exp_setup["eval_times"]
-        args["start_time_offset"] = local_exp_setup["unit_offset"]
-        args = g_utils.adjust_start_times_with_offset(args)
+        if "eval_times" in local_exp_setup and "unit_offset" in local_exp_setup:
+            args["start_times"] = local_exp_setup["eval_times"]
+            args["start_time_offset"] = local_exp_setup["unit_offset"]
+            args = g_utils.adjust_start_times_with_offset(args)
+        else:
+            # Check if ref path exists
+            ref_file_path = pl.Path(args["datapath"], "ref_data")
+            # Get ref info text file
+            ref_header_dict = g_import.import_info_file(ref_file_path)
+            args["start_times"] = r_utils.get_random_start_times(
+                args, args["n_profiles"], ref_header_dict
+            )
+
     elif cfg.MODEL == Models.SHELL_MODEL:
         start_times, num_possible_units, _ = sh_r_utils.get_regime_start_times(args)
         args["start_times"] = start_times[: args["n_profiles"]]

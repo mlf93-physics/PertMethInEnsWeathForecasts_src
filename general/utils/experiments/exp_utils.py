@@ -48,24 +48,29 @@ def preprocess_exp_setup_for_comparison(exp_setup: dict) -> None:
         The experiment setup
     """
 
-    # Add unit_offset to vector gen exp setups
-    exp_setup["bv_gen_setup"]["vector_offset"] = exp_setup["general"]["unit_offset"]
-    exp_setup["sv_gen_setup"]["vector_offset"] = exp_setup["general"]["unit_offset"]
+    if "unit_offset" in exp_setup["general"]:
+        # Add unit_offset to vector gen exp setups
+        exp_setup["bv_gen_setup"]["vector_offset"] = exp_setup["general"]["unit_offset"]
+        exp_setup["sv_gen_setup"]["vector_offset"] = exp_setup["general"]["unit_offset"]
 
     # Add sub_exp_folder to vector gen exp setups
     exp_setup["bv_gen_setup"]["sub_exp_folder"] = exp_setup["general"]["sub_exp_folder"]
     exp_setup["sv_gen_setup"]["sub_exp_folder"] = exp_setup["general"]["sub_exp_folder"]
 
     if "lv_gen_setup" in exp_setup:
-        exp_setup["lv_gen_setup"]["vector_offset"] = exp_setup["general"]["unit_offset"]
+        if "unit_offset" in exp_setup["general"]:
+            exp_setup["lv_gen_setup"]["vector_offset"] = exp_setup["general"][
+                "unit_offset"
+            ]
         exp_setup["lv_gen_setup"]["sub_exp_folder"] = exp_setup["general"][
             "sub_exp_folder"
         ]
 
     if "fsv_gen_setup" in exp_setup:
-        exp_setup["fsv_gen_setup"]["vector_offset"] = exp_setup["general"][
-            "unit_offset"
-        ]
+        if "unit_offset" in exp_setup["general"]:
+            exp_setup["fsv_gen_setup"]["vector_offset"] = exp_setup["general"][
+                "unit_offset"
+            ]
         exp_setup["fsv_gen_setup"]["sub_exp_folder"] = exp_setup["general"][
             "sub_exp_folder"
         ]

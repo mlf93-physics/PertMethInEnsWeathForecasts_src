@@ -95,10 +95,11 @@
             "eval_times": [
                 10001
             ],
-            "n_units": 100
+            "n_units": 10,
+            "unit_offset": 0.1
         },
         "lv_gen_setup": {
-            "integration_time": 20.0,
+            "integration_time": 4.0,
             "n_cycles": 5,
             "n_vectors": 3
         },
@@ -129,5 +130,5 @@
         "pert_setup": {
             "time_to_run": 20.0
         }
-    },
+    }
 }

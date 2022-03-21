@@ -596,8 +596,10 @@ def import_start_u_profiles(
     if args["start_times"] is None and len_start_times == 0:
         r_utils.get_random_start_times(args, n_profiles, ref_header_dict)
         _temp_start_times = args["start_times"]
-    else:
+    elif len_start_times > 0:
         _temp_start_times = start_times
+    else:
+        _temp_start_times = args["start_times"]
 
     print(
         f"\nImporting {n_profiles} velocity profiles positioned as "
