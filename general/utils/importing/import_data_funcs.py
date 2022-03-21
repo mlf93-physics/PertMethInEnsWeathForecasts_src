@@ -354,7 +354,11 @@ def import_ref_data(args: dict = None) -> Tuple[np.ndarray, np.ndarray, dict]:
 
         # Add offset to first record, if not starting with first rec_id
         if i == 0:
-            time_concat[0] += data_in.shape[0] / params.tts * header_dict["rec_id"]
+            time_concat[0] += (
+                header_dict["time_to_run"]
+                / header_dict["n_records"]
+                * header_dict["rec_id"]
+            )
 
     # Add offset to time arrays to make one linear increasing time series
     for i, time_series in enumerate(time_concat):

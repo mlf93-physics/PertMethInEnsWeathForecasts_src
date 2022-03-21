@@ -1,4 +1,11 @@
-__all__ = ["LINESTYLES", "FIG_ROOT", "MARKERS", "SUBFIG_LABELS", "METHOD_COLORS"]
+__all__ = [
+    "LINESTYLES",
+    "FIG_ROOT",
+    "MARKERS",
+    "SUBFIG_LABELS",
+    "METHOD_COLORS",
+    "LINEWIDTH",
+]
 
 import pathlib as pl
 import seaborn as sb
@@ -18,6 +25,8 @@ METHOD_COLORS = {
     "lv": sb.color_palette()[3],  # red
     "rf": sb.color_palette()[6],  # pink
 }
+
+LINEWIDTH = 1.5
 
 LINESTYLES = [
     "-",

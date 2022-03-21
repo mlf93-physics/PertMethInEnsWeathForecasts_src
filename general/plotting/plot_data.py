@@ -222,12 +222,12 @@ def plot_error_norm_vs_time(
     if header_dicts[0]["pert_mode"] in ["rd", "nm", "rf"]:
         linewidth: float = 1.0
         alpha: float = 0.5
-        zorder: float = 0
+        zorder: float = 5
     else:
         zorder: float = 10
 
     if header_dicts[0]["pert_mode"] == "nm":
-        zorder = 2
+        zorder = 7
 
     lines = axes.plot(
         time_array,
@@ -256,8 +256,13 @@ def plot_error_norm_vs_time(
         axes.plot(time_array, error_spread_vs_time, "k--")  # , 'k', linewidth=1)
         # Plot std of perturbation errors
 
+    if cfg.MODEL == cfg.Models.LORENTZ63:
+        ylabel_suffix = "$||\\mathbf{x} - \\mathbf{x}_{ref}||$"
+    elif cfg.MODEL == cfg.Models.SHELL_MODEL:
+        ylabel_suffix = "$||\\mathbf{u} - \\mathbf{u}_{ref}||$"
+
     axes.set_xlabel("Time")
-    axes.set_ylabel("Error")
+    axes.set_ylabel("Error, " + ylabel_suffix)
     axes.set_yscale("log")
 
     if legend_on:
@@ -365,6 +370,7 @@ def plot_energy(
     zero_time_ref=None,
     plot_args=["detailed_title"],
     plot_kwargs={"exp_file_type": "perturbations"},
+    zorder=0,
 ):
     # Import reference data
     time, u_data, header_dict = g_import.import_ref_data(args=args)
@@ -375,9 +381,9 @@ def plot_energy(
 
     # Plot total energy vs time
     energy_vs_time = np.sum(u_data * np.conj(u_data), axis=1).real
-    axes.plot(time.real, energy_vs_time, "k")
+    axes.plot(time.real, energy_vs_time, "k", zorder=zorder)
     axes.set_xlabel("Time")
-    axes.set_ylabel("Total energy")
+    axes.set_ylabel("Energy, $\\frac{1}{2} u_{n, ref} u_{n, ref}^*$")
     axes.set_xlim(args["ref_start_time"], args["ref_end_time"])
 
     header_dict = g_utils.handle_different_headers(header_dict)

@@ -23,6 +23,7 @@ import general.utils.importing.import_data_funcs as g_import
 import general.utils.importing.import_perturbation_data as pt_import
 import general.utils.plot_utils as g_plt_utils
 import general.plotting.plot_config as plt_config
+from general.plotting.plot_params import *
 import general.utils.user_interface as g_ui
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mpl_ticker
@@ -489,10 +490,12 @@ def plot_energy_per_shell(ax=None, omit=None, path=None, args=None):
                 break
 
 
-def plot_energy(args=None, axes=None, plot_args=["detailed_title"]):
+def plot_energy(args=None, axes=None, plot_args=["detailed_title"], zorder=0):
 
     # plot_energy_spectrum(u_data, header_dict, args=args)
-    axes = g_plt_data.plot_energy(args, axes=axes, plot_args=plot_args)
+    axes = g_plt_data.plot_energy(
+        args, axes=axes, plot_args=plot_args, zorder=zorder, linewidth=LINEWIDTH
+    )
 
     if args["tolatex"]:
         plt_config.adjust_axes(axes)

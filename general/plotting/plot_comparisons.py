@@ -25,6 +25,7 @@ import general.utils.importing.import_utils as g_imp_utils
 import general.utils.plot_utils as g_plt_utils
 import general.analyses.plot_analyses as g_plt_anal
 from general.plotting.plot_params import *
+import general.plotting.plot_config as plt_config
 from general.utils.module_import.type_import import *
 import general.utils.user_interface as g_ui
 import general.utils.util_funcs as g_utils
@@ -613,7 +614,7 @@ def plt_BV_LYAP_vector_comparison(args):
     # fig2.tight_layout(rect=[0, 0, 0.9, 1])
 
 
-def plot_error_norm_comparison(args: dict):
+def plot_error_norm_comparison(args: dict, axes=None):
     """Plots a comparison of the error norm based in several different
     perturbation techniques
 
@@ -622,7 +623,10 @@ def plot_error_norm_comparison(args: dict):
     args : dict
         Run-time arguments
     """
-    fig, axes = plt.subplots(nrows=2, ncols=1, sharex=True)
+    if axes is None:
+        fig, axes = plt.subplots(nrows=1, ncols=1, sharex=True)
+
+    axes = [axes, axes.twinx()]
 
     args["endpoint"] = True
 
@@ -631,9 +635,7 @@ def plot_error_norm_comparison(args: dict):
     cmap_list = plt.rcParams["axes.prop_cycle"].by_key()["color"]
 
     line_counter = 0
-    perturb_type_old = ""
-    color_counter = 0
-    for i, folder in enumerate(args["exp_folders"]):
+    for _, folder in enumerate(args["exp_folders"]):
         folder_path = pl.Path(folder)
         # Set exp_folder
         args["exp_folder"] = folder
@@ -644,29 +646,21 @@ def plot_error_norm_comparison(args: dict):
                 perturb_type = folder_path.name.split(
                     lib_type_utils.zpad_string(str(digits_in_name), n_zeros=2)
                 )[0]
-
-                if not perturb_type == perturb_type_old:
-                    color = cmap_list[color_counter]
-                    _save_color = color
-                    perturb_type_old = perturb_type
-                    color_counter += 1
-                else:
-                    color = _save_color
-                    if digits_in_name >= args["n_runs_per_profile"]:
-                        continue
+                color = METHOD_COLORS[perturb_type]
 
                 linestyle = LINESTYLES[digits_in_name]
 
         else:
-            color = cmap_list[color_counter]
+            perturb_type = folder_path.name.split("_")[0]
+            color = METHOD_COLORS[perturb_type]
             linestyle = None
-            color_counter += 1
 
         g_plt_data.plot_error_norm_vs_time(
             args,
             axes=axes[0],
             cmap_list=[color],
             linestyle=linestyle,
+            linewidth=LINEWIDTH,
             legend_on=False,
             normalize_start_time=False,
             plot_args=[],
@@ -699,7 +693,16 @@ def plot_error_norm_comparison(args: dict):
             plot_args=[],
         )
     elif cfg.MODEL == Models.LORENTZ63:
-        l63_plot.plot_energy(args, axes=axes[1])
+        l63_plot.plot_energy(args, axes=axes[1], zorder=0)
+
+    axes[0].set_zorder(10)
+    axes[0].patch.set_visible(False)
+
+    if args["tolatex"]:
+        axes[0].get_legend().remove()
+        plt_config.adjust_axes(axes)
+
+    return axes
 
 
 def plot_RMSE_and_spread_comparison(args: dict):
@@ -1087,6 +1090,7 @@ if __name__ == "__main__":
         sh_utils.update_arrays(params)
 
     g_ui.confirm_run_setup(args)
+    plt_config.adjust_default_fig_axes_settings(args)
 
     if "pert_comp_compare" in args["plot_type"]:
         plt_pert_components(args)

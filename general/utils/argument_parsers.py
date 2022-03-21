@@ -587,6 +587,11 @@ class StandardPlottingArgParser:
         self._parser.add_argument("--specific_files", nargs="+", default=None, type=int)
         self._parser.add_argument("--combinations", action="store_true")
         self._parser.add_argument("--endpoint", action="store_true")
+        self._parser.add_argument(
+            "--right_spine",
+            action="store_true",
+            help="Used to enable right spine",
+        )
 
         if cfg.MODEL == Models.SHELL_MODEL:
             self._parser.add_argument(

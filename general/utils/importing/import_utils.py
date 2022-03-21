@@ -48,8 +48,8 @@ def get_start_end_times_from_exp_setup(
         # Adjust start- and endtime differently depending on if only last
         # perturbation data is saved, or all perturbation data is saved.
         if pert_info_dict["save_last_pert"]:
-            start_time = exp_setup["eval_times"][0] - int_time
-            end_time = start_time + (pert_info_dict["n_units"] + 1) * int_time
+            start_time = exp_setup["eval_times"][0]
+            end_time = start_time + (pert_info_dict["n_units"]) * int_time
         else:
             start_time = exp_setup["eval_times"][0] - exp_setup["n_cycles"] * int_time
             end_time = exp_setup["eval_times"][0]

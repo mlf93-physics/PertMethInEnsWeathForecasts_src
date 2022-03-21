@@ -20,6 +20,7 @@ from lorentz63_experiments.params.params import *
 import lorentz63_experiments.analyses.normal_mode_analysis as nm_analysis
 import lorentz63_experiments.utils.util_funcs as l_utils
 import general.utils.importing.import_data_funcs as g_import
+from general.plotting.plot_params import *
 import general.plotting.plot_data as g_plt_data
 import general.utils.plot_utils as g_plt_utils
 import general.utils.argument_parsers as a_parsers
@@ -165,7 +166,7 @@ def plot_velocities(args):
     # plt.suptitle("Velocities vs time")
 
 
-def plot_energy(args, axes=None):
+def plot_energy(args, axes=None, zorder=0, alpha=1):
     """Plot the energy of the reference data
 
     Parameters
@@ -182,9 +183,9 @@ def plot_energy(args, axes=None):
     if axes is None:
         axes = plt.gca()
 
-    axes.plot(time, energy, "k-")
+    axes.plot(time, energy, "k-", zorder=zorder, alpha=alpha, linewidth=LINEWIDTH)
     axes.set_xlabel("Time")
-    axes.set_ylabel("Energy")
+    axes.set_ylabel("Energy, $\\frac{1}{2}\\sum_i {x}_{i, ref}$")
     axes.set_title("Energy vs time")
 
 
