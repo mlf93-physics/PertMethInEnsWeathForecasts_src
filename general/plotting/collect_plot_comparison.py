@@ -11,50 +11,30 @@ python ../general/plotting/plot_comparisons.py
 import sys
 
 sys.path.append("..")
-import math
-import re
-import pathlib as pl
 import copy
 import config as cfg
-import general.plotting.plot_data as g_plt_data
 import general.utils.argument_parsers as a_parsers
 import general.utils.arg_utils as a_utils
-import general.utils.importing.import_data_funcs as g_import
-import general.utils.importing.import_perturbation_data as pt_import
-import general.utils.importing.import_utils as g_imp_utils
 import general.utils.plot_utils as g_plt_utils
-import general.analyses.plot_analyses as g_plt_anal
 from general.plotting.plot_params import *
 import general.plotting.plot_config as plt_config
 from general.utils.module_import.type_import import *
 import general.utils.user_interface as g_ui
-import general.utils.util_funcs as g_utils
-import general.utils.experiments.exp_utils as e_utils
-import general.utils.running.runner_utils as r_utils
-from libs.libutils import type_utils as lib_type_utils
 import matplotlib.pyplot as plt
-import matplotlib.ticker as mpl_ticker
-import numpy as np
-import seaborn as sb
 from general.params.model_licences import Models
 import general.plotting.plot_comparisons as plt_compare
 
 # Get parameters for model
 if cfg.MODEL == Models.SHELL_MODEL:
-    import shell_model_experiments.plotting.plot_data as sh_plot
     import shell_model_experiments.utils.util_funcs as sh_utils
     import shell_model_experiments.utils.special_params as sh_sparams
-    import shell_model_experiments.perturbations.normal_modes as sh_nm_estimator
     from shell_model_experiments.params.params import PAR as PAR_SH
-    from shell_model_experiments.params.params import ParamsStructType
 
     params = PAR_SH
     sparams = sh_sparams
 elif cfg.MODEL == Models.LORENTZ63:
     import lorentz63_experiments.params.params as l63_params
     import lorentz63_experiments.params.special_params as l63_sparams
-    import lorentz63_experiments.perturbations.normal_modes as l63_nm_estimator
-    import lorentz63_experiments.plotting.plot_data as l63_plot
 
     params = l63_params
     sparams = l63_sparams

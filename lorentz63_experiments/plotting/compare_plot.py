@@ -49,7 +49,9 @@ def plot_mean_exp_growth_rate_distribution(args: dict):
     fig, axes = plt.subplots(
         num_subplot_cols,
         num_subplot_rows,
-        subplot_kw=dict(projection="3d"),
+        sharex=True,
+        sharey=True,
+        # subplot_kw=dict(projection="3d"),
     )
     if isinstance(axes, np.ndarray):
         axes = axes.ravel()
@@ -97,7 +99,6 @@ def plot_mean_exp_growth_rate_distribution(args: dict):
             if temp_min_exp_growth_rate < min_exp_growth_rate
             else min_exp_growth_rate
         )
-
         # Prepare cmap and norm
         cmap, norm = g_plt_utils.get_custom_cmap(
             vmin=min_exp_growth_rate,
@@ -108,7 +109,7 @@ def plot_mean_exp_growth_rate_distribution(args: dict):
 
         scatter_plot = axes[i].scatter(
             save_u_ref_stores[:, 0, 0],
-            save_u_ref_stores[:, 0, 1],
+            # save_u_ref_stores[:, 0, 1],
             save_u_ref_stores[:, 0, 2],
             c=profile_mean_growth_rates[-1, :],
             alpha=0.4,
@@ -117,18 +118,33 @@ def plot_mean_exp_growth_rate_distribution(args: dict):
             norm=norm,
             cmap=cmap,
         )
-        axes[i].set_title(pl.Path(folder).name.split("_perturbations")[0])
-        axes[i].xaxis.set_ticklabels([])
-        axes[i].yaxis.set_ticklabels([])
-        axes[i].zaxis.set_ticklabels([])
+        # Prepare titles
+        folder_path = pl.Path(folder)
+        digits_in_name = lib_type_utils.get_digits_from_string(folder_path.name)
+        perturb_type = folder_path.name.split(
+            lib_type_utils.zpad_string(str(digits_in_name), n_zeros=2)
+        )[0]
+        # Take into account the _ in bv_eof
+        perturb_type = perturb_type.replace("_", "-")
+        if args["tolatex"]:
+            subtitle = f"$\\textnormal{{{perturb_type.upper()}}}^\\textnormal{{{digits_in_name + 1}}}$"
+        else:
+            subtitle = f"{perturb_type.upper()}{digits_in_name + 1}"
 
-    fig.subplots_adjust(right=0.8)
-    cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
-    fig.colorbar(scatter_plot, cax=cbar_ax)
+        axes[i].set_title(subtitle)
+        # axes[i].xaxis.set_ticklabels([])
+        # axes[i].yaxis.set_ticklabels([])
+        # axes[i].zaxis.set_ticklabels([])
+
+        # axes[i].view_init(elev=27.0, azim=-21)
+        # axes[i].xaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+        # axes[i].yaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+        # axes[i].zaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
 
     # Remove leftover axes
     for j in range(i + 1, len(axes)):
-        axes[j].remove()
+        axes[j].remove()  # Remove from figure
+        axes = np.delete(axes, j)  # Remove from array
 
     title = g_plt_utils.generate_title(
         args,
@@ -137,7 +153,29 @@ def plot_mean_exp_growth_rate_distribution(args: dict):
         detailed=False,
         title_suffix=pl.Path(folder).parent.name,
     )
-    fig.suptitle(title)
+    if not args["tolatex"]:
+        fig.suptitle(title)
+
+    label_axes: plt.Axes = fig.add_subplot(111, frame_on=False)
+    label_axes.tick_params(
+        labelcolor="none", bottom=False, left=False, right=False, top=False
+    )
+    label_axes.set_xlabel("x")
+    label_axes.set_ylabel("z")
+
+    # fig.subplots_adjust(bottom=0.2)
+    # cbar_ax = fig.add_axes([0.15, 0.15, 0.05, 0.7])
+    fig.colorbar(scatter_plot, ax=axes, shrink=0.5, location="right")
+
+    if args["tolatex"]:
+        plt_config.remove_legends(axes)
+
+    if args["save_fig"]:
+        g_plt_utils.save_figure(
+            args,
+            subpath="thesis_figures/results_and_analyses/l63/",
+            file_name="compare_mean_exp_growth_rate_dists",
+        )
 
 
 def plot_pert_vectors3D(args: dict, axes: plt.Axes = None):
@@ -338,7 +376,7 @@ def plot_pert_vectors3D(args: dict, axes: plt.Axes = None):
     axes.legend(loc="center right", bbox_to_anchor=(1.35, 0.5))
 
     if args["tolatex"]:
-        axes.get_legend().remove()
+        plt_config.remove_legends(axes)
         axes.ticklabel_format(style="plain")
         plt_config.adjust_axes(axes)
 

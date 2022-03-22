@@ -41,11 +41,12 @@ def default_figure_settings(args):
             "axes.spines.top": False,
             "font.family": "serif",
             "text.usetex": True,
+            "text.latex.preamble": r"\usepackage{amsmath} \usepackage{amssymb}",
         }
     )
 
 
-def adjust_axes(axes: Union[plt.Axes, List[plt.Axes]]):
+def adjust_axes(axes: Union[plt.Axes, List[plt.Axes], np.ndarray]):
     if isinstance(axes, list) or isinstance(axes, np.ndarray):
         for ax in axes:
             ax.set_title("")
@@ -53,7 +54,7 @@ def adjust_axes(axes: Union[plt.Axes, List[plt.Axes]]):
         axes.set_title("")
 
 
-def hide_axis_labels(axes):
+def hide_axis_labels(axes: Union[plt.Axes, List[plt.Axes], np.ndarray]):
     if isinstance(axes, list) or isinstance(axes, np.ndarray):
         for ax in axes:
             ax.set_xlabel("")
@@ -63,7 +64,7 @@ def hide_axis_labels(axes):
         axes.set_ylabel("")
 
 
-def hide_axis_ticks(axes):
+def hide_axis_ticks(axes: Union[plt.Axes, List[plt.Axes], np.ndarray]):
     if isinstance(axes, list) or isinstance(axes, np.ndarray):
         for ax in axes:
             ax.get_xaxis().set_ticks([])
@@ -76,6 +77,18 @@ def hide_axis_ticks(axes):
 def adjust_axes_to_subplot(axes):
     axes.set_xlabel("")
     axes.set_xticklabels([])
+
+
+def remove_legends(axes: Union[plt.Axes, List[plt.Axes], np.ndarray]):
+    if isinstance(axes, list) or isinstance(axes, np.ndarray):
+        for ax in axes:
+            try:
+                ax.get_legend().remove()
+            except AttributeError:
+                # If no legend -> continue
+                continue
+    else:
+        axes.get_legend().remove()
 
 
 def set_ytick_format(axes, fmt="%.0f"):

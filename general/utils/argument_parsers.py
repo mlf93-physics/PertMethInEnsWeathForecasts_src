@@ -642,6 +642,13 @@ class StandardPlottingArgParser:
             default=-100,
             help="Azimuthal angle in 3D plot",
         )
+        plot_kwargs_parser.add_argument(
+            "--exp_growth_type",
+            type=str,
+            default="instant",
+            choices=["instant", "mean"],
+            help="The analysis type of the exponential growth comparison",
+        )
 
 
 class VerificationArgParser:

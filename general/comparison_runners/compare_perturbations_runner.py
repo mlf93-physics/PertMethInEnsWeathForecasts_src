@@ -77,6 +77,9 @@ def generate_lvs(args: dict, exp_setup: dict):
 
     lv_runner(args, local_exp_setup)
 
+    # Reset submodel
+    cfg.MODEL.submodel = None
+
 
 def generate_bvs(args: dict, exp_setup: dict):
     """Generate the BVs according to the exp setup

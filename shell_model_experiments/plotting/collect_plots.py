@@ -12,26 +12,15 @@ python plotting/plot_data.py
 import sys
 
 sys.path.append("..")
-from pathlib import Path
-from typing import List
 
 import config as cfg
-import general.plotting.plot_data as g_plt_data
 from general.utils.module_import.type_import import *
 import general.utils.argument_parsers as a_parsers
-import general.utils.importing.import_data_funcs as g_import
-import general.utils.importing.import_perturbation_data as pt_import
 import general.utils.plot_utils as g_plt_utils
 import general.plotting.plot_config as plt_config
 import general.utils.user_interface as g_ui
-import matplotlib as mpl
 import matplotlib.pyplot as plt
-import matplotlib.ticker as mpl_ticker
-import numpy as np
 import shell_model_experiments.utils.util_funcs as sh_utils
-import shell_model_experiments.analyses.analyse_data as sh_analysis
-import shell_model_experiments.perturbations.normal_modes as sh_nm_estimator
-from mpl_toolkits import mplot3d
 from shell_model_experiments.params.params import ParamsStructType
 from shell_model_experiments.params.params import PAR
 import plot_data as sh_plot_data

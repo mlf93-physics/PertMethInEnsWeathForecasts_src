@@ -106,7 +106,7 @@ def update_compare_exp_folders(args):
                         if re.match(
                             fr"{item}(\d+_perturbations|_perturbations)", _dirs[i].name
                         )
-                    ]
+                    ][: args["n_runs_per_profile"]]
                 )
             for item in args["vectors"]:
                 _exp_folders.extend(

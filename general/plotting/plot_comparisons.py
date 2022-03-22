@@ -808,7 +808,6 @@ def plot_exp_growth_rate_comparison(args: dict):
     args : dict
         Run-time arguments
     """
-
     # args["endpoint"] = True
 
     e_utils.update_compare_exp_folders(args)
@@ -829,27 +828,20 @@ def plot_exp_growth_rate_comparison(args: dict):
 
         digits_in_name = lib_type_utils.get_digits_from_string(folder_path.name)
         if digits_in_name is not None:
+            if digits_in_name >= args["n_runs_per_profile"]:
+                continue
             if isinstance(digits_in_name, int):
-
                 perturb_type = folder_path.name.split(
                     lib_type_utils.zpad_string(str(digits_in_name), n_zeros=2)
                 )[0]
-                if not perturb_type == perturb_type_old:
-                    color = cmap_list[color_counter]
-                    _save_color = color
-                    perturb_type_old = perturb_type
-                    color_counter += 1
-                else:
-                    color = _save_color
-                    if digits_in_name >= args["n_runs_per_profile"]:
-                        continue
+                color = METHOD_COLORS[perturb_type]
 
                 linestyle = LINESTYLES[digits_in_name]
 
         else:
-            color = cmap_list[color_counter]
+            perturb_type = folder_path.name.split("_")[0]
+            color = METHOD_COLORS[perturb_type]
             linestyle = None
-            color_counter += 1
 
         # Set exp_folder
         args["exp_folder"] = folder
@@ -864,14 +856,15 @@ def plot_exp_growth_rate_comparison(args: dict):
             color=color,  # cmap_list[i],
             # zorder=zorder,
             linestyle=linestyle,
-            anal_type="instant",
+            anal_type=args["exp_growth_type"],
             plot_args=[],
             title_suffix=str(folder_path.parent),
         )
 
     if cfg.MODEL == Models.LORENTZ63:
-        lower_bound: float = -16
+        lower_bound: float = -6
         upper_bound: float = 4
+        axes.set_ylim(lower_bound, upper_bound)
         spacing: float = 2
         axes.set_yticks(
             np.linspace(
@@ -881,6 +874,22 @@ def plot_exp_growth_rate_comparison(args: dict):
                 endpoint=True,
             ),
             minor=False,
+        )
+
+    if args["tolatex"]:
+        plt_config.remove_legends(axes)
+        plt_config.adjust_axes(axes)
+
+    if args["save_fig"]:
+        if cfg.MODEL == Models.SHELL_MODEL:
+            subfolder = "shell"
+        elif cfg.MODEL == Models.LORENTZ63:
+            subfolder = "l63"
+
+        g_plt_utils.save_figure(
+            args,
+            subpath="thesis_figures/results_and_analyses/" + subfolder,
+            file_name="compare_instant_exp_growth_rate",
         )
 
 
