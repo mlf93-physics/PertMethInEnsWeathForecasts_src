@@ -317,7 +317,7 @@ def bv_pert_experiment(args: dict, local_exp_setup: dict):
     processes = []
 
     # Prepare arguments for perturbation run
-    args["n_runs_per_profile"] = local_exp_setup["n_vectors"]
+    args["n_runs_per_profile"] = local_exp_setup["n_runs_per_profile"]
     args["pert_mode"] = "bv"
     args["pert_vector_folder"] = pl.Path(
         local_exp_setup["folder_name"], local_exp_setup["vector_folder"]
@@ -491,7 +491,7 @@ def execute_pert_experiments(args: dict, exp_setup: dict):
 
     if "bv" in args["perturbations"] or "all" in args["perturbations"]:
         bv_pert_experiment(
-            copy.deepcopy(args), local_exp_setup | exp_setup["bv_gen_setup"]
+            copy.deepcopy(args), local_exp_setup | exp_setup["bv_pert_setup"]
         )
     if "bv_eof" in args["perturbations"] or "all" in args["perturbations"]:
         bv_eof_pert_experiment(

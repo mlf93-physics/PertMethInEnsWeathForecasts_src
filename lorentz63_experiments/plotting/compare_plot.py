@@ -16,6 +16,7 @@ import general.utils.arg_utils as a_utils
 from general.utils.module_import.type_import import *
 from general.plotting.plot_params import *
 import general.utils.running.runner_utils as r_utils
+import general.utils.util_funcs as g_utils
 import general.utils.experiments.exp_utils as e_utils
 import general.utils.importing.import_data_funcs as g_import
 import general.utils.plot_utils as g_plt_utils
@@ -42,13 +43,17 @@ def plot_mean_exp_growth_rate_distribution(args: dict):
     e_utils.update_compare_exp_folders(args)
 
     len_folders = len(args["exp_folders"])
-    num_subplot_rows = math.floor(len_folders / 2) + 1
-    num_subplot_cols = math.ceil(len_folders / num_subplot_rows)
+    num_subplot_cols = 3
+    num_subplot_rows = math.ceil(len_folders / num_subplot_cols)
+
+    # Define axis to plot on
+    method_axis = {"rd": 0, "nm": 1, "bv": 2, "bv_eof": 3, "sv": 6, "lv": 9, "rf": 12}
+    num_methods = 13
 
     # fig: plt.Figure = plt.figure()
     fig, axes = plt.subplots(
-        num_subplot_cols,
-        num_subplot_rows,
+        ncols=num_subplot_cols,
+        nrows=num_subplot_rows,
         sharex=True,
         sharey=True,
         # subplot_kw=dict(projection="3d"),
@@ -80,6 +85,14 @@ def plot_mean_exp_growth_rate_distribution(args: dict):
         if i == 0:
             save_u_ref_stores = np.array(u_ref_stores)
 
+        # Get indices of first run per profile
+        run_in_profile_array = g_utils.get_values_from_dicts(
+            header_dicts, "run_in_profile"
+        )
+        first_run_indices = np.where(
+            np.array(run_in_profile_array, dtype=np.int32) == 0
+        )[0]
+
         (
             _,
             profile_mean_growth_rates,
@@ -107,10 +120,27 @@ def plot_mean_exp_growth_rate_distribution(args: dict):
             cmap_handle=plt.cm.jet,
         )
 
-        scatter_plot = axes[i].scatter(
-            save_u_ref_stores[:, 0, 0],
-            # save_u_ref_stores[:, 0, 1],
-            save_u_ref_stores[:, 0, 2],
+        # Prepare info on perturbation
+        folder_path = pl.Path(folder)
+        digits_in_name = lib_type_utils.get_digits_from_string(folder_path.name)
+        # Get perturb_type
+        if digits_in_name is not None:
+            perturb_type = folder_path.name.split(
+                lib_type_utils.zpad_string(str(digits_in_name), n_zeros=2)
+            )[0]
+        else:
+            perturb_type = folder_path.name.split("_")[0]
+
+        if len(args["exp_folders"]) == num_methods:
+            offset = digits_in_name if digits_in_name is not None else 0
+            axis_index = method_axis[perturb_type] + offset
+        else:
+            axis_index = i
+
+        scatter_plot = axes[axis_index].scatter(
+            save_u_ref_stores[first_run_indices, 0, 0],
+            # save_u_ref_stores[first_run_indices, 0, 1],
+            save_u_ref_stores[first_run_indices, 0, 2],
             c=profile_mean_growth_rates[-1, :],
             alpha=0.4,
             zorder=5,
@@ -118,20 +148,22 @@ def plot_mean_exp_growth_rate_distribution(args: dict):
             norm=norm,
             cmap=cmap,
         )
+
         # Prepare titles
-        folder_path = pl.Path(folder)
-        digits_in_name = lib_type_utils.get_digits_from_string(folder_path.name)
-        perturb_type = folder_path.name.split(
-            lib_type_utils.zpad_string(str(digits_in_name), n_zeros=2)
-        )[0]
         # Take into account the _ in bv_eof
         perturb_type = perturb_type.replace("_", "-")
         if args["tolatex"]:
-            subtitle = f"$\\textnormal{{{perturb_type.upper()}}}^\\textnormal{{{digits_in_name + 1}}}$"
+            if digits_in_name is not None:
+                subtitle = f"$\\textnormal{{{perturb_type.upper()}}}^\\textnormal{{{digits_in_name + 1}}}$"
+            else:
+                subtitle = f"$\\textnormal{{{perturb_type.upper()}}}$"
         else:
-            subtitle = f"{perturb_type.upper()}{digits_in_name + 1}"
+            if digits_in_name is not None:
+                subtitle = f"{perturb_type.upper()}{digits_in_name + 1}"
+            else:
+                subtitle = f"{perturb_type.upper()}"
 
-        axes[i].set_title(subtitle)
+        axes[axis_index].set_title(subtitle)
         # axes[i].xaxis.set_ticklabels([])
         # axes[i].yaxis.set_ticklabels([])
         # axes[i].zaxis.set_ticklabels([])
@@ -142,7 +174,7 @@ def plot_mean_exp_growth_rate_distribution(args: dict):
         # axes[i].zaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
 
     # Remove leftover axes
-    for j in range(i + 1, len(axes)):
+    for j in range(len(axes) - 1, i, -1):
         axes[j].remove()  # Remove from figure
         axes = np.delete(axes, j)  # Remove from array
 
@@ -160,12 +192,21 @@ def plot_mean_exp_growth_rate_distribution(args: dict):
     label_axes.tick_params(
         labelcolor="none", bottom=False, left=False, right=False, top=False
     )
-    label_axes.set_xlabel("x")
     label_axes.set_ylabel("z")
+
+    # Set x labels and ticks of buttom axes
+    if len(args["exp_folders"]) == num_methods:
+        for offset in range(1, 3):
+            axes[method_axis["lv"] + offset].set_xlabel("x")
+            axes[method_axis["lv"] + offset].set_xticklabels(
+                axes[method_axis["rf"]].get_ticklabels()
+            )
 
     # fig.subplots_adjust(bottom=0.2)
     # cbar_ax = fig.add_axes([0.15, 0.15, 0.05, 0.7])
-    fig.colorbar(scatter_plot, ax=axes, shrink=0.5, location="right")
+    plt.subplots_adjust(left=0.07, hspace=0.530, right=0.95)
+    cax = fig.add_axes([0.35, 0.15, 0.5, 0.05])
+    fig.colorbar(scatter_plot, cax=cax, shrink=0.5, orientation="horizontal")
 
     if args["tolatex"]:
         plt_config.remove_legends(axes)

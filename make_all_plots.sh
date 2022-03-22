@@ -18,3 +18,6 @@ python plotting/compare_plot.py --n_profiles=1 --plot_type=pert_vectors3D --exp_
 
 echo "Make compare error norm plot"
 python ../general/plotting/collect_plot_comparison.py --plot_type=collect_error_norm_compare --exp_folder=compare_pert_error_norm --endpoint  --seed_mode --n_runs_per_profile=30 --tolatex -lf two_panel --right_spine --notight --save_fig --noplot
+
+echo "Make conceptual visualisations"
+python ../general/plotting/conceptual_visualizations.py --plot_type=breed_method -lf horizontal_panel --tolatex --save_fig --noplot
