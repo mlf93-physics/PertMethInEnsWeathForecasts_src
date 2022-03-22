@@ -60,6 +60,7 @@ def make_spec_energy_howmoller_plot(args):
 
     if args["save_fig"]:
         g_plt_utils.save_figure(
+            args,
             subpath="thesis_figures/models/",
             file_name="sh_spec_energy_howmoller",
         )
@@ -77,6 +78,7 @@ def make_lyapunov_anal_plot(args):
 
     if args["save_fig"]:
         g_plt_utils.save_figure(
+            args,
             subpath="thesis_figures/models/",
             file_name="sh_eigenmode_analysis",
         )

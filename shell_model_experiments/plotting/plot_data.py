@@ -494,7 +494,11 @@ def plot_energy(args=None, axes=None, plot_args=["detailed_title"], zorder=0):
 
     # plot_energy_spectrum(u_data, header_dict, args=args)
     axes = g_plt_data.plot_energy(
-        args, axes=axes, plot_args=plot_args, zorder=zorder, linewidth=LINEWIDTH
+        args,
+        axes=axes,
+        plot_args=plot_args,
+        zorder=zorder,
+        linewidth=LINEWIDTHS["thin"],
     )
 
     if args["tolatex"]:

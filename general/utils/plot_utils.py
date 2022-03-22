@@ -138,6 +138,7 @@ def load_interactive_fig(args):
 
 
 def save_figure(
+    args,
     subpath: pl.Path = None,
     file_name="figure1",
     fig: plt.Figure = None,
@@ -145,7 +146,8 @@ def save_figure(
 ):
     print("\nSaving figure...\n")
     # Prepare layout
-    plt.tight_layout(rect=tight_layout_rect)
+    if not args["notight"]:
+        plt.tight_layout(rect=tight_layout_rect)
 
     if subpath is None:
         full_path = FIG_ROOT

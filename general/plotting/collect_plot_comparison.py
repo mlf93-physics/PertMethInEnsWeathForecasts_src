@@ -80,11 +80,11 @@ def collect_error_norm_plots(args):
     g_plt_utils.add_subfig_labels(axes)
 
     if cfg.MODEL == cfg.Models.LORENTZ63:
-        ylabel_suffix = "$||\\mathbf{x} - \\mathbf{x}_{ref}||$"
-        ylabel_right_suffix = "$\\frac{1}{2}\\sum_i {x}_{i, ref}^2$"
+        ylabel_suffix = "$||\\mathbf{x}'||$"
+        ylabel_right = "x"
     elif cfg.MODEL == cfg.Models.SHELL_MODEL:
-        ylabel_suffix = "$||\\mathbf{u} - \\mathbf{u}_{ref}||$"
-        ylabel_right_suffix = "$\\frac{1}{2} u_{n, ref} u_{n, ref}^*$"
+        ylabel_suffix = "$||\\mathbf{u}'||$"
+        ylabel_right = "Energy, $\\frac{1}{2} u_{n, ref} u_{n, ref}^*$"
 
     label_axes: plt.Axes = fig.add_subplot(111, frame_on=False)
     label_axes.tick_params(
@@ -97,7 +97,7 @@ def collect_error_norm_plots(args):
     label_axes_right.tick_params(
         labelcolor="none", bottom=False, left=False, right=False, top=False
     )
-    label_axes_right.set_ylabel("Energy, " + ylabel_right_suffix, labelpad=30)
+    label_axes_right.set_ylabel(ylabel_right, labelpad=30)
 
     plt_config.hide_axis_ticks([label_axes, label_axes_right])
 
@@ -106,10 +106,11 @@ def collect_error_norm_plots(args):
         label_axes.spines[spine].set_visible(False)
         label_axes_right.spines[spine_right_axes].set_visible(False)
 
-    fig.subplots_adjust(left=0.120, bottom=0.120, right=0.880, top=0.940)
+    fig.subplots_adjust(left=0.120, bottom=0.155, right=0.880, top=0.935)
 
     if args["save_fig"]:
         g_plt_utils.save_figure(
+            args,
             subpath="thesis_figures/results_and_analyses/l63/",
             file_name="compare_error_norm",
         )

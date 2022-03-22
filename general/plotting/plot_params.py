@@ -4,7 +4,7 @@ __all__ = [
     "MARKERS",
     "SUBFIG_LABELS",
     "METHOD_COLORS",
-    "LINEWIDTH",
+    "LINEWIDTHS",
 ]
 
 import pathlib as pl
@@ -26,7 +26,7 @@ METHOD_COLORS = {
     "rf": sb.color_palette()[6],  # pink
 }
 
-LINEWIDTH = 1.5
+LINEWIDTHS = {"thin": 1.0, "medium": 1.5}
 
 LINESTYLES = [
     "-",

@@ -566,6 +566,7 @@ class StandardPlottingArgParser:
                 "normal",
                 "horizontal_panel",
                 "horizontal_panel_with_cbar",
+                "two_panel",
                 "three_panel",
                 "quad_item",
                 "two_vertical_panel",

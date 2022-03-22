@@ -344,6 +344,7 @@ def plot_pert_vectors3D(args: dict, axes: plt.Axes = None):
 
     if args["save_fig"]:
         g_plt_utils.save_figure(
+            args,
             subpath="thesis_figures/results_and_analyses/l63/",
             file_name=args["save_fig_name"],
         )
@@ -516,6 +517,7 @@ def plot_pert_vectors2D(args, axes: plt.Axes = None):
     axes.legend(loc="center right", bbox_to_anchor=(1.35, 0.5))
 
     g_plt_utils.save_figure(
+        args,
         subpath=pl.Path(
             "lorentz63_experiments/compare_perturbations/perturbation_vectors_offset0.01_series/"
         ),

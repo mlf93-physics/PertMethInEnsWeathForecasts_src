@@ -133,12 +133,12 @@
     },
     "ComparePertErrorNorm": {
         "general": {
-            "folder_name": "compare_pert_error_norm",
+            "folder_name": "compare_pert_error_norm_v3",
             "vector_folder": "vectors",
             "perturbation_folder": "perturbations",
             "sub_exp_folder": "perturb_data",
             "eval_times": [
-                10006.3
+                10008
             ],
             "n_units": 10,
             "unit_offset": 0.1

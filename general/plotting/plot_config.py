@@ -7,6 +7,10 @@ import matplotlib.ticker as mpl_ticker
 plt.rcParams["savefig.dpi"] = 300
 
 
+def two_panel_figure():
+    plt.rcParams["figure.figsize"] = [5.39749, 3]
+
+
 def three_panel_figure():
     plt.rcParams["figure.figsize"] = [5.39749, 5.3]
 
@@ -85,6 +89,8 @@ def adjust_default_fig_axes_settings(args):
             horizontal_panel_figure()
         if args["latex_format"] == "horizontal_panel_with_cbar":
             horizontal_panel_with_cbar_figure()
+        if args["latex_format"] == "two_panel":
+            two_panel_figure()
         if args["latex_format"] == "three_panel":
             three_panel_figure()
         if args["latex_format"] == "normal":

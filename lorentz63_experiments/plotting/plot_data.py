@@ -144,7 +144,7 @@ def split_attractor_in_wings(u_data, axes=None):
     )
 
 
-def plot_velocities(args):
+def plot_velocities(args, axes=None):
     """Plot the velocities of the reference data
 
     Parameters
@@ -156,10 +156,11 @@ def plot_velocities(args):
     # Import reference data
     time, u_data, header_dict = g_import.import_ref_data(args=args)
 
-    fig, axes = plt.subplots(nrows=1, ncols=1, sharex=True, figsize=(6, 2))
+    if axes is None:
+        fig, axes = plt.subplots(nrows=1, ncols=1, sharex=True, figsize=(6, 2))
 
     # for i, ax in enumerate(axes):
-    axes.plot(time - time[0], u_data[:, 0], "k-")
+    axes.plot(time, u_data[:, 0], "k-")
     axes.set_xlabel("Time")
     axes.set_ylabel("x")
 
@@ -177,13 +178,15 @@ def plot_energy(args, axes=None, zorder=0, alpha=1):
 
     # Import reference data
     time, u_data, header_dict = g_import.import_ref_data(args=args)
-    energy = 1 / 2 * np.sum(u_data ** 2, axis=1)
+    energy = u_data[:, 0]  # 1 / 2 * np.sum(u_data ** 2, axis=1)
 
     # Prepare axes
     if axes is None:
         axes = plt.gca()
 
-    axes.plot(time, energy, "k-", zorder=zorder, alpha=alpha, linewidth=LINEWIDTH)
+    axes.plot(
+        time, energy, "k-", zorder=zorder, alpha=alpha, linewidth=LINEWIDTHS["thin"]
+    )
     axes.set_xlabel("Time")
     axes.set_ylabel("Energy, $\\frac{1}{2}\\sum_i {x}_{i, ref}$")
     axes.set_title("Energy vs time")

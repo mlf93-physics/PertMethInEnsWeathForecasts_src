@@ -660,7 +660,7 @@ def plot_error_norm_comparison(args: dict, axes=None):
             axes=axes[0],
             cmap_list=[color],
             linestyle=linestyle,
-            linewidth=LINEWIDTH,
+            linewidth=LINEWIDTHS["thin"],
             legend_on=False,
             normalize_start_time=False,
             plot_args=[],
@@ -693,7 +693,7 @@ def plot_error_norm_comparison(args: dict, axes=None):
             plot_args=[],
         )
     elif cfg.MODEL == Models.LORENTZ63:
-        l63_plot.plot_energy(args, axes=axes[1], zorder=0)
+        l63_plot.plot_velocities(args, axes=axes[1])
 
     axes[0].set_zorder(10)
     axes[0].patch.set_visible(False)
