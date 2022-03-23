@@ -130,7 +130,7 @@ def imported_sorted_perturbation_info(folder_name, args, search_pattern="*.csv")
         )
 
     # Import headers and extract info
-    for perturb_file in perturb_file_names:
+    for perturb_file in enumerate(perturb_file_names):
         # Import perturbation header info
         perturb_header_dict = import_header(file_name=perturb_file)
 

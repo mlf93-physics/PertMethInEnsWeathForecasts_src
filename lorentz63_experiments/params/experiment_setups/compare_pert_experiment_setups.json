@@ -181,7 +181,7 @@
     },
     "ComparePertExpGrowthRate": {
         "general": {
-            "folder_name": "compare_pert_exp_growth_rate_test",
+            "folder_name": "compare_pert_exp_growth_rate",
             "vector_folder": "vectors",
             "perturbation_folder": "perturbations",
             "sub_exp_folder": "perturb_data",

@@ -67,7 +67,6 @@ def plot_mean_exp_growth_rate_distribution(args: dict):
 
     max_exp_growth_rate = -np.inf
     min_exp_growth_rate = np.inf
-    save_u_ref_stores = None
 
     for i, folder in enumerate(args["exp_folders"]):
         # Set exp_folder
@@ -82,8 +81,8 @@ def plot_mean_exp_growth_rate_distribution(args: dict):
         ) = g_import.import_perturbation_velocities(
             args, search_pattern="*perturb*.csv"
         )
-        if i == 0:
-            save_u_ref_stores = np.array(u_ref_stores)
+
+        u_ref_stores = np.array(u_ref_stores)
 
         # Get indices of first run per profile
         run_in_profile_array = g_utils.get_values_from_dicts(
@@ -97,7 +96,7 @@ def plot_mean_exp_growth_rate_distribution(args: dict):
             _,
             profile_mean_growth_rates,
         ) = g_anal.execute_mean_exp_growth_rate_vs_time_analysis(
-            args, u_stores, header_dicts=header_dicts, anal_type="mean"
+            args, u_stores, header_dicts=header_dicts, anal_type=args["exp_growth_type"]
         )
 
         temp_max_exp_growth_rate = np.max(profile_mean_growth_rates[-1, :])
@@ -138,13 +137,13 @@ def plot_mean_exp_growth_rate_distribution(args: dict):
             axis_index = i
 
         scatter_plot = axes[axis_index].scatter(
-            save_u_ref_stores[first_run_indices, 0, 0],
-            # save_u_ref_stores[first_run_indices, 0, 1],
-            save_u_ref_stores[first_run_indices, 0, 2],
+            u_ref_stores[first_run_indices, 0, 0],
+            u_ref_stores[first_run_indices, 0, 2],
             c=profile_mean_growth_rates[-1, :],
-            alpha=0.4,
+            # alpha=0.4,
             zorder=5,
             marker=".",
+            s=4,
             norm=norm,
             cmap=cmap,
         )
@@ -164,14 +163,6 @@ def plot_mean_exp_growth_rate_distribution(args: dict):
                 subtitle = f"{perturb_type.upper()}"
 
         axes[axis_index].set_title(subtitle)
-        # axes[i].xaxis.set_ticklabels([])
-        # axes[i].yaxis.set_ticklabels([])
-        # axes[i].zaxis.set_ticklabels([])
-
-        # axes[i].view_init(elev=27.0, azim=-21)
-        # axes[i].xaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
-        # axes[i].yaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
-        # axes[i].zaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
 
     # Remove leftover axes
     for j in range(len(axes) - 1, i, -1):
@@ -181,7 +172,7 @@ def plot_mean_exp_growth_rate_distribution(args: dict):
     title = g_plt_utils.generate_title(
         args,
         header_dict=header_dicts[0],
-        title_header="Mean exp. growth rate distribution",
+        title_header=f"{args['exp_growth_type'].capitalize()} exp. growth rate distribution",
         detailed=False,
         title_suffix=pl.Path(folder).parent.name,
     )
@@ -198,15 +189,25 @@ def plot_mean_exp_growth_rate_distribution(args: dict):
     if len(args["exp_folders"]) == num_methods:
         for offset in range(1, 3):
             axes[method_axis["lv"] + offset].set_xlabel("x")
-            axes[method_axis["lv"] + offset].set_xticklabels(
-                axes[method_axis["rf"]].get_ticklabels()
-            )
+            axes[method_axis["lv"] + offset].xaxis.set_tick_params(labelbottom=True)
+
+    axes[method_axis["rf"]].set_xlabel("x")
 
     # fig.subplots_adjust(bottom=0.2)
     # cbar_ax = fig.add_axes([0.15, 0.15, 0.05, 0.7])
-    plt.subplots_adjust(left=0.07, hspace=0.530, right=0.95)
-    cax = fig.add_axes([0.35, 0.15, 0.5, 0.05])
-    fig.colorbar(scatter_plot, cax=cax, shrink=0.5, orientation="horizontal")
+    plt.subplots_adjust(
+        top=0.956, bottom=0.08, left=0.08, right=0.995, hspace=0.6, wspace=0.13
+    )
+    cax = fig.add_axes([0.4, 0.12, 0.5, 0.05])
+    fig.colorbar(
+        scatter_plot,
+        cax=cax,
+        shrink=0.5,
+        orientation="horizontal",
+        label="$\\kappa(t)$"
+        if args["exp_growth_type"].lower() == "instant"
+        else "$\\kappa_{{mean}}(t_0)$",
+    )
 
     if args["tolatex"]:
         plt_config.remove_legends(axes)
@@ -215,7 +216,7 @@ def plot_mean_exp_growth_rate_distribution(args: dict):
         g_plt_utils.save_figure(
             args,
             subpath="thesis_figures/results_and_analyses/l63/",
-            file_name="compare_mean_exp_growth_rate_dists",
+            file_name=f"compare_{args['exp_growth_type'].lower()}_exp_growth_rate_dists",
         )
 
 

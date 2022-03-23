@@ -19,5 +19,11 @@ python plotting/compare_plot.py --n_profiles=1 --plot_type=pert_vectors3D --exp_
 echo "Make compare error norm plot"
 python ../general/plotting/collect_plot_comparison.py --plot_type=collect_error_norm_compare --exp_folder=compare_pert_error_norm --endpoint  --seed_mode --n_runs_per_profile=30 --tolatex -lf two_panel --right_spine --notight --save_fig --noplot
 
+echo "Make compare exp. growth rate dists plot"
+python plotting/compare_plot.py  --plot_type=growth_rate_dist --exp_folder=compare_pert_exp_growth_rate_dists --seed_mode --n_runs_per_profile=3 -pt all --tolatex --notight -lf normal_large --save_fig --noplot plot_kwargs --exp_growth_type=mean
+
+echo "Make compare exp. growth rates plot"
+python ../general/plotting/plot_comparisons.py --plot_type=exp_growth_rate_compare --exp_folder=compare_pert_exp_growth_rate --endpoint  --seed_mode --n_runs_per_profile=3 -pt all -lf normal_small --tolatex --save_fig --noplot plot_kwargs --exp_growth_type=instant
+
 echo "Make conceptual visualisations"
 python ../general/plotting/conceptual_visualizations.py --plot_type=breed_method -lf horizontal_panel --tolatex --save_fig --noplot

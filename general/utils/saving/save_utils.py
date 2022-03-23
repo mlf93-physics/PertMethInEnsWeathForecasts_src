@@ -70,6 +70,8 @@ def args_to_string(args):
     if args is None:
         return ""
 
+    excluded_keys = ["start_times"]
+
     # Filter out arguments which are present in params struct if running the shell
     # model
     if cfg.MODEL == Models.SHELL_MODEL:
@@ -77,7 +79,9 @@ def args_to_string(args):
             f"{key}={value}" for key, value in args.items() if not hasattr(PAR_SH, key)
         ]
     elif cfg.MODEL == Models.LORENTZ63:
-        arg_str_list = [f"{key}={value}" for key, value in args.items()]
+        arg_str_list = [
+            f"{key}={value}" for key, value in args.items() if key not in excluded_keys
+        ]
 
     arg_str = ", ".join(arg_str_list)
 

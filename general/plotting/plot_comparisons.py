@@ -843,6 +843,8 @@ def plot_exp_growth_rate_comparison(args: dict):
             color = METHOD_COLORS[perturb_type]
             linestyle = None
 
+        print("perturb_type", perturb_type)
+
         # Set exp_folder
         args["exp_folder"] = folder
 
@@ -889,7 +891,7 @@ def plot_exp_growth_rate_comparison(args: dict):
         g_plt_utils.save_figure(
             args,
             subpath="thesis_figures/results_and_analyses/" + subfolder,
-            file_name="compare_instant_exp_growth_rate",
+            file_name="compare_instant_exp_growth_rates",
         )
 
 

@@ -563,7 +563,8 @@ class StandardPlottingArgParser:
             "-lf",
             "--latex_format",
             choices=[
-                "normal",
+                "normal_small",
+                "normal_large",
                 "horizontal_panel",
                 "horizontal_panel_with_cbar",
                 "two_panel",

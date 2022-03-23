@@ -112,8 +112,10 @@ def plot_exp_growth_rate_vs_time(
         detailed="detailed_title" in plot_args,
     )
     axes.set_title(title)
-    axes.set_xlabel("Time")
-    axes.set_ylabel("Exp. growth rate, $\\lambda$")
+    axes.set_xlabel("$t$")
+    axes.set_ylabel(
+        "$\\kappa(t)$" if anal_type.lower() == "instant" else "$\\kappa_{{mean}}(t_0)$"
+    )
 
 
 def plot_error_norm_vs_time(
