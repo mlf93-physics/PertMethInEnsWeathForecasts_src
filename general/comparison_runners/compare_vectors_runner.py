@@ -22,6 +22,7 @@ import general.utils.user_interface as g_ui
 from general.params.experiment_licences import Experiments as exp
 from general.params.model_licences import Models
 from general.runners.breed_vector_runner import main as bv_runner
+from general.analyses.breed_vector_eof_analysis import main as bv_eof_analyser
 from general.runners.lyapunov_vector_runner import main as lv_runner
 from general.runners.adj_lyapunov_vector_runner import main as adj_lv_runner
 from general.runners.singular_vector_lanczos_runner import main as sv_runner
@@ -80,6 +81,41 @@ def generate_bvs(args: dict, exp_setup: dict):
         local_exp_setup["integration_time"] = iw * params.stt
 
         bv_runner(args, local_exp_setup)
+
+
+def generate_bv_eofs(args: dict, exp_setup: dict):
+    """Generate the BV-EOFs according to the exp setup
+
+    Parameters
+    ----------
+    args : dict
+        Run-time arguments
+    exp_setup : dict
+        Experiment setup
+    """
+    print(f"{col.Fore.GREEN}BV-EOF GENERATION{col.Fore.RESET}")
+    # Update licence
+    cfg.LICENCE = exp.BREEDING_EOF_VECTORS
+
+    # Get subset of experiment setup
+    local_exp_setup = exp_setup["general"] | exp_setup["bv_eof_gen_setup"]
+    args["n_profiles"] = local_exp_setup["n_units"]
+    args["n_runs_per_profile"] = local_exp_setup["n_vectors"]
+    args["pert_vector_folder"] = pl.Path(
+        local_exp_setup["folder_name"], local_exp_setup["vector_folder"]
+    )
+
+    for iw in local_exp_setup["iws"]:
+        iw_str: str = lib_type_utils.zpad_string(str(iw), n_zeros=3)
+        # Set local args params
+        args["out_exp_folder"] = pl.Path(
+            local_exp_setup["folder_name"],
+            local_exp_setup["vector_folder"],
+            f"bv_eof_vectors_iw{iw_str}",
+        )
+        args["exp_folder"] = f"bv_vectors_iw{iw_str}"
+
+        bv_eof_analyser(args, exp_setup=local_exp_setup)
 
 
 def generate_lvs(args: dict, exp_setup: dict):
@@ -253,6 +289,8 @@ def generate_vectors(args: dict, exp_setup: dict):
 
     if "bv" in args["vectors"] or "all" in args["vectors"]:
         generate_bvs(copy.deepcopy(args), copy.deepcopy(exp_setup))
+    if "bv_eof" in args["vectors"] or "all" in args["vectors"]:
+        generate_bv_eofs(copy.deepcopy(args), copy.deepcopy(exp_setup))
     if "lv" in args["vectors"] or "all" in args["vectors"]:
         generate_lvs(copy.deepcopy(args), copy.deepcopy(exp_setup))
     if "alv" in args["vectors"] or "all" in args["vectors"]:

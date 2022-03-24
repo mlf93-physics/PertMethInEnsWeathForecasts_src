@@ -274,5 +274,53 @@
         "pert_setup": {
             "time_to_run": 0.1
         }
+    },
+    "ComparePertVectorsOnTrajectory": {
+        "general": {
+            "folder_name": "compare_pert_vectors_on_trajectory",
+            "vector_folder": "vectors",
+            "perturbation_folder": "perturbations",
+            "sub_exp_folder": "perturb_data",
+            "eval_times": [
+                10007.8
+            ],
+            "n_units": 140,
+            "unit_offset": 0.01
+        },
+        "lv_gen_setup": {
+            "integration_time": 4.0,
+            "n_cycles": 5,
+            "n_vectors": 3
+        },
+        "bv_gen_setup": {
+            "integration_time": 0.1,
+            "n_cycles": 4,
+            "n_vectors": 8
+        },
+        "bv_eof_gen_setup": {
+            "sub_exp_folder": "perturb_data",
+            "n_vectors": 3
+        },
+        "sv_gen_setup": {
+            "integration_time": 0.1,
+            "n_vectors": 3,
+            "n_lanczos_iterations": 1,
+            "n_model_iterations": 1
+        },
+        "rd_pert_setup": {
+            "n_runs_per_profile": 3
+        },
+        "nm_pert_setup": {
+            "n_runs_per_profile": 3
+        },
+        "bv_pert_setup": {
+            "n_runs_per_profile": 3
+        },
+        "rf_pert_setup": {
+            "n_runs_per_profile": 3
+        },
+        "pert_setup": {
+            "time_to_run": 0.1
+        }
     }
 }

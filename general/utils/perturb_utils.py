@@ -112,7 +112,7 @@ def calculate_perturbations(
 
 
 def rescale_perturbations(
-    perturb_data: np.ndarray, args: dict, raw_perturbations: bool = False
+    perturb_data: np.ndarray, args: dict, return_raw_perturbations: bool = False
 ) -> np.ndarray:
     """Rescale a set of perturbations to the seeked error norm relative to
     the reference data
@@ -123,7 +123,7 @@ def rescale_perturbations(
         The perturbations that are rescaled
     args : dict
         Run-time arguments
-    raw_perturbations : bool, optional
+    return_raw_perturbations : bool, optional
         If the raw perturbations should be returned instead of the perturbations
         added to the u_init_profiles, by default False
 
@@ -146,18 +146,15 @@ def rescale_perturbations(
         mode="constant",
     )
 
-    if not raw_perturbations:
-        # Import reference data
-        (
-            u_init_profiles,
-            _,
-            _,
-        ) = g_import.import_start_u_profiles(args=args)
+    # Import reference data
+    (
+        u_init_profiles,
+        _,
+        _,
+    ) = g_import.import_start_u_profiles(args=args)
 
-        # Diff data
-        diff_data = perturb_data.T - u_init_profiles
-    else:
-        diff_data = perturb_data.T
+    # Diff data
+    diff_data = perturb_data.T - u_init_profiles
 
     # Rescale data
     rescaled_data = (
@@ -172,14 +169,14 @@ def rescale_perturbations(
             np.linalg.norm(rescaled_data[:, 0] - rescaled_data[:, 1], axis=0),
         )
 
-    if not raw_perturbations:
+    if not return_raw_perturbations:
         # Add rescaled data to u_init_profiles
-        u_init_profiles += rescaled_data
+        out_profiles = u_init_profiles + rescaled_data
     else:
         # Return raw rescaled perturbations
-        u_init_profiles = rescaled_data
+        out_profiles = rescaled_data
 
-    return u_init_profiles
+    return out_profiles
 
 
 def generate_rd_perturbations() -> np.ndarray:

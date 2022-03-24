@@ -234,6 +234,7 @@ class PerturbationVectorArgSetup:
         # Add arguments
         self._parser.add_argument("--pert_vector_folder", default="", type=str)
         self._parser.add_argument("--specific_start_vector", default=0, type=int)
+        self._parser.add_argument("--bv_raw_perts", action="store_true")
 
 
 class PerturbationArgSetup:

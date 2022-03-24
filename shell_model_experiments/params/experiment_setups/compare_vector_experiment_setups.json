@@ -8,7 +8,7 @@
             "eval_times": [
                 8.95
             ],
-            "n_units": 131,
+            "n_units": 24,
             "iws": [
                 2,
                 4,
@@ -26,6 +26,62 @@
         },
         "bv_gen_setup": {
             "n_cycles": 8,
+            "n_vectors": 20
+        },
+        "lv_gen_setup": {
+            "integration_time": 0.01,
+            "n_cycles": 10,
+            "n_vectors": 20
+        },
+        "sv_gen_setup": {
+            "n_vectors": 20,
+            "n_lanczos_iterations": 1,
+            "n_model_iterations": 1
+        },
+        "fsv_gen_setup": {
+            "n_vectors": 20,
+            "n_lanczos_iterations": 1,
+            "n_model_iterations": 1
+        }
+    },
+    "CompareITRun02": {
+        "general": {
+            "folder_name": "compare_vecs_bv_to_lv_ncycles4_examine_linear_regime_v1_new",
+            "vector_folder": "vectors",
+            "perturbation_folder": "perturbations",
+            "sub_exp_folder": "perturb_data",
+            "eval_times": [
+                8.95
+            ],
+            "n_units": 100,
+            "iws": [
+                2,
+                4,
+                8,
+                12,
+                16,
+                20,
+                24,
+                28,
+                32,
+                40,
+                44,
+                48,
+                52,
+                56,
+                60,
+                64,
+                68,
+                72,
+                78
+            ],
+            "unit_offset": 1.0
+        },
+        "bv_gen_setup": {
+            "n_cycles": 8,
+            "n_vectors": 20
+        },
+        "bv_eof_gen_setup": {
             "n_vectors": 20
         },
         "lv_gen_setup": {

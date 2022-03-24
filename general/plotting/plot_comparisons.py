@@ -259,8 +259,8 @@ def plt_vec_compared_to_lv(args, axes: plt.Axes = None):
         vector_folder_units, header_values = prepare_vector_folder_units(
             args,
             vector=vector,
-            raw_perturbations=not vector == "bv",
-            force_no_ref_import=not vector == "bv",
+            raw_perturbations=True,
+            force_no_ref_import=True,
             dtype=np.complex128
             if "sv" in vector
             else sparams.dtype,  # Both sv's and fsv's
@@ -296,7 +296,7 @@ def plt_vec_compared_to_lv(args, axes: plt.Axes = None):
                     if vector in ["lv", "alv"]:
                         continue
 
-                    if vector in ["bv", "sv"]:
+                    if vector in ["bv", "bv_eof", "sv"]:
                         if "lv" in save_vectors:
                             orthogonality_dict[vector][
                                 n, i, j, :
@@ -350,7 +350,7 @@ def plt_vec_compared_to_lv(args, axes: plt.Axes = None):
                 mean_vector_adj_lv_orthogonality_dict[vector] = np.mean(
                     np.abs(adj_orthogonality_dict[vector]), axis=2
                 )
-        if vector in ["bv"]:
+        if vector in ["bv", "bv_eof"]:
             if "lv" in save_vectors:
                 mean_vector_lv_orthogonality_dict[vector] = np.mean(
                     np.mean(np.abs(orthogonality_dict[vector]), axis=3), axis=2
@@ -367,7 +367,7 @@ def plt_vec_compared_to_lv(args, axes: plt.Axes = None):
     # Plot orthogonality vs iw
     for vector in save_vectors:
         # Plot BVs vs LVs
-        if vector == "bv":
+        if vector in ["bv", "bv_eof"]:
             # Get cmap
             cmap_list, _ = g_plt_utils.get_non_repeating_colors(n_colors=n_lvs)
             axes.set_prop_cycle("color", cmap_list)
@@ -381,7 +381,7 @@ def plt_vec_compared_to_lv(args, axes: plt.Axes = None):
             if "alv" in save_vectors:
                 vector_vs_alv_lines = axes.plot(
                     iw_values,
-                    mean_vector_adj_lv_orthogonality_dict[vector],
+                    mean_vector_adj_lv_orthogonality_dict[vector].T,
                     linestyle="dashed",
                 )
                 vector_vs_lines.append(vector_vs_alv_lines)

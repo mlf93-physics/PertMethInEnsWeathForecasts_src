@@ -172,5 +172,50 @@
         "pert_setup": {
             "time_to_run": 0.01
         }
-    }
+    },
+    "CompareLowPredRegime0.01_temp": {
+        "general": {
+            "folder_name": "test_lv_exp_growth_rates",
+            "vector_folder": "vectors",
+            "perturbation_folder": "perturbations",
+            "sub_exp_folder": "perturb_data",
+            "eval_times": [
+                8.95
+            ],
+            "n_units": 60,
+            "unit_offset": 0.01
+        },
+        "lv_gen_setup": {
+            "integration_time": 0.01,
+            "n_cycles": 1,
+            "n_vectors": 20
+        },
+        "bv_gen_setup": {
+            "integration_time": 0.01,
+            "n_cycles": 4,
+            "n_vectors": 20
+        },
+        "bv_eof_gen_setup": {
+            "sub_exp_folder": "perturb_data",
+            "n_vectors": 20
+        },
+        "sv_gen_setup": {
+            "integration_time": 0.01,
+            "n_vectors": 20,
+            "n_lanczos_iterations": 1,
+            "n_model_iterations": 1
+        },
+        "rd_pert_setup": {
+            "n_runs_per_profile": 20
+        },
+        "nm_pert_setup": {
+            "n_runs_per_profile": 20
+        },
+        "rf_pert_setup": {
+            "n_runs_per_profile": 20
+        },
+        "pert_setup": {
+            "time_to_run": 0.01
+        }
+    },
 }

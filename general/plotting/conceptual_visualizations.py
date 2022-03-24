@@ -33,26 +33,33 @@ def visualize_breeding_method(args):
         0, cycle_length * n_cycles, n_points_per_cycle * n_cycles
     )
 
-    perturbed_fc = one_cycle_time_array ** 2 + 0.25
+    perturbed_fc = one_cycle_time_array ** 2
+
+    coefficients = np.linspace(0.2, 1.0, n_cycles, endpoint=True)
 
     # Make axes
     axes = plt.axes()
 
     for i in range(n_cycles):
+        adjusted_perturbed_fc = coefficients[i] * perturbed_fc + 0.25
         # Plot breed cycles
-        axes.plot(one_cycle_time_array + i * cycle_length, perturbed_fc, "k--")
+        axes.plot(
+            one_cycle_time_array + i * cycle_length,
+            adjusted_perturbed_fc,
+            "k--",
+        )
         # Plot vertical line indicators
         xpoint = one_cycle_time_array[-1] + i * cycle_length
         axes.plot(
             np.ones(2) * xpoint,
-            [0, perturbed_fc[-1]],
+            [0, adjusted_perturbed_fc[-1]],
             "k",
             linestyle="dotted",
             linewidth=1,
         )
         axes.plot(
             np.ones(2) * i * cycle_length,
-            [0, perturbed_fc[0]],
+            [0, adjusted_perturbed_fc[0]],
             "k",
             linestyle="dotted",
             linewidth=1,
@@ -66,6 +73,7 @@ def visualize_breeding_method(args):
     axes.spines["right"].set_visible(False)
     axes.set_yticklabels([])
     axes.set_yticks([])
+    axes.set_ylabel("Error")
     xticks = np.arange(-(n_cycles + 1), 1, dtype=np.int32)
     # axes.yaxis.set_major_locator(mticker.FixedLocator(xticks))
     axes.set_xticklabels(xticks)

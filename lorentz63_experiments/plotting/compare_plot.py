@@ -191,7 +191,7 @@ def plot_mean_exp_growth_rate_distribution(args: dict):
             axes[method_axis["lv"] + offset].set_xlabel("x")
             axes[method_axis["lv"] + offset].xaxis.set_tick_params(labelbottom=True)
 
-    axes[method_axis["rf"]].set_xlabel("x")
+        axes[method_axis["rf"]].set_xlabel("x")
 
     # fig.subplots_adjust(bottom=0.2)
     # cbar_ax = fig.add_axes([0.15, 0.15, 0.05, 0.7])
@@ -227,9 +227,6 @@ def plot_pert_vectors3D(args: dict, axes: plt.Axes = None):
 
     e_utils.update_compare_exp_folders(args)
 
-    # Get colors
-    color_list = plt.rcParams["axes.prop_cycle"].by_key()["color"]
-
     n_runs_per_profile_dict: dict = {
         "rd": 500,
         "nm": 500,
@@ -249,7 +246,10 @@ def plot_pert_vectors3D(args: dict, axes: plt.Axes = None):
         "rf": ".",
     }
 
-    perturbations_store, perturb_positions = prepare_pert_vectors_for_compare_plot(
+    (
+        perturbations_store,
+        perturb_positions_store,
+    ) = prepare_pert_vectors_for_compare_plot(
         args,
         n_runs_per_profile_dict,
     )
@@ -399,7 +399,7 @@ def plot_pert_vectors3D(args: dict, axes: plt.Axes = None):
         args,
         title_header="Perturbation Vectors",
         detailed=False,
-        title_suffix=f"time={perturb_positions[0] * stt:.2f}",
+        title_suffix=f"time={perturb_positions_store[list(perturb_positions_store.keys())[0]][0] * stt:.2f}",
     )
 
     axes.set_xlabel("x")
@@ -435,11 +435,111 @@ def plot_pert_vectors3D(args: dict, axes: plt.Axes = None):
         # )
 
 
+def plot_pert_vector_dists(args: dict, axes: plt.Axes = None):
+    if axes is None:
+        fig = plt.figure()
+        axes = fig.add_subplot(projection="3d")
+
+    e_utils.update_compare_exp_folders(args)
+
+    n_runs_per_profile_dict: dict = {
+        "bv_eof": 3,
+        "sv": 3,
+        "lv": 3,
+    }
+
+    (
+        perturbations_store,
+        perturb_positions_store,
+    ) = prepare_pert_vectors_for_compare_plot(
+        args,
+        n_runs_per_profile_dict,
+    )
+
+    # Get first key in perturb_positions_store
+    temp_key = list(perturb_positions_store.keys())[0]
+    # Import from start of appropriate ref record to last perturb position
+    first_pert_position = np.min(perturb_positions_store[temp_key])
+    args["ref_start_time"] = (
+        (first_pert_position * stt)
+        // cfg.GLOBAL_PARAMS.record_max_time
+        * cfg.GLOBAL_PARAMS.record_max_time
+    )
+    args["ref_end_time"] = (np.max(perturb_positions_store[temp_key]) + 1) * stt
+    time, u_data, header_dict = g_import.import_ref_data(args=args)
+
+    # Plot all perturbation vectors
+    for i, item_tuple in enumerate(perturbations_store.items()):
+        vector, perturbations = item_tuple
+        # Scale up perturbation
+        perturbations *= 200
+
+        # Take into account if first position is not from first record
+        perturb_pos_offset = int(
+            first_pert_position
+            // (cfg.GLOBAL_PARAMS.record_max_time * tts)
+            * cfg.GLOBAL_PARAMS.record_max_time
+            * tts
+        )
+
+        if vector in args["vectors"]:
+            color = METHOD_COLORS[vector]
+            for specific_run_index in range(n_runs_per_profile_dict[vector]):
+                for j in range(args["n_profiles"]):
+                    axes.quiver(
+                        u_data[
+                            perturb_positions_store[vector][j] - perturb_pos_offset, 0
+                        ],
+                        u_data[
+                            perturb_positions_store[vector][j] - perturb_pos_offset, 1
+                        ],
+                        u_data[
+                            perturb_positions_store[vector][j] - perturb_pos_offset, 2
+                        ],
+                        perturbations[
+                            0, j * n_runs_per_profile_dict[vector] + specific_run_index
+                        ],
+                        perturbations[
+                            1, j * n_runs_per_profile_dict[vector] + specific_run_index
+                        ],
+                        perturbations[
+                            2, j * n_runs_per_profile_dict[vector] + specific_run_index
+                        ],
+                        label=vector
+                        + "_"
+                        + lib_type_utils.zpad_string(str(j), n_zeros=2),
+                        zorder=10,
+                        linestyle=LINESTYLES[specific_run_index],
+                        linewidth=1.5,
+                        # marker=markerstyles_dict[mode][j],
+                        color=color,
+                    )
+
+        # Plot trajectory
+        first_pos_rel_record = int(
+            first_pert_position % (cfg.GLOBAL_PARAMS.record_max_time * tts)
+        )
+        axes.plot(
+            u_data[first_pos_rel_record:, 0],
+            u_data[first_pos_rel_record:, 1],
+            u_data[first_pos_rel_record:, 2],
+            "k-",
+        )
+        # Plot start point
+        axes.plot(
+            u_data[first_pos_rel_record, 0],
+            u_data[first_pos_rel_record, 1],
+            u_data[first_pos_rel_record, 2],
+            "kx",
+        )
+
+
 def prepare_pert_vectors_for_compare_plot(
     args,
     n_runs_per_profile_dict,
 ):
     perturbations_store = {}
+    perturb_positions_store = {}
     vector_folders = [folder for folder in args["exp_folders"] if "vectors" in folder]
     # Import perturb vectors
     for i, folder in enumerate(vector_folders):
@@ -455,6 +555,7 @@ def prepare_pert_vectors_for_compare_plot(
         )
 
         perturbations_store[args["vectors"][i]] = perturbations
+        perturb_positions_store[args["vectors"][i]] = perturb_positions
 
     # Filter out already imported perturbations
     filtered_perturbations = [
@@ -472,7 +573,7 @@ def prepare_pert_vectors_for_compare_plot(
         )
         perturbations_store[mode] = perturbations
 
-    return perturbations_store, perturb_positions
+    return perturbations_store, perturb_positions_store
 
 
 def plot_pert_vectors2D(args, axes: plt.Axes = None):
@@ -630,6 +731,8 @@ if __name__ == "__main__":
         plot_pert_vectors2D(args)
     elif "pert_vectors3D" in args["plot_type"]:
         plot_pert_vectors3D(args)
+    elif "pert_vector_dists":
+        plot_pert_vector_dists(args)
     elif "growth_rate_dist":
         plot_mean_exp_growth_rate_distribution(args)
     else:

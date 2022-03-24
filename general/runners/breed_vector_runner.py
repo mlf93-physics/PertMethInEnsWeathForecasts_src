@@ -150,6 +150,10 @@ def main(args: dict, exp_setup: dict = None):
 
         # Set out folder
         args["out_exp_folder"] = pl.Path(exp_setup["folder_name"])
+
+        rescaled_data = pt_utils.rescale_perturbations(
+            data_out_list, copy_args, return_raw_perturbations=True
+        )
         # Save breed vector data
         v_save.save_vector_unit(
             rescaled_data[sparams.u_slice, :].T,
