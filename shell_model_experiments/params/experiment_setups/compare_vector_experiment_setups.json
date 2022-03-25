@@ -46,7 +46,7 @@
     },
     "CompareITRun02": {
         "general": {
-            "folder_name": "compare_vecs_bv_to_lv_ncycles4_examine_linear_regime_v1_new",
+            "folder_name": "compare_vecs_bv_to_lv_ncycles2_examine_linear_regime_low_pred",
             "vector_folder": "vectors",
             "perturbation_folder": "perturbations",
             "sub_exp_folder": "perturb_data",
@@ -55,23 +55,27 @@
             ],
             "n_units": 100,
             "iws": [
-                82,
-                86,
-                90,
-                94,
-                98,
-                102,
-                106,
-                110,
-                114,
-                118,
-                122,
-                126
+                4,
+                8,
+                12,
+                16,
+                20,
+                24,
+                28,
+                32,
+                36,
+                40,
+                44,
+                48,
+                52,
+                56,
+                60,
+                64
             ],
             "unit_offset": 1.0
         },
         "bv_gen_setup": {
-            "n_cycles": 8,
+            "n_cycles": 2,
             "n_vectors": 20
         },
         "bv_eof_gen_setup": {

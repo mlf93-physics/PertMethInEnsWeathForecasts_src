@@ -58,10 +58,10 @@ class StandardArgSetup:
             # datapath = "./data/thesis_data/ny2.37e-08_ny_n19_t3.00e+03_n_f0_f1.0_sdim20_kexp2/"
 
         elif cfg.MODEL == Models.LORENTZ63:
-            # datapath = "./data/sig1.00e+01_t9.10e+03_b2.67e+00_r2.80e+01/"
-            datapath = (
-                "./data/thesis_data/sig1.00e+01_t1.00e+05_b2.67e+00_r2.80e+01_dt0.01/"
-            )
+            datapath = "./data/sig1.00e+01_t9.10e+03_b2.67e+00_r2.80e+01/"
+            # datapath = (
+            #     "./data/thesis_data/sig1.00e+01_t1.00e+05_b2.67e+00_r2.80e+01_dt0.01/"
+            # )
 
         # Add general arguments
         self._parser.add_argument("-dp", "--datapath", type=str, default=datapath)
