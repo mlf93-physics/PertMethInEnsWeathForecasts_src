@@ -303,7 +303,7 @@ def plt_vec_compared_to_lv(args, axes: plt.Axes = None):
                             ] = g_plt_anal.orthogonality_to_vector(
                                 vector_folder_units_dict["lv"][
                                     0, j, lv_index, :
-                                ],  # 0 in first index is for using only LV evaluated at time 0
+                                ],  # 0 in first index is for using only LVs evaluated at time 0
                                 vector_folder_units_dict[vector][i, j, :, :],
                             )
                         if "alv" in save_vectors:
@@ -341,7 +341,7 @@ def plt_vec_compared_to_lv(args, axes: plt.Axes = None):
         if vector in ["lv", "alv"]:
             continue
 
-        if vector in ["fsv", "sv"]:
+        if vector in ["fsv", "sv", "bv_eof"]:
             if "lv" in save_vectors:
                 mean_vector_lv_orthogonality_dict[vector] = np.mean(
                     np.abs(orthogonality_dict[vector]), axis=2
@@ -350,7 +350,7 @@ def plt_vec_compared_to_lv(args, axes: plt.Axes = None):
                 mean_vector_adj_lv_orthogonality_dict[vector] = np.mean(
                     np.abs(adj_orthogonality_dict[vector]), axis=2
                 )
-        if vector in ["bv", "bv_eof"]:
+        if vector in ["bv"]:
             if "lv" in save_vectors:
                 mean_vector_lv_orthogonality_dict[vector] = np.mean(
                     np.mean(np.abs(orthogonality_dict[vector]), axis=3), axis=2
@@ -367,7 +367,7 @@ def plt_vec_compared_to_lv(args, axes: plt.Axes = None):
     # Plot orthogonality vs iw
     for vector in save_vectors:
         # Plot BVs vs LVs
-        if vector in ["bv", "bv_eof"]:
+        if vector in ["bv"]:
             # Get cmap
             cmap_list, _ = g_plt_utils.get_non_repeating_colors(n_colors=n_lvs)
             axes.set_prop_cycle("color", cmap_list)
@@ -408,7 +408,7 @@ def plt_vec_compared_to_lv(args, axes: plt.Axes = None):
                         line_obj[1].set_color(line_obj[0].get_color())
 
         # Plot SVs/FSVs vs LVs
-        if "sv" in vector:
+        if vector in ["sv", "bv_eof"]:
             # Get cmap
             cmap_list, _ = g_plt_utils.get_non_repeating_colors(
                 n_colors=args["n_runs_per_profile"]

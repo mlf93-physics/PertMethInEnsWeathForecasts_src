@@ -436,9 +436,16 @@ def plot_pert_vectors3D(args: dict, axes: plt.Axes = None):
 
 
 def plot_pert_vector_dists(args: dict, axes: plt.Axes = None):
+    n_vectors = len(args["vectors"])
     if axes is None:
-        fig = plt.figure()
-        axes = fig.add_subplot(projection="3d")
+        fig: plt.Figure
+        axes: np.ndarray(plt.Axes)
+        fig, axes = plt.subplots(
+            nrows=n_vectors,
+            ncols=3,
+            subplot_kw={"projection": "3d"},
+        )
+        axes: np.ndarray(plt.Axes) = np.reshape(axes, (n_vectors, 3))
 
     e_utils.update_compare_exp_folders(args)
 
@@ -472,7 +479,7 @@ def plot_pert_vector_dists(args: dict, axes: plt.Axes = None):
     for i, item_tuple in enumerate(perturbations_store.items()):
         vector, perturbations = item_tuple
         # Scale up perturbation
-        perturbations *= 200
+        perturbations *= 400
 
         # Take into account if first position is not from first record
         perturb_pos_offset = int(
@@ -486,7 +493,7 @@ def plot_pert_vector_dists(args: dict, axes: plt.Axes = None):
             color = METHOD_COLORS[vector]
             for specific_run_index in range(n_runs_per_profile_dict[vector]):
                 for j in range(args["n_profiles"]):
-                    axes.quiver(
+                    axes[i, specific_run_index].quiver(
                         u_data[
                             perturb_positions_store[vector][j] - perturb_pos_offset, 0
                         ],
@@ -510,27 +517,75 @@ def plot_pert_vector_dists(args: dict, axes: plt.Axes = None):
                         + lib_type_utils.zpad_string(str(j), n_zeros=2),
                         zorder=10,
                         linestyle=LINESTYLES[specific_run_index],
-                        linewidth=1.5,
+                        linewidth=0.5,
                         # marker=markerstyles_dict[mode][j],
                         color=color,
                     )
 
-        # Plot trajectory
-        first_pos_rel_record = int(
-            first_pert_position % (cfg.GLOBAL_PARAMS.record_max_time * tts)
-        )
-        axes.plot(
-            u_data[first_pos_rel_record:, 0],
-            u_data[first_pos_rel_record:, 1],
-            u_data[first_pos_rel_record:, 2],
-            "k-",
-        )
-        # Plot start point
-        axes.plot(
-            u_data[first_pos_rel_record, 0],
-            u_data[first_pos_rel_record, 1],
-            u_data[first_pos_rel_record, 2],
-            "kx",
+                # Plot trajectory
+                first_pos_rel_record = int(
+                    first_pert_position % (cfg.GLOBAL_PARAMS.record_max_time * tts)
+                )
+                axes[i, specific_run_index].plot(
+                    u_data[first_pos_rel_record:, 0],
+                    u_data[first_pos_rel_record:, 1],
+                    u_data[first_pos_rel_record:, 2],
+                    "k-",
+                    linewidth=LINEWIDTHS["thin"],
+                )
+                # Plot start point
+                axes[i, specific_run_index].plot(
+                    u_data[first_pos_rel_record, 0],
+                    u_data[first_pos_rel_record, 1],
+                    u_data[first_pos_rel_record, 2],
+                    "kx",
+                    linewidth=LINEWIDTHS["thin"],
+                )
+
+                # Plot settings
+                axes[i, specific_run_index].xaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+                axes[i, specific_run_index].yaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+                axes[i, specific_run_index].zaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+                axes[i, specific_run_index].set_xlabel("x", labelpad=-8)
+                axes[i, specific_run_index].set_ylabel("y", labelpad=-8)
+                axes[i, specific_run_index].set_zlabel("z", labelpad=-10)
+
+                # Prepare titles
+                # Take into account the _ in bv_eof
+                vector_for_title = vector.replace("_", "-")
+                if args["tolatex"]:
+                    if specific_run_index is not None:
+                        subtitle = f"$\\textnormal{{{vector_for_title.upper()}}}^\\textnormal{{{specific_run_index + 1}}}$"
+                    else:
+                        subtitle = f"$\\textnormal{{{vector_for_title.upper()}}}$"
+                else:
+                    if specific_run_index is not None:
+                        subtitle = f"{vector_for_title.upper()}{specific_run_index + 1}"
+                    else:
+                        subtitle = f"{vector_for_title.upper()}"
+
+                axes[i, specific_run_index].set_title(subtitle, y=0.95)
+                axes[i, specific_run_index].view_init(
+                    elev=args["elev"], azim=args["azim"]
+                )
+                # axes[i, specific_run_index].view_init(elev=21, azim=-57)
+                # axes[i, specific_run_index].view_init(elev=6, azim=-126)
+                axes[i, specific_run_index].tick_params(
+                    axis="both", which="major", pad=-3
+                )
+
+    # fig.subplots_adjust(
+    #     top=0.976, bottom=0.024, left=0.023, right=0.977, hspace=0.2, wspace=0.048
+    # )
+
+    if args["tolatex"]:
+        plt_config.remove_legends(axes)
+
+    if args["save_fig"]:
+        g_plt_utils.save_figure(
+            args,
+            subpath="thesis_figures/appendices/extra_plots/",
+            file_name=args["save_fig_name"],
         )
 
 

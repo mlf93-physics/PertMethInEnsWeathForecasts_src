@@ -27,6 +27,10 @@ def two_quads():
     plt.rcParams["figure.figsize"] = [5.39749 / 2, 5.39749 / 2]
 
 
+def full_page():
+    plt.rcParams["figure.figsize"] = [6.39749, 6.19312]
+
+
 def horizontal_panel_figure():
     plt.rcParams["figure.figsize"] = [5.39749, 1.5]
 
@@ -116,3 +120,5 @@ def adjust_default_fig_axes_settings(args):
             normal_small_figure()
         if args["latex_format"] == "two_quads":
             two_quads()
+        if args["latex_format"] == "full_page":
+            full_page()
