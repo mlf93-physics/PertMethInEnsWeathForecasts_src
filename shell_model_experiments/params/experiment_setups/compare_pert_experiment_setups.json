@@ -173,25 +173,25 @@
             "time_to_run": 0.01
         }
     },
-    "CompareLowPredRegime0.01_temp": {
+    "ComparePertErrorNorm": {
         "general": {
-            "folder_name": "test_lv_exp_growth_rates",
+            "folder_name": "compare_pert_error_norm",
             "vector_folder": "vectors",
             "perturbation_folder": "perturbations",
             "sub_exp_folder": "perturb_data",
             "eval_times": [
-                8.95
+                21.12
             ],
-            "n_units": 60,
+            "n_units": 10,
             "unit_offset": 0.01
         },
         "lv_gen_setup": {
-            "integration_time": 0.01,
-            "n_cycles": 1,
+            "integration_time": 0.001,
+            "n_cycles": 10,
             "n_vectors": 20
         },
         "bv_gen_setup": {
-            "integration_time": 0.01,
+            "integration_time": 0.001,
             "n_cycles": 4,
             "n_vectors": 20
         },
@@ -200,7 +200,7 @@
             "n_vectors": 20
         },
         "sv_gen_setup": {
-            "integration_time": 0.01,
+            "integration_time": 0.001,
             "n_vectors": 20,
             "n_lanczos_iterations": 1,
             "n_model_iterations": 1
@@ -214,8 +214,11 @@
         "rf_pert_setup": {
             "n_runs_per_profile": 20
         },
+        "bv_pert_setup": {
+            "n_runs_per_profile": 3
+        },
         "pert_setup": {
             "time_to_run": 0.01
         }
-    },
+    }
 }

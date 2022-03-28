@@ -4,6 +4,8 @@ sys.path.append("../../")
 import re
 import pathlib as pl
 import json
+from operator import itemgetter
+import numpy as np
 from libs.libutils import file_utils as lib_file_utils
 
 
@@ -99,15 +101,26 @@ def update_compare_exp_folders(args):
             # Sort out dirs not named according to input arguments
             _exp_folders: list = []
             for item in args["perturbations"]:
-                _exp_folders.extend(
-                    [
-                        str(pl.Path(args["exp_folder"], _dirs[i].name))
-                        for i in range(len_folders)
-                        if re.match(
-                            fr"{item}(\d+_perturbations|_perturbations)", _dirs[i].name
-                        )
-                    ][: args["n_runs_per_profile"]]
-                )
+                temp_new_folders = [
+                    str(pl.Path(args["exp_folder"], _dirs[i].name))
+                    for i in range(len_folders)
+                    if re.match(
+                        fr"{item}(\d+_perturbations|_perturbations)", _dirs[i].name
+                    )
+                ]
+                # Filter out unwanted folders
+                if (
+                    args["specific_runs_per_profile"] is not None
+                    and len(temp_new_folders) > 1
+                ):
+                    temp_new_folders = itemgetter(*args["specific_runs_per_profile"])(
+                        temp_new_folders
+                    )
+                else:
+                    temp_new_folders = temp_new_folders[: args["n_runs_per_profile"]]
+
+                # Add new folders to list
+                _exp_folders.extend(temp_new_folders)
             for item in args["vectors"]:
                 _exp_folders.extend(
                     [

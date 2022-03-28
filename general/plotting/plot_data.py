@@ -372,6 +372,7 @@ def plot_energy(
     zero_time_ref=None,
     plot_args=["detailed_title"],
     plot_kwargs={"exp_file_type": "perturbations"},
+    linewidth=LINEWIDTHS["medium"],
     zorder=0,
 ):
     # Import reference data
@@ -383,7 +384,7 @@ def plot_energy(
 
     # Plot total energy vs time
     energy_vs_time = np.sum(u_data * np.conj(u_data), axis=1).real
-    axes.plot(time.real, energy_vs_time, "k", zorder=zorder)
+    axes.plot(time.real, energy_vs_time, "k", zorder=zorder, linewidth=linewidth)
     axes.set_xlabel("Time")
     axes.set_ylabel("Energy, $\\frac{1}{2} u_{n, ref} u_{n, ref}^*$")
     axes.set_xlim(args["ref_start_time"], args["ref_end_time"])

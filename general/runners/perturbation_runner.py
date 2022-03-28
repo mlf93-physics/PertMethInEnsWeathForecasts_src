@@ -331,7 +331,7 @@ def main_setup(
 ):
 
     exec_all_runs_per_profile = None
-    args["Nt"] = int(round(args["time_to_run"] * params.tts))
+    args["Nt"] = int(round(args["time_to_run"] / params.dt))
 
     # If in 2. or higher breed cycle, the perturbation is given as input
     if u_profiles_perturbed is None:  # or perturb_positions is None:

@@ -355,8 +355,7 @@ def import_ref_data(args: dict = None) -> Tuple[np.ndarray, np.ndarray, dict]:
         # Add offset to first record, if not starting with first rec_id
         if i == 0:
             time_concat[0] += (
-                header_dict["time_to_run"]
-                / header_dict["n_records"]
+                round(header_dict["time_to_run"] / header_dict["n_records"])
                 * header_dict["rec_id"]
             )
 

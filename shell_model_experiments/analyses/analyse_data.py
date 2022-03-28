@@ -186,69 +186,75 @@ def main(args):
 
 
 def find_distinct_pred_regimes(args):
+    out_array = None
+
+    import matplotlib.pyplot as plt
+
+    fig, axes = plt.subplots(nrows=4, ncols=1, sharex=True)
 
     # Import reference data
-    time, u_data, header_dict = g_import.import_ref_data(args=args)
+    if args["n_ref_records"] is not None:
+        for record in range(args["n_ref_records"]):
+            args["specific_ref_records"] = [record]
+            time, u_data, header_dict = g_import.import_ref_data(args=args)
 
-    # if isinstance(args["shell_cutoff"], int):
-    #     u_data = u_data[:, : args["shell_cutoff"]]
-    # else:
-    #     raise ValueError(
-    #         "shell_cutoff should be set to find the distinct predictability regimes"
-    #     )
+            # Get total energy
+            total_energy = np.sum((u_data * np.conj(u_data)).real, axis=1)
 
-    # Get total energy
-    total_energy = np.sum((u_data * np.conj(u_data)).real, axis=1)
+            # Differentiate total energy
+            diff_total_energy = (total_energy[1:] - total_energy[:-1]) / PAR.stt
 
-    # Differentiate total energy
-    diff_total_energy = (total_energy[1:] - total_energy[:-1]) / PAR.stt
+            # Find positive and negative slopes
+            bool_diff_array = diff_total_energy > 0
 
-    # Find positive and negative slopes
-    bool_diff_array = diff_total_energy > 0
+            # Prepare for erosion and dilation
+            structure = np.ones(int(PAR.tts * 0.05))
 
-    # Prepare for erosion and dilation
-    structure = np.ones(int(PAR.tts * 0.05))
+            # Perform erosion and dilation to remove smallest regions in boolean array
+            eroded_bool_array = sp_ndi.binary_erosion(
+                bool_diff_array, origin=10, structure=structure
+            )
+            dilated_bool_array = sp_ndi.binary_dilation(
+                eroded_bool_array, origin=10, structure=structure, iterations=2
+            )
+            eroded_bool_array: np.ndarray = sp_ndi.binary_erosion(
+                dilated_bool_array, origin=10, structure=structure
+            )
 
-    # Perform erosion and dilation to remove smallest regions in boolean array
-    eroded_bool_array = sp_ndi.binary_erosion(
-        bool_diff_array, origin=10, structure=structure
-    )
-    dilated_bool_array = sp_ndi.binary_dilation(
-        eroded_bool_array, origin=10, structure=structure, iterations=2
-    )
-    eroded_bool_array: np.ndarray = sp_ndi.binary_erosion(
-        dilated_bool_array, origin=10, structure=structure
-    )
+            # Find indices when the eroded boolean array changes bool value, which
+            # indicates when a high or low pred regime begins.
+            roll_array = np.roll(eroded_bool_array, 1)
+            high_pred_regime_starts = np.logical_and(
+                np.logical_not(roll_array), eroded_bool_array
+            )
+            low_pred_regime_starts = np.logical_and(
+                roll_array, np.logical_not(eroded_bool_array)
+            )
 
-    # Find indices when the eroded boolean array changes bool value, which
-    # indicates when a high or low pred regime begins.
-    roll_array = np.roll(eroded_bool_array, 1)
-    high_pred_regime_starts = np.logical_and(
-        np.logical_not(roll_array), eroded_bool_array
-    )
-    low_pred_regime_starts = np.logical_and(
-        roll_array, np.logical_not(eroded_bool_array)
-    )
+            # Convert indices to start times
+            high_pred_regime_starts_times = time.real[np.where(high_pred_regime_starts)]
+            low_pred_regime_starts_times = time.real[np.where(low_pred_regime_starts)]
 
-    # Convert indices to start times
-    high_pred_regime_starts_times = time.real[np.where(high_pred_regime_starts)]
-    low_pred_regime_starts_times = time.real[np.where(low_pred_regime_starts)]
+            # Check if sizes are equal
+            if high_pred_regime_starts_times.size != low_pred_regime_starts_times.size:
+                raise ValueError(
+                    "Size of high pred and low pred regime start time arrays are not equal"
+                )
 
-    # Check if sizes are equal
-    if high_pred_regime_starts_times.size != low_pred_regime_starts_times.size:
-        raise ValueError(
-            "Size of high pred and low pred regime start time arrays are not equal"
-        )
+            # Prepare array to be saved
+            temp_out_array = np.stack(
+                [high_pred_regime_starts_times, low_pred_regime_starts_times], axis=1
+            )
 
-    # Prepare array to be saved
-    out_array = np.stack(
-        [high_pred_regime_starts_times, low_pred_regime_starts_times], axis=1
-    )
+            # Determine precision of time
+            _precision = abs(decimal.Decimal(str(PAR.stt)).as_tuple().exponent)
+            # Round off start times
+            temp_out_array = np.round(temp_out_array, decimals=_precision)
 
-    # Determine precision of time
-    _precision = abs(decimal.Decimal(str(PAR.stt)).as_tuple().exponent)
-    # Round off start times
-    out_array = np.round(out_array, decimals=_precision)
+            if out_array is None:
+                out_array = temp_out_array
+            else:
+                out_array = np.append(out_array, temp_out_array, axis=0)
 
     # Save array
     g_save.save_data(
@@ -259,31 +265,30 @@ def find_distinct_pred_regimes(args):
         args=args,
     )
 
-    # import matplotlib.pyplot as plt
-
-    # fig, axes = plt.subplots(nrows=4, ncols=1, sharex=True)
-    # axes[0].plot(time.real, total_energy)
-    # axes[0].set_title("Total energy")
-    # axes[1].plot(time.real[:-1] + 1 / 2 * PAR.stt, diff_total_energy)
-    # axes[1].set_title("Diff. total energy")
-    # axes[2].plot(
-    #     time.real[:-1] + 1 / 2 * PAR.stt,
-    #     eroded_bool_array,
-    # )
-    # axes[2].set_title("Erosion/dilation filtered diff. array")
-    # axes[3].plot(
-    #     time.real[:-1] + 1 / 2 * PAR.stt,
-    #     high_pred_regime_starts,
-    #     label="High pred start",
-    # )
-    # axes[3].plot(
-    #     time.real[:-1] + 1 / 2 * PAR.stt, low_pred_regime_starts, label="Low pred start"
-    # )
-    # axes[3].set_title("Detected regime start times")
-    # axes[3].legend(
-    #     loc="center right",
-    #     bbox_to_anchor=(1.15, 0.5),
-    # )
+    #         axes[0].plot(time.real, total_energy)
+    #         axes[0].set_title("Total energy")
+    #         axes[1].plot(time.real[:-1] + 1 / 2 * PAR.stt, diff_total_energy)
+    #         axes[1].set_title("Diff. total energy")
+    #         axes[2].plot(
+    #             time.real[:-1] + 1 / 2 * PAR.stt,
+    #             eroded_bool_array,
+    #         )
+    #         axes[2].set_title("Erosion/dilation filtered diff. array")
+    #         axes[3].plot(
+    #             time.real[:-1] + 1 / 2 * PAR.stt,
+    #             high_pred_regime_starts,
+    #             label="High pred start",
+    #         )
+    #         axes[3].plot(
+    #             time.real[:-1] + 1 / 2 * PAR.stt,
+    #             low_pred_regime_starts,
+    #             label="Low pred start",
+    #         )
+    #         axes[3].set_title("Detected regime start times")
+    #         axes[3].legend(
+    #             loc="center right",
+    #             bbox_to_anchor=(1.15, 0.5),
+    #         )
     # plt.tight_layout()
     # plt.show()
 

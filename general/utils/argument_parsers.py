@@ -54,8 +54,10 @@ class StandardArgSetup:
         # Prepare model specific default arguments
         if cfg.MODEL == Models.SHELL_MODEL:
             # datapath = "./data/ny_n19/ny2.37e-08_ny_n19_t3.00e+02_n_f0_f1.0_kexp2"
-            datapath = "./data/new_dt/ny_n19/ny2.37e-08_ny_n19_t3.00e+02_n_f0_f1.0_sdim20_kexp2/"
-            # datapath = "./data/thesis_data/ny2.37e-08_ny_n19_t3.00e+03_n_f0_f1.0_sdim20_kexp2/"
+            # datapath = "./data/new_dt/ny_n19/ny2.37e-08_ny_n19_t3.00e+02_n_f0_f1.0_sdim20_kexp2/"
+            datapath = (
+                "./data/thesis_data/ny2.37e-08_ny_n19_t3.00e+03_n_f0_f1.0_sdim20_kexp2/"
+            )
 
         elif cfg.MODEL == Models.LORENTZ63:
             datapath = "./data/sig1.00e+01_t9.10e+03_b2.67e+00_r2.80e+01/"
@@ -182,6 +184,9 @@ class RelReferenceArgSetup:
         )
         # Add optional arguments
         self._parser.add_argument("--n_runs_per_profile", default=1, type=int)
+        self._parser.add_argument(
+            "--specific_runs_per_profile", nargs="+", default=None, type=int
+        )
         self._parser.add_argument("--n_profiles", default=1, type=int)
         self._parser.add_argument("--exp_setup", default=None, type=str)
         start_time_group: argparse._MutuallyExclusiveGroup = (
@@ -436,6 +441,7 @@ class ReferenceAnalysisArgParser:
         self._parser.add_argument(
             "--specific_ref_records", nargs="+", default=[0], type=int
         )
+        self._parser.add_argument("--n_ref_records", default=None, type=int)
 
 
 class ComparisonPlottingArgParser:

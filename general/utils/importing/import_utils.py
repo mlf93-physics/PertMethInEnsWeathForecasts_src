@@ -27,10 +27,10 @@ def get_start_end_times_from_exp_setup(
     ValueError
         Raised if the start time could not be determined from exp_setup
     """
-    if "integration_time" in exp_setup:
-        int_time = exp_setup["integration_time"]
-    elif "time_to_run" in exp_setup:
+    if "time_to_run" in exp_setup:
         int_time = exp_setup["time_to_run"]
+    elif "integration_time" in exp_setup:
+        int_time = exp_setup["integration_time"]
     else:
         raise ValueError("No entry in exp_setup to get time duration of integration")
 
