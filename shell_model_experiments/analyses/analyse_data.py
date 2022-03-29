@@ -106,7 +106,9 @@ def analyse_mean_velocity_spectra(args: dict):
 
         mean_velocity = np.reshape(mean_velocity, (1, mean_velocity.size))
 
-        g_save.save_data(mean_velocity, prefix="mean_", args=args)
+        g_save.save_data(
+            mean_velocity, prefix=f"mean_anal_time{args['ref_end_time']}_", args=args
+        )
 
 
 def analyse_mean_energy_spectrum(args: dict, u_data: np.ndarray, header_dict: dict):
@@ -314,4 +316,5 @@ if __name__ == "__main__":
     )
 
     # main(args)
-    find_distinct_pred_regimes(args)
+    # find_distinct_pred_regimes(args)
+    analyse_mean_velocity_spectra(args)

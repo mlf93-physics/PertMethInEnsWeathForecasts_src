@@ -614,7 +614,9 @@ def plt_BV_LYAP_vector_comparison(args):
     # fig2.tight_layout(rect=[0, 0, 0.9, 1])
 
 
-def plot_error_norm_comparison(args: dict, axes=None):
+def plot_error_norm_comparison(
+    args: dict, axes=None, specific_runs_per_profile_dict=None
+):
     """Plots a comparison of the error norm based in several different
     perturbation techniques
 
@@ -630,7 +632,9 @@ def plot_error_norm_comparison(args: dict, axes=None):
 
     args["endpoint"] = True
 
-    e_utils.update_compare_exp_folders(args)
+    e_utils.update_compare_exp_folders(
+        args, specific_runs_per_profile_dict=specific_runs_per_profile_dict
+    )
 
     cmap_list = plt.rcParams["axes.prop_cycle"].by_key()["color"]
 

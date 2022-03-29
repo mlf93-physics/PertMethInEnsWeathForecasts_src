@@ -327,17 +327,17 @@ def import_ref_data(args: dict = None) -> Tuple[np.ndarray, np.ndarray, dict]:
             )
         else:
             # Only use ref_end_time information if importing last record out of multiple
+            remaining_time = args["ref_end_time"] % cfg.GLOBAL_PARAMS.record_max_time
             max_line = (
                 int(
                     round(
-                        (args["ref_end_time"] % cfg.GLOBAL_PARAMS.record_max_time)
-                        * params.tts
+                        remaining_time * params.tts
                         + (args["ref_start_time"] == 0)
                         + endpoint,
                         0,
                     )
                 )
-                if i + 1 == len(records_to_import)
+                if i + 1 == len(records_to_import) and remaining_time > 0
                 else None
             )
 

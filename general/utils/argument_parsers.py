@@ -71,7 +71,7 @@ class StandardArgSetup:
             "--ref_data_out", type=str, default="./data/thesis_data"
         )
         self._parser.add_argument(
-            "--analysis_path", type=str, default="./data/analysed_data/"
+            "--analysis_path", type=str, default="./data/thesis_data/ny2.37e-08_ny_n19_t3.00e+03_n_f0_f1.0_sdim20_kexp2/analysis_data/"
         )
         self._parser.add_argument("-ttr", "--time_to_run", default=0.1, type=float)
         self._parser.add_argument("--burn_in_time", default=0.0, type=float)

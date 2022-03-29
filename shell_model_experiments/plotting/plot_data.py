@@ -504,7 +504,10 @@ def plot_energy(args=None, axes=None, plot_args=["detailed_title"], zorder=0):
     if args["tolatex"]:
         plt_config.adjust_axes(axes)
         # plt_config.adjust_axes_to_subplot(axes)
-        plt_config.set_ytick_format(axes)
+        if cfg.MODEL == cfg.Models.LORENTZ63:
+            plt_config.set_ytick_format(axes)
+        elif cfg.MODEL == cfg.Models.SHELL_MODEL:
+            plt_config.set_ytick_format(axes, fmt="%.1f")
 
         # if args["save_fig"]:
         #     g_plt_utils.save_figure(

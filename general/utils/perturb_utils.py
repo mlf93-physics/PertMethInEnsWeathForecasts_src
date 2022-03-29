@@ -2,7 +2,7 @@ import sys
 
 sys.path.append("..")
 from math import floor, log10
-
+import copy
 import config as cfg
 import general.utils.dev_plots as g_dev_plots
 import general.utils.importing.import_data_funcs as g_import
@@ -548,11 +548,13 @@ def get_rand_field_perturbations(
         rand_field1_times = rand_field1_indices * params.stt
         rand_field2_times = rand_field2_indices * params.stt
         # Import u_profiles
+        copy_args = copy.deepcopy(args)
+        copy_args["n_runs_per_profile"] = 1
         u_data_rand_field1, _, ref_header_dict = g_import.import_start_u_profiles(
-            args=args, start_times=list(rand_field1_times)
+            args=copy_args, start_times=list(rand_field1_times)
         )
         u_data_rand_field2, _, ref_header_dict = g_import.import_start_u_profiles(
-            args=args, start_times=list(rand_field2_times)
+            args=copy_args, start_times=list(rand_field2_times)
         )
         # Calculate rand_field diffs
         for i in range(args["n_profiles"] * args["n_runs_per_profile"]):

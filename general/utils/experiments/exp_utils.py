@@ -78,7 +78,7 @@ def preprocess_exp_setup_for_comparison(exp_setup: dict) -> None:
         ]
 
 
-def update_compare_exp_folders(args):
+def update_compare_exp_folders(args, specific_runs_per_profile_dict=None):
     """Update the exp_folders argument when comparison folder is given as exp_folder
     argument
 
@@ -101,6 +101,12 @@ def update_compare_exp_folders(args):
             # Sort out dirs not named according to input arguments
             _exp_folders: list = []
             for item in args["perturbations"]:
+                # Update specific_runs according to dict
+                if specific_runs_per_profile_dict is not None:
+                    args["specific_runs_per_profile"] = specific_runs_per_profile_dict[
+                        item
+                    ]
+
                 temp_new_folders = [
                     str(pl.Path(args["exp_folder"], _dirs[i].name))
                     for i in range(len_folders)

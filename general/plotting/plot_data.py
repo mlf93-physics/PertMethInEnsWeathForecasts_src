@@ -387,7 +387,7 @@ def plot_energy(
     axes.plot(time.real, energy_vs_time, "k", zorder=zorder, linewidth=linewidth)
     axes.set_xlabel("Time")
     axes.set_ylabel("Energy, $\\frac{1}{2} u_{n, ref} u_{n, ref}^*$")
-    axes.set_xlim(args["ref_start_time"], args["ref_end_time"])
+    # axes.set_xlim(args["ref_start_time"], args["ref_end_time"])
 
     header_dict = g_utils.handle_different_headers(header_dict)
 

@@ -44,10 +44,24 @@ def collect_error_norm_plots(args):
     # Make axes
     fig, axes = plt.subplots(nrows=2, ncols=1, sharex=True, sharey=True)
 
+    if cfg.MODEL == cfg.Models.SHELL_MODEL:
+        specific_runs_per_profile_dict = {
+            "bv": None,
+            "bv_eof": [0, 5, 10, 15],
+            "sv": [0, 5, 10, 15],
+            "lv": [1, 5, 10, 15],
+        }
+    else:
+        specific_runs_per_profile_dict = None
+
     # Plot BV, BV-EOF, SV, LV
     args["perturbations"] = ["bv", "bv_eof", "sv", "lv"]
     copy_exp_folder = copy.deepcopy(args["exp_folder"])
-    twin_axes = plt_compare.plot_error_norm_comparison(args, axes=axes[0])
+    twin_axes = plt_compare.plot_error_norm_comparison(
+        args,
+        axes=axes[0],
+        specific_runs_per_profile_dict=specific_runs_per_profile_dict,
+    )
     plt_config.hide_axis_labels(twin_axes)
 
     # Plot RD, NM, RF
@@ -64,7 +78,7 @@ def collect_error_norm_plots(args):
         ylabel_right = "x"
     elif cfg.MODEL == cfg.Models.SHELL_MODEL:
         ylabel_suffix = "$||\\mathbf{u}'||$"
-        ylabel_right = "Energy, $\\frac{1}{2} u_{n, ref} u_{n, ref}^*$"
+        ylabel_right = "Ref. energy, $\\frac{1}{2} u_n u_n^*$"
 
     label_axes: plt.Axes = fig.add_subplot(111, frame_on=False)
     label_axes.tick_params(
@@ -89,9 +103,14 @@ def collect_error_norm_plots(args):
     fig.subplots_adjust(left=0.120, bottom=0.155, right=0.880, top=0.935)
 
     if args["save_fig"]:
+        if cfg.MODEL == cfg.Models.LORENTZ63:
+            subfolder = "l63"
+        elif cfg.MODEL == cfg.Models.SHELL_MODEL:
+            subfolder = "shell"
+
         g_plt_utils.save_figure(
             args,
-            subpath="thesis_figures/results_and_analyses/l63/",
+            subpath=f"thesis_figures/results_and_analyses/{subfolder}/",
             file_name="compare_error_norm",
         )
 

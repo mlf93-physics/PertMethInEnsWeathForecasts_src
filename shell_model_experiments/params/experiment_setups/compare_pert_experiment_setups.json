@@ -192,7 +192,7 @@
         },
         "bv_gen_setup": {
             "integration_time": 0.001,
-            "n_cycles": 4,
+            "n_cycles": 8,
             "n_vectors": 20
         },
         "bv_eof_gen_setup": {

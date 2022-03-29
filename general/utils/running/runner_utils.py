@@ -302,7 +302,7 @@ def prepare_perturbations(
         elif "bv" in args["pert_mode"]:
             if args["pert_mode"] == "bv":
                 print("\nRunning with BREED VECTOR perturbations\n")
-                _raw_perturbations = False
+                _raw_perturbations = args["bv_raw_perts"]
             elif args["pert_mode"] == "bv_eof":
                 print("\nRunning with BREED EOF VECTOR perturbations\n")
                 _raw_perturbations = True
