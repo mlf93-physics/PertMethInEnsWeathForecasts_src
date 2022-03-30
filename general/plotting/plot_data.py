@@ -5,11 +5,12 @@ import seaborn as sb
 from general.utils.module_import.type_import import *
 import general.utils.importing.import_data_funcs as g_import
 import general.utils.plot_utils as g_plt_utils
+import general.plotting.plot_config as plt_config
 import general.analyses.analyse_data as g_a_data
 import general.utils.util_funcs as g_utils
 import general.utils.importing.import_perturbation_data as pt_import
 from general.plotting.plot_params import *
-from matplotlib.colors import LogNorm
+from matplotlib.colors import LogNorm, Normalize
 from general.params.experiment_licences import Experiments as EXP
 from general.params.model_licences import Models
 import config as cfg
@@ -22,6 +23,9 @@ if cfg.MODEL == Models.SHELL_MODEL:
 
     params = PAR_SH
     sparams = sh_sparams
+
+    SHELL_TICKS_COMPACT = np.arange(1, params.sdim, 2)
+    SHELL_TICKS_FULL = np.arange(1, params.sdim + 1, 1)
 elif cfg.MODEL == Models.LORENTZ63:
     import lorentz63_experiments.params.params as l63_params
     import lorentz63_experiments.params.special_params as l63_sparams
@@ -432,8 +436,18 @@ def plot_energy(
 
 
 def plot2D_average_vectors(
-    args, axes: plt.Axes = None, rel_mean_vector: bool = False, plot_kwargs: dict = {}
+    args,
+    axes: plt.Axes = None,
+    rel_mean_vector: bool = False,
+    characteristic_value_name="",
+    plot_kwargs: dict = {},
 ):
+
+    if axes is None:
+        fig, axes = plt.subplots(
+            nrows=2, ncols=1, sharex=True, gridspec_kw={"height_ratios": [1, 3]}
+        )
+
     (
         vector_units,
         characteristic_values,
@@ -443,10 +457,10 @@ def plot2D_average_vectors(
     ) = pt_import.import_perturb_vectors(
         args, raw_perturbations=True, dtype=np.complex128
     )
-    # print("vector_units", vector_units.shape)
-    # print("np.abs(characteristic_values)", np.abs(characteristic_values))
     characteristic_values = (
-        2 * 1 / header_dicts[0]["time_to_run"] * np.log(np.abs(characteristic_values))
+        1
+        / header_dicts[0]["time_to_run"]
+        * np.log(np.sqrt(np.abs(characteristic_values)))
     )
     sort_index = np.argsort(characteristic_values, axis=1)[:, ::-1]
     # print("sort_index", sort_index)
@@ -454,23 +468,21 @@ def plot2D_average_vectors(
         vector_units[i, :, :] = vector_units[i, sort_index[i, :], :]
         characteristic_values[i, :] = characteristic_values[i, sort_index[i, :]]
 
-    mean_lyapunov_exp = np.mean(characteristic_values, axis=0)
-    print("mean_lyapunov_exp", mean_lyapunov_exp)
-    plt.figure()
-    # plt.plot(np.cumsum(mean_lyapunov_exp[1:]) / np.sum(mean_lyapunov_exp[1:]), ".")
-    plt.plot(mean_lyapunov_exp, ".")  # / np.max(mean_lyapunov_exp[1:]), ".")
-    # plt.title("Cummulative mean lyapunov exponents (normalized)")
-    plt.title("Mean lyapunov exponents")
-    plt.ylabel("$\\mu_m$")
-    plt.xlabel("Lyapunov index, m")
-    plt.figure()
+    mean_characteristic_value = np.mean(characteristic_values, axis=0)
+
+    # plt.plot(np.cumsum(mean_characteristic_value[1:]) / np.sum(mean_characteristic_value[1:]), ".")
+    axes[0].plot(
+        SHELL_TICKS_FULL - 0.5,
+        mean_characteristic_value,
+        ".",
+        markersize=4,
+    )  # / np.max(mean_characteristic_value[1:]), ".")
+    # axes[0].title("Cummulative mean lyapunov exponents (normalized)")
+    # axes[0].title("Mean lyapunov exponents")
+    axes[0].set_ylabel(characteristic_value_name)
 
     # Normalize
     vector_units = g_utils.normalize_array(vector_units, norm_value=1, axis=2)
-
-    # Prepare axes
-    if axes is None:
-        axes = plt.axes()
 
     mean_abs_vector_units = np.mean(np.abs(vector_units), axis=0)
 
@@ -480,7 +492,19 @@ def plot2D_average_vectors(
             - np.mean(mean_abs_vector_units, axis=0)[np.newaxis, :]
         )
 
-    plot2D_vectors(mean_abs_vector_units, args, header_dicts, axes=axes, **plot_kwargs)
+    plot2D_vectors(
+        mean_abs_vector_units,
+        args,
+        header_dicts,
+        axes=axes[1],
+        **plot_kwargs,
+    )
+
+    if args["tolatex"]:
+        plt_config.adjust_axes(axes)
+        fig.subplots_adjust(
+            top=0.973, bottom=0.041, left=0.221, right=0.984, hspace=0.15, wspace=0.2
+        )
 
 
 def plot2D_vectors(
@@ -496,32 +520,45 @@ def plot2D_vectors(
     xlabel: str = "x index",
     ylabel: str = "y index",
     title_header: str = "DEFAULT TITLE",
+    vector_label: str = "VECTOR LABEL",
 ):
 
     # Prepare axes
     if axes is None:
         axes = plt.axes()
 
-    sb.heatmap(
+    heatmap_plot = sb.heatmap(
         vector_units.T,
         ax=axes,
-        cmap=cmap,
-        cbar_kws={
-            "pad": 0.1,
-        },
         annot=annot,
         fmt=".1f",
         annot_kws={"fontsize": 8},
         vmin=vmin,
         vmax=vmax,
-        norm=LogNorm() if log_cmap else None,
+        norm=LogNorm(vmin, vmax) if log_cmap else Normalize(vmin, vmax),
+        cmap=cmap,
+        cbar=True,
+        cbar_kws={
+            "location": "bottom",
+            "shrink": 0.5,
+            "pad": 0.3,
+        },
     )
+    heatmap_plot.set_yticklabels([1, 7, 13, 19], rotation=0)
+    heatmap_plot.set_xticklabels(np.arange(1, 20, 2).astype(np.int16))
+
+    fig = plt.gcf()
+    cbar_ax = fig.axes[-1]
+    cbar_ax.set_title(vector_label, x=-0.3, y=-3)
+
+    # heatmap_plot.set_yticklabels(SHELL_TICKS_COMPACT, rotation=0)
+    # heatmap_plot.set_xticklabels(SHELL_TICKS_FULL)
 
     axes.invert_yaxis()
-    axes.invert_xaxis()
+    # axes.invert_xaxis()
     plt.xticks(rotation=0)
-    axes.yaxis.tick_right()
-    axes.yaxis.set_label_position("right")
+    # axes.yaxis.tick_right()
+    # axes.yaxis.set_label_position("right")
     axes.set_xlabel(xlabel)
     axes.set_ylabel(ylabel)
 

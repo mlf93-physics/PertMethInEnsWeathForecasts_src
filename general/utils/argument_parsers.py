@@ -557,6 +557,9 @@ class StandardPlottingArgParser:
             "--save_fig_name", type=str, help="Name of file to save figure to"
         )
         self._parser.add_argument(
+            "--save_sub_folder", type=str, help="Sub folder to save figure to"
+        )
+        self._parser.add_argument(
             "--datapaths",
             nargs="+",
             type=str,

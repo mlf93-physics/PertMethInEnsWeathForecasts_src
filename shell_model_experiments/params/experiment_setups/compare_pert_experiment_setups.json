@@ -117,7 +117,7 @@
     },
     "ComparePertErrorNorm": {
         "general": {
-            "folder_name": "compare_pert_error_norm",
+            "folder_name": "low_pred/compare_pert_error_norm",
             "vector_folder": "vectors",
             "perturbation_folder": "perturbations",
             "sub_exp_folder": "perturb_data",
@@ -165,23 +165,23 @@
     },
     "ComparePertExpGrowthRate": {
         "general": {
-            "folder_name": "compare_pert_exp_growth_rate_it0.005",
+            "folder_name": "low_pred/compare_pert_exp_growth_rate_it0.01",
             "vector_folder": "vectors",
             "perturbation_folder": "perturbations",
             "sub_exp_folder": "perturb_data",
             "eval_times": [
                 21.12
             ],
-            "n_units": 1000,
+            "n_units": 900,
             "unit_offset": 0.01
         },
         "lv_gen_setup": {
-            "integration_time": 0.005,
+            "integration_time": 0.01,
             "n_cycles": 10,
             "n_vectors": 20
         },
         "bv_gen_setup": {
-            "integration_time": 0.005,
+            "integration_time": 0.01,
             "n_cycles": 10,
             "n_vectors": 20
         },
@@ -190,7 +190,7 @@
             "n_vectors": 20
         },
         "sv_gen_setup": {
-            "integration_time": 0.005,
+            "integration_time": 0.01,
             "n_vectors": 20,
             "n_lanczos_iterations": 1,
             "n_model_iterations": 1

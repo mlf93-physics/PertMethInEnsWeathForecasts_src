@@ -26,6 +26,7 @@ import general.utils.importing.import_utils as g_imp_utils
 import general.utils.util_funcs as g_utils
 import general.utils.plot_utils as g_plt_utils
 import general.utils.user_interface as g_ui
+import general.plotting.plot_config as plt_config
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mpl_ticker
 from mpl_toolkits import mplot3d
@@ -169,13 +170,26 @@ def plot_s_vectors_average(args, axes: plt.Axes = None):
 
     # Prepare plot_kwargs
     plot_kwargs: dict = {
-        "xlabel": "SV index",
-        "ylabel": "Shell index",
+        "xlabel": "SV index, $i$",
+        "ylabel": "$n$",
         "title_header": "Averaged SVs",
+        "vector_label": "$\\langle|v_{n,i}| \\rangle$",
     }
 
     # Import breed vectors
-    g_plt_data.plot2D_average_vectors(args, axes=axes, plot_kwargs=plot_kwargs)
+    g_plt_data.plot2D_average_vectors(
+        args,
+        axes=axes,
+        characteristic_value_name="$\\sigma_i$",  # "$\\frac{{1}}{{t_{{OPT}}}}\\mathrm{{log}}(\\sigma_i)$",
+        plot_kwargs=plot_kwargs,
+    )
+
+    if args["save_fig"]:
+        g_plt_utils.save_figure(
+            args,
+            subpath="thesis_figures/" + args["save_sub_folder"],
+            file_name="average_sv_vectors_with_s_values",
+        )
 
 
 def plot3D_s_vectors_average(args, axes: plt.Axes = None, plot_args: list = []):
@@ -389,6 +403,8 @@ if __name__ == "__main__":
         sh_utils.update_dependent_params(params)
         sh_utils.set_params(params, parameter="sdim", value=args["sdim"])
         sh_utils.update_arrays(params)
+
+    plt_config.adjust_default_fig_axes_settings(args)
 
     # Make profiler
     profiler = Profiler()

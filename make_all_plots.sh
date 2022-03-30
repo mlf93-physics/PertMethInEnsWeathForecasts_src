@@ -9,6 +9,12 @@ python ./plotting/collect_plots.py --plot_type=spec_energy_howmoller --ref_end_t
 echo "Making sh_eigenmode_analysis plot"
 python ./plotting/collect_plots.py --plot_type=lyapunov_anal --n_profiles=100 --tolatex --save_fig --noplot --noconfirm
 
+echo "Making singular vector average plot, opt0.01"
+python ../general/plotting/singular_vector_plotter.py --plot_type=s_vectors_average --pert_vector_folder=low_pred/compare_pert_exp_growth_rate_it0.01/vectors --exp_folder=sv_vectors --endpoint --n_profiles=1000 --n_runs_per_profile=20 --tolatex -lf quad_item --notight --save_fig --noconfirm --save_sub_folder=results_and_analyses/shell/low_pred --noplot
+
+echo "Making singular vector average plot, opt0.01"
+python ../general/plotting/singular_vector_plotter.py --plot_type=s_vectors_average --pert_vector_folder=low_pred/compare_pert_exp_growth_rate_it0.005/vectors --exp_folder=sv_vectors --endpoint --n_profiles=1000 --n_runs_per_profile=20 --tolatex -lf quad_item --notight --save_fig --noconfirm --save_sub_folder=appendices/extra_plots/shell_opt0.005/low_pred --noplot
+
 # L63 plots
 cd ./lorentz63_experiments
 
