@@ -130,6 +130,7 @@ def plot_error_norm_vs_time(
     cmap_list: Union[None, list] = None,
     legend_on: bool = True,
     plot_args: list = ["detailed_title"],
+    raw_perturbations: bool = True,
 ):
 
     if exp_setup is None:
@@ -147,7 +148,9 @@ def plot_error_norm_vs_time(
         perturb_time_pos_list_legend,
         header_dicts,
         u_ref_stores,
-    ) = g_import.import_perturbation_velocities(args, search_pattern="*perturb*.csv")
+    ) = g_import.import_perturbation_velocities(
+        args, search_pattern="*perturb*.csv", raw_perturbations=raw_perturbations
+    )
 
     # Get number of runs per profile and n_profiles
     n_runs_per_profile = int(header_dicts[0]["n_runs_per_profile"])

@@ -337,13 +337,13 @@ def main_setup(
     if u_profiles_perturbed is None:  # or perturb_positions is None:
 
         raw_perturbations = False
-        # Get only raw_perturbations if licence is LYAPUNOV_VECTORS,
-        # SINGULAR_VECTORS or FINAL_SINGULAR_VECTORS
+        # Get only raw_perturbations for specific licences
         if (
             cfg.LICENCE == EXP.LYAPUNOV_VECTORS
             or cfg.LICENCE == EXP.ADJ_LYAPUNOV_VECTORS
             or cfg.LICENCE == EXP.SINGULAR_VECTORS
             or cfg.LICENCE == EXP.FINAL_SINGULAR_VECTORS
+            or cfg.LICENCE == EXP.TANGENT_LINEAR
         ):
             raw_perturbations = True
 

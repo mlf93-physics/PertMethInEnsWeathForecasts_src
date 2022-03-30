@@ -29,6 +29,7 @@ from general.runners.lyapunov_vector_runner import main as lv_runner
 from general.runners.breed_vector_runner import main as bv_runner
 from general.analyses.breed_vector_eof_analysis import main as bv_eof_analyser
 from general.runners.singular_vector_lanczos_runner import main as sv_runner
+from general.runners.tangent_linear_runner import main as tl_runner
 from libs.libutils import type_utils as lib_type_utils
 
 # Get parameters for model
@@ -224,6 +225,37 @@ def rd_pert_experiment(args: dict, local_exp_setup: dict):
     processes.extend(temp_processes)
 
     pr_utils.run_pert_processes(copy_args, local_exp_setup, processes)
+
+
+def tl_rd_pert_experiment(args: dict, local_exp_setup: dict):
+    """Run TL perturbations with rd as pert_mode
+
+    Parameters
+    ----------
+    args : dict
+        Local run-time arguments
+    local_exp_setup : dict
+        Local experiment setup
+    """
+    print(f"{col.Fore.GREEN}TL with RD PERTURBATIONS{col.Fore.RESET}")
+
+    # Update licence
+    cfg.LICENCE = exp.TANGENT_LINEAR
+
+    processes = []
+
+    # Prepare arguments for perturbation run
+    args["n_runs_per_profile"] = local_exp_setup["n_runs_per_profile"]
+    args["pert_mode"] = "rd"
+    args["out_exp_folder"] = pl.Path(
+        local_exp_setup["folder_name"],
+        "tl_rd_perturbations",
+    )
+
+    # Copy args in order not override in forecast processes
+    copy_args = copy.deepcopy(args)
+
+    tl_runner(copy_args, exp_setup=local_exp_setup)
 
 
 def lv_pert_experiment(args: dict, local_exp_setup: dict):
@@ -504,6 +536,10 @@ def execute_pert_experiments(args: dict, exp_setup: dict):
     if "rd" in args["perturbations"] or "all" in args["perturbations"]:
         rd_pert_experiment(
             copy.deepcopy(args), local_exp_setup | exp_setup["rd_pert_setup"]
+        )
+    if "tl_rd" in args["perturbations"] or "all" in args["perturbations"]:
+        tl_rd_pert_experiment(
+            copy.deepcopy(args), local_exp_setup | exp_setup["tl_rd_pert_setup"]
         )
     if "nm" in args["perturbations"] or "all" in args["perturbations"]:
         nm_pert_experiment(

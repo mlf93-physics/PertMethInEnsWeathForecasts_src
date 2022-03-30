@@ -258,41 +258,41 @@ def find_distinct_pred_regimes(args):
             else:
                 out_array = np.append(out_array, temp_out_array, axis=0)
 
-    # Save array
-    g_save.save_data(
-        out_array,
-        prefix="regime_start_times_",
-        header="high=0, low=1",
-        fmt=f"%.{_precision}f",
-        args=args,
-    )
+            # Save array
+            # g_save.save_data(
+            #     out_array,
+            #     prefix="regime_start_times_",
+            #     header="high=0, low=1",
+            #     fmt=f"%.{_precision}f",
+            #     args=args,
+            # )
 
-    #         axes[0].plot(time.real, total_energy)
-    #         axes[0].set_title("Total energy")
-    #         axes[1].plot(time.real[:-1] + 1 / 2 * PAR.stt, diff_total_energy)
-    #         axes[1].set_title("Diff. total energy")
-    #         axes[2].plot(
-    #             time.real[:-1] + 1 / 2 * PAR.stt,
-    #             eroded_bool_array,
-    #         )
-    #         axes[2].set_title("Erosion/dilation filtered diff. array")
-    #         axes[3].plot(
-    #             time.real[:-1] + 1 / 2 * PAR.stt,
-    #             high_pred_regime_starts,
-    #             label="High pred start",
-    #         )
-    #         axes[3].plot(
-    #             time.real[:-1] + 1 / 2 * PAR.stt,
-    #             low_pred_regime_starts,
-    #             label="Low pred start",
-    #         )
-    #         axes[3].set_title("Detected regime start times")
-    #         axes[3].legend(
-    #             loc="center right",
-    #             bbox_to_anchor=(1.15, 0.5),
-    #         )
-    # plt.tight_layout()
-    # plt.show()
+            axes[0].plot(time.real, total_energy)
+            axes[0].set_title("Total energy")
+            axes[1].plot(time.real[:-1] + 1 / 2 * PAR.stt, diff_total_energy)
+            axes[1].set_title("Diff. total energy")
+            axes[2].plot(
+                time.real[:-1] + 1 / 2 * PAR.stt,
+                eroded_bool_array,
+            )
+            axes[2].set_title("Erosion/dilation filtered diff. array")
+            axes[3].plot(
+                time.real[:-1] + 1 / 2 * PAR.stt,
+                high_pred_regime_starts,
+                label="High pred start",
+            )
+            axes[3].plot(
+                time.real[:-1] + 1 / 2 * PAR.stt,
+                low_pred_regime_starts,
+                label="Low pred start",
+            )
+            axes[3].set_title("Detected regime start times")
+            axes[3].legend(
+                loc="center right",
+                bbox_to_anchor=(1.15, 0.5),
+            )
+    plt.tight_layout()
+    plt.show()
 
 
 if __name__ == "__main__":
@@ -316,5 +316,5 @@ if __name__ == "__main__":
     )
 
     # main(args)
-    # find_distinct_pred_regimes(args)
-    analyse_mean_velocity_spectra(args)
+    find_distinct_pred_regimes(args)
+    # analyse_mean_velocity_spectra(args)

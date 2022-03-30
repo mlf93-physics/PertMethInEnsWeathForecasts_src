@@ -23,6 +23,7 @@ import general.utils.importing.import_data_funcs as g_import
 import general.utils.importing.import_perturbation_data as pt_import
 import general.utils.importing.import_utils as g_imp_utils
 import general.utils.plot_utils as g_plt_utils
+import general.analyses.analyse_data as g_a_data
 import general.analyses.plot_analyses as g_plt_anal
 from general.plotting.plot_params import *
 import general.plotting.plot_config as plt_config
@@ -614,6 +615,78 @@ def plt_BV_LYAP_vector_comparison(args):
     # fig2.tight_layout(rect=[0, 0, 0.9, 1])
 
 
+def plot_tlm_validity(args: dict, axes=None):
+    if axes is None:
+        fig, axes = plt.subplots(nrows=1, ncols=1, sharex=True)
+
+    args["endpoint"] = True
+
+    e_utils.update_compare_exp_folders(args)
+
+    cmap_list = plt.rcParams["axes.prop_cycle"].by_key()["color"]
+
+    line_counter = 0
+    u_stores = []
+    for _, folder in enumerate(args["exp_folders"]):
+        folder_path = pl.Path(folder)
+        # Set exp_folder
+        args["exp_folder"] = folder
+
+        # digits_in_name = lib_type_utils.get_digits_from_string(folder_path.name)
+        # if digits_in_name is not None:
+        #     if isinstance(digits_in_name, int):
+        #         perturb_type = folder_path.name.split(
+        #             lib_type_utils.zpad_string(str(digits_in_name), n_zeros=2)
+        #         )[0]
+        #         color = METHOD_COLORS[perturb_type]
+
+        #         linestyle = LINESTYLES[digits_in_name]
+
+        # else:
+        #     perturb_type = folder_path.name.split("_")[0]
+        #     color = METHOD_COLORS[perturb_type]
+        #     linestyle = None
+
+        (
+            u_store,
+            perturb_time_pos_list,
+            perturb_time_pos_list_legend,
+            header_dicts,
+            u_ref_stores,
+        ) = g_import.import_perturbation_velocities(
+            args,
+            search_pattern="*perturb*.csv",
+        )
+
+        # Get number of runs per profile and n_profiles
+        n_runs_per_profile = int(header_dicts[0]["n_runs_per_profile"])
+        n_profiles = int(header_dicts[0]["n_profiles"])
+        n_perturbations = len(perturb_time_pos_list)
+
+        u_stores.append(u_store)
+
+    u_diff_stores = []
+    for i in range(n_perturbations):
+        u_diff_stores.append(u_stores[1][i] - u_stores[0][i])
+
+    (
+        error_norm_vs_time,
+        error_norm_mean_vs_time,
+    ) = g_a_data.analyse_error_norm_vs_time(u_diff_stores, args=args)
+
+    time_array = np.linspace(
+        0,
+        header_dicts[0]["time_to_run"],
+        int(header_dicts[0]["time_to_run"] * params.tts) + args["endpoint"] * 1,
+        dtype=np.float64,
+        endpoint=args["endpoint"],
+    )
+
+    mean_of_logged_error_norm = np.mean(np.log(error_norm_vs_time[1:, :]), axis=1)
+
+    plt.plot(time_array[1:], mean_of_logged_error_norm, "k")
+
+
 def plot_error_norm_comparison(
     args: dict, axes=None, specific_runs_per_profile_dict=None
 ):
@@ -846,8 +919,6 @@ def plot_exp_growth_rate_comparison(args: dict):
             perturb_type = folder_path.name.split("_")[0]
             color = METHOD_COLORS[perturb_type]
             linestyle = None
-
-        print("perturb_type", perturb_type)
 
         # Set exp_folder
         args["exp_folder"] = folder
@@ -1121,6 +1192,8 @@ if __name__ == "__main__":
         plot_char_value_vs_time_with_ref_flow(args)
     elif "vec_compare_to_lv" in args["plot_type"]:
         plt_vec_compared_to_lv(args)
+    elif "tlm_validity" in args["plot_type"]:
+        plot_tlm_validity(args)
     else:
         raise ValueError("No valid plot type given as input argument")
 

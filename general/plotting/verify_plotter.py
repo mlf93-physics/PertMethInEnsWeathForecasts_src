@@ -8,11 +8,13 @@ import general.utils.argument_parsers as a_parsers
 import general.utils.importing.import_data_funcs as g_import
 import general.utils.plot_utils as g_plt_utils
 import general.utils.user_interface as g_ui
+import general.plotting.plot_config as plt_config
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.optimize as sp_optim
 from general.params.model_licences import Models
 from general.utils.module_import.type_import import *
+from matplotlib.ticker import MultipleLocator
 from pyinstrument import Profiler
 
 # Get parameters for model
@@ -28,8 +30,12 @@ elif cfg.MODEL == Models.LORENTZ63:
     params = l63_params
 
 
-def parabola_order2(x, a, b):
-    return a * x ** 2 + b * x
+def logfunction(x, a, b):
+    return a * np.log(x) + b
+
+
+def linearfunction(x, a, b):
+    return a * x + b
 
 
 def plot_tl_error_verification(args, axes=None):
@@ -60,39 +66,79 @@ def plot_tl_error_verification(args, axes=None):
     error_norms = np.array(error_norms).T
 
     # Get mean and std
-    mean_error_norm = np.mean(error_norms, axis=1)
-    std_error_norm = np.std(error_norms, axis=1)
+    mean_error_norm = np.mean(np.log(error_norms), axis=1)
+    std_error_norm = np.std(np.log(error_norms), axis=1)
 
     # Get time
     time_array = verification_data[:, 0].real
 
+    if cfg.MODEL == cfg.Models.LORENTZ63:
+        logfit_split_index = 50
+        linfit_split_index = 100
+    elif cfg.MODEL == cfg.Models.SHELL_MODEL:
+        logfit_split_index = 40
+        linfit_split_index = 80
+
     # Fit data
-    popt, pcov = sp_optim.curve_fit(
-        parabola_order2,
-        np.repeat(time_array, error_norms.shape[1]).ravel(),
-        error_norms.ravel(),
+    log_popt, log_pcov = sp_optim.curve_fit(
+        logfunction,
+        np.repeat(time_array[1:logfit_split_index], error_norms.shape[1]).ravel(),
+        np.log(error_norms[1:logfit_split_index, :]).ravel(),
+    )
+    print("log_popt", log_popt)
+
+    lin_popt, lin_pcov = sp_optim.curve_fit(
+        linearfunction,
+        np.repeat(time_array[linfit_split_index:], error_norms.shape[1]).ravel(),
+        np.log(error_norms[linfit_split_index:, :]).ravel(),
     )
 
     axes.plot(
-        time_array, mean_error_norm, "b-", label="$\\langle ||\\delta x(t)|| \\rangle$"
+        time_array[1:],
+        mean_error_norm[1:],
+        "k-",
+        label="$\\langle ||\\delta x(t)|| \\rangle$",
+    )
+    axes.plot(
+        time_array[1:],
+        logfunction(time_array[1:], *log_popt),
+        label="Log. fit ($f(x)=a \\mathrm{{log}}(x) + b$)",
+        color="b",
+        linestyle="dashed",
     )
     axes.plot(
         time_array,
-        mean_error_norm + std_error_norm,
-        "b--",
-        label="$\\langle ||\\delta x(t)|| \\rangle + \\sigma$",
-    )
-    axes.plot(
-        time_array,
-        parabola_order2(time_array, *popt),
-        label="Poly. fit ($f(x)=ax^2 + bx$)",
+        linearfunction(time_array, *lin_popt),
+        label="Linear fit",
+        color="b",
+        linestyle="dotted",
     )
     axes.set_ylabel(
-        "Error difference\n $\\mathbf{{L}}\\delta x(0)$ - $( M[x_0 + \\delta x(0)] - M(x_0))$"
+        "Log error norm $\\mathrm{{log}}||E(t)||$"  # $\\mathrm{{log}}||L \\delta x(0)$ - $( M[x_0 + \\delta x(0)] - M(x_0))||$"
     )
     axes.set_xlabel("Time")
     axes.set_title("TLM error verification")
     axes.legend()
+
+    fig.subplots_adjust(
+        top=0.98, bottom=0.199, left=0.25, right=0.944, hspace=0.2, wspace=0.2
+    )
+
+    if args["tolatex"]:
+        axes.get_legend().remove()
+        plt_config.adjust_axes(axes)
+
+    if args["save_fig"]:
+        if cfg.MODEL == Models.SHELL_MODEL:
+            subfolder = "shell"
+        elif cfg.MODEL == Models.LORENTZ63:
+            subfolder = "l63"
+
+        g_plt_utils.save_figure(
+            args,
+            subpath="thesis_figures/numerical_setup/" + subfolder,
+            file_name="verification_tlm",
+        )
 
 
 if __name__ == "__main__":
@@ -113,14 +159,15 @@ if __name__ == "__main__":
         sh_utils.update_arrays(params)
 
     # Make profiler
-    profiler = Profiler()
-    profiler.start()
+    # profiler = Profiler()
+    # profiler.start()
+    plt_config.adjust_default_fig_axes_settings(args)
 
     if "tl_error_verification" in args["plot_type"]:
         plot_tl_error_verification(args)
     else:
         raise ValueError("No valid plot type given as input argument")
 
-    profiler.stop()
-    print(profiler.output_text(color=True))
+    # profiler.stop()
+    # print(profiler.output_text(color=True))
     g_plt_utils.save_or_show_plot(args)

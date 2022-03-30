@@ -96,6 +96,8 @@ def generate_start_times(exp_setup: dict, args: dict):
         or cfg.LICENCE == EXP.FINAL_SINGULAR_VECTORS
     ):
         offset_var = "vector_offset"
+    elif cfg.LICENCE == EXP.TANGENT_LINEAR:
+        offset_var = "unit_offset"
     else:
         raise g_exceptions.LicenceImplementationError(licence=cfg.LICENCE)
 
@@ -116,6 +118,10 @@ def generate_start_times(exp_setup: dict, args: dict):
                 )
             elif cfg.LICENCE == EXP.SINGULAR_VECTORS:
                 _time_offset = exp_setup["eval_times"][0]
+            elif cfg.LICENCE == EXP.TANGENT_LINEAR:
+                _time_offset = (
+                    exp_setup["eval_times"][0] - exp_setup["integration_time"]
+                )
             elif cfg.LICENCE == EXP.FINAL_SINGULAR_VECTORS:
                 _time_offset = (
                     exp_setup["eval_times"][0] - exp_setup["integration_time"]

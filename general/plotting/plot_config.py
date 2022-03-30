@@ -23,6 +23,10 @@ def normal_small_figure():
     plt.rcParams["figure.figsize"] = [5.39749, 3]
 
 
+def quad():
+    plt.rcParams["figure.figsize"] = [5.39749 / 2, 2]
+
+
 def two_quads():
     plt.rcParams["figure.figsize"] = [5.39749 / 2, 5.39749 / 2]
 
@@ -99,8 +103,8 @@ def remove_legends(axes: Union[plt.Axes, List[plt.Axes], np.ndarray]):
         axes.get_legend().remove()
 
 
-def set_ytick_format(axes, fmt="%.0f"):
-    axes.yaxis.set_major_formatter(mpl_ticker.FormatStrFormatter(fmt))
+def set_axis_tick_format(axis, fmt="%.0f"):
+    axis.set_major_formatter(mpl_ticker.FormatStrFormatter(fmt))
 
 
 def adjust_default_fig_axes_settings(args):
@@ -120,5 +124,7 @@ def adjust_default_fig_axes_settings(args):
             normal_small_figure()
         if args["latex_format"] == "two_quads":
             two_quads()
+        if args["latex_format"] == "quad_item":
+            quad()
         if args["latex_format"] == "full_page":
             full_page()
