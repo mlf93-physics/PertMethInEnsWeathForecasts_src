@@ -141,7 +141,7 @@ def generate_lvs(args: dict, exp_setup: dict):
     stored_eval_times = copy.copy(local_exp_setup["eval_times"])
 
     # Calculate lv valid at eval time + all end times
-    for iw in [0]:  # *local_exp_setup["iws"]]:
+    for iw in [0, *local_exp_setup["iws"]]:
         iw_str: str = lib_type_utils.zpad_string(str(iw), n_zeros=3)
         local_exp_setup["folder_name"] = str(
             pl.Path(

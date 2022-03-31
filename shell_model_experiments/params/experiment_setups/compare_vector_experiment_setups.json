@@ -46,7 +46,7 @@
     },
     "CompareITRun02": {
         "general": {
-            "folder_name": "compare_vecs_bv_to_lv_ncycles2_examine_linear_regime_low_pred",
+            "folder_name": "compare_vecs_bv_to_lv_ncycles8_examine_lv_int_time0.4",
             "vector_folder": "vectors",
             "perturbation_folder": "perturbations",
             "sub_exp_folder": "perturb_data",
@@ -75,7 +75,7 @@
             "unit_offset": 1.0
         },
         "bv_gen_setup": {
-            "n_cycles": 2,
+            "n_cycles": 8,
             "n_vectors": 20
         },
         "bv_eof_gen_setup": {

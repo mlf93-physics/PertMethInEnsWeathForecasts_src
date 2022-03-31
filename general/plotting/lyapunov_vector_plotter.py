@@ -17,10 +17,12 @@ import pathlib as pl
 import config as cfg
 import general.analyses.plot_analyses as g_plt_anal
 import general.plotting.plot_config as g_plt_config
+import general.utils.plot_utils as g_plt_utils
 import general.plotting.plot_data as g_plt_data
 import general.utils.argument_parsers as a_parsers
 import general.utils.importing.import_data_funcs as g_import
 import general.utils.user_interface as g_ui
+import general.plotting.plot_config as plt_config
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sb
@@ -47,12 +49,25 @@ elif cfg.MODEL == Models.LORENTZ63:
 def plot_lyapunov_vectors_average(args: dict, axes: plt.Axes = None):
     # Prepare plot_kwargs
     plot_kwargs: dict = {
-        "xlabel": "LV index",
-        "ylabel": "Shell index",
+        "xlabel": "$i$",
+        "ylabel": "$n$",
         "title_header": "Averaged LVs",
+        "vector_label": "$\\langle|\\xi^{-\\infty}_{n,i}| \\rangle$",
     }
 
-    g_plt_data.plot2D_average_vectors(args, axes=axes, plot_kwargs=plot_kwargs)
+    g_plt_data.plot2D_average_vectors(
+        args,
+        axes=axes,
+        plot_kwargs=plot_kwargs,
+        characteristic_value_name="$\\lambda_i$",
+    )
+
+    if args["save_fig"]:
+        g_plt_utils.save_figure(
+            args,
+            subpath="thesis_figures/" + args["save_sub_folder"],
+            file_name="average_lv_vectors_with_exponents",
+        )
 
 
 def plot_tlm_solution(args, axes=None):
@@ -213,6 +228,8 @@ if __name__ == "__main__":
         sh_utils.set_params(params, parameter="sdim", value=args["sdim"])
         sh_utils.update_arrays(params)
 
+    plt_config.adjust_default_fig_axes_settings(args)
+
     if "tlm_error_norm" in args["plot_type"]:
         plot_tlm_solution(args)
     elif "tlm_orth_vs_time" in args["plot_type"]:
@@ -224,6 +241,4 @@ if __name__ == "__main__":
     else:
         raise ValueError("No valid plot type given as input argument")
 
-    if not args["noplot"]:
-        plt.tight_layout()
-        plt.show()
+    g_plt_utils.save_or_show_plot(args)

@@ -47,7 +47,7 @@
     },
     "CompareITRun02": {
         "general": {
-            "folder_name": "compare_vecs_to_lv_ncycles1_n_units100",
+            "folder_name": "compare_bv_ncycles4_to_lv_it100_n_units100",
             "vector_folder": "vectors",
             "perturbation_folder": "perturbations",
             "sub_exp_folder": "perturb_data",
@@ -72,12 +72,12 @@
             "unit_offset": 2.0
         },
         "bv_gen_setup": {
-            "n_cycles": 1,
+            "n_cycles": 4,
             "n_vectors": 8
         },
         "lv_gen_setup": {
-            "integration_time": 20,
-            "n_cycles": 1,
+            "integration_time": 4,
+            "n_cycles": 5,
             "n_vectors": 3
         },
         "sv_gen_setup": {
@@ -124,6 +124,73 @@
         "lv_gen_setup": {
             "integration_time": 20,
             "n_cycles": 1,
+            "n_vectors": 3
+        },
+        "sv_gen_setup": {
+            "n_vectors": 3,
+            "n_lanczos_iterations": 1,
+            "n_model_iterations": 1
+        },
+        "fsv_gen_setup": {
+            "n_vectors": 3,
+            "n_lanczos_iterations": 1,
+            "n_model_iterations": 1
+        }
+    },
+    "CompareVectorProjectibilityToLV": {
+        "general": {
+            "folder_name": "compare_vector_projectibility_to_lv_n_units1000",
+            "vector_folder": "vectors",
+            "perturbation_folder": "perturbations",
+            "sub_exp_folder": "perturb_data",
+            "eval_times": [
+                10001
+            ],
+            "n_units": 1000,
+            "iws": [
+                2,
+                6,
+                10,
+                14,
+                18,
+                22,
+                26,
+                30,
+                34,
+                38,
+                42,
+                46,
+                50,
+                54,
+                58,
+                62,
+                66,
+                70,
+                74,
+                78,
+                82,
+                86,
+                90,
+                94,
+                98,
+                102,
+                106,
+                110,
+                114,
+                118,
+                122,
+                126,
+                130
+            ],
+            "unit_offset": 2.0
+        },
+        "bv_gen_setup": {
+            "n_cycles": 4,
+            "n_vectors": 8
+        },
+        "lv_gen_setup": {
+            "integration_time": 4,
+            "n_cycles": 5,
             "n_vectors": 3
         },
         "sv_gen_setup": {

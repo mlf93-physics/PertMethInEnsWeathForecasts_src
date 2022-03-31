@@ -27,8 +27,12 @@ def quad():
     plt.rcParams["figure.figsize"] = [5.39749 / 2, 2]
 
 
-def two_quads():
+def large_quad():
     plt.rcParams["figure.figsize"] = [5.39749 / 2, 5.39749 / 2]
+
+
+def two_quads():
+    plt.rcParams["figure.figsize"] = [5.39749, 2]
 
 
 def full_page():

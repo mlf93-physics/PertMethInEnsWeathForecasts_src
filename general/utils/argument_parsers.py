@@ -584,6 +584,7 @@ class StandardPlottingArgParser:
                 "three_panel",
                 "quad_item",
                 "two_vertical_panel",
+                "large_quad",
                 "two_quads",
                 "full_page",
             ],

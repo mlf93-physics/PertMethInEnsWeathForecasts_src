@@ -115,6 +115,64 @@ def collect_error_norm_plots(args):
         )
 
 
+def collect_sv_vec_compare_plots(args):
+    fig, axes = plt.subplots(nrows=1, ncols=2, sharex=True, sharey=True)
+
+    copy_args1 = copy.deepcopy(args)
+    copy_args2 = copy.deepcopy(args)
+    copy_args1["vectors"] = ["lv", "fsv"]
+    plt_compare.plt_vec_compared_to_lv(copy_args1, axes=axes[1], pair_vectors=True)
+
+    copy_args2["vectors"] = ["lv", "sv"]
+    plt_compare.plt_vec_compared_to_lv(copy_args2, axes=axes[0], pair_vectors=True)
+
+    # Remove labels
+    for ax in axes:
+        ax.set_ylabel("")
+        ax.set_xlabel("")
+
+    fig.supxlabel("$t_{{OPT}}$")
+    fig.supylabel("Absolute projectibility")
+
+    fig.subplots_adjust(
+        top=0.976, bottom=0.204, left=0.119, right=0.992, hspace=0.2, wspace=0.092
+    )
+
+    if args["tolatex"]:
+        plt_config.remove_legends(axes)
+        plt_config.adjust_axes(axes)
+        g_plt_utils.add_subfig_labels(axes)
+
+    if args["save_fig"]:
+        g_plt_utils.save_figure(
+            args,
+            subpath="thesis_figures/pt_methods",
+            file_name="projectibility_vs_opt_sv_fsv_vs_lv",
+        )
+
+
+def collect_bv_vec_compare_plots(args):
+    fig, axes = plt.subplots(nrows=1, ncols=1)
+
+    args["vectors"] = ["lv", "bv"]
+    plt_compare.plt_vec_compared_to_lv(args, axes=axes)
+
+    # fig.subplots_adjust(
+    #     top=0.976, bottom=0.204, left=0.119, right=0.992, hspace=0.2, wspace=0.092
+    # )
+
+    if args["tolatex"]:
+        plt_config.remove_legends(axes)
+        plt_config.adjust_axes(axes)
+
+    if args["save_fig"]:
+        g_plt_utils.save_figure(
+            args,
+            subpath="thesis_figures/pt_methods",
+            file_name="projectibility_vs_opt_bv_vs_lv",
+        )
+
+
 if __name__ == "__main__":
     cfg.init_licence()
 
@@ -139,6 +197,10 @@ if __name__ == "__main__":
 
     if "collect_error_norm_compare" in args["plot_type"]:
         collect_error_norm_plots(args)
+    elif "collect_sv_vec_compare_plots" in args["plot_type"]:
+        collect_sv_vec_compare_plots(args)
+    elif "collect_bv_vec_compare_plots" in args["plot_type"]:
+        collect_bv_vec_compare_plots(args)
     else:
         raise ValueError("No valid plot type given as input argument")
 
