@@ -21,6 +21,7 @@ if cfg.MODEL == Models.SHELL_MODEL:
     import shell_model_experiments.perturbations.normal_modes as sh_nm_estimator
     import shell_model_experiments.utils.util_funcs as ut_funcs
     from shell_model_experiments.sabra_model.sabra_model import run_model as sh_model
+    import shell_model_experiments.utils.runner_utils as sh_r_utils
     from shell_model_experiments.sabra_model.tl_sabra_model import (
         run_model as sh_tl_model,
     )
@@ -417,6 +418,9 @@ if __name__ == "__main__":
         args["ny"] = ut_funcs.ny_from_ny_n_and_forcing(
             args["forcing"], args["ny_n"], args["diff_exponent"]
         )
+        if args["regime_start"] is not None:
+            start_times, _, _ = sh_r_utils.get_regime_start_times(args)
+            args["start_times"] = start_times[: args["n_profiles"]]
 
     # Add/edit arguments
     args["Nt"] = int(round(args["time_to_run"] / params.dt))

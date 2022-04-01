@@ -76,8 +76,12 @@ def plot_tl_error_verification(args, axes=None):
         logfit_split_index = 50
         linfit_split_index = 100
     elif cfg.MODEL == cfg.Models.SHELL_MODEL:
-        logfit_split_index = 40
-        linfit_split_index = 80
+        if args["regime_start"] == "low":
+            logfit_split_index = 6
+            linfit_split_index = 20
+        elif args["regime_start"] == "high":
+            logfit_split_index = 40
+            linfit_split_index = 80
 
     # Fit data
     log_popt, log_pcov = sp_optim.curve_fit(
@@ -138,7 +142,7 @@ def plot_tl_error_verification(args, axes=None):
         g_plt_utils.save_figure(
             args,
             subpath="thesis_figures/numerical_setup/" + subfolder,
-            file_name="verification_tlm",
+            file_name="verification_tlm_" + args["regime_start"],
         )
 
 
