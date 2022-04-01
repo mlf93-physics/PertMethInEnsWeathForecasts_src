@@ -68,7 +68,7 @@ def generate_lvs(args: dict, exp_setup: dict):
     args["pert_mode"] = "rd"
 
     # Get subset of experiment setup
-    local_exp_setup = exp_setup["general"] | exp_setup["lv_gen_setup"]
+    local_exp_setup = {**exp_setup["general"], **exp_setup["lv_gen_setup"]}
     local_exp_setup["folder_name"] = str(
         pl.Path(
             local_exp_setup["folder_name"],
@@ -101,7 +101,7 @@ def generate_bvs(args: dict, exp_setup: dict):
     args["pert_mode"] = "rd"
 
     # Get subset of experiment setup
-    local_exp_setup = exp_setup["general"] | exp_setup["bv_gen_setup"]
+    local_exp_setup = {**exp_setup["general"], **exp_setup["bv_gen_setup"]}
     local_exp_setup["folder_name"] = str(
         pl.Path(
             local_exp_setup["folder_name"],
@@ -128,7 +128,7 @@ def generate_bv_eofs(args: dict, exp_setup: dict):
     cfg.LICENCE = exp.BREEDING_EOF_VECTORS
 
     # Get subset of experiment setup
-    local_exp_setup = exp_setup["general"] | exp_setup["bv_eof_gen_setup"]
+    local_exp_setup = {**exp_setup["general"], **exp_setup["bv_eof_gen_setup"]}
     # Set local args params
     args["out_exp_folder"] = pl.Path(
         local_exp_setup["folder_name"],
@@ -161,7 +161,7 @@ def generate_svs(args: dict, exp_setup: dict):
     cfg.LICENCE = exp.SINGULAR_VECTORS
 
     # Get subset of experiment setup
-    local_exp_setup = exp_setup["general"] | exp_setup["sv_gen_setup"]
+    local_exp_setup = {**exp_setup["general"], **exp_setup["sv_gen_setup"]}
     # Set local exp values
     local_exp_setup["folder_name"] = str(
         pl.Path(
@@ -493,7 +493,7 @@ def execute_pert_experiments(args: dict, exp_setup: dict):
     cfg.LICENCE = exp.NORMAL_PERTURBATION
 
     # Get subset of experiment setup
-    local_exp_setup = exp_setup["general"] | exp_setup["pert_setup"]
+    local_exp_setup = {**exp_setup["general"], **exp_setup["pert_setup"]}
 
     # Prepare arguments for perturbation runs
     args["time_to_run"] = local_exp_setup["time_to_run"]
@@ -524,35 +524,35 @@ def execute_pert_experiments(args: dict, exp_setup: dict):
 
     if "bv" in args["perturbations"] or "all" in args["perturbations"]:
         bv_pert_experiment(
-            copy.deepcopy(args), local_exp_setup | exp_setup["bv_pert_setup"]
+            copy.deepcopy(args), {**local_exp_setup, **exp_setup["bv_pert_setup"]}
         )
     if "bv_eof" in args["perturbations"] or "all" in args["perturbations"]:
         bv_eof_pert_experiment(
-            copy.deepcopy(args), local_exp_setup | exp_setup["bv_eof_gen_setup"]
+            copy.deepcopy(args), {**local_exp_setup, **exp_setup["bv_eof_gen_setup"]}
         )
     if "lv" in args["perturbations"] or "all" in args["perturbations"]:
         lv_pert_experiment(
-            copy.deepcopy(args), local_exp_setup | exp_setup["lv_gen_setup"]
+            copy.deepcopy(args), {**local_exp_setup, **exp_setup["lv_gen_setup"]}
         )
     if "rd" in args["perturbations"] or "all" in args["perturbations"]:
         rd_pert_experiment(
-            copy.deepcopy(args), local_exp_setup | exp_setup["rd_pert_setup"]
+            copy.deepcopy(args), {**local_exp_setup, **exp_setup["rd_pert_setup"]}
         )
     if "tl_rd" in args["perturbations"] or "all" in args["perturbations"]:
         tl_rd_pert_experiment(
-            copy.deepcopy(args), local_exp_setup | exp_setup["tl_rd_pert_setup"]
+            copy.deepcopy(args), {**local_exp_setup, **exp_setup["tl_rd_pert_setup"]}
         )
     if "nm" in args["perturbations"] or "all" in args["perturbations"]:
         nm_pert_experiment(
-            copy.deepcopy(args), local_exp_setup | exp_setup["nm_pert_setup"]
+            copy.deepcopy(args), {**local_exp_setup, **exp_setup["nm_pert_setup"]}
         )
     if "sv" in args["perturbations"] or "all" in args["perturbations"]:
         sv_pert_experiment(
-            copy.deepcopy(args), local_exp_setup | exp_setup["sv_gen_setup"]
+            copy.deepcopy(args), {**local_exp_setup, **exp_setup["sv_gen_setup"]}
         )
     if "rf" in args["perturbations"] or "all" in args["perturbations"]:
         rf_pert_experiment(
-            copy.deepcopy(args), local_exp_setup | exp_setup["rf_pert_setup"]
+            copy.deepcopy(args), {**local_exp_setup, **exp_setup["rf_pert_setup"]}
         )
 
 
