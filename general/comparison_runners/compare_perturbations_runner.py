@@ -13,6 +13,7 @@ sys.path.append("..")
 import copy
 import pathlib as pl
 import colorama as col
+from pyinstrument import Profiler
 import config as cfg
 import general.runners.perturbation_runner as pt_runner
 import general.utils.argument_parsers as a_parsers
@@ -606,4 +607,10 @@ if __name__ == "__main__":
     g_ui.confirm_run_setup(args)
     r_utils.adjust_run_setup(args)
 
+    profiler = Profiler()
+    profiler.start()
+
     main(args)
+
+    profiler.stop()
+    print(profiler.output_text())

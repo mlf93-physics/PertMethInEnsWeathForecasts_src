@@ -1,3 +1,4 @@
+import numpy as np
 import colorama as col
 from general.params.model_licences import Models
 import config as cfg
@@ -63,5 +64,78 @@ def check_dimension(header_func: callable) -> callable:
         return header_dict
 
     wrapper.dimension_checked = False
+
+    return wrapper
+
+
+def cached_profiles(header_func: callable) -> callable:
+    def wrapper(*args, **kwargs):
+        if wrapper.counter > 0:
+            if "start_times" in kwargs.keys():
+                len_start_times = len(kwargs["start_times"])
+                if len_start_times > 0 and len_start_times == len(wrapper.positions):
+                    # Check if saved positions correspond to requested start times
+                    if (
+                        all(
+                            [
+                                int(round(kwargs["start_times"][i] * params.tts))
+                                == wrapper.positions[i]
+                                for i in range(len(kwargs["start_times"]))
+                            ]
+                        )
+                        and kwargs["args"]["n_runs_per_profile"]
+                        == wrapper.n_runs_per_profile
+                    ):
+                        return (
+                            wrapper.u_init_profiles,
+                            wrapper.positions,
+                            wrapper.ref_header_dict,
+                        )
+            elif kwargs["args"]["start_times"] is not None:
+                len_args_start_times = len(kwargs["args"]["start_times"])
+                if len_args_start_times > 0 and len_args_start_times == len(
+                    wrapper.positions
+                ):
+                    # Check if saved positions correspond to requested start times
+                    if (
+                        all(
+                            [
+                                int(
+                                    round(kwargs["args"]["start_times"][i] * params.tts)
+                                )
+                                == wrapper.positions[i]
+                                for i in range(len_args_start_times)
+                            ]
+                        )
+                        and kwargs["args"]["n_runs_per_profile"]
+                        == wrapper.n_runs_per_profile
+                    ):
+                        return (
+                            wrapper.u_init_profiles,
+                            wrapper.positions,
+                            wrapper.ref_header_dict,
+                        )
+
+        # Import profiles if not using cached profiles
+        (u_init_profiles, positions, ref_header_dict) = header_func(*args, **kwargs)
+
+        wrapper.u_init_profiles = u_init_profiles
+        wrapper.positions = positions
+        wrapper.ref_header_dict = ref_header_dict
+        wrapper.n_runs_per_profile = kwargs["args"]["n_runs_per_profile"]
+
+        wrapper.counter += 1
+
+        return (
+            wrapper.u_init_profiles,
+            wrapper.positions,
+            wrapper.ref_header_dict,
+        )
+
+    wrapper.counter = 0
+    wrapper.u_init_profiles = None
+    wrapper.positions = None
+    wrapper.ref_header_dict = None
+    wrapper.n_runs_per_profile = None
 
     return wrapper

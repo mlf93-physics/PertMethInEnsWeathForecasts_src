@@ -5,6 +5,7 @@ numba
 numpy
 pip
 pyinstrument
+colorama
 scipy
 seaborn
 pyperclip

@@ -165,14 +165,14 @@
     },
     "ComparePertExpGrowthRate": {
         "general": {
-            "folder_name": "low_pred/compare_pert_exp_growth_rate_it0.001",
+            "folder_name": "low_pred/compare_pert_exp_growth_rate_it0.001_no_dec",
             "vector_folder": "vectors",
             "perturbation_folder": "perturbations",
             "sub_exp_folder": "perturb_data",
             "eval_times": [
                 21.12
             ],
-            "n_units": 5,
+            "n_units": 2,
             "unit_offset": 0.01
         },
         "lv_gen_setup": {
