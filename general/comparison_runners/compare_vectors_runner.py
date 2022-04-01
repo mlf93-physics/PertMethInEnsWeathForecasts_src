@@ -66,7 +66,7 @@ def generate_bvs(args: dict, exp_setup: dict):
     args["pert_mode"] = "rd"
 
     # Get subset of experiment setup
-    local_exp_setup = exp_setup["general"] | exp_setup["bv_gen_setup"]
+    local_exp_setup = {**exp_setup["general"], **exp_setup["bv_gen_setup"]}
 
     for iw in local_exp_setup["iws"]:
         iw_str: str = lib_type_utils.zpad_string(str(iw), n_zeros=3)
@@ -98,7 +98,7 @@ def generate_bv_eofs(args: dict, exp_setup: dict):
     cfg.LICENCE = exp.BREEDING_EOF_VECTORS
 
     # Get subset of experiment setup
-    local_exp_setup = exp_setup["general"] | exp_setup["bv_eof_gen_setup"]
+    local_exp_setup = {**exp_setup["general"], **exp_setup["bv_eof_gen_setup"]}
     args["n_profiles"] = local_exp_setup["n_units"]
     args["n_runs_per_profile"] = local_exp_setup["n_vectors"]
     args["pert_vector_folder"] = pl.Path(
@@ -136,7 +136,7 @@ def generate_lvs(args: dict, exp_setup: dict):
     args["pert_mode"] = "rd"
 
     # Get subset of experiment setup
-    local_exp_setup = exp_setup["general"] | exp_setup["lv_gen_setup"]
+    local_exp_setup = {**exp_setup["general"], **exp_setup["lv_gen_setup"]}
 
     stored_eval_times = copy.copy(local_exp_setup["eval_times"])
 
@@ -174,12 +174,12 @@ def generate_adj_lvs(args: dict, exp_setup: dict):
     args["pert_mode"] = "rd"
 
     # Get subset of experiment setup
-    local_exp_setup = exp_setup["general"] | exp_setup["lv_gen_setup"]
+    local_exp_setup = {**exp_setup["general"], **exp_setup["lv_gen_setup"]}
 
     stored_eval_times = copy.copy(local_exp_setup["eval_times"])
 
     # Calculate lv valid at eval time + all end times
-    for iw in [0, *local_exp_setup["iws"]]:
+    for iw in [*local_exp_setup["iws"]]:
         iw_str: str = lib_type_utils.zpad_string(str(iw), n_zeros=3)
         local_exp_setup["folder_name"] = str(
             pl.Path(
@@ -210,7 +210,7 @@ def generate_initial_svs(args: dict, exp_setup: dict):
     cfg.LICENCE = exp.SINGULAR_VECTORS
 
     # Get subset of experiment setup
-    local_exp_setup = exp_setup["general"] | exp_setup["sv_gen_setup"]
+    local_exp_setup = {**exp_setup["general"], **exp_setup["sv_gen_setup"]}
 
     for iw in local_exp_setup["iws"]:
         iw_str: str = lib_type_utils.zpad_string(str(iw), n_zeros=3)
@@ -244,7 +244,7 @@ def generate_final_svs(args: dict, exp_setup: dict):
     cfg.LICENCE = exp.FINAL_SINGULAR_VECTORS
 
     # Get subset of experiment setup
-    local_exp_setup = exp_setup["general"] | exp_setup["fsv_gen_setup"]
+    local_exp_setup = {**exp_setup["general"], **exp_setup["fsv_gen_setup"]}
     # Set pert_vector_folder to be able to get sv vectors for perturbations
     args["pert_vector_folder"] = pl.Path(
         exp_setup["general"]["folder_name"],
