@@ -425,6 +425,7 @@ def plt_vec_compared_to_lv(args, axes: plt.Axes = None, pair_vectors=False):
                             axes.plot(
                                 iw_values,
                                 mean_vector_lv_orthogonality_dict[vector][n, :, n],
+                                color=cmap_list[n],
                             )
                         )
                     else:
@@ -434,12 +435,22 @@ def plt_vec_compared_to_lv(args, axes: plt.Axes = None, pair_vectors=False):
                         )
                         vector_vs_lines.append(vector_vs_lv_lines)
                 if "alv" in save_vectors:
-                    vector_vs_alv_lines = axes.plot(
-                        iw_values,
-                        mean_vector_adj_lv_orthogonality_dict[vector][n, :, :],
-                        linestyle="dashed",
-                    )
-                    vector_vs_lines.append(vector_vs_alv_lines)
+                    if pair_vectors:
+                        vector_vs_lines.append(
+                            axes.plot(
+                                iw_values,
+                                mean_vector_adj_lv_orthogonality_dict[vector][n, :, n],
+                                linestyle="dashed",
+                                color=cmap_list[n],
+                            )
+                        )
+                    else:
+                        vector_vs_alv_lines = axes.plot(
+                            iw_values,
+                            mean_vector_adj_lv_orthogonality_dict[vector][n, :, :],
+                            linestyle="dashed",
+                        )
+                        vector_vs_lines.append(vector_vs_alv_lines)
 
                 line_objs = zip(*vector_vs_lines)
 

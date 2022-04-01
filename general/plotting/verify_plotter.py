@@ -85,13 +85,14 @@ def plot_tl_error_verification(args, axes=None):
         np.repeat(time_array[1:logfit_split_index], error_norms.shape[1]).ravel(),
         np.log(error_norms[1:logfit_split_index, :]).ravel(),
     )
-    print("log_popt", log_popt)
+    print("log_popt", log_popt, "log_pcov", log_pcov)
 
     lin_popt, lin_pcov = sp_optim.curve_fit(
         linearfunction,
         np.repeat(time_array[linfit_split_index:], error_norms.shape[1]).ravel(),
         np.log(error_norms[linfit_split_index:, :]).ravel(),
     )
+    print("lin_popt", lin_popt, "lin_pcov", lin_pcov)
 
     axes.plot(
         time_array[1:],

@@ -389,12 +389,12 @@ def verify_atlm_model(args: dict):
 
     print(f"{cfg.MODEL} | V_atlm = {mean_diff_identity} +/- {std_diff_identity}")
 
-    plt.plot(logged_diff_identity_array)
-    plt.plot([0, n_runs], [mean_diff_identity, mean_diff_identity], "k--")
-    plt.xlabel("Profile index")
-    plt.ylabel("Logged error rel. mean of identity")
-    plt.title(f"Verification of ATLM | $N_{{iterations}}$={int(args['Nt'])}")
-    plt.show()
+    # plt.plot(logged_diff_identity_array)
+    # plt.plot([0, n_runs], [mean_diff_identity, mean_diff_identity], "k--")
+    # plt.xlabel("Profile index")
+    # plt.ylabel("Logged error rel. mean of identity")
+    # plt.title(f"Verification of ATLM | $N_{{iterations}}$={int(args['Nt'])}")
+    # plt.show()
 
 
 if __name__ == "__main__":

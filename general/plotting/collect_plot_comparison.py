@@ -120,10 +120,10 @@ def collect_sv_vec_compare_plots(args):
 
     copy_args1 = copy.deepcopy(args)
     copy_args2 = copy.deepcopy(args)
-    copy_args1["vectors"] = ["lv", "fsv"]
+    copy_args1["vectors"] = ["lv", "alv", "fsv"]
     plt_compare.plt_vec_compared_to_lv(copy_args1, axes=axes[1], pair_vectors=True)
 
-    copy_args2["vectors"] = ["lv", "sv"]
+    copy_args2["vectors"] = ["lv", "alv", "sv"]
     plt_compare.plt_vec_compared_to_lv(copy_args2, axes=axes[0], pair_vectors=True)
 
     # Remove labels
