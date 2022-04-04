@@ -6,7 +6,7 @@ import pathlib as pl
 import json
 from operator import itemgetter
 import numpy as np
-from libs.libutils import file_utils as lib_file_utils
+from libs.libutils import file_utils as lib_file_utils, type_utils as lib_type_utils
 
 
 def get_exp_setup(path_to_file: pl.Path, args: dict) -> dict:
@@ -108,7 +108,7 @@ def update_compare_exp_folders(args, specific_runs_per_profile_dict=None):
                     ]
 
                 temp_new_folders = [
-                    str(pl.Path(args["exp_folder"], _dirs[i].name))
+                    pl.Path(args["exp_folder"], _dirs[i].name)
                     for i in range(len_folders)
                     if re.match(
                         fr"{item}(\d+_perturbations|_perturbations)", _dirs[i].name
@@ -119,14 +119,19 @@ def update_compare_exp_folders(args, specific_runs_per_profile_dict=None):
                     args["specific_runs_per_profile"] is not None
                     and len(temp_new_folders) > 1
                 ):
-                    temp_new_folders = itemgetter(*args["specific_runs_per_profile"])(
-                        temp_new_folders
-                    )
+                    temp_new_folders = [
+                        temp_new_folders[i]
+                        for i in range(len(temp_new_folders))
+                        if lib_type_utils.get_digits_from_string(
+                            temp_new_folders[i].name
+                        )
+                        in args["specific_runs_per_profile"]
+                    ]
                 else:
                     temp_new_folders = temp_new_folders[: args["n_runs_per_profile"]]
 
                 # Add new folders to list
-                _exp_folders.extend(temp_new_folders)
+                _exp_folders.extend([str(folder) for folder in temp_new_folders])
             for item in args["vectors"]:
                 _exp_folders.extend(
                     [

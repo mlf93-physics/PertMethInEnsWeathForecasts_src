@@ -40,6 +40,34 @@ elif cfg.MODEL == Models.LORENTZ63:
     sparams = l63_sparams
 
 
+def collect_exp_growth_rate_plots(args):
+    # Make axes
+    fig, axes = plt.subplots(nrows=2, ncols=1, sharex=True, sharey=True)
+
+    copy_args1 = copy.deepcopy(args)
+    copy_args1["exp_folder"] = "low_pred/compare_pert_exp_growth_rate_it0.001"
+
+    plt_compare.plot_exp_growth_rate_comparison(copy_args1, axes=axes[0])
+
+    copy_args2 = copy.deepcopy(args)
+    copy_args2["exp_folder"] = "high_pred/compare_pert_exp_growth_rate_it0.004"
+
+    plt_compare.plot_exp_growth_rate_comparison(copy_args2, axes=axes[1])
+
+    g_plt_utils.add_subfig_labels(axes)
+
+    if args["tolatex"]:
+        plt_config.remove_legends(axes)
+        plt_config.adjust_axes(axes)
+
+    if args["save_fig"]:
+        g_plt_utils.save_figure(
+            args,
+            subpath=f"thesis_figures/results_and_analyses/",
+            file_name="compare_exp_growth_rate",
+        )
+
+
 def collect_error_norm_plots(args):
     # Make axes
     fig, axes = plt.subplots(nrows=2, ncols=1, sharex=True, sharey=True)
@@ -47,9 +75,9 @@ def collect_error_norm_plots(args):
     if cfg.MODEL == cfg.Models.SHELL_MODEL:
         specific_runs_per_profile_dict = {
             "bv": None,
-            "bv_eof": [0, 5, 10, 15],
-            "sv": [0, 5, 10, 15],
-            "lv": [1, 5, 10, 15],
+            "bv_eof": [0, 4, 9, 14],
+            "sv": [0, 4, 9, 14],
+            "lv": [1, 4, 9, 14],
         }
     else:
         specific_runs_per_profile_dict = None
@@ -201,6 +229,8 @@ if __name__ == "__main__":
         collect_sv_vec_compare_plots(args)
     elif "collect_bv_vec_compare_plots" in args["plot_type"]:
         collect_bv_vec_compare_plots(args)
+    elif "collect_exp_growth_rate_compare_plots" in args["plot_type"]:
+        collect_exp_growth_rate_plots(args)
     else:
         raise ValueError("No valid plot type given as input argument")
 

@@ -9,6 +9,12 @@ python ./plotting/collect_plots.py --plot_type=spec_energy_howmoller --ref_end_t
 echo "Making sh_eigenmode_analysis plot"
 python ./plotting/collect_plots.py --plot_type=lyapunov_anal --n_profiles=100 --tolatex --save_fig --noplot --noconfirm
 
+echo "Making error norm comparison"
+python ../general/plotting/collect_plot_comparison.py --plot_type=collect_error_norm_compare --exp_folder=compare_pert_error_norm --endpoint  --seed_mode -pt all --tolatex -lf two_panel --save_fig --right_spine --notight plot_kwargs
+
+echo "Make exp. growth rate comparison"
+python ../general/plotting/collect_plot_comparison.py --plot_type=collect_exp_growth_rate_compare_plots --endpoint --seed_mode -pt all --n_runs_per_profile=20 --tolatex -lf two_panel --save_fig --noplot --noconfirm plot_kwargs --exp_growth_type=instant
+
 echo "Making singular vector average plot, opt0.01"
 python ../general/plotting/singular_vector_plotter.py --plot_type=s_vectors_average --pert_vector_folder=low_pred/compare_pert_exp_growth_rate_it0.01/vectors --exp_folder=sv_vectors --endpoint --n_profiles=1000 --n_runs_per_profile=20 --tolatex -lf quad_item --notight --save_fig --noconfirm --save_sub_folder=results_and_analyses/shell/low_pred --noplot
 

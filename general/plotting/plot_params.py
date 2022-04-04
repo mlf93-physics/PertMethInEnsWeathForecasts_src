@@ -4,6 +4,7 @@ __all__ = [
     "MARKERS",
     "SUBFIG_LABELS",
     "METHOD_COLORS",
+    "METHOD_LINESTYLES",
     "LINEWIDTHS",
 ]
 
@@ -25,6 +26,8 @@ METHOD_COLORS = {
     "lv": sb.color_palette()[3],  # red
     "rf": sb.color_palette()[6],  # pink
 }
+
+METHOD_LINESTYLES = {"bv_eof": ["-", "--", "-.", ":"], "sv": ["-", "--", "-.", ":"], "lv": ["-", "--", "-.", ":"]}
 
 LINEWIDTHS = {"thin": 1.0, "medium": 1.5}
 

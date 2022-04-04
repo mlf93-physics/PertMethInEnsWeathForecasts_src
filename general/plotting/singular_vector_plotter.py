@@ -188,7 +188,7 @@ def plot_s_vectors_average(args, axes: plt.Axes = None):
         g_plt_utils.save_figure(
             args,
             subpath="thesis_figures/" + args["save_sub_folder"],
-            file_name="average_sv_vectors_with_s_values",
+            file_name=args["save_fig_name"],
         )
 
 

@@ -898,7 +898,7 @@ def plot_RMSE_and_spread_comparison(args: dict):
     # axes.legend()
 
 
-def plot_exp_growth_rate_comparison(args: dict):
+def plot_exp_growth_rate_comparison(args: dict, axes: plt.Axes = None):
     """Plots a comparison of the exponential growth rates vs time for the different
     perturbation methods
 
@@ -909,7 +909,22 @@ def plot_exp_growth_rate_comparison(args: dict):
     """
     # args["endpoint"] = True
 
-    e_utils.update_compare_exp_folders(args)
+    if cfg.MODEL == cfg.Models.SHELL_MODEL:
+        specific_runs_per_profile_dict = {
+            "bv": None,
+            "rd": None,
+            "nm": None,
+            "rf": None,
+            "bv_eof": [0, 4, 9, 14],
+            "sv": [0, 4, 9, 14],
+            "lv": [1, 4, 9, 14],
+        }
+    else:
+        specific_runs_per_profile_dict = None
+
+    e_utils.update_compare_exp_folders(
+        args, specific_runs_per_profile_dict=specific_runs_per_profile_dict
+    )
     # Update number of folders after filtering
     len_folders = len(args["exp_folders"])
 
@@ -918,7 +933,10 @@ def plot_exp_growth_rate_comparison(args: dict):
     #     n_colors=args["n_runs_per_profile"]  # , vmin=0.2, vmax=0.8
     # )
     # cmap_list[0] = "k"
-    axes = plt.axes()
+    standalone_plot = False
+    if axes is None:
+        axes = plt.axes()
+        standalone_plot = True
 
     perturb_type_old = ""
     color_counter = 0
@@ -935,8 +953,8 @@ def plot_exp_growth_rate_comparison(args: dict):
                 )[0]
                 color = METHOD_COLORS[perturb_type]
 
-                linestyle = LINESTYLES[digits_in_name]
-
+                # linestyle = LINESTYLES[digits_in_name]
+                linestyle = METHOD_LINESTYLES[perturb_type][i]
         else:
             perturb_type = folder_path.name.split("_")[0]
             color = METHOD_COLORS[perturb_type]
@@ -975,21 +993,22 @@ def plot_exp_growth_rate_comparison(args: dict):
             minor=False,
         )
 
-    if args["tolatex"]:
-        plt_config.remove_legends(axes)
-        plt_config.adjust_axes(axes)
+    if standalone_plot:
+        if args["tolatex"]:
+            plt_config.remove_legends(axes)
+            plt_config.adjust_axes(axes)
 
-    if args["save_fig"]:
-        if cfg.MODEL == Models.SHELL_MODEL:
-            subfolder = "shell"
-        elif cfg.MODEL == Models.LORENTZ63:
-            subfolder = "l63"
+        if args["save_fig"]:
+            if cfg.MODEL == Models.SHELL_MODEL:
+                subfolder = "shell"
+            elif cfg.MODEL == Models.LORENTZ63:
+                subfolder = "l63"
 
-        g_plt_utils.save_figure(
-            args,
-            subpath="thesis_figures/results_and_analyses/" + subfolder,
-            file_name="compare_instant_exp_growth_rates",
-        )
+            g_plt_utils.save_figure(
+                args,
+                subpath="thesis_figures/results_and_analyses/" + subfolder,
+                file_name="compare_instant_exp_growth_rates",
+            )
 
 
 def plot_characteristic_value_vs_time(args: dict, axes: plt.Axes = None):

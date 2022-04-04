@@ -287,7 +287,11 @@ def lv_pert_experiment(args: dict, local_exp_setup: dict):
         "lv_perturbations",
     )
 
-    for i in range(local_exp_setup["n_vectors"]):
+    for i in (
+        range(local_exp_setup["n_vectors"])
+        if args["specific_runs_per_profile"] is None
+        else args["specific_runs_per_profile"]
+    ):
         args["specific_start_vector"] = i
         # Prepare vector str index
         str_index = lib_type_utils.zpad_string(str(i), n_zeros=2)
@@ -392,7 +396,11 @@ def bv_eof_pert_experiment(args: dict, local_exp_setup: dict):
     )
     args["exp_folder"] = "bv_eof_vectors"
 
-    for i in range(local_exp_setup["n_vectors"]):
+    for i in (
+        range(local_exp_setup["n_vectors"])
+        if args["specific_runs_per_profile"] is None
+        else args["specific_runs_per_profile"]
+    ):
         args["specific_start_vector"] = i
         # Prepare vector str index
         str_index = lib_type_utils.zpad_string(str(i), n_zeros=2)
@@ -430,7 +438,11 @@ def sv_pert_experiment(args: dict, local_exp_setup: dict):
     )
     args["exp_folder"] = "sv_vectors"
 
-    for i in range(local_exp_setup["n_vectors"]):
+    for i in (
+        range(local_exp_setup["n_vectors"])
+        if args["specific_runs_per_profile"] is None
+        else args["specific_runs_per_profile"]
+    ):
         args["specific_start_vector"] = i
         # Prepare vector str index
         str_index = lib_type_utils.zpad_string(str(i), n_zeros=2)

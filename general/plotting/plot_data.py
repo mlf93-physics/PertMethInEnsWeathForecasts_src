@@ -25,7 +25,7 @@ if cfg.MODEL == Models.SHELL_MODEL:
     sparams = sh_sparams
 
     SHELL_TICKS_COMPACT2 = np.arange(1, params.sdim, 2)
-    SHELL_TICKS_COMPACT3 = np.arange(1, params.sdim + 1, 3)
+    SHELL_TICKS_COMPACT5 = np.arange(1, params.sdim + 1, 6)
     SHELL_TICKS_FULL = np.arange(1, params.sdim + 1, 1)
 elif cfg.MODEL == Models.LORENTZ63:
     import lorentz63_experiments.params.params as l63_params
@@ -462,11 +462,13 @@ def plot2D_average_vectors(
         args, raw_perturbations=True, dtype=np.complex128
     )
     if cfg.LICENCE == EXP.SINGULAR_VECTORS:
-        characteristic_values = (
-            1
-            / header_dicts[0]["time_to_run"]
-            * np.log(np.sqrt(np.abs(characteristic_values)))
-        )
+        # Cut off at zero
+        real_s_values = np.min(characteristic_values.real, 0)
+        temp_log_array = np.zeros(characteristic_values.shape)
+        # Take log and output to temp_log_array
+        np.log(np.sqrt(real_s_values), out=temp_log_array, where=real_s_values > 0)
+        # Divide by optimization time
+        characteristic_values = 1 / header_dicts[0]["time_to_run"] * temp_log_array
     else:
         characteristic_values = np.abs(characteristic_values)
 
@@ -585,12 +587,13 @@ def plot2D_vectors(
     cbar_ax = fig.axes[-1]
     cbar_ax.set_title(vector_label, x=-0.3, y=-3.5)
 
-    if not no_char_values:
+    if no_char_values:
         heatmap_plot.set_yticklabels(SHELL_TICKS_COMPACT2, rotation=0)
         heatmap_plot.set_xticklabels(SHELL_TICKS_FULL)
     else:
         heatmap_plot.set_xticklabels(SHELL_TICKS_COMPACT2)
-        heatmap_plot.set_yticklabels(SHELL_TICKS_COMPACT3, rotation=0)
+        heatmap_plot.set_yticks(SHELL_TICKS_COMPACT5 - 0.5)
+        heatmap_plot.set_yticklabels(SHELL_TICKS_COMPACT5, rotation=0)
 
     axes.invert_yaxis()
     # axes.invert_xaxis()
