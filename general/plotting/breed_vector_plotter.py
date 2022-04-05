@@ -29,6 +29,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from general.params.model_licences import Models
 from general.utils.module_import.type_import import *
+from general.params.experiment_licences import Experiments as EXP
 from mpl_toolkits import mplot3d
 from pyinstrument import Profiler
 
@@ -256,10 +257,12 @@ def plot_breed_eof_vectors_average(args: dict, axes: plt.Axes = None):
         "vector_label": "$\\langle|e_{n,i}| \\rangle$",
     }
 
+    cfg.LICENCE = EXP.BREEDING_EOF_VECTORS
+
     g_plt_data.plot2D_average_vectors(
         args,
         axes=axes,
-        characteristic_value_name="$s_i^2$",
+        characteristic_value_name="$s_i^2/\\sum_i s_i^2$",
         plot_kwargs=plot_kwargs,
     )
 
@@ -282,14 +285,14 @@ def plot_breed_vectors_average(args: dict, axes: plt.Axes = None):
         "xlabel": "$i$",
         "ylabel": "$n$",
         "title_header": "Averaged BVs rel. mean BV",
-        "vector_label": "$\\langle|b_{n,i} - \\langle b_{n,i} \\rangle_{(i,t)}| \\rangle$",
+        "vector_label": "$\\langle|b_{n,i}| \\rangle_t$",
         # "cmap": cmap,
     }
 
     g_plt_data.plot2D_average_vectors(
         args,
         axes=axes,
-        rel_mean_vector=True,
+        rel_mean_vector=False,
         plot_kwargs=plot_kwargs,
         no_char_values=True,
     )
@@ -298,7 +301,7 @@ def plot_breed_vectors_average(args: dict, axes: plt.Axes = None):
         g_plt_utils.save_figure(
             args,
             subpath="thesis_figures/" + args["save_sub_folder"],
-            file_name="average_bv_vectors",
+            file_name=args["save_fig_name"],
         )
 
 

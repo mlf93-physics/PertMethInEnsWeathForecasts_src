@@ -27,7 +27,11 @@ METHOD_COLORS = {
     "rf": sb.color_palette()[6],  # pink
 }
 
-METHOD_LINESTYLES = {"bv_eof": ["-", "--", "-.", ":"], "sv": ["-", "--", "-.", ":"], "lv": ["-", "--", "-.", ":"]}
+METHOD_LINESTYLES = {
+    "bv_eof": ["-", "--", "-.", ":"],
+    "sv": ["-", "--", "-.", ":"],
+    "lv": ["-", "--", "-.", ":"],
+}
 
 LINEWIDTHS = {"thin": 1.0, "medium": 1.5}
 

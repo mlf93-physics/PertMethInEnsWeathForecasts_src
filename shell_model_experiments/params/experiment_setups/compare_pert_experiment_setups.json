@@ -163,7 +163,7 @@
             "time_to_run": 0.01
         }
     },
-    "ComparePertExpGrowthRate": {
+    "ComparePertExpGrowthRateLowPred": {
         "general": {
             "folder_name": "low_pred/compare_pert_exp_growth_rate_it0.0005",
             "vector_folder": "vectors",

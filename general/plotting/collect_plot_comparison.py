@@ -42,19 +42,29 @@ elif cfg.MODEL == Models.LORENTZ63:
 
 def collect_exp_growth_rate_plots(args):
     # Make axes
-    fig, axes = plt.subplots(nrows=2, ncols=1, sharex=True, sharey=True)
+    fig, axes = plt.subplots(nrows=2, ncols=1)
 
     copy_args1 = copy.deepcopy(args)
-    copy_args1["exp_folder"] = "low_pred/compare_pert_exp_growth_rate_it0.001"
+    copy_args1["exp_folder"] = "low_pred/compare_pert_exp_growth_rate_it0.0005"
 
     plt_compare.plot_exp_growth_rate_comparison(copy_args1, axes=axes[0])
+    axes[0].set_xlim(-0.0001, 0.005)
+    axes[0].set_ylim(-2000, None)
+    axes[0].set_yticks([-1000, 0, 1000])
+    axes[0].ticklabel_format(axis="y", style="sci", scilimits=(0, 0))
 
     copy_args2 = copy.deepcopy(args)
     copy_args2["exp_folder"] = "high_pred/compare_pert_exp_growth_rate_it0.004"
 
     plt_compare.plot_exp_growth_rate_comparison(copy_args2, axes=axes[1])
+    axes[1].set_xlim(-0.0001, 0.01)
+    axes[1].set_ylim(-1000, 250)
+    axes[1].ticklabel_format(axis="y", style="sci", scilimits=(0, 0))
 
     g_plt_utils.add_subfig_labels(axes)
+    fig.subplots_adjust(
+        top=0.949, bottom=0.126, left=0.111, right=0.966, hspace=0.395, wspace=0.2
+    )
 
     if args["tolatex"]:
         plt_config.remove_legends(axes)
@@ -63,8 +73,8 @@ def collect_exp_growth_rate_plots(args):
     if args["save_fig"]:
         g_plt_utils.save_figure(
             args,
-            subpath=f"thesis_figures/results_and_analyses/",
-            file_name="compare_exp_growth_rate",
+            subpath=f"thesis_figures/results_and_analyses/shell/",
+            file_name="compare_instant_exp_growth_rates",
         )
 
 

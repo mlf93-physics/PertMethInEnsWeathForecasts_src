@@ -22,7 +22,9 @@ import general.plotting.plot_data as g_plt_data
 import general.utils.argument_parsers as a_parsers
 import general.utils.importing.import_data_funcs as g_import
 import general.utils.user_interface as g_ui
+import general.utils.util_funcs as g_utils
 import general.plotting.plot_config as plt_config
+import general.utils.importing.import_perturbation_data as pt_import
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sb
@@ -52,14 +54,14 @@ def plot_lyapunov_vectors_average(args: dict, axes: plt.Axes = None):
         "xlabel": "$i$",
         "ylabel": "$n$",
         "title_header": "Averaged LVs",
-        "vector_label": "$\\langle|\\xi^{-\\infty}_{n,i}| \\rangle$",
+        "vector_label": "$\\langle|\\xi^{\\infty}_{n,i}| \\rangle$",
     }
 
     g_plt_data.plot2D_average_vectors(
         args,
         axes=axes,
         plot_kwargs=plot_kwargs,
-        characteristic_value_name="$\\lambda_i$",
+        characteristic_value_name="$\\lambda_i/t_{{OPT}}$",
     )
 
     if args["save_fig"]:
@@ -212,6 +214,38 @@ def plot_tlm_solution_and_orthogonality(args):
     fig.tight_layout()
 
 
+def plot_zeroth_lyapunov_vector(args):
+
+    (
+        vector_units,
+        characteristic_values,
+        _,
+        _,
+        header_dicts,
+    ) = pt_import.import_perturb_vectors(
+        args, raw_perturbations=True, dtype=np.complex128
+    )
+
+    sort_index = np.argsort(characteristic_values, axis=1)[:, ::-1]
+    for i in range(vector_units.shape[0]):
+        vector_units[i, :, :] = vector_units[i, sort_index[i, :], :]
+        characteristic_values[i, :] = characteristic_values[i, sort_index[i, :]]
+
+    vector_units = g_utils.normalize_array(vector_units, norm_value=1, axis=2)
+    mean_abs_vector_units = np.mean(np.abs(vector_units), axis=0)
+
+    fig, ax = plt.subplots(nrows=1, ncols=1)
+    ax.plot(np.log2(params.k_vec_temp), mean_abs_vector_units[0, :], label="$LV^1$")
+    ax.set_yscale("log")
+    ax.plot(
+        np.log2(params.k_vec_temp),
+        params.k_vec_temp ** (-1 / 3),
+        "k--",
+        label="$k^{{-1/3}}$",
+    )
+    ax.legend()
+
+
 if __name__ == "__main__":
     cfg.init_licence()
     # Get arguments
@@ -238,6 +272,8 @@ if __name__ == "__main__":
         plot_tlm_solution_and_orthogonality(args)
     elif "lv_average" in args["plot_type"]:
         plot_lyapunov_vectors_average(args)
+    elif "zeroth_lv" in args["plot_type"]:
+        plot_zeroth_lyapunov_vector(args)
     else:
         raise ValueError("No valid plot type given as input argument")
 

@@ -170,7 +170,7 @@ def plot_s_vectors_average(args, axes: plt.Axes = None):
 
     # Prepare plot_kwargs
     plot_kwargs: dict = {
-        "xlabel": "SV index, $i$",
+        "xlabel": "$i$",
         "ylabel": "$n$",
         "title_header": "Averaged SVs",
         "vector_label": "$\\langle|v_{n,i}| \\rangle$",
@@ -180,7 +180,7 @@ def plot_s_vectors_average(args, axes: plt.Axes = None):
     g_plt_data.plot2D_average_vectors(
         args,
         axes=axes,
-        characteristic_value_name="$\\sigma_i$",  # "$\\frac{{1}}{{t_{{OPT}}}}\\mathrm{{log}}(\\sigma_i)$",
+        characteristic_value_name="$\\frac{{1}}{{t_{{OPT}}}}\\mathrm{{ln}}\\sigma_i$",
         plot_kwargs=plot_kwargs,
     )
 

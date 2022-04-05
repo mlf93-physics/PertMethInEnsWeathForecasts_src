@@ -50,6 +50,8 @@ if cfg.MODEL == Models.SHELL_MODEL:
 
     params = PAR_SH
     sparams = sh_sparams
+
+    SHELL_TICKS_COMPACT2 = np.arange(1, params.sdim, 2)
 elif cfg.MODEL == Models.LORENTZ63:
     import lorentz63_experiments.params.params as l63_params
     import lorentz63_experiments.params.special_params as l63_sparams
@@ -65,6 +67,8 @@ def plt_pert_components(args: dict, axes: plt.Axes = None):
     if len(args["vectors"]) == 0:
         raise ValueError("--vectors argument mandatory for this plot")
 
+    specific_n_runs_per_profile = {"bv": 3, "lv": 1, "rf": 3}
+
     e_utils.update_compare_exp_folders(args)
 
     # Prepare axes
@@ -73,17 +77,23 @@ def plt_pert_components(args: dict, axes: plt.Axes = None):
 
     shell_index = np.log2(params.k_vec_temp)
     cmap_list_base = plt.rcParams["axes.prop_cycle"].by_key()["color"]
-    # ipert = 0
 
+    # Filter out any other folders than vector folders
     vector_folders = [folder for folder in args["exp_folders"] if "vectors" in folder]
 
     # Import perturb vectors and plot
     for i, folder in enumerate(vector_folders):
         folder_path = pl.Path(folder)
-        if re.match(fr"bv(\d+_vectors|_vectors)", folder_path.name):
-            raw_perturbations = False
+
+        digits_in_name = lib_type_utils.get_digits_from_string(folder_path.name)
+        if digits_in_name is not None:
+            perturb_type = folder_path.name.split(
+                lib_type_utils.zpad_string(str(digits_in_name), n_zeros=2)
+            )[0]
         else:
-            raw_perturbations = True
+            perturb_type = folder_path.name.split("_")[0]
+
+        args["n_runs_per_profile"] = specific_n_runs_per_profile[perturb_type]
 
         args["exp_folder"] = folder
         (
@@ -92,42 +102,22 @@ def plt_pert_components(args: dict, axes: plt.Axes = None):
             _,
             eval_pos,
             header_dicts,
-        ) = pt_import.import_perturb_vectors(args, raw_perturbations=raw_perturbations)
+        ) = pt_import.import_perturb_vectors(args, raw_perturbations=True)
 
-        mean_vectors = np.mean(np.abs(vector_units), axis=0).T
+        mean_vectors = np.mean(np.mean(np.abs(vector_units), axis=1), axis=0)
         norm_mean_vectors = g_utils.normalize_array(mean_vectors, norm_value=1, axis=0)
-
-        # if "bv" in folder:
-        #     anal_file = g_utils.get_analysis_file(args, type="velocities")
-        #     mean_u_data, ref_header_dict = g_import.import_data(
-        #         file_name=anal_file, start_line=1
-        #     )
-
-        #     norm_mean_u_data = g_utils.normalize_array(
-        #         np.abs(mean_u_data.T), norm_value=1, axis=0
-        #     )
-        #     norm_mean_vectors /= norm_mean_u_data
-        #     norm_mean_vectors = g_utils.normalize_array(
-        #         norm_mean_vectors, norm_value=1, axis=0
-        #     )
-
-        # Prepare cmap for SVs
-        cmap = g_plt_utils.set_color_cycle_for_vectors(
-            axes,
-            vector_type=folder_path.name.split("_vectors")[0],
-            n_vectors=norm_mean_vectors.shape[1],
-        )
 
         vector_lines = axes.plot(
             shell_index,
             norm_mean_vectors,
             linestyle="solid",
+            color=METHOD_COLORS[perturb_type]
             # color=cmap_list[ipert],
         )
 
         vector_lines[0].set_label(
             str(pl.Path(args["exp_folder"]).name).split("_vectors")[0]
-            + f" ({cmap.name.strip('_r')})"
+            # + f" ({cmap.name.strip('_r')})"
         )
 
         # ipert += 1
@@ -153,12 +143,14 @@ def plt_pert_components(args: dict, axes: plt.Axes = None):
         else:
             continue
 
+        args["n_runs_per_profile"] = specific_n_runs_per_profile[item]
+
         perturbations, _, exec_all_runs_per_profile = r_utils.prepare_perturbations(
             args, raw_perturbations=True
         )
         vector_units_list.append(perturbations[sparams.u_slice, :])
 
-    axes.set_prop_cycle("color", cmap_list_base[6:])
+    # axes.set_prop_cycle("color", cmap_list_base[6:])
 
     for i, vector_units in enumerate(vector_units_list):
         mean_vectors = np.mean(np.abs(vector_units), axis=1)
@@ -168,6 +160,7 @@ def plt_pert_components(args: dict, axes: plt.Axes = None):
             shell_index,
             norm_mean_vectors,
             linestyle="solid",
+            color=METHOD_COLORS[vector_label_list[i]],
         )
         vector_lines[0].set_label(vector_label_list[i])
         # ipert += 1
@@ -182,12 +175,35 @@ def plt_pert_components(args: dict, axes: plt.Axes = None):
         detailed=False,
     )
 
-    axes.set_xlabel("Shell index, i")
-    axes.set_ylabel("$\\langle|v_i|\\rangle$")
+    # Add kolmogorov spectrum
+    axes.plot(
+        np.log2(params.k_vec_temp),
+        params.k_vec_temp ** (-1 / 3),
+        "k--",
+    )
+
+    axes.set_xticks(SHELL_TICKS_COMPACT2)
+    axes.set_xticklabels(SHELL_TICKS_COMPACT2)
+    axes.set_xlabel("$n$")
+    axes.set_ylabel("Absolute components")
     axes.set_yscale("log")
     axes.set_ylim(1e-4, 1)
     axes.set_title(title)
     axes.legend()
+    plt.subplots_adjust(
+        top=0.961, bottom=0.194, left=0.217, right=0.99, hspace=0.2, wspace=0.2
+    )
+
+    if args["tolatex"]:
+        axes.get_legend().remove()
+        plt_config.adjust_axes(axes)
+
+    if args["save_fig"]:
+        g_plt_utils.save_figure(
+            args,
+            subpath="thesis_figures/results_and_analyses/shell/low_pred",
+            file_name="average_lv1_bv_rf_vectors_topt0.0005",
+        )
 
 
 def import_multiple_vector_dirs(
@@ -915,9 +931,9 @@ def plot_exp_growth_rate_comparison(args: dict, axes: plt.Axes = None):
             "rd": None,
             "nm": None,
             "rf": None,
-            "bv_eof": [0, 4, 9, 14],
-            "sv": [0, 4, 9, 14],
-            "lv": [1, 4, 9, 14],
+            "bv_eof": [0, 9, 17],
+            "sv": [0, 9, 17],
+            "lv": [1, 9, 17],
         }
     else:
         specific_runs_per_profile_dict = None
@@ -939,9 +955,10 @@ def plot_exp_growth_rate_comparison(args: dict, axes: plt.Axes = None):
         standalone_plot = True
 
     perturb_type_old = ""
-    color_counter = 0
+    linestyle_counter = -1
     for i, folder in enumerate(args["exp_folders"]):
         folder_path = pl.Path(folder)
+        print("folder", folder_path.name)
 
         digits_in_name = lib_type_utils.get_digits_from_string(folder_path.name)
         if digits_in_name is not None:
@@ -952,9 +969,13 @@ def plot_exp_growth_rate_comparison(args: dict, axes: plt.Axes = None):
                     lib_type_utils.zpad_string(str(digits_in_name), n_zeros=2)
                 )[0]
                 color = METHOD_COLORS[perturb_type]
+                if perturb_type == perturb_type_old or len(perturb_type_old) == 0:
+                    linestyle_counter += 1
+                else:
+                    linestyle_counter = 0
 
                 # linestyle = LINESTYLES[digits_in_name]
-                linestyle = METHOD_LINESTYLES[perturb_type][i]
+                linestyle = METHOD_LINESTYLES[perturb_type][linestyle_counter]
         else:
             perturb_type = folder_path.name.split("_")[0]
             color = METHOD_COLORS[perturb_type]
@@ -972,11 +993,14 @@ def plot_exp_growth_rate_comparison(args: dict, axes: plt.Axes = None):
             axes=axes,
             color=color,  # cmap_list[i],
             # zorder=zorder,
+            linewidth=1,
             linestyle=linestyle,
             anal_type=args["exp_growth_type"],
             plot_args=[],
             title_suffix=str(folder_path.parent),
         )
+
+        perturb_type_old = perturb_type
 
     if cfg.MODEL == Models.LORENTZ63:
         lower_bound: float = -6

@@ -25,6 +25,7 @@ if cfg.MODEL == Models.SHELL_MODEL:
     sparams = sh_sparams
 
     SHELL_TICKS_COMPACT2 = np.arange(1, params.sdim, 2)
+    SHELL_TICKS_COMPACT3 = np.arange(1, params.sdim + 1, 3)
     SHELL_TICKS_COMPACT5 = np.arange(1, params.sdim + 1, 6)
     SHELL_TICKS_FULL = np.arange(1, params.sdim + 1, 1)
 elif cfg.MODEL == Models.LORENTZ63:
@@ -461,35 +462,54 @@ def plot2D_average_vectors(
     ) = pt_import.import_perturb_vectors(
         args, raw_perturbations=True, dtype=np.complex128
     )
+    exp_setup = g_import.import_exp_info_file(args)
+
+    n_zeros = 0  # Used to remove negative singular values
     if cfg.LICENCE == EXP.SINGULAR_VECTORS:
         # Cut off at zero
-        real_s_values = np.min(characteristic_values.real, 0)
+        real_s_values = characteristic_values.real
+        below_zero_bool_array = real_s_values < 0
+        # Count number of zero entries
+        n_zeros = np.max(np.sum(below_zero_bool_array, axis=1))
+        real_s_values[below_zero_bool_array] = 0
         temp_log_array = np.zeros(characteristic_values.shape)
         # Take log and output to temp_log_array
-        np.log(np.sqrt(real_s_values), out=temp_log_array, where=real_s_values > 0)
+        np.log(
+            np.sqrt(real_s_values),
+            out=temp_log_array,
+            where=np.logical_not(below_zero_bool_array),
+        )
         # Divide by optimization time
         characteristic_values = 1 / header_dicts[0]["time_to_run"] * temp_log_array
+    elif cfg.LICENCE == EXP.BREEDING_EOF_VECTORS:
+        characteristic_values = (
+            characteristic_values.real
+            / np.sum(characteristic_values.real, axis=1)[:, np.newaxis]
+        )
+    elif cfg.LICENCE == EXP.LYAPUNOV_VECTORS:
+        characteristic_values = characteristic_values.real / (
+            exp_setup["integration_time"] * exp_setup["n_cycles"]
+        )
     else:
-        characteristic_values = np.abs(characteristic_values)
+        characteristic_values = characteristic_values.real
+
+    temp_range = np.s_[:-(n_zeros)] if n_zeros > 0 else np.s_[:]
+    characteristic_values = characteristic_values[:, temp_range]
 
     if not no_char_values:
         sort_index = np.argsort(characteristic_values, axis=1)[:, ::-1]
-        # print("sort_index", sort_index)
         for i in range(vector_units.shape[0]):
-            vector_units[i, :, :] = vector_units[i, sort_index[i, :], :]
+            vector_units[i, temp_range, :] = vector_units[i, sort_index[i, :], :]
             characteristic_values[i, :] = characteristic_values[i, sort_index[i, :]]
 
         mean_characteristic_value = np.mean(characteristic_values, axis=0)
 
-        # plt.plot(np.cumsum(mean_characteristic_value[1:]) / np.sum(mean_characteristic_value[1:]), ".")
         axes[0].plot(
-            SHELL_TICKS_FULL - 0.5,
+            SHELL_TICKS_FULL[temp_range] - 0.5,
             mean_characteristic_value,
-            ".",
+            "k.",
             markersize=4,
-        )  # / np.max(mean_characteristic_value[1:]), ".")
-        # axes[0].title("Cummulative mean lyapunov exponents (normalized)")
-        # axes[0].title("Mean lyapunov exponents")
+        )
         axes[0].set_ylabel(characteristic_value_name)
 
         if cfg.LICENCE in [EXP.BREEDING_EOF_VECTORS, EXP.BREEDING_VECTORS]:
@@ -502,9 +522,12 @@ def plot2D_average_vectors(
         if cfg.LICENCE == EXP.LYAPUNOV_VECTORS:
             axes[0].set_yscale("log")
             axes[0].set_yticks(
-                [1, 1e-4, 1e-8],
+                [1e3, 1e-6],
                 minor=False,
             )
+        if cfg.LICENCE == EXP.SINGULAR_VECTORS:
+            axes[0].ticklabel_format(axis="y", style="sci", scilimits=(0, 0))
+            axes[0].set_ylim(-1000, 1000)
 
     # Normalize
     vector_units = g_utils.normalize_array(vector_units, norm_value=1, axis=2)
@@ -529,11 +552,18 @@ def plot2D_average_vectors(
 
     if args["tolatex"]:
         plt_config.adjust_axes(axes)
+        if cfg.LICENCE == EXP.SINGULAR_VECTORS:
+            left = 0.196
+        elif cfg.LICENCE == EXP.LYAPUNOV_VECTORS:
+            left = 0.236
+        else:
+            left = 0.221
+
         if not no_char_values:
             fig.subplots_adjust(
-                top=0.973,
+                top=0.973 if cfg.LICENCE != EXP.SINGULAR_VECTORS else 0.923,
                 bottom=0.041,
-                left=0.221,
+                left=left,
                 right=0.984,
                 hspace=0.15,
                 wspace=0.2,
@@ -588,8 +618,10 @@ def plot2D_vectors(
     cbar_ax.set_title(vector_label, x=-0.3, y=-3.5)
 
     if no_char_values:
-        heatmap_plot.set_yticklabels(SHELL_TICKS_COMPACT2, rotation=0)
-        heatmap_plot.set_xticklabels(SHELL_TICKS_FULL)
+        heatmap_plot.set_yticks(SHELL_TICKS_COMPACT3 - 0.5)
+        heatmap_plot.set_yticklabels(SHELL_TICKS_COMPACT3, rotation=0)
+        heatmap_plot.set_xticks(SHELL_TICKS_COMPACT2 - 0.5)
+        heatmap_plot.set_xticklabels(SHELL_TICKS_COMPACT2)
     else:
         heatmap_plot.set_xticklabels(SHELL_TICKS_COMPACT2)
         heatmap_plot.set_yticks(SHELL_TICKS_COMPACT5 - 0.5)

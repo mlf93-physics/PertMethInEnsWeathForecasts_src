@@ -15,11 +15,18 @@ python ../general/plotting/collect_plot_comparison.py --plot_type=collect_error_
 echo "Make exp. growth rate comparison"
 python ../general/plotting/collect_plot_comparison.py --plot_type=collect_exp_growth_rate_compare_plots --endpoint --seed_mode -pt all --n_runs_per_profile=20 --tolatex -lf two_panel --save_fig --noplot --noconfirm plot_kwargs --exp_growth_type=instant
 
-echo "Making singular vector average plot, opt0.01"
-python ../general/plotting/singular_vector_plotter.py --plot_type=s_vectors_average --pert_vector_folder=low_pred/compare_pert_exp_growth_rate_it0.01/vectors --exp_folder=sv_vectors --endpoint --n_profiles=1000 --n_runs_per_profile=20 --tolatex -lf quad_item --notight --save_fig --noconfirm --save_sub_folder=results_and_analyses/shell/low_pred --noplot
+echo "Low pred"
+echo "Making singular vector average plot, opt0.0005"
+python ../general/plotting/singular_vector_plotter.py --plot_type=s_vectors_average --pert_vector_folder=low_pred/compare_pert_exp_growth_rate_it0.0005/vectors --exp_folder=sv_vectors --endpoint --n_profiles=1000 --n_runs_per_profile=20 --tolatex -lf quad_item --notight --noconfirm --save_sub_folder=results_and_analyses/shell/low_pred --save_fig_name=average_sv_vectors_with_s_values_topt0.0005 --noplot --save_fig
 
-echo "Making singular vector average plot, opt0.01"
+echo "Making singular vector average plot, opt0.005"
 python ../general/plotting/singular_vector_plotter.py --plot_type=s_vectors_average --pert_vector_folder=low_pred/compare_pert_exp_growth_rate_it0.005/vectors --exp_folder=sv_vectors --endpoint --n_profiles=1000 --n_runs_per_profile=20 --tolatex -lf quad_item --notight --save_fig --noconfirm --save_sub_folder=appendices/extra_plots/shell_opt0.005/low_pred --noplot
+
+echo "Making lv vector average plot, low pred"
+python ../general/plotting/lyapunov_vector_plotter.py --plot_type=lv_average --pert_vector_folder=low_pred/compare_pert_exp_growth_rate_it0.001/vectors --exp_folder=lv_vectors --endpoint --n_profiles=1000 --n_runs_per_profile=20 --tolatex -lf quad_item --notight --bv_raw_pert --save_sub_folder=results_and_analyses/shell/low_pred --save_fig_name=average_lv_vectors_with_exponents --save_fig --noconfirm --noplot
+
+echo "Making bv-eof vector average plot, low pred"
+python ../general/plotting/breed_vector_plotter.py --plot_type=bv_eof_vectors_average --pert_vector_folder=low_pred/compare_pert_exp_growth_rate_it0.0005/vectors --exp_folder=bv_eof_vectors --endpoint --n_profiles=1000 --n_runs_per_profile=20 --tolatex -lf quad_item --notight --bv_raw_pert --save_fig --save_sub_folder=results_and_analyses/shell/low_pred --save_fig_name=average_bv_eof_vectors_topt0.0005 --noconfirm
 
 # L63 plots
 cd ./lorentz63_experiments
