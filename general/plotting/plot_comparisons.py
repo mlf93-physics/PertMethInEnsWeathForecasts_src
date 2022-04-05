@@ -38,6 +38,7 @@ import matplotlib.ticker as mpl_ticker
 import numpy as np
 import seaborn as sb
 from general.params.model_licences import Models
+from general.params.experiment_licences import Experiments as EXP
 
 # Get parameters for model
 if cfg.MODEL == Models.SHELL_MODEL:
@@ -1050,36 +1051,47 @@ def plot_characteristic_value_vs_time(args: dict, axes: plt.Axes = None):
     # Import perturb vectors and plot
     for i, folder in enumerate(vector_folders):
         folder_path = pl.Path(folder)
-        if re.match(fr"bv(\d+_vectors|_vectors)", folder_path.name):
-            raw_perturbations = False
-        else:
-            raw_perturbations = True
+
+        digits_in_name = lib_type_utils.get_digits_from_string(folder_path.name)
+        perturb_type = folder_path.name.split(
+            lib_type_utils.zpad_string(str(digits_in_name), n_zeros=2)
+        )[0]
+
+        # Adjust license
+        if perturb_type == "sv":
+            cfg.LICENCE = EXP.SINGULAR_VECTORS
+        elif perturb_type == "bv_eof":
+            cfg.LICENCE = EXP.BREEDING_EOF_VECTORS
+        elif perturb_type == "LV":
+            cfg.LICENCE = EXP.LYAPUNOV_VECTORS
 
         args["exp_folder"] = folder
         (
-            _,
+            vector_units,
             characteristic_values,
             u_init_profiles,
             eval_pos,
             header_dicts,
         ) = pt_import.import_perturb_vectors(
             args,
-            raw_perturbations=raw_perturbations,
-            dtype=np.complex128 if "sv" in folder_path.name else None,
+            raw_perturbations=True,
+            dtype=np.complex128,
         )
 
-        # print(
-        #     "s values",
-        #     1 / header_dicts[0]["time_to_run"] * np.sqrt(characteristic_values),
+        # (
+        #     valid_char_value_range,
+        #     characteristic_values,
+        # ) = g_plt_utils.post_process_vectors_and_char_values(
+        #     args, vector_units, characteristic_values, header_dicts
         # )
 
-        normed_characteristic_values = characteristic_values / np.max(
-            characteristic_values
-        )  # g_utils.normalize_array(
+        # normed_characteristic_values = characteristic_values / np.max(
+        #     characteristic_values
+        # )  # g_utils.normalize_array(
         #     characteristic_values, norm_value=1, axis=1
         # )
 
-        array_to_plot = prepare_char_values_to_plot(args, normed_characteristic_values)
+        # array_to_plot = prepare_char_values_to_plot(args, normed_characteristic_values)
 
         # Only make eval_times array once
         if i == 0:
@@ -1087,7 +1099,7 @@ def plot_characteristic_value_vs_time(args: dict, axes: plt.Axes = None):
 
         vector_type = folder_path.name.split("_vectors")[0]
         subplot_routine_characteristic_value_vs_time(
-            axes, array_to_plot, eval_times, vector_type
+            axes, characteristic_values.real, eval_times, vector_type
         )
 
     if "nm" in args["perturbations"]:
@@ -1140,7 +1152,7 @@ def plot_characteristic_value_vs_time(args: dict, axes: plt.Axes = None):
         # nm_axes.legend()
 
     axes.set_xlabel("Time")
-    axes.set_ylabel("Normalized char. value")
+    # axes.set_ylabel("Normalized char. value")
     axes.set_yscale("log")
 
     title = g_plt_utils.generate_title(
@@ -1150,7 +1162,7 @@ def plot_characteristic_value_vs_time(args: dict, axes: plt.Axes = None):
         title_suffix=f"display: {args['display_type']} real",
         detailed=False,
     )
-    axes.set_title(title)
+    # axes.set_title(title)
     axes.legend()
 
     return eval_times
@@ -1170,9 +1182,9 @@ def subplot_routine_characteristic_value_vs_time(
         eval_times,
         array_to_plot,
     )
-    lines[0].set_linestyle("dashed")
-    lines[1].set_label(vector_type)
-    lines[-1].set_linestyle("dashed")
+    # lines[0].set_linestyle("dashed")
+    # lines[1].set_label(vector_type)
+    # lines[-1].set_linestyle("dashed")
 
 
 def prepare_char_values_to_plot(args, normed_characteristic_values):
@@ -1204,7 +1216,9 @@ def prepare_char_values_to_plot(args, normed_characteristic_values):
 def plot_char_value_vs_time_with_ref_flow(args: dict, axes: np.ndarray = None):
 
     if axes is None:
-        fig, axes = plt.subplots(nrows=2, ncols=1, sharex=True)
+        fig, axes = plt.subplots(nrows=1, ncols=1)
+
+    axes = [axes, axes.twinx()]
 
     eval_times = plot_characteristic_value_vs_time(args, axes=axes[0])
 
@@ -1219,6 +1233,8 @@ def plot_char_value_vs_time_with_ref_flow(args: dict, axes: np.ndarray = None):
         )
     elif cfg.MODEL == Models.LORENTZ63:
         l63_plot.plot_energy(args, axes=axes[1])
+
+    axes[1].set_title("")
 
 
 if __name__ == "__main__":

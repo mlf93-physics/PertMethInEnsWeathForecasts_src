@@ -10,9 +10,86 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 import numpy as np
 import general.utils.user_interface as g_ui
+import general.utils.importing.import_data_funcs as g_import
 from general.plotting.plot_params import *
 from general.params.model_licences import Models
+from general.params.experiment_licences import Experiments as EXP
 import config as cfg
+
+
+def post_process_vectors_and_char_values(
+    args: dict,
+    vector_units: np.ndarray,
+    characteristic_values: np.ndarray,
+    header_dicts: dict,
+):
+    """Post process the pert vectors and characteristic values differently
+    depending on the license
+
+    E.g. the singular values are converted to growth rates, variances to fraction of
+    total variance, and lyapunov exponents divided by optimization time.
+
+    Parameters
+    ----------
+    args : dict
+        Run-time arguments
+    vector_units : np.ndarray
+        The vector units
+    characteristic_values : np.ndarray
+        The characteristic values
+    header_dicts : dict
+        The header dicts
+
+    Returns
+    -------
+    Tuple(
+        np.ndarray: valid_char_value_range
+        np.ndarray: characteristic_values
+    )
+    """
+
+    exp_setup = g_import.import_exp_info_file(args)
+
+    n_zeros = 0  # Used to remove negative singular values
+    if cfg.LICENCE == EXP.SINGULAR_VECTORS:
+        # Cut off at zero
+        real_s_values = characteristic_values.real
+        below_zero_bool_array = real_s_values < 0
+        # Count number of zero entries
+        n_zeros = np.max(np.sum(below_zero_bool_array, axis=1))
+        real_s_values[below_zero_bool_array] = 0
+        temp_log_array = np.zeros(characteristic_values.shape)
+        # Take log and output to temp_log_array
+        np.log(
+            np.sqrt(real_s_values),
+            out=temp_log_array,
+            where=np.logical_not(below_zero_bool_array),
+        )
+        # Divide by optimization time
+        characteristic_values = 1 / header_dicts[0]["time_to_run"] * temp_log_array
+    elif cfg.LICENCE == EXP.BREEDING_EOF_VECTORS:
+        characteristic_values = (
+            characteristic_values.real
+            / np.sum(characteristic_values.real, axis=1)[:, np.newaxis]
+        )
+    elif cfg.LICENCE == EXP.LYAPUNOV_VECTORS:
+        characteristic_values = characteristic_values.real / (
+            exp_setup["integration_time"] * exp_setup["n_cycles"]
+        )
+    else:
+        characteristic_values = characteristic_values.real
+
+    valid_char_value_range = np.s_[:-(n_zeros)] if n_zeros > 0 else np.s_[:]
+    characteristic_values = characteristic_values[:, valid_char_value_range]
+
+    sort_index = np.argsort(characteristic_values, axis=1)[:, ::-1]
+    for i in range(vector_units.shape[0]):
+        vector_units[i, valid_char_value_range, :] = vector_units[
+            i, sort_index[i, :], :
+        ]
+        characteristic_values[i, :] = characteristic_values[i, sort_index[i, :]]
+
+    return valid_char_value_range, characteristic_values
 
 
 def get_non_repeating_colors(

@@ -462,50 +462,18 @@ def plot2D_average_vectors(
     ) = pt_import.import_perturb_vectors(
         args, raw_perturbations=True, dtype=np.complex128
     )
-    exp_setup = g_import.import_exp_info_file(args)
-
-    n_zeros = 0  # Used to remove negative singular values
-    if cfg.LICENCE == EXP.SINGULAR_VECTORS:
-        # Cut off at zero
-        real_s_values = characteristic_values.real
-        below_zero_bool_array = real_s_values < 0
-        # Count number of zero entries
-        n_zeros = np.max(np.sum(below_zero_bool_array, axis=1))
-        real_s_values[below_zero_bool_array] = 0
-        temp_log_array = np.zeros(characteristic_values.shape)
-        # Take log and output to temp_log_array
-        np.log(
-            np.sqrt(real_s_values),
-            out=temp_log_array,
-            where=np.logical_not(below_zero_bool_array),
-        )
-        # Divide by optimization time
-        characteristic_values = 1 / header_dicts[0]["time_to_run"] * temp_log_array
-    elif cfg.LICENCE == EXP.BREEDING_EOF_VECTORS:
-        characteristic_values = (
-            characteristic_values.real
-            / np.sum(characteristic_values.real, axis=1)[:, np.newaxis]
-        )
-    elif cfg.LICENCE == EXP.LYAPUNOV_VECTORS:
-        characteristic_values = characteristic_values.real / (
-            exp_setup["integration_time"] * exp_setup["n_cycles"]
-        )
-    else:
-        characteristic_values = characteristic_values.real
-
-    temp_range = np.s_[:-(n_zeros)] if n_zeros > 0 else np.s_[:]
-    characteristic_values = characteristic_values[:, temp_range]
+    (
+        valid_char_value_range,
+        characteristic_values,
+    ) = g_plt_utils.post_process_vectors_and_char_values(
+        args, vector_units, characteristic_values, header_dicts
+    )
+    mean_characteristic_value = np.mean(characteristic_values, axis=0)
 
     if not no_char_values:
-        sort_index = np.argsort(characteristic_values, axis=1)[:, ::-1]
-        for i in range(vector_units.shape[0]):
-            vector_units[i, temp_range, :] = vector_units[i, sort_index[i, :], :]
-            characteristic_values[i, :] = characteristic_values[i, sort_index[i, :]]
-
-        mean_characteristic_value = np.mean(characteristic_values, axis=0)
 
         axes[0].plot(
-            SHELL_TICKS_FULL[temp_range] - 0.5,
+            SHELL_TICKS_FULL[valid_char_value_range] - 0.5,
             mean_characteristic_value,
             "k.",
             markersize=4,

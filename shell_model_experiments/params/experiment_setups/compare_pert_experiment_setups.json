@@ -117,24 +117,24 @@
     },
     "ComparePertErrorNorm": {
         "general": {
-            "folder_name": "compare_pert_error_norm",
+            "folder_name": "compare_pert_error_norm_dense_spaced2",
             "vector_folder": "vectors",
             "perturbation_folder": "perturbations",
             "sub_exp_folder": "perturb_data",
             "eval_times": [
                 21.12
             ],
-            "n_units": 10,
-            "unit_offset": 0.01
+            "n_units": 100,
+            "unit_offset": 0.0005
         },
         "lv_gen_setup": {
-            "integration_time": 0.001,
+            "integration_time": 0.01,
             "n_cycles": 10,
             "n_vectors": 20
         },
         "bv_gen_setup": {
-            "integration_time": 0.001,
-            "n_cycles": 8,
+            "integration_time": 0.0005,
+            "n_cycles": 10,
             "n_vectors": 20
         },
         "bv_eof_gen_setup": {
@@ -142,9 +142,9 @@
             "n_vectors": 20
         },
         "sv_gen_setup": {
-            "integration_time": 0.001,
+            "integration_time": 0.0005,
             "n_vectors": 20,
-            "n_lanczos_iterations": 1,
+            "n_lanczos_iterations": 10,
             "n_model_iterations": 1
         },
         "rd_pert_setup": {
