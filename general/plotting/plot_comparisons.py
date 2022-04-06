@@ -749,7 +749,8 @@ def plot_error_norm_comparison(
     )
 
     cmap_list = plt.rcParams["axes.prop_cycle"].by_key()["color"]
-
+    perturb_type_old = ""
+    linestyle_counter = -1
     line_counter = 0
     for _, folder in enumerate(args["exp_folders"]):
         folder_path = pl.Path(folder)
@@ -763,9 +764,12 @@ def plot_error_norm_comparison(
                     lib_type_utils.zpad_string(str(digits_in_name), n_zeros=2)
                 )[0]
                 color = METHOD_COLORS[perturb_type]
+                if perturb_type == perturb_type_old or len(perturb_type_old) == 0:
+                    linestyle_counter += 1
+                else:
+                    linestyle_counter = 0
 
-                linestyle = LINESTYLES[digits_in_name]
-
+                linestyle = METHOD_LINESTYLES[perturb_type][linestyle_counter]
         else:
             perturb_type = folder_path.name.split("_")[0]
             color = METHOD_COLORS[perturb_type]
@@ -786,6 +790,8 @@ def plot_error_norm_comparison(
 
         len_lines = len(lines)
         line_counter += len_lines - line_counter
+
+        perturb_type_old = perturb_type
 
     axes[0].legend()
 

@@ -85,9 +85,9 @@ def collect_error_norm_plots(args):
     if cfg.MODEL == cfg.Models.SHELL_MODEL:
         specific_runs_per_profile_dict = {
             "bv": None,
-            "bv_eof": [0, 4, 9, 14],
-            "sv": [0, 4, 9, 14],
-            "lv": [1, 4, 9, 14],
+            "bv_eof": [0, 9, 17],
+            "sv": [0, 9, 17],
+            "lv": [1, 9, 17],
         }
     else:
         specific_runs_per_profile_dict = None
