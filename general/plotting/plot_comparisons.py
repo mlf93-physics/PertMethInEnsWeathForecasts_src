@@ -202,8 +202,8 @@ def plt_pert_components(args: dict, axes: plt.Axes = None):
     if args["save_fig"]:
         g_plt_utils.save_figure(
             args,
-            subpath="thesis_figures/results_and_analyses/shell/low_pred",
-            file_name="average_lv1_bv_rf_vectors_topt0.0005",
+            subpath=pl.Path("thesis_figures", args["save_sub_folder"]),
+            file_name=args["save_fig_name"],
         )
 
 

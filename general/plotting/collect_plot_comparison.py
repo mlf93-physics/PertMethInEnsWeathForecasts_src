@@ -12,6 +12,8 @@ import sys
 
 sys.path.append("..")
 import copy
+import pathlib as pl
+import numpy as np
 import config as cfg
 import general.utils.argument_parsers as a_parsers
 import general.utils.arg_utils as a_utils
@@ -59,6 +61,7 @@ def collect_exp_growth_rate_plots(args):
     plt_compare.plot_exp_growth_rate_comparison(copy_args2, axes=axes[1])
     axes[1].set_xlim(-0.0001, 0.01)
     axes[1].set_ylim(-1000, 250)
+    axes[1].set_yticks(np.array([-1.0, -0.5, 0.0], dtype=np.float32) * 1e3)
     axes[1].ticklabel_format(axis="y", style="sci", scilimits=(0, 0))
 
     g_plt_utils.add_subfig_labels(axes)
@@ -73,8 +76,43 @@ def collect_exp_growth_rate_plots(args):
     if args["save_fig"]:
         g_plt_utils.save_figure(
             args,
-            subpath=f"thesis_figures/results_and_analyses/shell/",
-            file_name="compare_instant_exp_growth_rates",
+            subpath=pl.Path(
+                "thesis_figures",
+                "results_and_analyses/shell/"
+                if args["save_sub_folder"] is None
+                else args["save_sub_folder"],
+            ),
+            file_name="compare_instant_exp_growth_rates"
+            if args["save_fig_name"] is None
+            else args["save_fig_name"],
+        )
+
+
+def collect_suppl_exp_growth_rate_plots(args):
+    # Make axes
+    fig, axes = plt.subplots(nrows=1, ncols=1)
+
+    plt_compare.plot_exp_growth_rate_comparison(args, axes=axes)
+    axes.set_xlim(-0.0001, 0.005)
+    axes.set_ylim(-2000, None)
+    axes.set_yticks([-1000, 0, 1000])
+    axes.ticklabel_format(axis="y", style="sci", scilimits=(0, 0))
+
+    if args["tolatex"]:
+        plt_config.remove_legends(axes)
+        plt_config.adjust_axes(axes)
+
+    if args["save_fig"]:
+        g_plt_utils.save_figure(
+            args,
+            subpath=pl.Path(
+                "thesis_figures/appendices/extra_plots/" + args["save_sub_folder"]
+                if args["save_sub_folder"] is not None
+                else ""
+            ),
+            file_name="compare_instant_exp_growth_rates"
+            if args["save_fig_name"] is None
+            else args["save_fig_name"],
         )
 
 
@@ -241,6 +279,8 @@ if __name__ == "__main__":
         collect_bv_vec_compare_plots(args)
     elif "collect_exp_growth_rate_compare_plots" in args["plot_type"]:
         collect_exp_growth_rate_plots(args)
+    elif "collect_suppl_exp_growth_rate_compare_plots" in args["plot_type"]:
+        collect_suppl_exp_growth_rate_plots(args)
     else:
         raise ValueError("No valid plot type given as input argument")
 

@@ -15,6 +15,14 @@ python ../general/plotting/collect_plot_comparison.py --plot_type=collect_error_
 echo "Make exp. growth rate comparison"
 python ../general/plotting/collect_plot_comparison.py --plot_type=collect_exp_growth_rate_compare_plots --endpoint --seed_mode -pt all --n_runs_per_profile=20 --tolatex -lf two_panel --save_fig --noplot --noconfirm plot_kwargs --exp_growth_type=instant
 
+echo "Exp. growth rates separately"
+# BV, BV-EOF
+python ../general/plotting/collect_plot_comparison.py --plot_type=collect_exp_growth_rate_compare_plots --endpoint --seed_mode -pt bv bv_eof --n_runs_per_profile=20 --tolatex -lf two_panel --noplot --save_fig --save_sub_folder=appendices/extra_plots/shell_opt0.0005 --save_fig_name=instant_exp_growth_rate_bv_eof --noconfirm plot_kwargs --exp_growth_type=instant
+# SV, LV
+python ../general/plotting/collect_plot_comparison.py --plot_type=collect_exp_growth_rate_compare_plots --endpoint --seed_mode -pt sv lv --n_runs_per_profile=20 --tolatex -lf two_panel --noplot --save_fig --save_sub_folder=appendices/extra_plots/shell_opt0.0005 --save_fig_name=instant_exp_growth_rate_sv_lv --noconfirm plot_kwargs --exp_growth_type=instant
+# RD, RF, NM
+python ../general/plotting/collect_plot_comparison.py --plot_type=collect_exp_growth_rate_compare_plots --endpoint --seed_mode -pt rd rf nm --n_runs_per_profile=20 --tolatex -lf two_panel --noplot --save_fig --save_sub_folder=appendices/extra_plots/shell_opt0.0005 --save_fig_name=instant_exp_growth_rate_rd_nm_rf --noconfirm plot_kwargs --exp_growth_type=instant
+
 echo "Low pred"
 echo "Making singular vector average plot, opt0.0005"
 python ../general/plotting/singular_vector_plotter.py --plot_type=s_vectors_average --pert_vector_folder=low_pred/compare_pert_exp_growth_rate_it0.0005/vectors --exp_folder=sv_vectors --endpoint --n_profiles=1000 --n_runs_per_profile=20 --tolatex -lf quad_item --notight --noconfirm --save_sub_folder=results_and_analyses/shell/low_pred --save_fig_name=average_sv_vectors_with_s_values_topt0.0005 --noplot --save_fig
@@ -27,6 +35,13 @@ python ../general/plotting/lyapunov_vector_plotter.py --plot_type=lv_average --p
 
 echo "Making bv-eof vector average plot, low pred"
 python ../general/plotting/breed_vector_plotter.py --plot_type=bv_eof_vectors_average --pert_vector_folder=low_pred/compare_pert_exp_growth_rate_it0.0005/vectors --exp_folder=bv_eof_vectors --endpoint --n_profiles=1000 --n_runs_per_profile=20 --tolatex -lf quad_item --notight --bv_raw_pert --save_fig --save_sub_folder=results_and_analyses/shell/low_pred --save_fig_name=average_bv_eof_vectors_topt0.0005 --noconfirm
+
+echo "Making LV1, BV and RF spectrum plot"
+python ../general/plotting/plot_comparisons.py --plot_type=pert_comp_compare --exp_folder=high_pred/compare_pert_exp_growth_rate_it0.0005 --endpoint -v lv bv -pt rf --seed_mode --n_profiles=1000 --tolatex -lf quad_item --save_fig --notight --noplot --save_sub_folder=results_and_analyses/shell/low_pred --save_fig_name=average_lv1_bv_rf_vectors_topt0.0005 --noprint --noconfirm
+
+echo "High pred"
+echo "Making LV1, BV and RF spectrum plot"
+python ../general/plotting/plot_comparisons.py --plot_type=pert_comp_compare --exp_folder=high_pred/compare_pert_exp_growth_rate_it0.004 --endpoint -v lv bv -pt rf --seed_mode --n_profiles=1000 --tolatex -lf quad_item --save_fig --notight --noplot --save_sub_folder=appendices/extra_plots/shell_opt0.004/high_pred --save_fig_name=average_lv1_bv_rf_vectors_topt0.004 --noprint --noconfirm
 
 # L63 plots
 cd ./lorentz63_experiments

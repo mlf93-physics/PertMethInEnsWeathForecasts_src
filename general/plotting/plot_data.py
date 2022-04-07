@@ -482,20 +482,24 @@ def plot2D_average_vectors(
 
         if cfg.LICENCE in [EXP.BREEDING_EOF_VECTORS, EXP.BREEDING_VECTORS]:
             axes[0].set_yscale("log")
-            axes[0].set_ylim(1e-4, None)
+            axes[0].set_ylim(1e-10, None)
+            # axes[0].set_yticks(
+            #     [1, 1e-2, 1e-4],
+            #     minor=False,
+            # )
             axes[0].set_yticks(
-                [1, 1e-2, 1e-4],
+                [1, 1e-5, 1e-10],
                 minor=False,
             )
         if cfg.LICENCE == EXP.LYAPUNOV_VECTORS:
             axes[0].set_yscale("log")
             axes[0].set_yticks(
-                [1e3, 1e-6],
+                [1e3, 1e-6, 1e-15],
                 minor=False,
             )
         if cfg.LICENCE == EXP.SINGULAR_VECTORS:
             axes[0].ticklabel_format(axis="y", style="sci", scilimits=(0, 0))
-            axes[0].set_ylim(-1000, 1000)
+            # axes[0].set_ylim(-1000, 1000)
 
     # Normalize
     vector_units = g_utils.normalize_array(vector_units, norm_value=1, axis=2)
@@ -591,9 +595,10 @@ def plot2D_vectors(
         heatmap_plot.set_xticks(SHELL_TICKS_COMPACT2 - 0.5)
         heatmap_plot.set_xticklabels(SHELL_TICKS_COMPACT2)
     else:
-        heatmap_plot.set_xticklabels(SHELL_TICKS_COMPACT2)
         heatmap_plot.set_yticks(SHELL_TICKS_COMPACT5 - 0.5)
         heatmap_plot.set_yticklabels(SHELL_TICKS_COMPACT5, rotation=0)
+        heatmap_plot.set_xticks(SHELL_TICKS_COMPACT2 - 0.5)
+        heatmap_plot.set_xticklabels(SHELL_TICKS_COMPACT2)
 
     axes.invert_yaxis()
     # axes.invert_xaxis()
