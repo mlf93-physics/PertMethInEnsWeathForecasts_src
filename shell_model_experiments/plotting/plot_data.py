@@ -14,7 +14,7 @@ import sys
 sys.path.append("..")
 from pathlib import Path
 from typing import List
-
+import pandas as pd
 import config as cfg
 import general.plotting.plot_data as g_plt_data
 from general.utils.module_import.type_import import *
@@ -1312,67 +1312,86 @@ def plot_howmoller_diagram_helicity(args=None, plt_args: list = ["rel_mean"]):
     )
 
 
-def plot_eddie_freqs(args=None):
+def plot_eddie_turnover_times(args=None):
     time, u_data, header_dict = g_import.import_ref_data(args=args)
 
     mean_eddy_turnover = sh_analysis.get_eddy_turnovertime(u_data)
-    eddy_freq = 1 / mean_eddy_turnover
+    # eddy_freq = 1 / mean_eddy_turnover
+    # np.set_printoptions(formatter={"all": np.format_float_scientific})
+    # rounded_mean_eddy_turnover = np.round_(mean_eddy_turnover, decimals=2)
 
-    fig, axes = plt.subplots(nrows=2, ncols=1)
+    print("mean_eddy_turnover", mean_eddy_turnover)
 
-    axes[0].plot(
-        np.log2(PAR.k_vec_temp), eddy_freq, "k.", label="Eddy freq. from $||u||$"
-    )
-    axes[0].plot(
-        np.log2(PAR.k_vec_temp),
-        (PAR.k_vec_temp / (2 * np.pi)) ** (2 / 3),
-        "k--",
-        label="$k^{2/3}$",
-    )
+    fig, axes = plt.subplots(nrows=1, ncols=1)
 
-    delta_time = (time[-1] - time[0]).real + PAR.stt
+    # axes[0].plot(
+    #     np.log2(PAR.k_vec_temp), eddy_freq, "k.", label="Eddy freq. from $||u||$"
+    # )
+    # axes[0].plot(
+    #     np.log2(PAR.k_vec_temp),
+    #     (PAR.k_vec_temp / (2 * np.pi)) ** (2 / 3),
+    #     "k--",
+    #     label="$k^{2/3}$",
+    # )
 
-    freq_title = g_plt_utils.generate_title(
-        args,
-        header_dict=header_dict,
-        title_header="Eddy frequencies",
-        title_suffix=f"$\\Delta t$={delta_time:.1f}s",
-    )
+    # delta_time = (time[-1] - time[0]).real + PAR.stt
 
-    axes[0].set_yscale("log")
-    axes[0].grid()
-    axes[0].legend()
-    axes[0].set_xlabel("k")
-    axes[0].set_ylabel("Eddy frequency")
-    axes[0].set_title(
-        freq_title,
-    )
+    # freq_title = g_plt_utils.generate_title(
+    #     args,
+    #     header_dict=header_dict,
+    #     title_header="Eddy frequencies",
+    #     title_suffix=f"$\\Delta t$={delta_time:.1f}s",
+    # )
 
-    axes[1].plot(
+    # axes[0].set_yscale("log")
+    # axes[0].grid()
+    # axes[0].legend()
+    # axes[0].set_xlabel("k")
+    # axes[0].set_ylabel("Eddy frequency")
+    # axes[0].set_title(
+    #     freq_title,
+    # )
+
+    axes.plot(
         np.log2(PAR.k_vec_temp),
         mean_eddy_turnover,
         "k.",
         label="Eddy turnover time from $||u||$",
     )
-    axes[1].plot(
+    axes.plot(
         np.log2(PAR.k_vec_temp),
         (PAR.k_vec_temp / (2 * np.pi)) ** (-2 / 3),
         "k--",
         label="$k^{-2/3}$",
     )
 
+    axes.set_xticks(SHELL_TICKS_COMPACT)
+    axes.grid(False)
+
+    # axes.xaxis.set_major_locator(mpl_ticker.MaxNLocator(integer=True))
+
     time_title = g_plt_utils.generate_title(
         args,
         header_dict=header_dict,
         title_header="Eddy turnover time",
-        title_suffix=f"$\\Delta t$={delta_time:.1f}s",
     )
-    axes[1].set_yscale("log")
-    axes[1].grid()
-    axes[1].legend()
-    axes[1].set_xlabel("k")
-    axes[1].set_ylabel("Eddy turnover time")
-    axes[1].set_title(time_title)
+    axes.set_yscale("log")
+    axes.grid()
+    axes.legend()
+    axes.set_xlabel("$n$")
+    axes.set_ylabel("$t_n$")
+    axes.set_title(time_title)
+
+    if args["tolatex"]:
+        plt_config.remove_legends(axes)
+        plt_config.adjust_axes(axes)
+
+    if args["save_fig"]:
+        g_plt_utils.save_figure(
+            args,
+            subpath="thesis_figures/appendices/timescale_analyses/",
+            file_name="sh_eddy_turnover_times",
+        )
 
 
 if __name__ == "__main__":
@@ -1472,6 +1491,6 @@ if __name__ == "__main__":
         plot_helicity_spectrum(u_data, header_dict, args)
 
     if "eddy_turnover" in args["plot_type"]:
-        plot_eddie_freqs(args)
+        plot_eddie_turnover_times(args)
 
     g_plt_utils.save_or_show_plot(args)

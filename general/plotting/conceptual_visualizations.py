@@ -15,6 +15,7 @@ import general.utils.arg_utils as a_utils
 import general.utils.plot_utils as g_plt_utils
 from general.plotting.plot_params import *
 import general.plotting.plot_config as plt_config
+import scipy.ndimage as sp_ndi
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
 import seaborn as sb
@@ -90,6 +91,86 @@ def visualize_breeding_method(args):
         )
 
 
+def visualize_erosion_and_dilation(args):
+
+    np.random.seed(20)
+    n_entries = 20
+    rand_array = np.round_(np.random.rand(n_entries), decimals=0).astype(np.int8)
+
+    structure = np.ones(3)
+    eroded_bool_array = sp_ndi.binary_erosion(
+        rand_array, origin=0, structure=structure, border_value=0
+    )
+    dilated_bool_array = sp_ndi.binary_dilation(
+        rand_array, origin=0, structure=structure, border_value=0
+    )
+
+    fig, axes = plt.subplots(nrows=3, ncols=1, sharex=True)
+
+    sb.heatmap(
+        # np.arange(n_entries)[:, np.newaxis],
+        rand_array[np.newaxis, :],
+        ax=axes[0],
+        annot=True,
+        # annot_kws={"fmt": "%d"},
+        cmap="Greys_r",
+        cbar=False,
+        linecolor="grey",
+        linewidths=0.5,
+    )
+
+    # Drawing the frame
+    sb.heatmap(
+        # np.arange(n_entries)[:, np.newaxis],
+        eroded_bool_array[np.newaxis, :],
+        ax=axes[1],
+        annot=True,
+        # annot_kws={"fmt": "%d"},
+        cmap="Greys_r",
+        cbar=False,
+        linecolor="grey",
+        linewidths=0.5,
+    )
+    sb.heatmap(
+        # np.arange(n_entries)[:, np.newaxis],
+        dilated_bool_array[np.newaxis, :],
+        ax=axes[2],
+        annot=True,
+        # annot_kws={"fmt": "%d"},
+        cmap="Greys_r",
+        cbar=False,
+        linecolor="grey",
+        linewidths=0.5,
+    )
+
+    # Set labels
+    axes[0].set_ylabel("Original", rotation=0, horizontalalignment="right", y=0.3)
+    axes[1].set_ylabel("Erosion", rotation=0, horizontalalignment="right", y=0.3)
+    axes[2].set_ylabel("Dilation", rotation=0, horizontalalignment="right", y=0.3)
+
+    for ax in axes:
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.set_xticklabels([])
+        ax.set_yticklabels([])
+
+        draw_rectangle(n_entries, ax)
+
+    if args["save_fig"]:
+        g_plt_utils.save_figure(
+            args,
+            subpath="thesis_figures/appendices/region_analysis_shell_model/",
+            file_name="erosion_dilation_visualization",
+        )
+
+
+def draw_rectangle(n_entries, axes):
+    axes.axhline(y=0, xmin=4 / n_entries, xmax=7 / n_entries, color="r", linewidth=2)
+    axes.axhline(y=1, xmin=4 / n_entries, xmax=7 / n_entries, color="r", linewidth=2)
+    axes.axvline(x=4, color="r", linewidth=2)
+    axes.axvline(x=7, color="r", linewidth=2)
+
+
 if __name__ == "__main__":
 
     # Get arguments
@@ -105,6 +186,8 @@ if __name__ == "__main__":
 
     if "breed_method" in args["plot_type"]:
         visualize_breeding_method(args)
+    elif "erosion_and_dilation" in args["plot_type"]:
+        visualize_erosion_and_dilation(args)
     else:
         raise ValueError("No valid plot type given as input argument")
 
