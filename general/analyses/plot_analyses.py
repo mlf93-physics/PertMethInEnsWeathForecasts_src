@@ -18,6 +18,10 @@ def orthogonality_of_vectors(matrix_of_vectors):
     numpy.ndarray
         The resulting orthogonality matrix
     """
+    # Convert to array if necessary
+    if isinstance(matrix_of_vectors, np.matrix):
+        matrix_of_vectors = np.asarray(matrix_of_vectors)
+
     n_vectors = matrix_of_vectors.shape[0]
 
     # Calculate orthogonality of all combinations

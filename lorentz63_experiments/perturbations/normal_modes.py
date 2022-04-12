@@ -4,6 +4,8 @@ from general.utils.module_import.type_import import *
 from lorentz63_experiments.params.params import *
 import config as cfg
 
+import general.analyses.plot_analyses as g_plt_anal
+
 
 def find_normal_modes(
     u_init_profiles: np.ndarray,

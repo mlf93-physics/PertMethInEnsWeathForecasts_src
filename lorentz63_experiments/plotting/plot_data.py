@@ -22,6 +22,7 @@ import lorentz63_experiments.utils.util_funcs as l_utils
 import general.utils.importing.import_data_funcs as g_import
 from general.plotting.plot_params import *
 import general.plotting.plot_data as g_plt_data
+import general.analyses.plot_analyses as g_plt_anal
 import general.utils.plot_utils as g_plt_utils
 import general.utils.argument_parsers as a_parsers
 import general.utils.user_interface as g_ui
@@ -209,8 +210,18 @@ def plot_normal_mode_dist(args):
         u_profiles,
         e_values,
         e_vector_matrix,
+        e_vector_collection,
         ref_header_dict,
     ) = nm_analysis.analyse_normal_mode_dist(args)
+
+    orthonormality_matrix = 0
+    for item in e_vector_collection:
+        temp = g_plt_anal.orthogonality_of_vectors(item.T)
+        # print("temp", temp)
+        orthonormality_matrix += temp  # g_plt_anal.orthogonality_of_vectors(item.T)
+    orthonormality_matrix /= len(e_vector_collection)
+
+    print("Orthogonality of eigen vectors: ", orthonormality_matrix)
 
     # Setup axes
     fig1 = plt.figure()

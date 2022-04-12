@@ -921,7 +921,12 @@ def plot_RMSE_and_spread_comparison(args: dict):
     # axes.legend()
 
 
-def plot_exp_growth_rate_comparison(args: dict, axes: plt.Axes = None):
+def plot_exp_growth_rate_comparison(
+    args: dict,
+    axes: plt.Axes = None,
+    specific_runs_per_profile_dict=None,
+    highlight_zeroth_pert=False,
+):
     """Plots a comparison of the exponential growth rates vs time for the different
     perturbation methods
 
@@ -932,29 +937,16 @@ def plot_exp_growth_rate_comparison(args: dict, axes: plt.Axes = None):
     """
     # args["endpoint"] = True
 
-    if cfg.MODEL == cfg.Models.SHELL_MODEL:
-        specific_runs_per_profile_dict = {
-            "bv": None,
-            "rd": None,
-            "nm": None,
-            "rf": None,
-            "bv_eof": [0, 9, 17],
-            "sv": [0, 9, 17],
-            "lv": [1, 9, 17],
-        }
-    else:
-        specific_runs_per_profile_dict = None
-
     e_utils.update_compare_exp_folders(
         args, specific_runs_per_profile_dict=specific_runs_per_profile_dict
     )
     # Update number of folders after filtering
     len_folders = len(args["exp_folders"])
 
-    cmap_list = plt.rcParams["axes.prop_cycle"].by_key()["color"]
-    # cmap_list, _ = g_plt_utils.get_non_repeating_colors(
-    #     n_colors=args["n_runs_per_profile"]  # , vmin=0.2, vmax=0.8
-    # )
+    cmap_list, _ = g_plt_utils.get_non_repeating_colors(
+        n_colors=args["n_runs_per_profile"], cmap=plt.cm.Reds_r, vmin=0.2
+    )
+    # cmap_list = plt.rcParams["axes.prop_cycle"].by_key()["color"]
     # cmap_list[0] = "k"
     standalone_plot = False
     if axes is None:
@@ -975,14 +967,21 @@ def plot_exp_growth_rate_comparison(args: dict, axes: plt.Axes = None):
                 perturb_type = folder_path.name.split(
                     lib_type_utils.zpad_string(str(digits_in_name), n_zeros=2)
                 )[0]
-                color = METHOD_COLORS[perturb_type]
                 if perturb_type == perturb_type_old or len(perturb_type_old) == 0:
                     linestyle_counter += 1
                 else:
                     linestyle_counter = 0
 
                 # linestyle = LINESTYLES[digits_in_name]
-                linestyle = METHOD_LINESTYLES[perturb_type][linestyle_counter]
+                if specific_runs_per_profile_dict is not None:
+                    color = METHOD_COLORS[perturb_type]
+                    if len(specific_runs_per_profile_dict[perturb_type]) <= len(
+                        METHOD_LINESTYLES[perturb_type]
+                    ):
+                        linestyle = METHOD_LINESTYLES[perturb_type][linestyle_counter]
+                else:
+                    linestyle = "solid"
+                    color = cmap_list[linestyle_counter]
         else:
             perturb_type = folder_path.name.split("_")[0]
             color = METHOD_COLORS[perturb_type]
@@ -998,8 +997,10 @@ def plot_exp_growth_rate_comparison(args: dict, axes: plt.Axes = None):
         g_plt_data.plot_exp_growth_rate_vs_time(
             args=args,
             axes=axes,
-            color=color,  # cmap_list[i],
-            # zorder=zorder,
+            color="k"
+            if highlight_zeroth_pert and linestyle_counter == 0
+            else color,  # cmap_list[i],
+            zorder=20 if highlight_zeroth_pert and linestyle_counter == 0 else 0,
             linewidth=1,
             linestyle=linestyle,
             anal_type=args["exp_growth_type"],

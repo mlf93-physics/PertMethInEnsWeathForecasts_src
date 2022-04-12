@@ -43,13 +43,29 @@ elif cfg.MODEL == Models.LORENTZ63:
 
 
 def collect_exp_growth_rate_plots(args):
+    if cfg.MODEL == cfg.Models.SHELL_MODEL:
+        specific_runs_per_profile_dict = {
+            "bv": None,
+            "rd": None,
+            "nm": None,
+            "rf": None,
+            "bv_eof": [0, 9, 17],
+            "sv": [0, 9, 17],
+            "lv": [1, 9, 17],
+        }
+    else:
+        specific_runs_per_profile_dict = None
     # Make axes
     fig, axes = plt.subplots(nrows=2, ncols=1)
 
     copy_args1 = copy.deepcopy(args)
     copy_args1["exp_folder"] = "low_pred/compare_pert_exp_growth_rate_it0.0005"
 
-    plt_compare.plot_exp_growth_rate_comparison(copy_args1, axes=axes[0])
+    plt_compare.plot_exp_growth_rate_comparison(
+        copy_args1,
+        axes=axes[0],
+        specific_runs_per_profile_dict=specific_runs_per_profile_dict,
+    )
     axes[0].set_xlim(-0.0001, 0.005)
     axes[0].set_ylim(-2000, None)
     axes[0].set_yticks([-1000, 0, 1000])
@@ -58,11 +74,73 @@ def collect_exp_growth_rate_plots(args):
     copy_args2 = copy.deepcopy(args)
     copy_args2["exp_folder"] = "high_pred/compare_pert_exp_growth_rate_it0.004"
 
-    plt_compare.plot_exp_growth_rate_comparison(copy_args2, axes=axes[1])
+    plt_compare.plot_exp_growth_rate_comparison(
+        copy_args2,
+        axes=axes[1],
+        specific_runs_per_profile_dict=specific_runs_per_profile_dict,
+    )
     axes[1].set_xlim(-0.0001, 0.01)
     axes[1].set_ylim(-1000, 250)
     axes[1].set_yticks(np.array([-1.0, -0.5, 0.0], dtype=np.float32) * 1e3)
     axes[1].ticklabel_format(axis="y", style="sci", scilimits=(0, 0))
+
+    g_plt_utils.add_subfig_labels(axes)
+    fig.subplots_adjust(
+        top=0.949, bottom=0.126, left=0.111, right=0.966, hspace=0.395, wspace=0.2
+    )
+
+    if args["tolatex"]:
+        plt_config.remove_legends(axes)
+        plt_config.adjust_axes(axes)
+
+    if args["save_fig"]:
+        g_plt_utils.save_figure(
+            args,
+            subpath=pl.Path(
+                "thesis_figures",
+                "results_and_analyses/shell/"
+                if args["save_sub_folder"] is None
+                else args["save_sub_folder"],
+            ),
+            file_name="compare_instant_exp_growth_rates"
+            if args["save_fig_name"] is None
+            else args["save_fig_name"],
+        )
+
+
+def collect_sv_exp_growth_rate_plots(args):
+
+    specific_runs_per_profile_dict = None
+
+    # Make axes
+    fig, axes = plt.subplots(nrows=2, ncols=1)
+
+    copy_args1 = copy.deepcopy(args)
+    copy_args1["exp_folder"] = "low_pred/compare_pert_exp_growth_rate_it0.001"
+
+    plt_compare.plot_exp_growth_rate_comparison(
+        copy_args1,
+        axes=axes[0],
+        specific_runs_per_profile_dict=specific_runs_per_profile_dict,
+        highlight_zeroth_pert=True,
+    )
+    axes[0].set_xlim(-0.0001, 0.005)
+    axes[0].set_ylim(-2000, None)
+    axes[0].set_yticks([-1000, 0, 1000])
+    axes[0].ticklabel_format(axis="y", style="sci", scilimits=(0, 0))
+
+    # copy_args2 = copy.deepcopy(args)
+    # copy_args2["exp_folder"] = "high_pred/compare_pert_exp_growth_rate_it0.004"
+
+    # plt_compare.plot_exp_growth_rate_comparison(
+    #     copy_args2,
+    #     axes=axes[1],
+    #     specific_runs_per_profile_dict=specific_runs_per_profile_dict,
+    # )
+    # axes[1].set_xlim(-0.0001, 0.01)
+    # axes[1].set_ylim(-1000, 250)
+    # axes[1].set_yticks(np.array([-1.0, -0.5, 0.0], dtype=np.float32) * 1e3)
+    # axes[1].ticklabel_format(axis="y", style="sci", scilimits=(0, 0))
 
     g_plt_utils.add_subfig_labels(axes)
     fig.subplots_adjust(
@@ -281,6 +359,8 @@ if __name__ == "__main__":
         collect_exp_growth_rate_plots(args)
     elif "collect_suppl_exp_growth_rate_compare_plots" in args["plot_type"]:
         collect_suppl_exp_growth_rate_plots(args)
+    elif "collect_sv_exp_growth_rate_compare_plots" in args["plot_type"]:
+        collect_sv_exp_growth_rate_plots(args)
     else:
         raise ValueError("No valid plot type given as input argument")
 

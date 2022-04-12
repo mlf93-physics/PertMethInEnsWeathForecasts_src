@@ -48,8 +48,6 @@ def choose_rand_field_indices(
     """
     # Define constants
     num_fields = 2
-    corr_time = 3  # one eddy turnover time of first shell
-    corr_dindex = int(corr_time * PAR.tts)
     num_start_times = regime_start_time_indices.shape[0]
     rand_field_indices = np.empty(2, dtype=np.int64)
 
