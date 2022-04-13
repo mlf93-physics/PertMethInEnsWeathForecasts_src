@@ -925,7 +925,7 @@ def plot_exp_growth_rate_comparison(
     args: dict,
     axes: plt.Axes = None,
     specific_runs_per_profile_dict=None,
-    highlight_zeroth_pert=False,
+    highlight_perts=[],
 ):
     """Plots a comparison of the exponential growth rates vs time for the different
     perturbation methods
@@ -944,7 +944,7 @@ def plot_exp_growth_rate_comparison(
     len_folders = len(args["exp_folders"])
 
     cmap_list, _ = g_plt_utils.get_non_repeating_colors(
-        n_colors=args["n_runs_per_profile"], cmap=plt.cm.Reds_r, vmin=0.2
+        n_colors=args["n_runs_per_profile"], cmap=plt.cm.Greens_r, vmin=0.2
     )
     # cmap_list = plt.rcParams["axes.prop_cycle"].by_key()["color"]
     # cmap_list[0] = "k"
@@ -952,6 +952,8 @@ def plot_exp_growth_rate_comparison(
     if axes is None:
         axes = plt.axes()
         standalone_plot = True
+
+    special_colors = {0: "k", 1: "r", 3: "r"}
 
     perturb_type_old = ""
     linestyle_counter = -1
@@ -997,10 +999,10 @@ def plot_exp_growth_rate_comparison(
         g_plt_data.plot_exp_growth_rate_vs_time(
             args=args,
             axes=axes,
-            color="k"
-            if highlight_zeroth_pert and linestyle_counter == 0
+            color=special_colors[linestyle_counter]
+            if linestyle_counter in highlight_perts
             else color,  # cmap_list[i],
-            zorder=20 if highlight_zeroth_pert and linestyle_counter == 0 else 0,
+            zorder=20 if linestyle_counter in highlight_perts else 0,
             linewidth=1,
             linestyle=linestyle,
             anal_type=args["exp_growth_type"],

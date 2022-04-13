@@ -84,7 +84,6 @@ def collect_exp_growth_rate_plots(args):
     axes[1].set_yticks(np.array([-1.0, -0.5, 0.0], dtype=np.float32) * 1e3)
     axes[1].ticklabel_format(axis="y", style="sci", scilimits=(0, 0))
 
-    g_plt_utils.add_subfig_labels(axes)
     fig.subplots_adjust(
         top=0.949, bottom=0.126, left=0.111, right=0.966, hspace=0.395, wspace=0.2
     )
@@ -92,6 +91,7 @@ def collect_exp_growth_rate_plots(args):
     if args["tolatex"]:
         plt_config.remove_legends(axes)
         plt_config.adjust_axes(axes)
+        g_plt_utils.add_subfig_labels(axes)
 
     if args["save_fig"]:
         g_plt_utils.save_figure(
@@ -116,40 +116,41 @@ def collect_sv_exp_growth_rate_plots(args):
     fig, axes = plt.subplots(nrows=2, ncols=1)
 
     copy_args1 = copy.deepcopy(args)
-    copy_args1["exp_folder"] = "low_pred/compare_pert_exp_growth_rate_it0.001"
+    copy_args1["exp_folder"] = "low_pred/compare_pert_exp_growth_rate_it0.0005"
 
     plt_compare.plot_exp_growth_rate_comparison(
         copy_args1,
         axes=axes[0],
         specific_runs_per_profile_dict=specific_runs_per_profile_dict,
-        highlight_zeroth_pert=True,
+        highlight_perts=[0, 1],
     )
     axes[0].set_xlim(-0.0001, 0.005)
-    axes[0].set_ylim(-2000, None)
-    axes[0].set_yticks([-1000, 0, 1000])
+    axes[0].set_ylim(-700, 700)
+    axes[0].set_yticks([-500, 0, 500])
     axes[0].ticklabel_format(axis="y", style="sci", scilimits=(0, 0))
 
-    # copy_args2 = copy.deepcopy(args)
-    # copy_args2["exp_folder"] = "high_pred/compare_pert_exp_growth_rate_it0.004"
+    copy_args2 = copy.deepcopy(args)
+    copy_args2["exp_folder"] = "high_pred/compare_pert_exp_growth_rate_it0.004"
 
-    # plt_compare.plot_exp_growth_rate_comparison(
-    #     copy_args2,
-    #     axes=axes[1],
-    #     specific_runs_per_profile_dict=specific_runs_per_profile_dict,
-    # )
-    # axes[1].set_xlim(-0.0001, 0.01)
-    # axes[1].set_ylim(-1000, 250)
-    # axes[1].set_yticks(np.array([-1.0, -0.5, 0.0], dtype=np.float32) * 1e3)
-    # axes[1].ticklabel_format(axis="y", style="sci", scilimits=(0, 0))
+    plt_compare.plot_exp_growth_rate_comparison(
+        copy_args2,
+        axes=axes[1],
+        specific_runs_per_profile_dict=specific_runs_per_profile_dict,
+        highlight_perts=[0, 3],
+    )
+    axes[1].set_xlim(-0.0001, 0.01)
+    axes[1].set_ylim(-500, 150)
+    axes[1].set_yticks(np.array([-0.5, 0.0], dtype=np.float32) * 1e3)
+    axes[1].ticklabel_format(axis="y", style="sci", scilimits=(0, 0))
 
-    g_plt_utils.add_subfig_labels(axes)
     fig.subplots_adjust(
-        top=0.949, bottom=0.126, left=0.111, right=0.966, hspace=0.395, wspace=0.2
+        top=0.933, bottom=0.126, left=0.095, right=0.966, hspace=0.7, wspace=0.0
     )
 
     if args["tolatex"]:
         plt_config.remove_legends(axes)
         plt_config.adjust_axes(axes)
+        g_plt_utils.add_subfig_labels(axes)
 
     if args["save_fig"]:
         g_plt_utils.save_figure(

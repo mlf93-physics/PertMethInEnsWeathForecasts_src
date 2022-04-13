@@ -12,6 +12,7 @@ sys.path.append("..")
 import pathlib as pl
 from mpl_toolkits import mplot3d
 from mpl_toolkits.mplot3d.art3d import Line3DCollection
+from matplotlib.collections import LineCollection
 import matplotlib.cm as cm
 import matplotlib.colors as mpl_colors
 import matplotlib.pyplot as plt
@@ -26,8 +27,114 @@ import general.analyses.plot_analyses as g_plt_anal
 import general.utils.plot_utils as g_plt_utils
 import general.utils.argument_parsers as a_parsers
 import general.utils.user_interface as g_ui
+import general.plotting.plot_config as plt_config
 import sklearn.cluster as skl_cluster
 import config as cfg
+
+
+def plot_splitted_wings(args):
+    fig1 = plt.figure()
+    ax1 = plt.axes(facecolor=(0, 0, 0, 0))
+
+    # Import reference data
+    _, u_data, ref_header_dict = g_import.import_ref_data(args=args)
+
+    wing_indices1 = u_data[:, 0] > 0
+    wing_indices2 = np.logical_not(wing_indices1)
+
+    segments = zip(u_data[:-1, :2], u_data[1:, :2])
+
+    coll1 = LineCollection(segments, cmap="coolwarm")
+    coll1.set_array(wing_indices1)
+
+    e_dist_title = g_plt_utils.generate_title(
+        args, header_dict=ref_header_dict, title_header="E dist | Lorentz63 model \n"
+    )
+
+    line_plot1 = ax1.add_collection(coll1)
+    ax1.set_xlim(-20, 20)
+    ax1.set_ylim(-25, 25)
+    ax1.set_xlabel("$x$")
+    ax1.set_ylabel("$y$")
+    ax1.grid(False)
+    ax1.set_title(e_dist_title)
+    # fig1.colorbar(line_plot1)
+
+    if args["tolatex"]:
+        plt_config.adjust_axes(ax1)
+
+    if args["save_fig"]:
+        g_plt_utils.save_figure(
+            args,
+            subpath=pl.Path("thesis_figures/pt_methods/"),
+            file_name="l63_attractor_split",
+        )
+
+
+def plot_attractor_standalone(args, ax=None, alpha=1):
+    """Plot the 3D attractor of the reference data
+
+    Parameters
+    ----------
+    args : dict
+        A dictionary containing run time arguments
+    """
+    # Import reference data
+    time, u_data, header_dict = g_import.import_ref_data(args=args)
+
+    # Setup axis if necessary
+    if ax is None:
+        ax = plt.axes(projection="3d")
+
+    plot_style = "k-"
+    linewidth = 0.5
+
+    ax.xaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+    ax.yaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+    ax.zaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+    ax.grid(False)
+
+    # Plot
+    ax.plot3D(
+        u_data[:, 0],
+        u_data[:, 1],
+        u_data[:, 2],
+        plot_style,
+        alpha=alpha,
+        linewidth=linewidth,
+        zorder=10,
+    )
+
+    ax.set_xlabel("$x$")
+    ax.set_ylabel("$y$")
+    ax.set_zlabel("$z$")
+    ax.view_init(elev=13, azim=-45)
+
+    # Add text in +/- fixpoints
+    ax.text(
+        np.sqrt(args["b_const"] * (args["r_const"] - 1)),
+        np.sqrt(args["b_const"] * (args["r_const"] - 1)),
+        args["r_const"] - 1,
+        "R",
+    )
+    ax.text(
+        -np.sqrt(args["b_const"] * (args["r_const"] - 1)),
+        -np.sqrt(args["b_const"] * (args["r_const"] - 1)),
+        args["r_const"] - 1,
+        "L",
+    )
+
+    if args["tolatex"]:
+        plt_config.adjust_axes(ax)
+
+    if args["save_fig"]:
+        g_plt_utils.save_figure(
+            args,
+            subpath=pl.Path("thesis_figures/models"),
+            file_name="lorentz_attractor",
+        )
+
+    return time, u_data, header_dict
 
 
 def plot_attractor(args, ax=None, alpha=1):
@@ -96,23 +203,6 @@ def plot_attractor(args, ax=None, alpha=1):
                 linewidth=0.5,
                 zorder=0,
             )
-
-    # ax.plot3D(
-    #     u_data[wing_indices1, 0],
-    #     u_data[wing_indices1, 1],
-    #     u_data[wing_indices1, 2],
-    #     "b.",
-    #     alpha=0.5,
-    #     # linewidth=0.5,
-    # )
-    # ax.plot3D(
-    #     u_data[wing_indices2, 0],
-    #     u_data[wing_indices2, 1],
-    #     u_data[wing_indices2, 2],
-    #     "r.",
-    #     alpha=0.5,
-    #     # linewidth=0.5,
-    # )
 
     ax.set_xlabel("x")
     ax.set_ylabel("y")
@@ -214,6 +304,8 @@ def plot_normal_mode_dist(args):
         ref_header_dict,
     ) = nm_analysis.analyse_normal_mode_dist(args)
 
+    chosen_e_values = e_values.real
+
     orthonormality_matrix = 0
     for item in e_vector_collection:
         temp = g_plt_anal.orthogonality_of_vectors(item.T)
@@ -230,8 +322,8 @@ def plot_normal_mode_dist(args):
     ax1.yaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
     ax1.zaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
 
-    max_e_value = np.max(e_values.imag)
-    min_e_value = np.min(e_values.imag)
+    max_e_value = np.max(chosen_e_values)
+    min_e_value = np.min(chosen_e_values)
 
     # Prepare cmap and norm
     cmap, norm = g_plt_utils.get_custom_cmap(
@@ -248,7 +340,7 @@ def plot_normal_mode_dist(args):
         u_profiles[0, :],
         u_profiles[1, :],
         u_profiles[2, :],
-        c=e_values.real,
+        c=chosen_e_values,
         norm=norm,
         cmap=cmap,
     )
@@ -282,9 +374,14 @@ def plot_normal_mode_dist(args):
         normalize=True,
         alpha=1,
         length=2,
-        linewidths=1.0,
+        linewidths=0.3,
         zorder=10,
     )
+
+    ax2.set_xlabel("$x$", labelpad=-8)
+    ax2.set_ylabel("$y$", labelpad=-8)
+    ax2.set_zlabel("$z$", labelpad=-10)
+    ax2.tick_params(axis="both", which="major", pad=-3)
 
     e_vector_dist_title = g_plt_utils.generate_title(
         args,
@@ -297,18 +394,27 @@ def plot_normal_mode_dist(args):
     ax2.grid(False)
 
     # Set quiver colors
-    qplot.set_array(np.concatenate((e_values.imag, np.repeat(e_values.imag, 2))))
+    qplot.set_array(np.concatenate((chosen_e_values, np.repeat(chosen_e_values, 2))))
     # Set colorbar
-    fig2.colorbar(qplot)
+    fig2.colorbar(qplot, shrink=0.6, pad=0.15)
+    ax2.view_init(elev=13, azim=-45)
+    fig2.subplots_adjust(
+        top=1.0, bottom=0.0, left=0.0, right=1.0, hspace=0.2, wspace=0.2
+    )
+
+    if args["tolatex"]:
+        plt_config.adjust_axes([ax2])
 
     if args["save_fig"]:
-        out_path = pl.Path(
-            "../../thesis/figures/lorentz63_experiments/normal_mode_perturbations/"
+        out_path = pl.Path("thesis_figures/models/")
+        g_plt_utils.save_figure(
+            args,
+            fig=fig2,
+            subpath=out_path,
+            file_name=args["save_fig_name"],
         )
-        name1 = f"nm_perturbations_e_value_dist_n{args['n_profiles']}"
-        name2 = f"nm_perturbations_e_vector_dist_n{args['n_profiles']}"
-        g_plt_utils.save_interactive_fig(fig1, out_path, name1)
-        g_plt_utils.save_interactive_fig(fig2, out_path, name2)
+        # g_plt_utils.save_interactive_fig(fig1, out_path, name1)
+        # g_plt_utils.save_interactive_fig(fig2, out_path, name2)
 
 
 def plot_energy_dist(args):
@@ -494,12 +600,13 @@ if __name__ == "__main__":
     # Initiate arrays
     # initiate_sdim_arrays(args["sdim"])
     g_ui.confirm_run_setup(args)
+    plt_config.adjust_default_fig_axes_settings(args)
 
     if "time_to_run" in args:
         args["Nt"] = int(args["time_to_run"] / dt * sample_rate)
 
     if "attractor" in args["plot_type"]:
-        plot_attractor(args)
+        plot_attractor_standalone(args)
     elif "velocity" in args["plot_type"]:
         plot_velocities(args)
     elif "energy" in args["plot_type"]:
@@ -514,5 +621,7 @@ if __name__ == "__main__":
         plot_characteristic_periods(args)
     elif "residence_time" in args["plot_type"]:
         plot_residence_time_in_wing(args)
+    elif "splitted_wings" in args["plot_type"]:
+        plot_splitted_wings(args)
 
     g_plt_utils.save_or_show_plot(args)

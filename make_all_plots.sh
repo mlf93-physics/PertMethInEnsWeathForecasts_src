@@ -71,3 +71,6 @@ python ../general/plotting/conceptual_visualizations.py --plot_type=breed_method
 echo "Make l63_pert_vectors_on_trajectory plots"
 python plotting/compare_plot.py  --plot_type=plot_pert_vector_dists --exp_folder=compare_pert_vectors_on_trajectory -v bv_eof lv sv --n_profiles=140 --endpoint --tolatex -lf full_page --noplot --save_fig --save_fig_name=l63_pert_vectors_on_trajectory_view1 plot_kwargs --elev=21 --azim=-57
 python plotting/compare_plot.py  --plot_type=plot_pert_vector_dists --exp_folder=compare_pert_vectors_on_trajectory -v bv_eof lv sv --n_profiles=140 --endpoint --tolatex -lf full_page --noplot --save_fig --save_fig_name=l63_pert_vectors_on_trajectory_view2 plot_kwargs --elev=6 --azim=-126
+
+echo "Make attractor split visualization"
+python plotting/plot_data.py --plot_type=splitted_wings --ref_end_time=30 --tolatex -lf normal_small --save_fig --noplot --noconfirm
