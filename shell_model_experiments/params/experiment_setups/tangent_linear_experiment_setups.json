@@ -1,9 +1,9 @@
 {
     "TestRun1": {
-        "folder_name": "test_tl_svs",
+        "folder_name": "test_tl_spectrum",
         "sub_exp_folder": "",
-        "time_to_run": 0.01,
-        "unit_offset": 0.01,
+        "time_to_run": 1,
+        "unit_offset": 1,
         "start_times": [
             21.12
         ]
