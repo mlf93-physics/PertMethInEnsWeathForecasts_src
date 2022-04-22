@@ -149,7 +149,7 @@ def main(args: dict, exp_setup: dict = None):
                 # Orthogonalise vectors
                 rescaled_data = np.array(data_out_list, dtype=sparams.dtype).T
                 rescaled_data, r_matrix = np.linalg.qr(rescaled_data)
-                lyapunov_exps += np.abs(np.diagonal(r_matrix))
+                lyapunov_exps += np.diagonal(r_matrix)
 
                 # rescaled_matrix = r_matrix @ rescaled_data
                 # lyapunov_exps += np.linalg.eig(rescaled_matrix)[0]

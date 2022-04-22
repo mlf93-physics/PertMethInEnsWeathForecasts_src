@@ -81,7 +81,7 @@ def init_jacobian(args):
 
     j_matrix[0, 0] = -args["sigma"]
     j_matrix[0, 1] = args["sigma"]
-    j_matrix[1, 1] = 1
+    j_matrix[1, 1] = -1
     j_matrix[2, 2] = -args["b_const"]
 
     return j_matrix

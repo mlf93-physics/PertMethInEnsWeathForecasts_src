@@ -291,6 +291,7 @@ def plot_error_norm_vs_time(args):
         legend_on=False,
         cmap_list=["blue"],
         plot_args=["unique_linestyle"],
+        linear_fit=False,
     )
 
 

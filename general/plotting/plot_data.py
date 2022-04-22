@@ -12,6 +12,7 @@ import general.utils.importing.import_perturbation_data as pt_import
 from general.plotting.plot_params import *
 from matplotlib.colors import LogNorm, Normalize
 from general.params.experiment_licences import Experiments as EXP
+import scipy.optimize as sp_optim
 from general.params.model_licences import Models
 import config as cfg
 
@@ -27,13 +28,14 @@ if cfg.MODEL == Models.SHELL_MODEL:
     SHELL_TICKS_COMPACT2 = np.arange(1, params.sdim, 2)
     SHELL_TICKS_COMPACT3 = np.arange(1, params.sdim + 1, 3)
     SHELL_TICKS_COMPACT5 = np.arange(1, params.sdim + 1, 6)
-    SHELL_TICKS_FULL = np.arange(1, params.sdim + 1, 1)
 elif cfg.MODEL == Models.LORENTZ63:
     import lorentz63_experiments.params.params as l63_params
     import lorentz63_experiments.params.special_params as l63_sparams
 
     params = l63_params
     sparams = l63_sparams
+
+TICKS_FULL = np.arange(1, params.sdim + 1, 1)
 
 
 def plot_exp_growth_rate_vs_time(
@@ -137,6 +139,7 @@ def plot_error_norm_vs_time(
     legend_on: bool = True,
     plot_args: list = ["detailed_title"],
     raw_perturbations: bool = True,
+    linear_fit: bool = False,
 ):
 
     if exp_setup is None:
@@ -212,6 +215,21 @@ def plot_error_norm_vs_time(
         perturb_time_pos_list_legend = np.append(
             perturb_time_pos_list_legend, ["Mean error norm", "Std of error"]
         )
+
+    if linear_fit:
+
+        def linearfunction(x, a, b):
+            return a * x + b
+
+        log_norm_data = np.log(error_norm_mean_vs_time)
+        # print("log_norm_data", log_norm_data)
+
+        lin_popt, lin_pcov = sp_optim.curve_fit(
+            linearfunction,
+            time_array[:, 0],
+            log_norm_data,
+        )
+        print("lin_popt", lin_popt, "lin_pcov", lin_pcov)
 
     # Prepare axes
     if axes is None:
@@ -470,10 +488,12 @@ def plot2D_average_vectors(
     )
     mean_characteristic_value = np.mean(characteristic_values, axis=0)
 
+    print("mean_characteristic_value", mean_characteristic_value)
+
     if not no_char_values:
 
         axes[0].plot(
-            SHELL_TICKS_FULL[valid_char_value_range] - 0.5,
+            TICKS_FULL[valid_char_value_range] - 0.5,
             mean_characteristic_value,
             "k.",
             markersize=4,
@@ -590,15 +610,27 @@ def plot2D_vectors(
     cbar_ax.set_title(vector_label, x=-0.3, y=-3.5)
 
     if no_char_values:
-        heatmap_plot.set_yticks(SHELL_TICKS_COMPACT3 - 0.5)
-        heatmap_plot.set_yticklabels(SHELL_TICKS_COMPACT3, rotation=0)
-        heatmap_plot.set_xticks(SHELL_TICKS_COMPACT2 - 0.5)
-        heatmap_plot.set_xticklabels(SHELL_TICKS_COMPACT2)
+        if cfg.MODEL == Models.SHELL_MODEL:
+            heatmap_plot.set_yticks(SHELL_TICKS_COMPACT3 - 0.5)
+            heatmap_plot.set_yticklabels(SHELL_TICKS_COMPACT3, rotation=0)
+            heatmap_plot.set_xticks(SHELL_TICKS_COMPACT2 - 0.5)
+            heatmap_plot.set_xticklabels(SHELL_TICKS_COMPACT2)
+        elif cfg.MODEL == Models.LORENTZ63:
+            heatmap_plot.set_yticks(TICKS_FULL - 0.5)
+            heatmap_plot.set_yticklabels(TICKS_FULL, rotation=0)
+            heatmap_plot.set_xticks(TICKS_FULL - 0.5)
+            heatmap_plot.set_xticklabels(TICKS_FULL)
     else:
-        heatmap_plot.set_yticks(SHELL_TICKS_COMPACT5 - 0.5)
-        heatmap_plot.set_yticklabels(SHELL_TICKS_COMPACT5, rotation=0)
-        heatmap_plot.set_xticks(SHELL_TICKS_COMPACT2 - 0.5)
-        heatmap_plot.set_xticklabels(SHELL_TICKS_COMPACT2)
+        if cfg.MODEL == Models.SHELL_MODEL:
+            heatmap_plot.set_yticks(SHELL_TICKS_COMPACT5 - 0.5)
+            heatmap_plot.set_yticklabels(SHELL_TICKS_COMPACT5, rotation=0)
+            heatmap_plot.set_xticks(SHELL_TICKS_COMPACT2 - 0.5)
+            heatmap_plot.set_xticklabels(SHELL_TICKS_COMPACT2)
+        elif cfg.MODEL == Models.LORENTZ63:
+            heatmap_plot.set_yticks(TICKS_FULL - 0.5)
+            heatmap_plot.set_yticklabels(TICKS_FULL, rotation=0)
+            heatmap_plot.set_xticks(TICKS_FULL - 0.5)
+            heatmap_plot.set_xticklabels(TICKS_FULL)
 
     axes.invert_yaxis()
     # axes.invert_xaxis()

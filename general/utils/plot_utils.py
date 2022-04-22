@@ -16,6 +16,16 @@ from general.params.model_licences import Models
 from general.params.experiment_licences import Experiments as EXP
 import config as cfg
 
+if cfg.MODEL == Models.SHELL_MODEL:
+    from shell_model_experiments.params.params import PAR as PAR_SH
+    from shell_model_experiments.params.params import ParamsStructType
+
+    params = PAR_SH
+elif cfg.MODEL == Models.LORENTZ63:
+    import lorentz63_experiments.params.params as l63_params
+
+    params = l63_params
+
 
 def post_process_vectors_and_char_values(
     args: dict,
@@ -73,9 +83,10 @@ def post_process_vectors_and_char_values(
             / np.sum(characteristic_values.real, axis=1)[:, np.newaxis]
         )
     elif cfg.LICENCE == EXP.LYAPUNOV_VECTORS:
-        characteristic_values = characteristic_values.real / (
-            exp_setup["integration_time"] * exp_setup["n_cycles"]
-        )
+        characteristic_values = np.log(
+            np.abs(characteristic_values) / params.seeked_error_norm
+        ) / (exp_setup["integration_time"] * exp_setup["n_cycles"])
+
     else:
         characteristic_values = characteristic_values.real
 
