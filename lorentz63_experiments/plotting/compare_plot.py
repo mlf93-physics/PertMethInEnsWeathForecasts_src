@@ -376,6 +376,8 @@ def plot_pert_vectors3D(args: dict, axes: plt.Axes = None):
         u_data[dt_sample_offset, 2],
         "kx",
         label="_nolegend_",
+        zorder=25,
+        markersize=4,
     )
 
     axes.xaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
@@ -467,6 +469,7 @@ def plot_pert_vector_dists(args: dict, axes: plt.Axes = None):
     temp_key = list(perturb_positions_store.keys())[0]
     # Import from start of appropriate ref record to last perturb position
     first_pert_position = np.min(perturb_positions_store[temp_key])
+
     args["ref_start_time"] = (
         (first_pert_position * stt)
         // cfg.GLOBAL_PARAMS.record_max_time

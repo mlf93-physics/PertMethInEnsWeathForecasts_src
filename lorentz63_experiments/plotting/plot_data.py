@@ -305,7 +305,11 @@ def plot_normal_mode_dist(args):
         ref_header_dict,
     ) = nm_analysis.analyse_normal_mode_dist(args)
 
-    chosen_e_values = e_values.real
+    part = "imag"
+    if part == "real":
+        chosen_e_values = e_values.real
+    else:
+        chosen_e_values = e_values.imag
 
     orthonormality_matrix = 0
     for item in e_vector_collection:
@@ -331,7 +335,7 @@ def plot_normal_mode_dist(args):
         vmin=min_e_value,
         vmax=max_e_value,
         vcenter=(max_e_value + min_e_value) / 2,
-        cmap_handle=plt.cm.coolwarm_r,
+        cmap_handle=plt.cm.jet if part == "real" else plt.cm.jet,
     )
     # Plot attractor
     plot_attractor(args, ax=ax1, alpha=0.5)
@@ -382,6 +386,8 @@ def plot_normal_mode_dist(args):
     ax2.set_xlabel("$x$", labelpad=-8)
     ax2.set_ylabel("$y$", labelpad=-8)
     ax2.set_zlabel("$z$", labelpad=-10)
+    ax2.set_xticks([-20, 0, 20])
+    ax2.set_yticks([-20, 0, 20])
     ax2.tick_params(axis="both", which="major", pad=-3)
 
     e_vector_dist_title = g_plt_utils.generate_title(

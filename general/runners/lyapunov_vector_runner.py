@@ -124,7 +124,7 @@ def main(args: dict, exp_setup: dict = None):
         # Start off with None value in order to invoke random perturbations
         rescaled_data = None
         perturb_positions = None
-        lyapunov_exps = 0
+        lyapunov_exps: np.ndarray = np.zeros((exp_setup["n_cycles"], params.sdim))
         for j in range(exp_setup["n_cycles"]):
             # Import reference data
             u_ref, _, ref_header_dict = g_import.import_start_u_profiles(args=copy_args)
@@ -149,10 +149,16 @@ def main(args: dict, exp_setup: dict = None):
                 # Orthogonalise vectors
                 rescaled_data = np.array(data_out_list, dtype=sparams.dtype).T
                 rescaled_data, r_matrix = np.linalg.qr(rescaled_data)
-                # Add estimate to mean lyapunov_exponents
-                lyapunov_exps += np.log(
+                # Add estimate to mean lyapunov_exponents by taking into account
+                # zeroths in r_matrix
+                temp_ratio = (
                     np.abs(np.diagonal(r_matrix).real) / params.seeked_error_norm
+                )
+                zero_temp_ratio = temp_ratio == 0
+                lyapunov_exps[j, :] = np.log(
+                    temp_ratio, where=np.logical_not(zero_temp_ratio)
                 ) / (exp_setup["integration_time"])
+                lyapunov_exps[j, zero_temp_ratio] = None
 
                 # rescaled_matrix = r_matrix @ rescaled_data
                 # lyapunov_exps += np.linalg.eig(rescaled_matrix)[0]
@@ -179,7 +185,7 @@ def main(args: dict, exp_setup: dict = None):
         v_save.save_vector_unit(
             rescaled_data[sparams.u_slice, :].T,
             # Average lyapunov exponent across cycles
-            characteristic_values=lyapunov_exps / exp_setup["n_cycles"],
+            characteristic_values=np.nanmean(lyapunov_exps, axis=0),
             perturb_position=int(round(start_times[i] * params.tts)),
             unit=i,
             args=args,

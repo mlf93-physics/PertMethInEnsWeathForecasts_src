@@ -282,7 +282,7 @@
             "perturbation_folder": "perturbations",
             "sub_exp_folder": "perturb_data",
             "eval_times": [
-                10008
+                10007.8
             ],
             "n_units": 140,
             "unit_offset": 0.01

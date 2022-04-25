@@ -943,10 +943,10 @@ def plot_exp_growth_rate_comparison(
     # Update number of folders after filtering
     len_folders = len(args["exp_folders"])
 
-    cmap_list, _ = g_plt_utils.get_non_repeating_colors(
-        n_colors=args["n_runs_per_profile"], cmap=plt.cm.Greens_r, vmin=0.2
-    )
-    # cmap_list = plt.rcParams["axes.prop_cycle"].by_key()["color"]
+    # cmap_list, _ = g_plt_utils.get_non_repeating_colors(
+    #     n_colors=args["n_runs_per_profile"], cmap=plt.cm.Greens_r, vmin=0.2
+    # )
+    cmap_list = plt.rcParams["axes.prop_cycle"].by_key()["color"]
     # cmap_list[0] = "k"
     standalone_plot = False
     if axes is None:
@@ -976,14 +976,18 @@ def plot_exp_growth_rate_comparison(
 
                 # linestyle = LINESTYLES[digits_in_name]
                 if specific_runs_per_profile_dict is not None:
-                    color = METHOD_COLORS[perturb_type]
                     if len(specific_runs_per_profile_dict[perturb_type]) <= len(
                         METHOD_LINESTYLES[perturb_type]
                     ):
                         linestyle = METHOD_LINESTYLES[perturb_type][linestyle_counter]
+                        color = METHOD_COLORS[perturb_type]
+                    else:
+                        linestyle = "solid"
+                        color = cmap_list[linestyle_counter]
                 else:
-                    linestyle = "solid"
-                    color = cmap_list[linestyle_counter]
+                    linestyle = METHOD_LINESTYLES[perturb_type][linestyle_counter]
+                    color = METHOD_COLORS[perturb_type]
+
         else:
             perturb_type = folder_path.name.split("_")[0]
             color = METHOD_COLORS[perturb_type]
@@ -1001,7 +1005,7 @@ def plot_exp_growth_rate_comparison(
             axes=axes,
             color=special_colors[linestyle_counter]
             if linestyle_counter in highlight_perts
-            else color,  # cmap_list[i],
+            else color,
             zorder=20 if linestyle_counter in highlight_perts else 0,
             linewidth=1,
             linestyle=linestyle,
@@ -1026,6 +1030,8 @@ def plot_exp_growth_rate_comparison(
             ),
             minor=False,
         )
+        lyap_exponent = 0.9
+        axes.plot(1.04, lyap_exponent, "k_")
 
     if standalone_plot:
         if args["tolatex"]:
