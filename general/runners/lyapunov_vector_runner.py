@@ -149,7 +149,10 @@ def main(args: dict, exp_setup: dict = None):
                 # Orthogonalise vectors
                 rescaled_data = np.array(data_out_list, dtype=sparams.dtype).T
                 rescaled_data, r_matrix = np.linalg.qr(rescaled_data)
-                lyapunov_exps += np.diagonal(r_matrix)
+                # Add estimate to mean lyapunov_exponents
+                lyapunov_exps += np.log(
+                    np.abs(np.diagonal(r_matrix).real) / params.seeked_error_norm
+                ) / (exp_setup["integration_time"])
 
                 # rescaled_matrix = r_matrix @ rescaled_data
                 # lyapunov_exps += np.linalg.eig(rescaled_matrix)[0]
@@ -175,7 +178,8 @@ def main(args: dict, exp_setup: dict = None):
         # Save lyapunov vectors
         v_save.save_vector_unit(
             rescaled_data[sparams.u_slice, :].T,
-            characteristic_values=lyapunov_exps,
+            # Average lyapunov exponent across cycles
+            characteristic_values=lyapunov_exps / exp_setup["n_cycles"],
             perturb_position=int(round(start_times[i] * params.tts)),
             unit=i,
             args=args,

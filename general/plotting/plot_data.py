@@ -488,8 +488,6 @@ def plot2D_average_vectors(
     )
     mean_characteristic_value = np.mean(characteristic_values, axis=0)
 
-    print("mean_characteristic_value", mean_characteristic_value)
-
     if not no_char_values:
 
         axes[0].plot(

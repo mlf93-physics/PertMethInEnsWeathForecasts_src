@@ -36,8 +36,8 @@ def post_process_vectors_and_char_values(
     """Post process the pert vectors and characteristic values differently
     depending on the license
 
-    E.g. the singular values are converted to growth rates, variances to fraction of
-    total variance, and lyapunov exponents divided by optimization time.
+    E.g. the singular values are converted to growth rates and variances to fraction of
+    total variance.
 
     Parameters
     ----------
@@ -82,11 +82,6 @@ def post_process_vectors_and_char_values(
             characteristic_values.real
             / np.sum(characteristic_values.real, axis=1)[:, np.newaxis]
         )
-    elif cfg.LICENCE == EXP.LYAPUNOV_VECTORS:
-        characteristic_values = np.log(
-            np.abs(characteristic_values) / params.seeked_error_norm
-        ) / (exp_setup["integration_time"] * exp_setup["n_cycles"])
-
     else:
         characteristic_values = characteristic_values.real
 
