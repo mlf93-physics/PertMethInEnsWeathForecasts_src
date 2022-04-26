@@ -19,12 +19,15 @@ import matplotlib.pyplot as plt
 import seaborn as sb
 from lorentz63_experiments.params.params import *
 import lorentz63_experiments.analyses.normal_mode_analysis as nm_analysis
+import lorentz63_experiments.perturbations.normal_modes as l63_nm_estimator
 import lorentz63_experiments.utils.util_funcs as l_utils
 import general.utils.importing.import_data_funcs as g_import
+import general.utils.importing.import_perturbation_data as pt_import
 from general.plotting.plot_params import *
 import general.plotting.plot_data as g_plt_data
 import general.analyses.plot_analyses as g_plt_anal
 import general.utils.plot_utils as g_plt_utils
+import general.utils.util_funcs as g_utils
 import general.utils.argument_parsers as a_parsers
 import general.utils.user_interface as g_ui
 import general.plotting.plot_config as plt_config
@@ -595,6 +598,52 @@ def plot_residence_time_in_wing(args):
     plt.legend()
 
 
+def projectibility_bv_eof_vs_nm(args):
+
+    (
+        vector_units,
+        _,
+        u_init_profiles,
+        eval_pos,
+        perturb_header_dicts,
+    ) = pt_import.import_perturb_vectors(
+        args,
+        raw_perturbations=True,
+    )
+
+    (
+        e_vector_matrix,
+        e_values_max,
+        e_vector_collection,
+        e_value_collection,
+    ) = l63_nm_estimator.find_normal_modes(
+        u_init_profiles, args, n_profiles=u_init_profiles.shape[1]
+    )
+
+    # Normalize
+    vector_units = g_utils.normalize_array(vector_units, norm_value=1, axis=2)
+    e_vector_collection = g_utils.normalize_array(
+        np.array(e_vector_collection), norm_value=1, axis=2
+    )
+
+    projectibility = np.zeros((args["n_runs_per_profile"], args["n_runs_per_profile"]))
+    for i in range(args["n_profiles"]):
+        for j in range(args["n_runs_per_profile"]):
+            # projectibility[j, :] += g_plt_anal.orthogonality_to_vector(
+            #     vector_units[i, j, :], e_vector_matrix.T
+            # )
+
+            projectibility[j, :] += np.abs(
+                g_plt_anal.orthogonality_to_vector(
+                    vector_units[i, j, :], e_vector_collection[i, :, :].T
+                )
+            )
+
+    sb.heatmap(projectibility / args["n_profiles"], cmap="Reds", annot=True)
+    plt.xlabel("NM index")
+    plt.ylabel("BV-EOF index")
+
+
 if __name__ == "__main__":
     cfg.init_licence()
 
@@ -630,5 +679,7 @@ if __name__ == "__main__":
         plot_residence_time_in_wing(args)
     elif "splitted_wings" in args["plot_type"]:
         plot_splitted_wings(args)
+    elif "project_bv_eof_vs_nm" in args["plot_type"]:
+        projectibility_bv_eof_vs_nm(args)
 
     g_plt_utils.save_or_show_plot(args)

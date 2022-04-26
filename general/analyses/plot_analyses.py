@@ -43,9 +43,9 @@ def orthogonality_to_vector(
 
     Parameters
     ----------
-    reference_vector : np.ndarray((n_vectors, dim))
+    reference_vector : np.ndarray
         The reference vector
-    matrix_of_vectors : np.ndarray
+    matrix_of_vectors : np.ndarray((n_vectors, dim))
         The trial vectors
 
     Returns
