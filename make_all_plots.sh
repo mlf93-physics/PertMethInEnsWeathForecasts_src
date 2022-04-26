@@ -77,3 +77,6 @@ python plotting/plot_data.py --plot_type=splitted_wings --ref_end_time=30 --tola
 
 echo "Make L63 normal mode dist plots"
 python ./plotting/plot_data.py --plot_type=nm_dist --n_profiles=5000 --ref_end_time=150 --tolatex -lf quad_item --save_fig_name=l63_eigenvector_value_real_dist --save_fig --noplot --noconfirm
+
+echo "Make L63 TLM verification plot"
+python ../general/plotting/verify_plotter.py --exp_folder=verification_tlm_test_ttr3 --plot_type=tl_error_verification

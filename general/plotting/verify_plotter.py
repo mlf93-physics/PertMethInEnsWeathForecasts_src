@@ -136,13 +136,15 @@ def plot_tl_error_verification(args, axes=None):
     if args["save_fig"]:
         if cfg.MODEL == Models.SHELL_MODEL:
             subfolder = "shell"
+            file_name = "verification_tlm_" + args["regime_start"]
         elif cfg.MODEL == Models.LORENTZ63:
             subfolder = "l63"
+            file_name = "verification_tlm"
 
         g_plt_utils.save_figure(
             args,
             subpath="thesis_figures/numerical_setup/" + subfolder,
-            file_name="verification_tlm_" + args["regime_start"],
+            file_name=file_name,
         )
 
 
