@@ -789,9 +789,9 @@ if __name__ == "__main__":
         plot_pert_vectors2D(args)
     elif "pert_vectors3D" in args["plot_type"]:
         plot_pert_vectors3D(args)
-    elif "pert_vector_dists":
+    elif "pert_vector_dists" in args["plot_type"]:
         plot_pert_vector_dists(args)
-    elif "growth_rate_dist":
+    elif "growth_rate_dist" in args["plot_type"]:
         plot_mean_exp_growth_rate_distribution(args)
     else:
         raise ValueError(f"No plot method present for plot_type={args['plot_type']}")

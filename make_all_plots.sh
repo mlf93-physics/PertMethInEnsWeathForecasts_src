@@ -7,7 +7,7 @@ echo "Making sh_howmoller_vs_time, sh_energy_vs_time and sh_energy_spectrum plot
 python ./plotting/collect_plots.py --plot_type=spec_energy_howmoller --ref_end_time=1 --tolatex -lf three_panel --save_fig --noplot
 
 echo "Making sh_eigenmode_analysis plot"
-python ./plotting/collect_plots.py --plot_type=lyapunov_anal --n_profiles=100 --tolatex --save_fig --noplot --noconfirm
+python ./plotting/collect_plots.py --plot_type=nm_anal --n_profiles=100 --tolatex --save_fig --noplot --noconfirm
 
 echo "Making error norm comparison"
 python ../general/plotting/collect_plot_comparison.py --plot_type=collect_error_norm_compare --exp_folder=compare_pert_error_norm --endpoint  --seed_mode -pt all --tolatex -lf two_panel --save_fig --right_spine --notight plot_kwargs

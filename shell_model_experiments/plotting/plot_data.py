@@ -596,11 +596,11 @@ def plot_eigen_value_dist(args=None, axes=None):
         np.mean(
             np.cumsum(e_value_collection.real, axis=0) / kolm_sinai_entropy, axis=1
         ),
-        "."
+        "k."
         # linestyle="-",
         # marker=".",
     )
-    axes.set_xlabel("Eigenmode index, $m$")
+    axes.set_xlabel("$m$")
     axes.set_ylabel("$\sum_{i=0}^m \\mu_m / H$")
     axes.set_ylim(-2, 2)
     axes.set_xlim(0, 20)
@@ -613,6 +613,8 @@ def plot_eigen_value_dist(args=None, axes=None):
         title_header="Cummulative eigenvalues",
         title_suffix=f'N_tot={args["n_profiles"]*args["n_runs_per_profile"]}, ',
     )
+
+    # axes.grid(visible=True, axis="y", color="k", linestyle="dotted")
 
     # plt.title(title)
 
@@ -773,8 +775,8 @@ def plot_2D_eigen_mode_analysis(
         title_suffix=f'N_tot={args["n_profiles"]*args["n_runs_per_profile"]}, ',
     )
 
-    mean_e_vectors = np.mean(np.abs(e_vector_collection) ** 2, axis=0)
-    eps = 1e-2
+    mean_e_vectors = np.mean(np.abs(e_vector_collection), axis=0)
+    eps = 2 * 1e-2
     pcolorplot = sb.heatmap(
         mean_e_vectors,
         cmap="Reds",
@@ -785,13 +787,14 @@ def plot_2D_eigen_mode_analysis(
         cbar_kws={
             "location": "bottom",
             "shrink": 0.5,
-            "label": "$\\langle|\\xi_{n,m}|^2 \\rangle$",
+            "label": "$\\langle|\\xi_{n,m}| \\rangle$",
         },
     )
+    pcolorplot.set_yticks(SHELL_TICKS_COMPACT)
     pcolorplot.set_yticklabels(SHELL_TICKS_COMPACT, rotation=0)
     pcolorplot.set_xticklabels(SHELL_TICKS_FULL)
-    axes.set_xlabel("Eigenmode index, $m$")
-    axes.set_ylabel("Shell number, $n$")
+    axes.set_xlabel("$m$")
+    axes.set_ylabel("$n$")
     axes.set_title(title)
     axes.invert_yaxis()
 
