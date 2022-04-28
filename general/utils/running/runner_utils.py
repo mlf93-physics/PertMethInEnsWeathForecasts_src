@@ -36,7 +36,7 @@ elif cfg.MODEL == Models.LORENTZ63:
     sparams = l63_sparams
 
 
-def get_bv_start_time(
+def get_bv_lv_start_time(
     eval_time: Union[float, np.ndarray] = None, exp_setup: dict = None
 ):
     _temp_offset = exp_setup["n_cycles"] * exp_setup["integration_time"]
@@ -109,7 +109,7 @@ def generate_start_times(exp_setup: dict, args: dict):
                 cfg.LICENCE == EXP.BREEDING_VECTORS
                 or cfg.LICENCE == EXP.LYAPUNOV_VECTORS
             ):
-                _time_offset = get_bv_start_time(
+                _time_offset = get_bv_lv_start_time(
                     eval_time=exp_setup["eval_times"][0], exp_setup=exp_setup
                 )
             elif cfg.LICENCE == EXP.ADJ_LYAPUNOV_VECTORS:

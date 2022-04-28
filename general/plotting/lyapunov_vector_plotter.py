@@ -62,6 +62,7 @@ def plot_lyapunov_vectors_average(args: dict, axes: plt.Axes = None):
         axes=axes,
         plot_kwargs=plot_kwargs,
         characteristic_value_name="$\\lambda_i/t_{{OPT}}$",
+        no_char_values=False,
     )
 
     if args["save_fig"]:
@@ -69,6 +70,31 @@ def plot_lyapunov_vectors_average(args: dict, axes: plt.Axes = None):
             args,
             subpath="thesis_figures/" + args["save_sub_folder"],
             file_name="average_lv_vectors_with_exponents",
+        )
+
+
+def plot_adj_lyapunov_vectors_average(args: dict, axes: plt.Axes = None):
+    # Prepare plot_kwargs
+    plot_kwargs: dict = {
+        "xlabel": "$i$",
+        "ylabel": "$n$",
+        "title_header": "Averaged adjoint LVs",
+        "vector_label": "$\\langle|\\xi^{-\\infty}_{n,i}| \\rangle$",
+    }
+
+    g_plt_data.plot2D_average_vectors(
+        args,
+        axes=axes,
+        plot_kwargs=plot_kwargs,
+        characteristic_value_name="$\\lambda_i/t_{{OPT}}$",
+        no_char_values=True,
+    )
+
+    if args["save_fig"]:
+        g_plt_utils.save_figure(
+            args,
+            subpath="thesis_figures/" + args["save_sub_folder"],
+            file_name="average_alv_vectors",
         )
 
 
@@ -272,6 +298,8 @@ if __name__ == "__main__":
         plot_tlm_solution_and_orthogonality(args)
     elif "lv_average" in args["plot_type"]:
         plot_lyapunov_vectors_average(args)
+    elif "alv_average" in args["plot_type"]:
+        plot_adj_lyapunov_vectors_average(args)
     elif "zeroth_lv" in args["plot_type"]:
         plot_zeroth_lyapunov_vector(args)
     else:

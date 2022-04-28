@@ -480,17 +480,17 @@ def plot2D_average_vectors(
     ) = pt_import.import_perturb_vectors(
         args, raw_perturbations=True, dtype=np.complex128
     )
-    (
-        valid_char_value_range,
-        characteristic_values,
-    ) = g_plt_utils.post_process_vectors_and_char_values(
-        args, vector_units, characteristic_values, header_dicts
-    )
-    mean_characteristic_value = np.mean(characteristic_values, axis=0)
-
-    print("mean_characteristic_value", mean_characteristic_value)
 
     if not no_char_values:
+        (
+            valid_char_value_range,
+            characteristic_values,
+        ) = g_plt_utils.post_process_vectors_and_char_values(
+            args, vector_units, characteristic_values, header_dicts
+        )
+        mean_characteristic_value = np.mean(characteristic_values, axis=0)
+
+        print("mean_characteristic_value", mean_characteristic_value)
 
         axes[0].plot(
             TICKS_FULL[valid_char_value_range] - 0.5,
@@ -502,19 +502,23 @@ def plot2D_average_vectors(
 
         if cfg.LICENCE in [EXP.BREEDING_EOF_VECTORS, EXP.BREEDING_VECTORS]:
             axes[0].set_yscale("log")
-            axes[0].set_ylim(1e-10, None)
-            # axes[0].set_yticks(
-            #     [1, 1e-2, 1e-4],
-            #     minor=False,
-            # )
             axes[0].set_yticks(
-                [1, 1e-5, 1e-10],
+                [1, 1e-2, 1e-4],
                 minor=False,
             )
+            axes[0].set_ylim(1e-4, None)
+
+            # axes[0].set_ylim(1e-10, None)
+            # axes[0].set_yticks(
+            #     [1, 1e-5, 1e-10],
+            #     minor=False,
+            # )
         if cfg.LICENCE == EXP.LYAPUNOV_VECTORS:
-            axes[0].set_yscale("log")
+            pass
+            # axes[0].set_yscale("log")
+            axes[0].set_ylim(None, 700)
             axes[0].set_yticks(
-                [1e3, 1e-6, 1e-15],
+                [500, 0, -1000],
                 minor=False,
             )
         if cfg.LICENCE == EXP.SINGULAR_VECTORS:

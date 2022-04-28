@@ -27,6 +27,7 @@ import general.utils.importing.import_data_funcs as g_import
 from general.params.experiment_licences import Experiments as exp
 from general.params.model_licences import Models
 from general.runners.lyapunov_vector_runner import main as lv_runner
+from general.runners.adj_lyapunov_vector_runner import main as adj_lv_runner
 from general.runners.breed_vector_runner import main as bv_runner
 from general.analyses.breed_vector_eof_analysis import main as bv_eof_analyser
 from general.runners.singular_vector_lanczos_runner import main as sv_runner
@@ -81,6 +82,36 @@ def generate_lvs(args: dict, exp_setup: dict):
 
     # Reset submodel
     cfg.MODEL.submodel = None
+
+
+def generate_adj_lvs(args: dict, exp_setup: dict):
+    """Generate the adjoint LVs according to the exp setup
+
+    Parameters
+    ----------
+    args : dict
+        Run-time arguments
+    exp_setup : dict
+        Experiment setup
+    """
+    print(f"{col.Fore.GREEN}ADJ LV GENERATION{col.Fore.RESET}")
+    # Update licence
+    cfg.LICENCE = exp.ADJ_LYAPUNOV_VECTORS
+
+    # Set local args params
+    args["pert_mode"] = "rd"
+
+    # Get subset of experiment setup
+    local_exp_setup = {**exp_setup["general"], **exp_setup["lv_gen_setup"]}
+    local_exp_setup["folder_name"] = str(
+        pl.Path(
+            local_exp_setup["folder_name"],
+            local_exp_setup["vector_folder"],
+            "alv_vectors",
+        )
+    )
+
+    adj_lv_runner(args, exp_setup=local_exp_setup)
 
 
 def generate_bvs(args: dict, exp_setup: dict):
@@ -191,6 +222,8 @@ def generate_vectors(args: dict, exp_setup: dict):
         generate_bvs(copy.deepcopy(args), copy.deepcopy(exp_setup))
     if "lv" in args["vectors"] or "all" in args["vectors"]:
         generate_lvs(copy.deepcopy(args), copy.deepcopy(exp_setup))
+    if "alv" in args["vectors"] or "all" in args["vectors"]:
+        generate_adj_lvs(copy.deepcopy(args), copy.deepcopy(exp_setup))
     if "bv_eof" in args["vectors"] or "all" in args["vectors"]:
         generate_bv_eofs(copy.deepcopy(args), copy.deepcopy(exp_setup))
     if "sv" in args["vectors"] or "all" in args["vectors"]:

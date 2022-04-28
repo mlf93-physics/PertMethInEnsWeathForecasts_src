@@ -90,6 +90,9 @@ def main(args: dict, exp_setup: dict = None):
         start_times, num_possible_units = r_utils.generate_start_times(exp_setup, args)
     elif cfg.MODEL == Models.SHELL_MODEL:
         start_times, num_possible_units, _ = sh_r_utils.get_regime_start_times(args)
+        start_times = r_utils.get_bv_lv_start_time(
+            eval_time=np.array(start_times), exp_setup=exp_setup
+        )
 
     processes = []
     # Prepare arguments
