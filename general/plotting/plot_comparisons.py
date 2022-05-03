@@ -943,10 +943,10 @@ def plot_exp_growth_rate_comparison(
     # Update number of folders after filtering
     len_folders = len(args["exp_folders"])
 
-    # cmap_list, _ = g_plt_utils.get_non_repeating_colors(
-    #     n_colors=args["n_runs_per_profile"], cmap=plt.cm.Greens_r, vmin=0.2
-    # )
-    cmap_list = plt.rcParams["axes.prop_cycle"].by_key()["color"]
+    cmap_list, _ = g_plt_utils.get_non_repeating_colors(
+        n_colors=args["n_runs_per_profile"], cmap=plt.cm.Greens_r, vmin=0.2
+    )
+    # cmap_list = plt.rcParams["axes.prop_cycle"].by_key()["color"]
     # cmap_list[0] = "k"
     standalone_plot = False
     if axes is None:

@@ -67,7 +67,7 @@ def collect_exp_growth_rate_plots(args):
         specific_runs_per_profile_dict=specific_runs_per_profile_dict,
     )
     # Plot largest Lyapunov exponent
-    # axes[0].plot(0.005, 133, "k_", zorder=25)
+    # axes[0].plot(0.005, 281.6, "k_", zorder=25)
 
     axes[0].set_xlim(-0.0001, 0.005)
     axes[0].set_ylim(-2000, None)
@@ -83,7 +83,7 @@ def collect_exp_growth_rate_plots(args):
         specific_runs_per_profile_dict=specific_runs_per_profile_dict,
     )
     # Plot largest Lyapunov exponent
-    # axes[1].plot(0.01, 384, "k_", zorder=25)
+    # axes[1].plot(0.01, 281.6, "k_", zorder=25)
 
     axes[1].set_xlim(-0.0001, 0.01)
     axes[1].set_ylim(-1000, 250)
@@ -116,7 +116,9 @@ def collect_exp_growth_rate_plots(args):
 
 def collect_sv_exp_growth_rate_plots(args):
 
-    specific_runs_per_profile_dict = None
+    specific_runs_per_profile_dict = {
+        "sv": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+    }
 
     # Make axes
     fig, axes = plt.subplots(nrows=2, ncols=1)

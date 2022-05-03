@@ -89,3 +89,6 @@ python ./plotting/plot_data.py --plot_type=nm_dist --n_profiles=5000 --ref_end_t
 
 echo "Make L63 TLM verification plot"
 python ../general/plotting/verify_plotter.py --exp_folder=verification_tlm_test_ttr3 --plot_type=tl_error_verification
+
+echo "Make L63 x component reference plot"
+python ./plotting/plot_data.py --plot_type=velocity --ref_end_time=200 --ref_start_time=155 --tolatex -lf horizontal_panel --save_fig --noconfirm --noplot

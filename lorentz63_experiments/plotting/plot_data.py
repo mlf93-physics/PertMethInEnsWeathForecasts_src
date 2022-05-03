@@ -252,14 +252,25 @@ def plot_velocities(args, axes=None):
     time, u_data, header_dict = g_import.import_ref_data(args=args)
 
     if axes is None:
-        fig, axes = plt.subplots(nrows=1, ncols=1, sharex=True, figsize=(6, 2))
+        fig, axes = plt.subplots(nrows=1, ncols=1)
 
     # for i, ax in enumerate(axes):
-    axes.plot(time, u_data[:, 0], "k-")
+    axes.plot(time - time[0], u_data[:, 0], "k-")
     axes.set_xlabel("Time")
     axes.set_ylabel("x")
+    axes.set_ylim(-20, 20)
 
-    # plt.suptitle("Velocities vs time")
+    if args["tolatex"]:
+        plt_config.adjust_axes([axes])
+
+    if args["save_fig"]:
+        out_path = pl.Path("thesis_figures/models/")
+        g_plt_utils.save_figure(
+            args,
+            fig=fig,
+            subpath=out_path,
+            file_name="l63_xvelocity_vs_time",
+        )
 
 
 def plot_energy(args, axes=None, zorder=0, alpha=1):

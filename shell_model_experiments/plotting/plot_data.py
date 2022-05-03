@@ -834,7 +834,7 @@ def plot_eigen_vector_comparison(args=None):
     # current_e_vectors = np.mean(e_vector_collection, axis=0)
     # current_e_vectors = e_vector_collection[1]
 
-    dev_plot = True
+    dev_plot = False
 
     integral_mean_lyaponov_index = (
         8  # int(np.average(np.arange(current_e_vectors.shape[1])
@@ -844,7 +844,7 @@ def plot_eigen_vector_comparison(args=None):
     print("integral_mean_lyaponov_index", integral_mean_lyaponov_index)
 
     orthogonality_array = np.zeros(
-        e_vector_collection.shape[0] * (integral_mean_lyaponov_index - 1),
+        (e_vector_collection.shape[0], integral_mean_lyaponov_index - 1),
         dtype=np.complex128,
     )
 
@@ -854,91 +854,41 @@ def plot_eigen_vector_comparison(args=None):
         for i in range(1, integral_mean_lyaponov_index):
             # print(f'{integral_mean_lyaponov_index - i} x'+
             #     f' {integral_mean_lyaponov_index + i} : ',
-            orthogonality_array[
-                j * (integral_mean_lyaponov_index - 1) + (i - 1)
-            ] = np.vdot(
+            orthogonality_array[j, i - 1] = np.vdot(
                 current_e_vectors[:, integral_mean_lyaponov_index - i],
                 current_e_vectors[:, integral_mean_lyaponov_index + i],
             )
 
-            if dev_plot:
-                fig, axes = plt.subplots(nrows=2, ncols=1, sharex=True)
-                legend = []
-
-                recent_plot = axes[0].plot(
-                    current_e_vectors[:, integral_mean_lyaponov_index - i].real, "-"
-                )
-                recent_color = recent_plot[0].get_color()
-                axes[0].plot(
-                    current_e_vectors.imag[:, integral_mean_lyaponov_index - i],
-                    linestyle="--",
-                    color=recent_color,
-                )
-
-                recent_plot = axes[1].plot(
-                    current_e_vectors[:, integral_mean_lyaponov_index + i].real, "-"
-                )
-                recent_color = recent_plot[0].get_color()
-                axes[1].plot(
-                    current_e_vectors.imag[:, integral_mean_lyaponov_index + i],
-                    linestyle="--",
-                    color=recent_color,
-                )
-
-                plt.xlabel("Shell number, i")
-                axes[0].set_ylabel(f"j = {integral_mean_lyaponov_index - i}")
-                axes[1].set_ylabel(f"j = {integral_mean_lyaponov_index + i}")
-                axes[0].legend(
-                    ["Real part", "Imag part"],
-                    loc="center right",
-                    bbox_to_anchor=(1.15, 0.5),
-                )
-                plt.subplots_adjust(right=0.852)
-                plt.suptitle(
-                    f'Eigenvector comparison; f={header_dict["f"]}'
-                    + f', $n_f$={int(header_dict["n_f"])}, $\\nu$={header_dict["ny"]:.2e}'
-                    + f', time={header_dict["time_to_run"]}s'
-                )
-
-    if dev_plot:
-        fig = plt.figure()
-        axes = plt.axes()
-        plt.pcolormesh(np.mean(np.abs(e_vector_collection) ** 2, axis=0), cmap="Reds")
-        plt.xlabel("Lyaponov index")
-        plt.ylabel("Shell number")
-        plt.title(
-            f'Eigenvectors vs shell numbers; f={header_dict["f"]}'
-            + f', $n_f$={int(header_dict["n_f"])}, $\\nu$={header_dict["ny"]:.2e}'
-            + f', time={header_dict["time_to_run"]}s, N_tot={args["n_profiles"]*args["n_runs_per_profile"]}'
-        )
-        plt.xlim(PAR.sdim, 0)
-        axes.yaxis.tick_right()
-        axes.yaxis.set_label_position("right")
-        plt.colorbar(pad=0.1)
-
     # Scatter plot
-    plt.figure()
     legend = []
 
+    fig, axes = plt.subplots(1, 1)
+
     for i in range(integral_mean_lyaponov_index - 1):
-        plt.scatter(
-            orthogonality_array[i : -1 : (integral_mean_lyaponov_index - 1)].real,
-            orthogonality_array[i : -1 : (integral_mean_lyaponov_index - 1)].imag,
-            marker=".",
-        )
+        # plt.scatter(
+        #     orthogonality_array[i : -1 : (integral_mean_lyaponov_index - 1)].real,
+        #     orthogonality_array[i : -1 : (integral_mean_lyaponov_index - 1)].imag,
+        #     marker=".",
+        # )
+        axes.hist(orthogonality_array[:, i].real, density=True, histtype="step")
 
-        legend.append(
-            f"{integral_mean_lyaponov_index - (i + 1)} x {integral_mean_lyaponov_index + (i + 1)}"
-        )
+        legend.append(f"$\\Delta$={i + 1}")
 
-    plt.xlabel("Real part")
-    plt.ylabel("Imag part")
-    plt.legend(legend)
-    plt.title(
-        f'Orthogonality of pairs of eigenvectors; f={header_dict["f"]}'
-        + f', $n_f$={int(header_dict["n_f"])}, $\\nu$={header_dict["ny"]:.2e}'
-        + f', time={header_dict["time_to_run"]}s, N_tot={args["n_profiles"]*args["n_runs_per_profile"]}'
-    )
+    axes.set_xlabel("$\\Re(\\langle \\xi_{9-\\Delta}; \\xi_{9 + \\Delta} \\rangle)$")
+    axes.set_ylabel("Frequency")
+    axes.legend(legend)
+
+    if args["tolatex"]:
+        # plt_config.remove_legends(axes)
+        plt_config.adjust_axes(axes)
+
+    if args["save_fig"]:
+        g_plt_utils.save_figure(
+            args,
+            fig=fig,
+            subpath="thesis_figures/models/",
+            file_name="sh_orthogonality_of_phasespace",
+        )
 
 
 def plot_pert_traject_energy_spectrum(args):
