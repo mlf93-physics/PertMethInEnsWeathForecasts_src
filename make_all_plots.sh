@@ -37,10 +37,19 @@ echo "Making bv-eof vector average plot, low pred"
 python ../general/plotting/breed_vector_plotter.py --plot_type=bv_eof_vectors_average --pert_vector_folder=low_pred/compare_pert_exp_growth_rate_it0.0005/vectors --exp_folder=bv_eof_vectors --endpoint --n_profiles=1000 --n_runs_per_profile=20 --tolatex -lf quad_item --notight --bv_raw_pert --save_fig --save_sub_folder=results_and_analyses/shell/low_pred --save_fig_name=average_bv_eof_vectors_topt0.0005 --noconfirm
 
 echo "Making LV1, BV and RF spectrum plot"
-python ../general/plotting/plot_comparisons.py --plot_type=pert_comp_compare --exp_folder=high_pred/compare_pert_exp_growth_rate_it0.0005 --endpoint -v lv bv -pt rf --seed_mode --n_profiles=1000 --tolatex -lf quad_item --save_fig --notight --noplot --save_sub_folder=results_and_analyses/shell/low_pred --save_fig_name=average_lv1_bv_rf_vectors_topt0.0005 --noprint --noconfirm
+python ../general/plotting/plot_comparisons.py --plot_type=pert_comp_compare --exp_folder=low_pred/compare_pert_exp_growth_rate_it0.0005 --endpoint -v lv bv -pt rf --seed_mode --n_profiles=1000 --tolatex -lf quad_item --save_fig --notight --noplot --save_sub_folder=results_and_analyses/shell/low_pred --save_fig_name=average_lv1_bv_rf_vectors_topt0.0005 --noprint --noconfirm
 
 echo "High pred"
-echo "Making LV1, BV and RF spectrum plot"
+echo "Making singular vector average plot, high pred"
+python ../general/plotting/singular_vector_plotter.py --plot_type=s_vectors_average --pert_vector_folder=high_pred/compare_pert_exp_growth_rate_it0.004/vectors --exp_folder=sv_vectors --endpoint --n_profiles=1000 --n_runs_per_profile=20 --tolatex -lf quad_item --notight --noconfirm --save_sub_folder=results_and_analyses/shell/high_pred --save_fig_name=average_sv_vectors_with_s_values_topt0.004 --noplot --save_fig
+
+echo "Making lv vector average plot, high pred"
+python ../general/plotting/lyapunov_vector_plotter.py --plot_type=lv_average --pert_vector_folder=high_pred/compare_pert_exp_growth_rate_it0.004/vectors --exp_folder=lv_vectors --endpoint --n_profiles=1000 --n_runs_per_profile=20 --tolatex -lf quad_item --notight --bv_raw_pert --save_sub_folder=results_and_analyses/shell/high_pred --save_fig_name=average_lv_vectors_with_exponents_topt0.004 --save_fig --noconfirm --noplot
+
+echo "Making bv-eof vector average plot, high pred"
+python ../general/plotting/breed_vector_plotter.py --plot_type=bv_eof_vectors_average --pert_vector_folder=high_pred/compare_pert_exp_growth_rate_it0.004/vectors --exp_folder=bv_eof_vectors --endpoint --n_profiles=1000 --n_runs_per_profile=20 --tolatex -lf quad_item --notight --bv_raw_pert --save_fig --save_sub_folder=results_and_analyses/shell/high_pred --save_fig_name=average_bv_eof_vectors_topt0.004 --noconfirm
+
+echo "Making LV1, BV and RF spectrum plot, high pred"
 python ../general/plotting/plot_comparisons.py --plot_type=pert_comp_compare --exp_folder=high_pred/compare_pert_exp_growth_rate_it0.004 --endpoint -v lv bv -pt rf --seed_mode --n_profiles=1000 --tolatex -lf quad_item --save_fig --notight --noplot --save_sub_folder=appendices/extra_plots/shell_opt0.004/high_pred --save_fig_name=average_lv1_bv_rf_vectors_topt0.004 --noprint --noconfirm
 
 # L63 plots
@@ -69,8 +78,8 @@ echo "Make conceptual visualisations"
 python ../general/plotting/conceptual_visualizations.py --plot_type=breed_method -lf horizontal_panel --tolatex --save_fig --noplot
 
 echo "Make l63_pert_vectors_on_trajectory plots"
-python plotting/compare_plot.py  --plot_type=plot_pert_vector_dists --exp_folder=compare_pert_vectors_on_trajectory -v bv_eof lv sv --n_profiles=140 --endpoint --tolatex -lf full_page --noplot --save_fig --save_fig_name=l63_pert_vectors_on_trajectory_view1 plot_kwargs --elev=21 --azim=-57
-python plotting/compare_plot.py  --plot_type=plot_pert_vector_dists --exp_folder=compare_pert_vectors_on_trajectory -v bv_eof lv sv --n_profiles=140 --endpoint --tolatex -lf full_page --noplot --save_fig --save_fig_name=l63_pert_vectors_on_trajectory_view2 plot_kwargs --elev=6 --azim=-126
+python plotting/compare_plot.py  --plot_type=pert_vector_dists --exp_folder=compare_pert_vectors_on_trajectory -v bv_eof lv sv --n_profiles=140 --endpoint --tolatex -lf full_page --noplot --save_fig --save_fig_name=l63_pert_vectors_on_trajectory_view1 plot_kwargs --elev=21 --azim=-57
+python plotting/compare_plot.py  --plot_type=pert_vector_dists --exp_folder=compare_pert_vectors_on_trajectory -v bv_eof lv sv --n_profiles=140 --endpoint --tolatex -lf full_page --noplot --save_fig --save_fig_name=l63_pert_vectors_on_trajectory_view2 plot_kwargs --elev=6 --azim=-126
 
 echo "Make attractor split visualization"
 python plotting/plot_data.py --plot_type=splitted_wings --ref_end_time=30 --tolatex -lf normal_small --save_fig --noplot --noconfirm

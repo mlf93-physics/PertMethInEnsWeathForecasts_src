@@ -66,6 +66,9 @@ def collect_exp_growth_rate_plots(args):
         axes=axes[0],
         specific_runs_per_profile_dict=specific_runs_per_profile_dict,
     )
+    # Plot largest Lyapunov exponent
+    # axes[0].plot(0.005, 133, "k_", zorder=25)
+
     axes[0].set_xlim(-0.0001, 0.005)
     axes[0].set_ylim(-2000, None)
     axes[0].set_yticks([-1000, 0, 1000])
@@ -79,6 +82,9 @@ def collect_exp_growth_rate_plots(args):
         axes=axes[1],
         specific_runs_per_profile_dict=specific_runs_per_profile_dict,
     )
+    # Plot largest Lyapunov exponent
+    # axes[1].plot(0.01, 384, "k_", zorder=25)
+
     axes[1].set_xlim(-0.0001, 0.01)
     axes[1].set_ylim(-1000, 250)
     axes[1].set_yticks(np.array([-1.0, -0.5, 0.0], dtype=np.float32) * 1e3)

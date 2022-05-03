@@ -502,23 +502,23 @@ def plot2D_average_vectors(
 
         if cfg.LICENCE in [EXP.BREEDING_EOF_VECTORS, EXP.BREEDING_VECTORS]:
             axes[0].set_yscale("log")
-            axes[0].set_yticks(
-                [1, 1e-2, 1e-4],
-                minor=False,
-            )
-            axes[0].set_ylim(1e-4, None)
-
-            # axes[0].set_ylim(1e-10, None)
             # axes[0].set_yticks(
-            #     [1, 1e-5, 1e-10],
+            #     [1, 1e-2, 1e-4],
             #     minor=False,
             # )
-        if cfg.LICENCE == EXP.LYAPUNOV_VECTORS:
-            pass
-            # axes[0].set_yscale("log")
-            axes[0].set_ylim(None, 700)
+            # axes[0].set_ylim(1e-4, None)
+
+            axes[0].set_ylim(1e-12, None)
             axes[0].set_yticks(
-                [500, 0, -1000],
+                [1, 1e-5, 1e-10],
+                minor=False,
+            )
+        if cfg.LICENCE == EXP.LYAPUNOV_VECTORS:
+            # pass
+            # axes[0].set_yscale("log")
+            axes[0].set_ylim(-400, 400)
+            axes[0].set_yticks(
+                [400, 0, -400],
                 minor=False,
             )
         if cfg.LICENCE == EXP.SINGULAR_VECTORS:

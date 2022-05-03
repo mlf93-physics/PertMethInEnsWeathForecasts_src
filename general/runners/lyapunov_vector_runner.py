@@ -88,6 +88,9 @@ def main(args: dict, exp_setup: dict = None):
     if args["regime_start"] is None:
         # Generate start times
         start_times, num_possible_units = r_utils.generate_start_times(exp_setup, args)
+        # start_times, num_possible_units = r_utils.generate_random_start_times(
+        #     exp_setup, args
+        # )
     elif cfg.MODEL == Models.SHELL_MODEL:
         start_times, num_possible_units, _ = sh_r_utils.get_regime_start_times(args)
         start_times = r_utils.get_bv_lv_start_time(
@@ -106,9 +109,11 @@ def main(args: dict, exp_setup: dict = None):
     args["n_runs_per_profile"] = exp_setup["n_vectors"]
 
     # Calculate the desired number of units
-    for i in range(
-        n_existing_units,
-        min(args["n_units"] + n_existing_units, num_possible_units),
+    for i, unit in enumerate(
+        range(
+            n_existing_units,
+            min(args["n_units"] + n_existing_units, num_possible_units),
+        )
     ):
         # Update start times
         args["start_times"] = [start_times[i]]
@@ -190,7 +195,7 @@ def main(args: dict, exp_setup: dict = None):
             # Average lyapunov exponent across cycles
             characteristic_values=np.nanmean(lyapunov_exps, axis=0),
             perturb_position=int(round(start_times[i] * params.tts)),
-            unit=i,
+            unit=unit,
             args=args,
             exp_setup=exp_setup,
         )

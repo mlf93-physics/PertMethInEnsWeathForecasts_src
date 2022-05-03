@@ -61,7 +61,7 @@ def plot_lyapunov_vectors_average(args: dict, axes: plt.Axes = None):
         args,
         axes=axes,
         plot_kwargs=plot_kwargs,
-        characteristic_value_name="$\\lambda_i/t_{{OPT}}$",
+        characteristic_value_name="$\\lambda_i$",
         no_char_values=False,
     )
 
@@ -86,7 +86,7 @@ def plot_adj_lyapunov_vectors_average(args: dict, axes: plt.Axes = None):
         args,
         axes=axes,
         plot_kwargs=plot_kwargs,
-        characteristic_value_name="$\\lambda_i/t_{{OPT}}$",
+        characteristic_value_name="$\\lambda_i$",
         no_char_values=True,
     )
 

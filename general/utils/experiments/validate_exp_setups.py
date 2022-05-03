@@ -71,7 +71,11 @@ def validate_start_time_method(exp_setup: dict = {}):
                         + f" integration_time = {exp_setup['integration_time']}",
                     )
 
-    elif offset_var not in exp_setup and "start_times" not in exp_setup:
+    elif (
+        offset_var not in exp_setup
+        and "start_times" not in exp_setup
+        and "eval_times" not in exp_setup
+    ):
         raise g_exceptions.ExperimentSetupError(
             f"Exp. setup invalid: Both {offset_var}, start_times and eval_times entries are"
             + " NOT set in the experiment setup. This is not valid; choose one of them."

@@ -17,6 +17,7 @@ import matplotlib.cm as cm
 import matplotlib.colors as mpl_colors
 import matplotlib.pyplot as plt
 import seaborn as sb
+import scipy.signal as sp_signal
 from lorentz63_experiments.params.params import *
 import lorentz63_experiments.analyses.normal_mode_analysis as nm_analysis
 import lorentz63_experiments.perturbations.normal_modes as l63_nm_estimator
@@ -515,6 +516,10 @@ def plot_characteristic_periods(args: dict, axes: plt.Axes = None):
     # Prepare axes
     if axes is None:
         axes = plt.axes()
+
+    peaks = sp_signal.find_peaks(power_spec[idx], height=1e10)
+    max_height_index = np.argmax(peaks[1]["peak_heights"])
+    print(1 / freqs[peaks[0][max_height_index]])
 
     axes.plot(1 / freqs[idx], power_spec[idx])
     axes.set_xscale("log")

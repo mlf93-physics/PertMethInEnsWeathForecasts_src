@@ -117,15 +117,15 @@
     },
     "ComparePertErrorNorm": {
         "general": {
-            "folder_name": "compare_pert_error_norm_dense_spaced2",
+            "folder_name": "compare_pert_error_norm",
             "vector_folder": "vectors",
             "perturbation_folder": "perturbations",
             "sub_exp_folder": "perturb_data",
             "eval_times": [
                 21.12
             ],
-            "n_units": 100,
-            "unit_offset": 0.0005
+            "n_units": 10,
+            "unit_offset": 0.01
         },
         "lv_gen_setup": {
             "integration_time": 0.01,

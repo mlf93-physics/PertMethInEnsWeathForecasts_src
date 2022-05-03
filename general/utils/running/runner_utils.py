@@ -59,6 +59,27 @@ def get_adj_lv_start_time(
     return start_time
 
 
+def generate_random_start_times(exp_setup: dict, args: dict):
+    ref_header_dict = g_import.import_info_file(pl.Path(args["datapath"], "ref_data"))
+
+    last_start_time = (
+        ref_header_dict["time_to_run"]
+        - exp_setup["integration_time"] * exp_setup["n_cycles"]
+    )
+
+    start_times = np.random.choice(
+        int(last_start_time * params.tts), size=args["n_units"], replace=False
+    )
+    # Determine precision of time using offset_var or integration_time
+    _precision = decimal.Decimal(str(params.stt)).as_tuple().exponent
+    start_times = [
+        round(start_times[i] * params.stt, abs(_precision))
+        for i in range(args["n_units"])
+    ]
+
+    return start_times, np.inf
+
+
 def generate_start_times(exp_setup: dict, args: dict):
     """Generate start times and calculate the number of possible units from
     the relevant run-time variables and variables from the experiment setup
@@ -103,50 +124,21 @@ def generate_start_times(exp_setup: dict, args: dict):
 
     if offset_var in exp_setup:
         if "start_times" in exp_setup:
-            _time_offset = exp_setup["start_times"][0]
+            _start_time = exp_setup["start_times"][0]
         elif "eval_times" in exp_setup:
-            if (
-                cfg.LICENCE == EXP.BREEDING_VECTORS
-                or cfg.LICENCE == EXP.LYAPUNOV_VECTORS
-            ):
-                _time_offset = get_bv_lv_start_time(
-                    eval_time=exp_setup["eval_times"][0], exp_setup=exp_setup
-                )
-            elif cfg.LICENCE == EXP.ADJ_LYAPUNOV_VECTORS:
-                _time_offset = get_adj_lv_start_time(
-                    eval_time=exp_setup["eval_times"][0], exp_setup=exp_setup
-                )
-            elif cfg.LICENCE == EXP.SINGULAR_VECTORS:
-                _time_offset = exp_setup["eval_times"][0]
-            elif cfg.LICENCE == EXP.TANGENT_LINEAR:
-                _time_offset = (
-                    exp_setup["eval_times"][0] - exp_setup["integration_time"]
-                )
-            elif cfg.LICENCE == EXP.FINAL_SINGULAR_VECTORS:
-                _time_offset = (
-                    exp_setup["eval_times"][0] - exp_setup["integration_time"]
-                )
-            else:
-                raise g_exceptions.LicenceImplementationError(licence=cfg.LICENCE)
+            _start_time = get_exp_specific_start_time(exp_setup)
         else:
-            _time_offset = 0
-
-        if "integration_time" in exp_setup:
-            _time_to_run = exp_setup["integration_time"]
-        elif "time_to_run" in exp_setup:
-            _time_to_run = exp_setup["time_to_run"]
-        else:
-            raise ValueError("Could not infer time_to_run from experiment setup")
+            _start_time = 0
 
         # Determine precision of time using offset_var or integration_time
         _precision = decimal.Decimal(str(params.stt)).as_tuple().exponent
 
         num_possible_units = int(
-            (ref_header_dict["time_to_run"] - _time_offset) // exp_setup[offset_var]
+            (ref_header_dict["time_to_run"] - _start_time) // exp_setup[offset_var]
         )
         # Calculate start_times and round off correctly
         start_times = [
-            round(exp_setup[offset_var] * i + _time_offset, abs(_precision))
+            round(exp_setup[offset_var] * i + _start_time, abs(_precision))
             for i in range(num_possible_units)
         ]
     elif "start_times" in exp_setup:
@@ -154,6 +146,27 @@ def generate_start_times(exp_setup: dict, args: dict):
         start_times = exp_setup["start_times"]
 
     return start_times, num_possible_units
+
+
+def get_exp_specific_start_time(exp_setup):
+    if cfg.LICENCE == EXP.BREEDING_VECTORS or cfg.LICENCE == EXP.LYAPUNOV_VECTORS:
+        _start_time = get_bv_lv_start_time(
+            eval_time=exp_setup["eval_times"][0], exp_setup=exp_setup
+        )
+    elif cfg.LICENCE == EXP.ADJ_LYAPUNOV_VECTORS:
+        _start_time = get_adj_lv_start_time(
+            eval_time=exp_setup["eval_times"][0], exp_setup=exp_setup
+        )
+    elif cfg.LICENCE == EXP.SINGULAR_VECTORS:
+        _start_time = exp_setup["eval_times"][0]
+    elif cfg.LICENCE == EXP.TANGENT_LINEAR:
+        _start_time = exp_setup["eval_times"][0] - exp_setup["integration_time"]
+    elif cfg.LICENCE == EXP.FINAL_SINGULAR_VECTORS:
+        _start_time = exp_setup["eval_times"][0] - exp_setup["integration_time"]
+    else:
+        raise g_exceptions.LicenceImplementationError(licence=cfg.LICENCE)
+
+    return _start_time
 
 
 def adjust_run_setup(args: dict):
