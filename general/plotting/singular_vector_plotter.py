@@ -347,6 +347,10 @@ def plot_s_vector_ortho_average(args, axes=None):
         )
 
     orthogonality_matrix /= args["n_profiles"]
+    print(
+        "mean orthogonality",
+        np.mean(orthogonality_matrix[np.triu_indices(args["n_runs_per_profile"], k=1)]),
+    )
 
     sb.heatmap(
         orthogonality_matrix,

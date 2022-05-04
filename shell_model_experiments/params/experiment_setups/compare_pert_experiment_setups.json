@@ -165,7 +165,7 @@
     },
     "ComparePertExpGrowthRateLowPred": {
         "general": {
-            "folder_name": "low_pred/compare_pert_exp_growth_rate_it0.0005",
+            "folder_name": "low_pred/compare_pert_exp_growth_rate_it0.005",
             "vector_folder": "vectors",
             "perturbation_folder": "perturbations",
             "sub_exp_folder": "perturb_data",
@@ -181,7 +181,7 @@
             "n_vectors": 20
         },
         "bv_gen_setup": {
-            "integration_time": 0.0005,
+            "integration_time": 0.005,
             "n_cycles": 10,
             "n_vectors": 20
         },
@@ -190,7 +190,7 @@
             "n_vectors": 20
         },
         "sv_gen_setup": {
-            "integration_time": 0.0005,
+            "integration_time": 0.005,
             "n_vectors": 20,
             "n_lanczos_iterations": 1,
             "n_model_iterations": 1
