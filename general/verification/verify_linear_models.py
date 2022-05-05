@@ -171,7 +171,7 @@ def run_sh_atl_model_verification(
     diagonal_1: np.ndarray,
     diagonal_2: np.ndarray,
 ):
-    u_tl_out, _, u_init_perturb = sh_tl_atl_model(
+    u_tl_out, u_atl_out, u_init_perturb = sh_tl_atl_model(
         u_perturb,
         u_ref,
         data_out,
@@ -184,10 +184,10 @@ def run_sh_atl_model_verification(
         diagonal_2,
     )
 
-    rhs_identity = np.dot(u_init_perturb[sparams.u_slice].conj(), data_out[0, 1:])
+    rhs_identity = np.dot(u_init_perturb[sparams.u_slice].conj(), u_atl_out)
     lhs_identity = np.dot(u_tl_out.conj(), u_tl_out)
-    diff_identity = np.abs(lhs_identity - rhs_identity) / np.mean(
-        [np.abs(lhs_identity), np.abs(rhs_identity)]
+    diff_identity = np.abs(lhs_identity - rhs_identity) / (
+        np.abs(1 / 2 * (lhs_identity + rhs_identity))
     )
 
     return diff_identity
@@ -318,9 +318,9 @@ def verify_atlm_model(args: dict):
     # Set number of iterations to a low number, e.g. to investigate one
     # iteration
     if cfg.MODEL == cfg.Models.LORENTZ63:
-        args["Nt"] = 100
+        args["Nt"] = 500
     elif cfg.MODEL == cfg.Models.SHELL_MODEL:
-        args["Nt"] = 2
+        args["Nt"] = 1
     # Import reference data
     u_ref, _, ref_header_dict = g_import.import_start_u_profiles(args=args)
 
@@ -328,7 +328,9 @@ def verify_atlm_model(args: dict):
     # perturb = pt_utils.generate_rd_perturbations()
     perturbations, _, _ = r_utils.prepare_perturbations(args, raw_perturbations=True)
     # Prepare arrays
-    data_out = np.zeros((args["Nt"], params.sdim + 1), dtype=sparams.dtype)
+    data_out = np.zeros(
+        (args["Nt"] + args["endpoint"] * 1, params.sdim + 1), dtype=sparams.dtype
+    )
     # Run verification multiple times
     n_runs = int(args["n_profiles"] * args["n_runs_per_profile"])
     diff_identity_array = np.empty(n_runs, dtype=np.float64)
@@ -384,9 +386,14 @@ def verify_atlm_model(args: dict):
 
             diff_identity_array[i] = diff_identity
 
-    logged_diff_identity_array = np.log(diff_identity_array)
-    mean_diff_identity = np.mean(logged_diff_identity_array)
-    std_diff_identity = np.std(logged_diff_identity_array)
+    zero_entries = diff_identity_array == 0
+
+    logged_diff_identity_array = np.log(
+        diff_identity_array, where=np.logical_not(zero_entries)
+    )
+    logged_diff_identity_array[zero_entries] = None
+    mean_diff_identity = np.nanmean(logged_diff_identity_array)
+    std_diff_identity = np.nanstd(logged_diff_identity_array)
 
     print(f"{cfg.MODEL} | V_atlm = {mean_diff_identity} +/- {std_diff_identity}")
 
