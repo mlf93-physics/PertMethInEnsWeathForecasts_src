@@ -67,10 +67,14 @@ def collect_exp_growth_rate_plots(args):
         specific_runs_per_profile_dict=specific_runs_per_profile_dict,
     )
     # Plot largest Lyapunov exponent
-    # axes[0].plot(0.005, 281.6, "k_", zorder=25)
+    ax0_lyap = axes[0].inset_axes([0, 0, 1.015, 1])
+    ax0_lyap.axis("off")
+    ax0_lyap.plot(0.00501, 206.11, "k_", zorder=25)
+    ax0_lyap.set_xlim(-0.0001, 0.00502)
+    ax0_lyap.set_ylim(-2000, 1300)
 
     axes[0].set_xlim(-0.0001, 0.005)
-    axes[0].set_ylim(-2000, None)
+    axes[0].set_ylim(-2000, 1300)
     axes[0].set_yticks([-1000, 0, 1000])
     axes[0].ticklabel_format(axis="y", style="sci", scilimits=(0, 0))
 
@@ -83,9 +87,13 @@ def collect_exp_growth_rate_plots(args):
         specific_runs_per_profile_dict=specific_runs_per_profile_dict,
     )
     # Plot largest Lyapunov exponent
-    # axes[1].plot(0.01, 281.6, "k_", zorder=25)
+    ax1_lyap = axes[1].inset_axes([0, 0, 1.01, 1])
+    ax1_lyap.axis("off")
+    ax1_lyap.plot(0.0101, 64.16, "k_", zorder=25)
+    ax1_lyap.set_xlim(-0.0001, 0.0102)
+    ax1_lyap.set_ylim(-1000, 250)
 
-    axes[1].set_xlim(-0.0001, 0.01)
+    axes[1].set_xlim(-0.0001, 0.0102)
     axes[1].set_ylim(-1000, 250)
     axes[1].set_yticks(np.array([-1.0, -0.5, 0.0], dtype=np.float32) * 1e3)
     axes[1].ticklabel_format(axis="y", style="sci", scilimits=(0, 0))

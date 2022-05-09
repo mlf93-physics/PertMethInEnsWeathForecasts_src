@@ -33,6 +33,7 @@ import general.utils.argument_parsers as a_parsers
 import general.utils.user_interface as g_ui
 import general.plotting.plot_config as plt_config
 import sklearn.cluster as skl_cluster
+import scipy.optimize as sp_optim
 import config as cfg
 
 
@@ -526,19 +527,35 @@ def plot_characteristic_periods(args: dict, axes: plt.Axes = None):
 
     # Prepare axes
     if axes is None:
-        axes = plt.axes()
+        fig, axes = plt.subplots()
 
-    peaks = sp_signal.find_peaks(power_spec[idx], height=1e10)
+    power_spec /= np.max(power_spec[idx])
+
+    peaks = sp_signal.find_peaks(power_spec[idx], height=1e-1)
     max_height_index = np.argmax(peaks[1]["peak_heights"])
-    print(1 / freqs[peaks[0][max_height_index]])
+    print("Rotation time: ", 1 / freqs[peaks[0][max_height_index]])
 
-    axes.plot(1 / freqs[idx], power_spec[idx])
+    axes.plot(1 / freqs[idx], power_spec[idx], "k")
     axes.set_xscale("log")
     axes.set_yscale("log")
+    # axes.set_yticks([1e-6, 1e-3, 1])
+    # axes.set_yticklabels([1e-9, 1e-6, 1e-3, 1])
     axes.set_ylabel("Power")
     axes.set_xlabel("Period [tu]")
     axes.set_title("Power spectrum | y")
-    axes.grid()
+    axes.grid(False)
+
+    if args["tolatex"]:
+        plt_config.adjust_axes([axes])
+
+    if args["save_fig"]:
+        out_path = pl.Path("thesis_figures/appendices/timescale_analyses/")
+        g_plt_utils.save_figure(
+            args,
+            fig=fig,
+            subpath=out_path,
+            file_name="power_spectrum_vs_period_var_z",
+        )
 
 
 def plot_residence_time_in_wing(args):
@@ -568,50 +585,98 @@ def plot_residence_time_in_wing(args):
         wing_times[largest_first_time_index][1:]
         - wing_times[abs(largest_first_time_index - 1)][:-1]
     )
-    residence_times2 = (
-        wing_times[abs(largest_first_time_index - 1)][:-1]
-        - wing_times[largest_first_time_index][:-1]
-    )
+    # residence_times2 = (
+    #     wing_times[abs(largest_first_time_index - 1)][:-1]
+    #     - wing_times[largest_first_time_index][:-1]
+    # )
     # Concatenate residence times
     residence_times = np.abs(
         residence_times1
     )  # np.abs(np.concatenate([residence_times1, residence_times2]))
-    count, bins = np.histogram(residence_times)
-    pdf = count / np.sum(count)
-    cdf = np.cumsum(pdf)
+    fig, axes = plt.subplots(nrows=1, ncols=1)
+    values, bins, bars = axes.hist(
+        residence_times, bins=20, density=True, edgecolor="k", fc=(0, 0, 0, 0.5)
+    )
 
-    plt.figure()
-    plt.plot((bins[1:] + bins[:-1]) / 2, 1 - cdf)
-    plt.yscale("log")
+    def linearfunction(x, a):
+        return a * x
+
+    # Sort out zeros
+    non_zero_values = values != 0
+    bin_centers = 1 / 2 * (bins[:-1] + bins[1:])
+    log_norm_data = np.log(values, where=non_zero_values)
+    lin_popt, lin_pcov = sp_optim.curve_fit(
+        linearfunction,
+        bin_centers[non_zero_values],
+        log_norm_data[non_zero_values],
+    )
+
+    residence_time = -1 / lin_popt[0]
+
+    print("residence_time", residence_time)
+    print("lin_popt", lin_popt)
+
+    axes.set_yscale("log")
+
+    # Plot fit
+    axes.plot(
+        bin_centers,
+        np.exp(linearfunction(bin_centers, *lin_popt)),
+        color="k",
+        linestyle="dashed",
+    )
 
     title = g_plt_utils.generate_title(
         args,
         header_dict=ref_header_dict,
-        title_header="Wing residence time CCDF",
+        title_header="Wing residence time histogram",
     )
 
-    plt.title(title)
-    plt.xlabel("Residence time")
-    plt.ylabel("Frequency")
+    axes.set_title(title)
+    axes.set_xlabel("Residence time [tu]")
+    axes.set_ylabel("Frequency")
 
-    return
-    plt.figure()
-    plt.plot(time, u_data[:, 0])
-    plt.plot(
-        wing_times[largest_first_time_index],
-        np.zeros(len(wing_times[largest_first_time_index])),
-        "x",
-        color="b",
-        label="index1",
-    )
-    plt.plot(
-        wing_times[abs(largest_first_time_index - 1)],
-        np.zeros(len(wing_times[abs(largest_first_time_index - 1)])),
-        "x",
-        color="r",
-        label="index2",
-    )
-    plt.legend()
+    if args["tolatex"]:
+        plt_config.adjust_axes([axes])
+
+    if args["save_fig"]:
+        out_path = pl.Path("thesis_figures/appendices/timescale_analyses/")
+        g_plt_utils.save_figure(
+            args,
+            fig=fig,
+            subpath=out_path,
+            file_name="residence_time_in_wing_histogram",
+        )
+
+    # plt.figure()
+    # plt.plot(time, u_data[:, 0])
+    # plt.plot(
+    #     wing_times[largest_first_time_index],
+    #     np.zeros(len(wing_times[largest_first_time_index])),
+    #     "x",
+    #     color="b",
+    #     label="index1",
+    # )
+    # plt.plot(
+    #     wing_times[abs(largest_first_time_index - 1)],
+    #     np.zeros(len(wing_times[abs(largest_first_time_index - 1)])),
+    #     "x",
+    #     color="r",
+    #     label="index2",
+    # )
+    # plt.legend()
+
+    if args["tolatex"]:
+        plt_config.adjust_axes([axes])
+
+    if args["save_fig"]:
+        out_path = pl.Path("thesis_figures/appendices/timescale_analyses/")
+        g_plt_utils.save_figure(
+            args,
+            fig=fig,
+            subpath=out_path,
+            file_name="power_spectrum_vs_period_var_z",
+        )
 
 
 def projectibility_bv_eof_vs_nm(args):
