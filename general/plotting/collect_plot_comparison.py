@@ -140,6 +140,14 @@ def collect_sv_exp_growth_rate_plots(args):
         specific_runs_per_profile_dict=specific_runs_per_profile_dict,
         highlight_perts=[0, 1],
     )
+
+    # Plot largest Lyapunov exponent
+    ax0_lyap = axes[0].inset_axes([0, 0, 1.015, 1])
+    ax0_lyap.axis("off")
+    ax0_lyap.plot(0.00501, 206.11, "k_", zorder=25)
+    ax0_lyap.set_xlim(-0.0001, 0.00502)
+    ax0_lyap.set_ylim(-700, 700)
+
     axes[0].set_xlim(-0.0001, 0.005)
     axes[0].set_ylim(-700, 700)
     axes[0].set_yticks([-500, 0, 500])
@@ -154,6 +162,13 @@ def collect_sv_exp_growth_rate_plots(args):
         specific_runs_per_profile_dict=specific_runs_per_profile_dict,
         highlight_perts=[0, 3],
     )
+    # Plot largest Lyapunov exponent
+    ax1_lyap = axes[1].inset_axes([0, 0, 1.02, 1])
+    ax1_lyap.axis("off")
+    ax1_lyap.plot(0.0101, 64.16, "k_", zorder=25)
+    ax1_lyap.set_xlim(-0.0001, 0.01015)
+    ax1_lyap.set_ylim(-500, 150)
+
     axes[1].set_xlim(-0.0001, 0.01)
     axes[1].set_ylim(-500, 150)
     axes[1].set_yticks(np.array([-0.5, 0.0], dtype=np.float32) * 1e3)
@@ -188,8 +203,15 @@ def collect_suppl_exp_growth_rate_plots(args):
     fig, axes = plt.subplots(nrows=1, ncols=1)
 
     plt_compare.plot_exp_growth_rate_comparison(args, axes=axes)
+    # Plot largest Lyapunov exponent
+    ax0_lyap = axes.inset_axes([0, 0, 1.015, 1])
+    ax0_lyap.axis("off")
+    ax0_lyap.plot(0.00501, 206.11, "k_", zorder=25)
+    ax0_lyap.set_xlim(-0.0001, 0.00502)
+    ax0_lyap.set_ylim(-2000, 1500)
+
     axes.set_xlim(-0.0001, 0.005)
-    axes.set_ylim(-2000, None)
+    axes.set_ylim(-2000, 1500)
     axes.set_yticks([-1000, 0, 1000])
     axes.ticklabel_format(axis="y", style="sci", scilimits=(0, 0))
 

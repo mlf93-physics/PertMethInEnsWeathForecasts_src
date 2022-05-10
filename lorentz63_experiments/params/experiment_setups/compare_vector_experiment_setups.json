@@ -139,14 +139,14 @@
     },
     "CompareVectorProjectibilityToLV": {
         "general": {
-            "folder_name": "compare_vector_projectibility_to_lv_n_units1000",
+            "folder_name": "compare_vector_projectibility_to_lv_n_units5000",
             "vector_folder": "vectors",
             "perturbation_folder": "perturbations",
             "sub_exp_folder": "perturb_data",
             "eval_times": [
                 10001
             ],
-            "n_units": 1000,
+            "n_units": 4000,
             "iws": [
                 2,
                 6,
