@@ -535,7 +535,7 @@ def plot_characteristic_periods(args: dict, axes: plt.Axes = None):
     max_height_index = np.argmax(peaks[1]["peak_heights"])
     print("Rotation time: ", 1 / freqs[peaks[0][max_height_index]])
 
-    axes.plot(1 / freqs[idx], power_spec[idx], "k")
+    axes.plot(1 / freqs[idx], power_spec[idx], "k", linewidth=0.2)
     axes.set_xscale("log")
     axes.set_yscale("log")
     # axes.set_yticks([1e-6, 1e-3, 1])
