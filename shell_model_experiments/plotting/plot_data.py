@@ -109,8 +109,8 @@ def plot_energy_spectrum(
 
     # Axes setup
     axes.set_yscale("log")
-    axes.set_xlabel("Shell number, $n$")
-    axes.set_ylabel("Energy per shell")
+    axes.set_xlabel("$n$")
+    axes.set_ylabel("Spectral energy\ndensity, $E(n)$")
     axes.set_xlim(1, 20)
     axes.xaxis.set_major_locator(mpl_ticker.MaxNLocator(integer=True))
 
@@ -1161,8 +1161,8 @@ def plot_howmoller_diagram_u_energy(
         levels=30,
     )
     pcm.negative_linestyle = "solid"
-    axes.set_ylabel("Shell number, $n$")
-    axes.set_xlabel("Time")
+    axes.set_ylabel("$n$")
+    axes.set_xlabel("Time [tu]")
     axes.set_yticks([1, 10, 20])
     axes.set_xlim(args["ref_start_time"], args["ref_end_time"])
     # axes.yaxis.set_major_locator(mpl_ticker.MaxNLocator(integer=True))
@@ -1179,9 +1179,19 @@ def plot_howmoller_diagram_u_energy(
 
     # cbar_label = "$|u|²$"
     # cbar_label += " - $\\langle|u|²\\rangle_t$" if "rel_mean" in plt_args else ""
-    cbar_label = "Shell energy anomaly"
-    fig.colorbar(
-        pcm, ax=axes, pad=0.25, label=cbar_label, shrink=0.5, location="bottom"
+    cbar_label = "$|u_n|^2 - \\langle|u_n|^2\\rangle_t$"
+    cbar = fig.colorbar(
+        pcm,
+        ax=axes,
+        pad=0.3,
+        label=cbar_label,
+        shrink=0.5,
+        location="bottom",
+        ticks=[-3, -1.5, 0, 1.5, 3]
+    )
+
+    fig.subplots_adjust(
+        top=0.961, bottom=0.053, left=0.15, right=0.967, hspace=0.614, wspace=0.2
     )
 
     if args["tolatex"]:

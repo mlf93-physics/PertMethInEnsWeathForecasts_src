@@ -412,8 +412,8 @@ def plot_energy(
     # Plot total energy vs time
     energy_vs_time = np.sum(u_data * np.conj(u_data), axis=1).real
     axes.plot(time.real, energy_vs_time, "k", zorder=zorder, linewidth=linewidth)
-    axes.set_xlabel("Time")
-    axes.set_ylabel("Energy, $\\frac{1}{2} u_{n, ref} u_{n, ref}^*$")
+    axes.set_xlabel("Time [tu]")
+    axes.set_ylabel("Total energy\n$\\frac{1}{2} u_{n} u_{n}^*$")
     # axes.set_xlim(args["ref_start_time"], args["ref_end_time"])
 
     header_dict = g_utils.handle_different_headers(header_dict)
@@ -514,13 +514,13 @@ def plot2D_average_vectors(
                 minor=False,
             )
         if cfg.LICENCE == EXP.LYAPUNOV_VECTORS:
-            # pass
+            pass
             # axes[0].set_yscale("log")
-            axes[0].set_ylim(-400, 400)
-            axes[0].set_yticks(
-                [400, 0, -400],
-                minor=False,
-            )
+            # axes[0].set_ylim(-400, 400)
+            # axes[0].set_yticks(
+            #     [400, 0, -400],
+            #     minor=False,
+            # )
         if cfg.LICENCE == EXP.SINGULAR_VECTORS:
             axes[0].ticklabel_format(axis="y", style="sci", scilimits=(0, 0))
             # axes[0].set_ylim(-1000, 1000)

@@ -37,6 +37,7 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as mpl_ticker
 import numpy as np
 import seaborn as sb
+import scipy.optimize as sp_optim
 from general.params.model_licences import Models
 from general.params.experiment_licences import Experiments as EXP
 
@@ -108,12 +109,32 @@ def plt_pert_components(args: dict, axes: plt.Axes = None):
         mean_vectors = np.mean(np.mean(np.abs(vector_units), axis=1), axis=0)
         norm_mean_vectors = g_utils.normalize_array(mean_vectors, norm_value=1, axis=0)
 
+        def linearfunction(x, a, b):
+            return a * x + b
+
+        log_norm_data = np.log(norm_mean_vectors)
+
+        inertial_range = np.s_[4:14]
+        lin_popt, lin_pcov = sp_optim.curve_fit(
+            linearfunction,
+            shell_index[inertial_range],
+            log_norm_data[inertial_range],
+        )
+        print("lin_popt", lin_popt, "lin_pcov", lin_pcov)
+
         vector_lines = axes.plot(
             shell_index,
             norm_mean_vectors,
             linestyle="solid",
             color=METHOD_COLORS[perturb_type]
             # color=cmap_list[ipert],
+        )
+
+        axes.plot(
+            shell_index,
+            np.exp(linearfunction(shell_index, *lin_popt)),
+            "k-",
+            label=f"exp={lin_popt[0]:.2f}",
         )
 
         vector_lines[0].set_label(
@@ -178,7 +199,7 @@ def plt_pert_components(args: dict, axes: plt.Axes = None):
 
     # Add kolmogorov spectrum
     axes.plot(
-        np.log2(params.k_vec_temp),
+        shell_index,
         params.k_vec_temp ** (-1 / 3),
         "k--",
     )
