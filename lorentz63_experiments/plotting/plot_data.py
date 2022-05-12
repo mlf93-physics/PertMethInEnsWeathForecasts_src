@@ -38,8 +38,7 @@ import config as cfg
 
 
 def plot_splitted_wings(args):
-    fig1 = plt.figure()
-    ax1 = plt.axes(facecolor=(0, 0, 0, 0))
+    fig1, axes = plt.subplots(nrows=1, ncols=2, facecolor=(0, 0, 0, 0), sharey=True)
 
     # Import reference data
     _, u_data, ref_header_dict = g_import.import_ref_data(args=args)
@@ -47,26 +46,34 @@ def plot_splitted_wings(args):
     wing_indices1 = u_data[:, 0] > 0
     wing_indices2 = np.logical_not(wing_indices1)
 
-    segments = zip(u_data[:-1, :2], u_data[1:, :2])
+    segments1 = zip(u_data[:-1, :2], u_data[1:, :2])
+    segments2 = zip(u_data[:-1, 2:0:-1], u_data[1:, 2:0:-1])
 
-    coll1 = LineCollection(segments, cmap="coolwarm")
+    coll1 = LineCollection(segments1, cmap="coolwarm")
     coll1.set_array(wing_indices1)
+    coll2 = LineCollection(segments2, cmap="coolwarm")
+    coll2.set_array(wing_indices1)
 
     e_dist_title = g_plt_utils.generate_title(
         args, header_dict=ref_header_dict, title_header="E dist | Lorentz63 model \n"
     )
 
-    line_plot1 = ax1.add_collection(coll1)
-    ax1.set_xlim(-20, 20)
-    ax1.set_ylim(-25, 25)
-    ax1.set_xlabel("$x$")
-    ax1.set_ylabel("$y$")
-    ax1.grid(False)
-    ax1.set_title(e_dist_title)
-    # fig1.colorbar(line_plot1)
+    line_plot1 = axes[0].add_collection(coll1)
+    axes[0].set_xlim(-20, 20)
+    axes[0].set_ylim(-25, 25)
+    axes[0].set_xlabel("$x$")
+    axes[0].set_ylabel("$y$")
+    axes[0].grid(False)
+
+    line_plot2 = axes[1].add_collection(coll2)
+    axes[1].set_xlim(0, 50)
+    # axes[1].set_ylim(-25, 25)
+    axes[1].set_xlabel("$z$")
+    axes[1].grid(False)
 
     if args["tolatex"]:
-        plt_config.adjust_axes(ax1)
+        plt_config.adjust_axes(axes)
+        g_plt_utils.add_subfig_labels(axes)
 
     if args["save_fig"]:
         g_plt_utils.save_figure(
@@ -115,18 +122,45 @@ def plot_attractor_standalone(args, ax=None, alpha=1):
     ax.set_zlabel("$z$")
     ax.view_init(elev=13, azim=-45)
 
+    ax.plot(
+        np.sqrt(args["b_const"] * (args["r_const"] - 1)),
+        np.sqrt(args["b_const"] * (args["r_const"] - 1)),
+        args["r_const"] - 1,
+        "k.",
+    )
+
+    ds = 1
+    ax.plot(
+        -np.sqrt(args["b_const"] * (args["r_const"] - 1)),
+        -np.sqrt(args["b_const"] * (args["r_const"] - 1)),
+        args["r_const"] - 1,
+        "k.",
+    )
+
     # Add text in +/- fixpoints
     ax.text(
-        np.sqrt(args["b_const"] * (args["r_const"] - 1)),
-        np.sqrt(args["b_const"] * (args["r_const"] - 1)),
+        np.sqrt(args["b_const"] * (args["r_const"] - 1)) + ds,
+        np.sqrt(args["b_const"] * (args["r_const"] - 1)) + ds,
         args["r_const"] - 1,
         "R",
     )
     ax.text(
-        -np.sqrt(args["b_const"] * (args["r_const"] - 1)),
-        -np.sqrt(args["b_const"] * (args["r_const"] - 1)),
+        -np.sqrt(args["b_const"] * (args["r_const"] - 1)) + ds,
+        -np.sqrt(args["b_const"] * (args["r_const"] - 1)) + ds,
         args["r_const"] - 1,
         "L",
+    )
+    ax.text(
+        np.sqrt(args["b_const"] * (args["r_const"] - 1)) - ds - 3,
+        np.sqrt(args["b_const"] * (args["r_const"] - 1)) - ds,
+        args["r_const"] - 1 - 3,
+        "$\\mathbf{x}_+$",
+    )
+    ax.text(
+        -np.sqrt(args["b_const"] * (args["r_const"] - 1)) - ds - 3,
+        -np.sqrt(args["b_const"] * (args["r_const"] - 1)) - ds,
+        args["r_const"] - 1 - 3,
+        "$\\mathbf{x}_-$",
     )
 
     if args["tolatex"]:
@@ -321,7 +355,7 @@ def plot_normal_mode_dist(args):
         ref_header_dict,
     ) = nm_analysis.analyse_normal_mode_dist(args)
 
-    part = "imag"
+    part = "real"
     if part == "real":
         chosen_e_values = e_values.real
     else:
@@ -377,7 +411,7 @@ def plot_normal_mode_dist(args):
     ax1.grid(False)
     fig1.colorbar(scatter_plot)
 
-    fig2 = plt.figure()
+    fig2 = plt.figure(figsize=(5.39749 / 2 + 5.39749 / 5, 4.1))
     ax2 = plt.axes(projection="3d")
     ax2.xaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
     ax2.yaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
@@ -401,7 +435,7 @@ def plot_normal_mode_dist(args):
 
     ax2.set_xlabel("$x$", labelpad=-8)
     ax2.set_ylabel("$y$", labelpad=-8)
-    ax2.set_zlabel("$z$", labelpad=-10)
+    ax2.set_zlabel("$z$", labelpad=-12)
     ax2.set_xticks([-20, 0, 20])
     ax2.set_yticks([-20, 0, 20])
     ax2.tick_params(axis="both", which="major", pad=-3)
@@ -419,10 +453,15 @@ def plot_normal_mode_dist(args):
     # Set quiver colors
     qplot.set_array(np.concatenate((chosen_e_values, np.repeat(chosen_e_values, 2))))
     # Set colorbar
-    fig2.colorbar(qplot, shrink=0.6, pad=0.15)
+    if part == "real":
+        label = "$\\Re(\\mu_1)$"
+    elif part == "imag":
+        label = "$\\Im(\\mu_1)$"
+
+    fig2.colorbar(qplot, shrink=0.6, pad=-0.05, location="bottom", label=label)
     ax2.view_init(elev=13, azim=-45)
     fig2.subplots_adjust(
-        top=1.0, bottom=0.0, left=0.0, right=1.0, hspace=0.2, wspace=0.2
+        top=1.0, bottom=0.105, left=0.015, right=0.924, hspace=0.175, wspace=0.18
     )
 
     if args["tolatex"]:

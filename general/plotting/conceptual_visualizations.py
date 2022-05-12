@@ -75,9 +75,12 @@ def visualize_breeding_method(args):
     axes.set_yticklabels([])
     axes.set_yticks([])
     axes.set_ylabel("Error")
-    xticks = np.arange(-(n_cycles + 1), 1, dtype=np.int32)
+    # xticks = np.arange(-(n_cycles + 1), 1, dtype=np.int32)
     # axes.yaxis.set_major_locator(mticker.FixedLocator(xticks))
-    axes.set_xticklabels(xticks)
+    axes.set_xticks(np.arange(0, 6))
+    axes.set_xticklabels(
+        ["$t_{-n}$", "$t_{-n + 1}$", "$t_{-n + 2}$", "$\\cdots$", "$t_{-1}$", "$t_0$"]
+    )
     axes.set_xlabel("Time")
 
     if args["tolatex"]:
