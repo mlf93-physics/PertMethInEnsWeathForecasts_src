@@ -291,7 +291,7 @@ def plot_velocities(args, axes=None):
 
     # for i, ax in enumerate(axes):
     axes.plot(time - time[0], u_data[:, 0], "k-")
-    axes.set_xlabel("Time")
+    axes.set_xlabel("Time [tu]")
     axes.set_ylabel("x")
     axes.set_ylim(-20, 20)
 

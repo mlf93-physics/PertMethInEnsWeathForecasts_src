@@ -516,7 +516,7 @@ def plt_vec_compared_to_lv(args, axes: plt.Axes = None, pair_vectors=False):
                             )
                             line_obj[1].set_color(line_obj[0].get_color())
 
-    axes.set_xlabel("$t_{{OPT}}$")
+    axes.set_xlabel("$t_{{OPT}}$ [tu]")
     axes.set_ylabel("Absolute projectibility")
     axes.legend()
 

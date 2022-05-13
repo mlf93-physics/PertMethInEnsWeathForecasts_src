@@ -324,7 +324,7 @@ def collect_sv_vec_compare_plots(args):
         ax.set_ylabel("")
         ax.set_xlabel("")
 
-    fig.supxlabel("$t_{{OPT}}$")
+    fig.supxlabel("$t_{{OPT}}$ [tu]")
     fig.supylabel("Absolute projectibility")
 
     fig.subplots_adjust(

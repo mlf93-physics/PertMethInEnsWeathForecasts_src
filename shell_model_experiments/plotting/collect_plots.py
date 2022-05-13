@@ -60,7 +60,7 @@ def make_nm_anal_plot(args):
         ncols=1, nrows=2, sharex=True, gridspec_kw={"height_ratios": [1, 3]}
     )
 
-    sh_plot_data.plot_eigen_value_dist(args=args, axes=axes[0])
+    sh_plot_data.plot_eigen_value_dist(args=args, axes=axes[0], fig=fig)
     sh_plot_data.plot_2D_eigen_mode_analysis(args=args, axes=axes[1], fig=fig)
 
     g_plt_utils.add_subfig_labels(axes)

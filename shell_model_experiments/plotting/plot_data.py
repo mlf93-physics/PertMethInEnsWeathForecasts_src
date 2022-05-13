@@ -558,9 +558,10 @@ def plot_shell_error_vs_time(args=None):
         plt.title(title)
 
 
-def plot_eigen_value_dist(args=None, axes=None):
+def plot_eigen_value_dist(args=None, axes=None, fig=None):
 
     if axes is None:
+        fig = plt.figure()
         axes = plt.axes()
 
     u_init_profiles, perturb_positions, header_dict = g_import.import_start_u_profiles(
@@ -591,21 +592,39 @@ def plot_eigen_value_dist(args=None, axes=None):
     kolm_sinai_entropy = sh_utils.get_kolm_sinai_entropy(e_value_collection)
 
     # Plot normalised sum of eigenvalues
-    axes.plot(
-        np.log2(PAR.k_vec_temp) - 0.5,
-        np.mean(
-            np.cumsum(e_value_collection.real, axis=0) / kolm_sinai_entropy, axis=1
-        ),
-        "k."
-        # linestyle="-",
-        # marker=".",
+    krange = np.log2(PAR.k_vec_temp) - 0.5
+    cumsummed_evalues = np.mean(
+        np.cumsum(e_value_collection.real, axis=0) / kolm_sinai_entropy, axis=1
     )
+    print("e_value_collection.real", np.mean(e_value_collection.real, axis=1))
+    axes.plot(krange[:4], cumsummed_evalues[:4], "k+")
+    axes.plot(krange[4:12], cumsummed_evalues[4:12], "k.")
+    axes.plot(krange[12:], cumsummed_evalues[12:], "k_")
+    # max_evalue = np.max(mean_evalues)
+    # scatter_plot = axes.scatter(
+    #     krange,
+    #     cumsummed_evalues,
+    #     c=mean_evalues,
+    #     cmap=plt.cm.jet,
+    #     vmax=max_evalue,
+    #     vmin=mean_evalues[15],
+    # )
     axes.set_xlabel("$m$")
-    axes.set_ylabel("$\sum_{i=0}^m \\mu_m / H$")
-    axes.set_ylim(-2, 2)
+    axes.set_ylabel("$\sum_{i=0}^m \\Re(\\mu_i) / H$")
+    axes.set_ylim(-1, 1.1)
     axes.set_xlim(0, 20)
     # axes.legend(perturb_time_pos_list)
     axes.xaxis.set_major_locator(mpl_ticker.MaxNLocator(integer=True))
+
+    # fig.colorbar(
+    #     scatter_plot,
+    #     ax=axes,
+    #     orientation="horizontal",
+    #     pad=0.1,
+    # )
+    # fig = plt.gcf()
+    # cbar_ax = fig.axes[-1]
+    # cbar_ax.set_title("$\\Re(\\mu_m)$", x=-0.17, y=-2.0)
 
     title = g_plt_utils.generate_title(
         args,
@@ -1187,7 +1206,7 @@ def plot_howmoller_diagram_u_energy(
         label=cbar_label,
         shrink=0.5,
         location="bottom",
-        ticks=[-3, -1.5, 0, 1.5, 3]
+        ticks=[-3, -1.5, 0, 1.5, 3],
     )
 
     fig.subplots_adjust(
