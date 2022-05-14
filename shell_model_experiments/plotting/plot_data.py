@@ -1361,7 +1361,7 @@ def plot_eddie_turnover_times(args=None):
     axes.grid()
     axes.legend()
     axes.set_xlabel("$n$")
-    axes.set_ylabel("$t_n$")
+    axes.set_ylabel("$t_n$ [tu]")
     axes.set_title(time_title)
 
     if args["tolatex"]:

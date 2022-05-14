@@ -587,6 +587,7 @@ class StandardPlottingArgParser:
                 "large_quad",
                 "two_quads",
                 "full_page",
+                "large_double",
             ],
             type=str,
             help="Used to prepare plot for latex report",

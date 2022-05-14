@@ -303,7 +303,7 @@ def find_distinct_pred_regimes(args):
             )
         # axes[2].plot(time.real[:-1] + 1 / 2 * PAR.stt, eroded_bool_array, "k")
         axes[2].set_title("Erosion/dilation filtered diff. array")
-        axes[2].set_xlabel("$t$")
+        axes[2].set_xlabel("$t$ [tu]")
         axes[2].set_yticks([0, 1])
         axes[2].set_yticklabels(["Small\nscales", "Large\nscales"])
 

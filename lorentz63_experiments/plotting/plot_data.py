@@ -49,9 +49,9 @@ def plot_splitted_wings(args):
     segments1 = zip(u_data[:-1, :2], u_data[1:, :2])
     segments2 = zip(u_data[:-1, 2:0:-1], u_data[1:, 2:0:-1])
 
-    coll1 = LineCollection(segments1, cmap="coolwarm")
+    coll1 = LineCollection(segments1, cmap="coolwarm", linewidths=1)
     coll1.set_array(wing_indices1)
-    coll2 = LineCollection(segments2, cmap="coolwarm")
+    coll2 = LineCollection(segments2, cmap="coolwarm", linewidths=1)
     coll2.set_array(wing_indices1)
 
     e_dist_title = g_plt_utils.generate_title(
@@ -70,6 +70,88 @@ def plot_splitted_wings(args):
     # axes[1].set_ylim(-25, 25)
     axes[1].set_xlabel("$z$")
     axes[1].grid(False)
+
+    # Add fix points
+    axes[0].plot(
+        np.sqrt(args["b_const"] * (args["r_const"] - 1)),
+        np.sqrt(args["b_const"] * (args["r_const"] - 1)),
+        "k.",
+    )
+    axes[0].plot(
+        -np.sqrt(args["b_const"] * (args["r_const"] - 1)),
+        -np.sqrt(args["b_const"] * (args["r_const"] - 1)),
+        "k.",
+    )
+
+    ds = 1
+    # Add text in +/- fixpoints
+    axes[0].text(
+        np.sqrt(args["b_const"] * (args["r_const"] - 1)) + ds,
+        np.sqrt(args["b_const"] * (args["r_const"] - 1)) + ds,
+        "R",
+    )
+    axes[0].text(
+        -np.sqrt(args["b_const"] * (args["r_const"] - 1)) + ds,
+        -np.sqrt(args["b_const"] * (args["r_const"] - 1)) + ds,
+        "L",
+    )
+    axes[0].text(
+        np.sqrt(args["b_const"] * (args["r_const"] - 1)) - ds - 3,
+        np.sqrt(args["b_const"] * (args["r_const"] - 1)) - ds,
+        "$\\mathbf{x}_+$",
+    )
+    axes[0].text(
+        -np.sqrt(args["b_const"] * (args["r_const"] - 1)) - ds - 3,
+        -np.sqrt(args["b_const"] * (args["r_const"] - 1)) - ds,
+        "$\\mathbf{x}_-$",
+    )
+
+    axes[0].plot(
+        np.sqrt(args["b_const"] * (args["r_const"] - 1)),
+        np.sqrt(args["b_const"] * (args["r_const"] - 1)),
+        args["r_const"] - 1,
+        "k.",
+    )
+    axes[0].plot(
+        -np.sqrt(args["b_const"] * (args["r_const"] - 1)),
+        -np.sqrt(args["b_const"] * (args["r_const"] - 1)),
+        args["r_const"] - 1,
+        "k.",
+    )
+
+    # Add fix points
+    axes[1].plot(
+        args["r_const"] - 1,
+        np.sqrt(args["b_const"] * (args["r_const"] - 1)),
+        "k.",
+    )
+    axes[1].plot(
+        args["r_const"] - 1,
+        -np.sqrt(args["b_const"] * (args["r_const"] - 1)),
+        "k.",
+    )
+
+    # Add text in +/- fixpoints
+    axes[1].text(
+        args["r_const"] - 1,
+        np.sqrt(args["b_const"] * (args["r_const"] - 1)) + ds,
+        "R",
+    )
+    axes[1].text(
+        args["r_const"] - 1,
+        -np.sqrt(args["b_const"] * (args["r_const"] - 1)) + ds,
+        "L",
+    )
+    axes[1].text(
+        args["r_const"] - 1 - 3,
+        np.sqrt(args["b_const"] * (args["r_const"] - 1)) - 2 * ds,
+        "$\\mathbf{x}_+$",
+    )
+    axes[1].text(
+        args["r_const"] - 1 - 3,
+        -np.sqrt(args["b_const"] * (args["r_const"] - 1)) - 2 * ds,
+        "$\\mathbf{x}_-$",
+    )
 
     if args["tolatex"]:
         plt_config.adjust_axes(axes)
@@ -122,21 +204,36 @@ def plot_attractor_standalone(args, ax=None, alpha=1):
     ax.set_zlabel("$z$")
     ax.view_init(elev=13, azim=-45)
 
+    add_fixpoint_markers(args, ax)
+
+    if args["tolatex"]:
+        plt_config.adjust_axes(ax)
+
+    if args["save_fig"]:
+        g_plt_utils.save_figure(
+            args,
+            subpath=pl.Path("thesis_figures/models"),
+            file_name="lorentz_attractor",
+        )
+
+    return time, u_data, header_dict
+
+
+def add_fixpoint_markers(args, ax):
     ax.plot(
         np.sqrt(args["b_const"] * (args["r_const"] - 1)),
         np.sqrt(args["b_const"] * (args["r_const"] - 1)),
+        args["r_const"] - 1,
+        "k.",
+    )
+    ax.plot(
+        -np.sqrt(args["b_const"] * (args["r_const"] - 1)),
+        -np.sqrt(args["b_const"] * (args["r_const"] - 1)),
         args["r_const"] - 1,
         "k.",
     )
 
     ds = 1
-    ax.plot(
-        -np.sqrt(args["b_const"] * (args["r_const"] - 1)),
-        -np.sqrt(args["b_const"] * (args["r_const"] - 1)),
-        args["r_const"] - 1,
-        "k.",
-    )
-
     # Add text in +/- fixpoints
     ax.text(
         np.sqrt(args["b_const"] * (args["r_const"] - 1)) + ds,
@@ -162,18 +259,6 @@ def plot_attractor_standalone(args, ax=None, alpha=1):
         args["r_const"] - 1 - 3,
         "$\\mathbf{x}_-$",
     )
-
-    if args["tolatex"]:
-        plt_config.adjust_axes(ax)
-
-    if args["save_fig"]:
-        g_plt_utils.save_figure(
-            args,
-            subpath=pl.Path("thesis_figures/models"),
-            file_name="lorentz_attractor",
-        )
-
-    return time, u_data, header_dict
 
 
 def plot_attractor(args, ax=None, alpha=1):
@@ -411,7 +496,7 @@ def plot_normal_mode_dist(args):
     ax1.grid(False)
     fig1.colorbar(scatter_plot)
 
-    fig2 = plt.figure(figsize=(5.39749 / 2 + 5.39749 / 5, 4.1))
+    fig2 = plt.figure()
     ax2 = plt.axes(projection="3d")
     ax2.xaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
     ax2.yaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
@@ -432,6 +517,8 @@ def plot_normal_mode_dist(args):
         linewidths=0.3,
         zorder=10,
     )
+
+    add_fixpoint_markers(args, ax2)
 
     ax2.set_xlabel("$x$", labelpad=-8)
     ax2.set_ylabel("$y$", labelpad=-8)

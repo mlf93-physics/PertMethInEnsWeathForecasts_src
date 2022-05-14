@@ -69,8 +69,8 @@ echo "Make SV/FSV vs LV/ALV projectibility plot"
 python ../general/plotting/collect_plot_comparison.py --plot_type=collect_sv_vec_compare_plots --exp_folder=compare_vector_projectibility_to_lv_n_units1000 --endpoint --n_runs_per_profile=3 --n_profiles=10 -nlvs=3 --tolatex -lf normal_small --notight --save_fig --noconfirm --noplot
 
 echo "Make 3D pert method visualization"
-python plotting/compare_plot.py --n_profiles=1 --plot_type=pert_vectors3D --exp_folder=compare_pert_3dplot_with_attractor -v bv_eof bv sv lv -pt rd nm rf  --seed_mode --file_offset=0 --tolatex -lf quad_item --save_fig --save_fig_name=pert_vectors_3D_v1 --noplot plot_kwargs --elev=2 --azim=-118
-python plotting/compare_plot.py --n_profiles=1 --plot_type=pert_vectors3D --exp_folder=compare_pert_3dplot_with_attractor -v bv_eof bv sv lv -pt rd nm rf  --seed_mode --file_offset=0 --tolatex -lf quad_item --save_fig --save_fig_name=pert_vectors_3D_v2 --noplot plot_kwargs --elev=9 --azim=-32
+python plotting/compare_plot.py --n_profiles=1 --plot_type=pert_vectors3D --exp_folder=compare_pert_3dplot_with_attractor -v bv_eof bv sv lv -pt rd nm rf  --seed_mode --file_offset=0 --tolatex -lf large_double --save_fig --save_fig_name=pert_vectors_3D_v1 --noplot plot_kwargs --elev=2 --azim=-118
+python plotting/compare_plot.py --n_profiles=1 --plot_type=pert_vectors3D --exp_folder=compare_pert_3dplot_with_attractor -v bv_eof bv sv lv -pt rd nm rf  --seed_mode --file_offset=0 --tolatex -lf large_double --save_fig --save_fig_name=pert_vectors_3D_v2 --noplot plot_kwargs --elev=9 --azim=-32
 
 echo "Make compare error norm plot"
 python ../general/plotting/collect_plot_comparison.py --plot_type=collect_error_norm_compare --exp_folder=compare_pert_error_norm --endpoint  --seed_mode --n_runs_per_profile=30 --tolatex -lf two_panel --right_spine --notight --save_fig --noplot
@@ -92,7 +92,7 @@ echo "Make attractor split visualization"
 python plotting/plot_data.py --plot_type=splitted_wings --ref_end_time=30 --tolatex -lf normal_small --save_fig --noplot --noconfirm
 
 echo "Make L63 normal mode dist plots"
-python ./plotting/plot_data.py --plot_type=nm_dist --n_profiles=5000 --ref_end_time=150 --tolatex -lf quad_item --save_fig_name=l63_eigenvector_value_real_dist --save_fig --noplot --noconfirm
+python ./plotting/plot_data.py --plot_type=nm_dist --n_profiles=5000 --ref_end_time=150 --tolatex -lf large_double --save_fig_name=l63_eigenvector_value_real_dist --save_fig --noplot --noconfirm
 
 echo "Make L63 TLM verification plot"
 python ../general/plotting/verify_plotter.py --exp_folder=verification_tlm_test_ttr3 --plot_type=tl_error_verification

@@ -491,17 +491,34 @@ def plot2D_average_vectors(
         mean_characteristic_value = np.mean(characteristic_values, axis=0)
 
         print("mean_characteristic_value", mean_characteristic_value)
-
-        axes[0].plot(
-            TICKS_FULL[valid_char_value_range] - 0.5,
-            mean_characteristic_value,
-            "k.",
-            markersize=4,
-        )
         axes[0].set_ylabel(characteristic_value_name)
 
         if cfg.LICENCE in [EXP.BREEDING_EOF_VECTORS, EXP.BREEDING_VECTORS]:
+            above10perc = mean_characteristic_value > 0.1
+            below10above1perc = np.logical_and(
+                mean_characteristic_value <= 0.1, mean_characteristic_value > 0.01
+            )
+            below1perc = mean_characteristic_value <= 0.01
+            axes[0].plot(
+                TICKS_FULL[valid_char_value_range][above10perc] - 0.5,
+                mean_characteristic_value[above10perc],
+                "k+",
+                markersize=4,
+            )
+            axes[0].plot(
+                TICKS_FULL[valid_char_value_range][below10above1perc] - 0.5,
+                mean_characteristic_value[below10above1perc],
+                "k.",
+                markersize=4,
+            )
+            axes[0].plot(
+                TICKS_FULL[valid_char_value_range][below1perc] - 0.5,
+                mean_characteristic_value[below1perc],
+                "k_",
+                markersize=4,
+            )
             axes[0].set_yscale("log")
+
             # axes[0].set_yticks(
             #     [1, 1e-2, 1e-4],
             #     minor=False,
@@ -514,16 +531,50 @@ def plot2D_average_vectors(
                 minor=False,
             )
         if cfg.LICENCE == EXP.LYAPUNOV_VECTORS:
-            pass
+            pos_indices = np.arange(5, dtype=np.int16)
+            zero_indices = np.arange(5, 10, dtype=np.int16)
+            neg_indices = np.arange(10, 20, dtype=np.int16)
+            axes[0].plot(
+                TICKS_FULL[valid_char_value_range][pos_indices] - 0.5,
+                mean_characteristic_value[pos_indices],
+                "k+",
+                markersize=4,
+            )
+            axes[0].plot(
+                TICKS_FULL[valid_char_value_range][zero_indices] - 0.5,
+                mean_characteristic_value[zero_indices],
+                "k.",
+                markersize=4,
+            )
+            axes[0].plot(
+                TICKS_FULL[valid_char_value_range][neg_indices] - 0.5,
+                mean_characteristic_value[neg_indices],
+                "k_",
+                markersize=4,
+            )
             # axes[0].set_yscale("log")
-            # axes[0].set_ylim(-400, 400)
-            # axes[0].set_yticks(
-            #     [400, 0, -400],
-            #     minor=False,
-            # )
+            axes[0].set_ylim(-400, 440)
+            axes[0].set_yticks(
+                [400, 0, -400],
+                minor=False,
+            )
         if cfg.LICENCE == EXP.SINGULAR_VECTORS:
             axes[0].ticklabel_format(axis="y", style="sci", scilimits=(0, 0))
             # axes[0].set_ylim(-1000, 1000)
+            pos_indices = mean_characteristic_value > 0
+            neg_indices = np.logical_not(pos_indices)
+            axes[0].plot(
+                TICKS_FULL[valid_char_value_range][pos_indices] - 0.5,
+                mean_characteristic_value[pos_indices],
+                "k+",
+                markersize=4,
+            )
+            axes[0].plot(
+                TICKS_FULL[valid_char_value_range][neg_indices] - 0.5,
+                mean_characteristic_value[neg_indices],
+                "k_",
+                markersize=4,
+            )
 
     # Normalize
     vector_units = g_utils.normalize_array(vector_units, norm_value=1, axis=2)

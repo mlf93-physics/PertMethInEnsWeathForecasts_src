@@ -7,6 +7,10 @@ import matplotlib.ticker as mpl_ticker
 plt.rcParams["savefig.dpi"] = 300
 
 
+def large_double_figure():
+    plt.rcParams["figure.figsize"] = [5.39749 / 2 + 5.39749 / 5, 4.1]
+
+
 def two_panel_figure():
     plt.rcParams["figure.figsize"] = [5.39749, 3]
 
@@ -132,3 +136,5 @@ def adjust_default_fig_axes_settings(args):
             quad()
         if args["latex_format"] == "full_page":
             full_page()
+        if args["latex_format"] == "large_double":
+            large_double_figure()

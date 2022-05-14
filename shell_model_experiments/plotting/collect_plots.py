@@ -38,7 +38,7 @@ def make_spec_energy_howmoller_plot(args):
     axs = [ax1, ax2, ax3]
 
     args["ref_end_time"] = 100
-    sh_plot_data.plot_energy_spectrum(args=args, axes=ax1)
+    sh_plot_data.plot_energy_spectrum(args=args, axes=ax1, plot_kwargs={"color": "k"})
 
     args["ref_end_time"] = 20
     sh_plot_data.plot_energy(args, axes=ax2, plot_args=[])
