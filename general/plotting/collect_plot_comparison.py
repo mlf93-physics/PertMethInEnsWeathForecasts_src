@@ -309,20 +309,20 @@ def collect_error_norm_plots(args):
 
 
 def collect_sv_vec_compare_plots(args):
-    fig, axes = plt.subplots(nrows=1, ncols=2, sharex=True, sharey=True)
+    fig, axes = plt.subplots(nrows=1, ncols=1, sharex=True, sharey=True)
 
     copy_args1 = copy.deepcopy(args)
     copy_args2 = copy.deepcopy(args)
     copy_args1["vectors"] = ["lv", "alv", "fsv"]
-    plt_compare.plt_vec_compared_to_lv(copy_args1, axes=axes[1], pair_vectors=True)
+    plt_compare.plt_vec_compared_to_lv(copy_args1, axes=axes, pair_vectors=True)
 
     copy_args2["vectors"] = ["lv", "alv", "sv"]
-    plt_compare.plt_vec_compared_to_lv(copy_args2, axes=axes[0], pair_vectors=True)
+    plt_compare.plt_vec_compared_to_lv(copy_args2, axes=axes, pair_vectors=True)
 
     # Remove labels
-    for ax in axes:
-        ax.set_ylabel("")
-        ax.set_xlabel("")
+    # for ax in axes:
+    axes.set_ylabel("")
+    axes.set_xlabel("")
 
     fig.supxlabel("$t_{{OPT}}$ [tu]")
     fig.supylabel("Absolute projectibility")
@@ -334,7 +334,7 @@ def collect_sv_vec_compare_plots(args):
     if args["tolatex"]:
         plt_config.remove_legends(axes)
         plt_config.adjust_axes(axes)
-        g_plt_utils.add_subfig_labels(axes)
+        # g_plt_utils.add_subfig_labels(axes)
 
     if args["save_fig"]:
         g_plt_utils.save_figure(

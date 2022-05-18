@@ -463,7 +463,9 @@ def plt_vec_compared_to_lv(args, axes: plt.Axes = None, pair_vectors=False):
                             axes.plot(
                                 iw_values,
                                 mean_vector_lv_orthogonality_dict[vector][n, :, n],
-                                color=cmap_list[n],
+                                color=cmap_list[1]
+                                if "fsv" in vector
+                                else cmap_list[0],  # cmap_list[n],
                             )
                         )
                     else:
@@ -479,7 +481,9 @@ def plt_vec_compared_to_lv(args, axes: plt.Axes = None, pair_vectors=False):
                                 iw_values,
                                 mean_vector_adj_lv_orthogonality_dict[vector][n, :, n],
                                 linestyle="dashed",
-                                color=cmap_list[n],
+                                color=cmap_list[1]
+                                if "fsv" in vector
+                                else cmap_list[0],  # cmap_list[n],
                             )
                         )
                     else:
