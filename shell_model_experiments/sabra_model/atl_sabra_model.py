@@ -26,7 +26,7 @@ from shell_model_experiments.params.params import ParamsStructType
 profiler = Profiler()
 
 # Set global params
-cfg.GLOBAL_PARAMS.record_max_time = 30
+
 cfg.GLOBAL_PARAMS.ref_run = False
 
 

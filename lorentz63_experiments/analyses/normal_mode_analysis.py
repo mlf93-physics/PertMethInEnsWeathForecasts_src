@@ -26,4 +26,10 @@ def analyse_normal_mode_dist(args):
     profiler.stop()
     print(profiler.output_text(color=True))
 
-    return u_profiles, e_values_max, e_vector_matrix, ref_header_dict
+    return (
+        u_profiles,
+        e_values_max,
+        e_vector_matrix,
+        e_vector_collection,
+        ref_header_dict,
+    )

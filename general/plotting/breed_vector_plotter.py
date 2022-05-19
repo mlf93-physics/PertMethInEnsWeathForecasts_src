@@ -23,11 +23,13 @@ import general.utils.importing.import_data_funcs as g_import
 import general.utils.importing.import_perturbation_data as pt_import
 import general.utils.importing.import_utils as g_imp_utils
 import general.utils.plot_utils as g_plt_utils
+import general.plotting.plot_config as plt_config
 import general.utils.user_interface as g_ui
 import matplotlib.pyplot as plt
 import numpy as np
 from general.params.model_licences import Models
 from general.utils.module_import.type_import import *
+from general.params.experiment_licences import Experiments as EXP
 from mpl_toolkits import mplot3d
 from pyinstrument import Profiler
 
@@ -249,12 +251,27 @@ def plot_breed_error_norm(args):
 def plot_breed_eof_vectors_average(args: dict, axes: plt.Axes = None):
     # Prepare plot_kwargs
     plot_kwargs: dict = {
-        "xlabel": "BV-EOF index",
-        "ylabel": "Shell index",
+        "xlabel": "$i$",
+        "ylabel": "$n$",
         "title_header": "Averaged BV-EOFs",
+        "vector_label": "$\\langle|e_{n,i}| \\rangle$",
     }
 
-    g_plt_data.plot2D_average_vectors(args, axes=axes, plot_kwargs=plot_kwargs)
+    cfg.LICENCE = EXP.BREEDING_EOF_VECTORS
+
+    g_plt_data.plot2D_average_vectors(
+        args,
+        axes=axes,
+        characteristic_value_name="$s_i^2/\\sum_i s_i^2$",
+        plot_kwargs=plot_kwargs,
+    )
+
+    if args["save_fig"]:
+        g_plt_utils.save_figure(
+            args,
+            subpath="thesis_figures/" + args["save_sub_folder"],
+            file_name="average_bv_eof_vectors_with_variances",
+        )
 
 
 def plot_breed_vectors_average(args: dict, axes: plt.Axes = None):
@@ -265,15 +282,27 @@ def plot_breed_vectors_average(args: dict, axes: plt.Axes = None):
 
     # Prepare plot_kwargs
     plot_kwargs: dict = {
-        "xlabel": "BV index",
-        "ylabel": "Shell index",
+        "xlabel": "$i$",
+        "ylabel": "$n$",
         "title_header": "Averaged BVs rel. mean BV",
-        "cmap": cmap,
+        "vector_label": "$\\langle|b_{n,i}| \\rangle_t$",
+        # "cmap": cmap,
     }
 
     g_plt_data.plot2D_average_vectors(
-        args, axes=axes, rel_mean_vector=True, plot_kwargs=plot_kwargs
+        args,
+        axes=axes,
+        rel_mean_vector=False,
+        plot_kwargs=plot_kwargs,
+        no_char_values=True,
     )
+
+    if args["save_fig"]:
+        g_plt_utils.save_figure(
+            args,
+            subpath="thesis_figures/" + args["save_sub_folder"],
+            file_name=args["save_fig_name"],
+        )
 
 
 def plot_breed_eof_vectors_3D(args: dict):
@@ -330,6 +359,8 @@ if __name__ == "__main__":
         sh_utils.update_dependent_params(params)
         sh_utils.set_params(params, parameter="sdim", value=args["sdim"])
         sh_utils.update_arrays(params)
+
+    plt_config.adjust_default_fig_axes_settings(args)
 
     # Make profiler
     profiler = Profiler()

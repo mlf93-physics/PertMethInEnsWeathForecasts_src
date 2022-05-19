@@ -21,6 +21,7 @@ if cfg.MODEL == Models.SHELL_MODEL:
     import shell_model_experiments.perturbations.normal_modes as sh_nm_estimator
     import shell_model_experiments.utils.util_funcs as ut_funcs
     from shell_model_experiments.sabra_model.sabra_model import run_model as sh_model
+    import shell_model_experiments.utils.runner_utils as sh_r_utils
     from shell_model_experiments.sabra_model.tl_sabra_model import (
         run_model as sh_tl_model,
     )
@@ -98,7 +99,7 @@ def run_tl_shell_model_verification(
     sh_model(
         diff_function,
         u_ref + u_perturb,
-        nl_model_non_pert_data_out,
+        nl_model_pert_data_out,
         args["Nt"],
         args["ny"],
         args["forcing"],
@@ -109,7 +110,7 @@ def run_tl_shell_model_verification(
     sh_model(
         diff_function,
         u_ref,
-        nl_model_pert_data_out,
+        nl_model_non_pert_data_out,
         args["Nt"],
         args["ny"],
         args["forcing"],
@@ -170,7 +171,7 @@ def run_sh_atl_model_verification(
     diagonal_1: np.ndarray,
     diagonal_2: np.ndarray,
 ):
-    u_tl_out, _, u_init_perturb = sh_tl_atl_model(
+    u_tl_out, u_atl_out, u_init_perturb = sh_tl_atl_model(
         u_perturb,
         u_ref,
         data_out,
@@ -183,10 +184,10 @@ def run_sh_atl_model_verification(
         diagonal_2,
     )
 
-    rhs_identity = np.dot(u_init_perturb[sparams.u_slice], data_out[0, 1:])
-    lhs_identity = np.dot(u_tl_out, u_tl_out)
-    diff_identity = np.abs(lhs_identity - rhs_identity) / np.mean(
-        [np.abs(lhs_identity), np.abs(rhs_identity)]
+    rhs_identity = np.dot(u_init_perturb[sparams.u_slice].conj(), u_atl_out)
+    lhs_identity = np.dot(u_tl_out.conj(), u_tl_out)
+    diff_identity = np.abs(lhs_identity - rhs_identity) / (
+        np.abs(1 / 2 * (lhs_identity + rhs_identity))
     )
 
     return diff_identity
@@ -269,6 +270,7 @@ def verify_tlm_model(args: dict):
             error_data_out[:, 1:] = tl_data_out[:, 1:] - (
                 nl_model_pert_data_out[:, 1:] - nl_model_non_pert_data_out[:, 1:]
             )
+            # Insert time
             error_data_out[:, 0] = tl_data_out[:, 0]
 
             pt_save.save_perturbation_data(
@@ -315,7 +317,10 @@ def verify_tlm_model(args: dict):
 def verify_atlm_model(args: dict):
     # Set number of iterations to a low number, e.g. to investigate one
     # iteration
-    args["Nt"] = 2
+    if cfg.MODEL == cfg.Models.LORENTZ63:
+        args["Nt"] = 500
+    elif cfg.MODEL == cfg.Models.SHELL_MODEL:
+        args["Nt"] = 1
     # Import reference data
     u_ref, _, ref_header_dict = g_import.import_start_u_profiles(args=args)
 
@@ -323,7 +328,9 @@ def verify_atlm_model(args: dict):
     # perturb = pt_utils.generate_rd_perturbations()
     perturbations, _, _ = r_utils.prepare_perturbations(args, raw_perturbations=True)
     # Prepare arrays
-    data_out = np.zeros((args["Nt"], params.sdim + 1), dtype=sparams.dtype)
+    data_out = np.zeros(
+        (args["Nt"] + args["endpoint"] * 1, params.sdim + 1), dtype=sparams.dtype
+    )
     # Run verification multiple times
     n_runs = int(args["n_profiles"] * args["n_runs_per_profile"])
     diff_identity_array = np.empty(n_runs, dtype=np.float64)
@@ -379,15 +386,23 @@ def verify_atlm_model(args: dict):
 
             diff_identity_array[i] = diff_identity
 
-    logged_diff_identity_array = np.log(diff_identity_array)
-    mean_diff_identity = np.mean(logged_diff_identity_array)
+    zero_entries = diff_identity_array == 0
 
-    plt.plot(logged_diff_identity_array)
-    plt.plot([0, n_runs], [mean_diff_identity, mean_diff_identity], "k--")
-    plt.xlabel("Profile index")
-    plt.ylabel("Logged error rel. mean of identity")
-    plt.title(f"Verification of ATLM | $N_{{iterations}}$={int(args['Nt'])}")
-    plt.show()
+    logged_diff_identity_array = np.log(
+        diff_identity_array, where=np.logical_not(zero_entries)
+    )
+    logged_diff_identity_array[zero_entries] = None
+    mean_diff_identity = np.nanmean(logged_diff_identity_array)
+    std_diff_identity = np.nanstd(logged_diff_identity_array)
+
+    print(f"{cfg.MODEL} | V_atlm = {mean_diff_identity} +/- {std_diff_identity}")
+
+    # plt.plot(logged_diff_identity_array)
+    # plt.plot([0, n_runs], [mean_diff_identity, mean_diff_identity], "k--")
+    # plt.xlabel("Profile index")
+    # plt.ylabel("Logged error rel. mean of identity")
+    # plt.title(f"Verification of ATLM | $N_{{iterations}}$={int(args['Nt'])}")
+    # plt.show()
 
 
 if __name__ == "__main__":
@@ -410,9 +425,12 @@ if __name__ == "__main__":
         args["ny"] = ut_funcs.ny_from_ny_n_and_forcing(
             args["forcing"], args["ny_n"], args["diff_exponent"]
         )
+        if args["regime_start"] is not None:
+            start_times, _, _ = sh_r_utils.get_regime_start_times(args)
+            args["start_times"] = start_times[: args["n_profiles"]]
 
     # Add/edit arguments
-    args["Nt"] = int(args["time_to_run"] / params.dt)
+    args["Nt"] = int(round(args["time_to_run"] / params.dt))
 
     profiler.start()
 

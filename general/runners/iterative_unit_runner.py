@@ -53,10 +53,11 @@ def unit_runner(
 
     print(f"Running unit {run_count + 1}/{args['n_profiles']}")
 
-    if cfg.LICENCE == EXP.SINGULAR_VECTORS:
+    if cfg.LICENCE == EXP.SINGULAR_VECTORS or cfg.LICENCE == EXP.FINAL_SINGULAR_VECTORS:
         sv_matrix, s_values = sv_r_utils.sv_generator(
             exp_setup, args, u_ref, u_old, data_out
         )
+
         data_out_dict[run_count] = {
             "sv_matrix": sv_matrix,
             "s_values": s_values,
@@ -70,8 +71,6 @@ def prepare_processes(
     n_units: int,
     n_unit_files: int,
     perturb_positions: List[int],
-    times_to_run: np.ndarray,
-    Nt_array: np.ndarray,
     args: dict,
     exp_setup: dict,
 ):
@@ -86,9 +85,6 @@ def prepare_processes(
     for j in range(n_units // cpu_count):
         for i in range(cpu_count):
             count = j * cpu_count + i
-
-            args["time_to_run"] = times_to_run[count]
-            args["Nt"] = Nt_array[count]
 
             # Copy args in order to avoid override between processes
             copy_args = copy.deepcopy(args)
@@ -111,9 +107,6 @@ def prepare_processes(
 
     for i in range(n_units % cpu_count):
         count = (n_units // cpu_count) * cpu_count + i
-
-        args["time_to_run"] = times_to_run[count]
-        args["Nt"] = Nt_array[count]
 
         # Copy args in order to avoid override between processes
         copy_args = copy.deepcopy(args)
@@ -144,9 +137,9 @@ def main_setup(
     n_existing_units: int = 0,
 ) -> Tuple[List[multiprocessing.Process], dict]:
 
-    times_to_run, Nt_array = r_utils.prepare_run_times(args)
+    args["Nt"] = int(round(args["time_to_run"] * params.tts))
 
-    if cfg.LICENCE == EXP.SINGULAR_VECTORS:
+    if cfg.LICENCE == EXP.SINGULAR_VECTORS or cfg.LICENCE == EXP.FINAL_SINGULAR_VECTORS:
         raw_perturbations = True
 
         (
@@ -161,8 +154,6 @@ def main_setup(
         args["n_profiles"],
         n_existing_units,
         perturb_positions,
-        times_to_run,
-        Nt_array,
         args,
         exp_setup,
     )

@@ -22,7 +22,9 @@ def validate_start_time_method(exp_setup: dict = {}):
     elif (
         cfg.LICENCE == EXP.BREEDING_VECTORS
         or cfg.LICENCE == EXP.LYAPUNOV_VECTORS
+        or cfg.LICENCE == EXP.ADJ_LYAPUNOV_VECTORS
         or cfg.LICENCE == EXP.SINGULAR_VECTORS
+        or cfg.LICENCE == EXP.FINAL_SINGULAR_VECTORS
     ):
         offset_var = "vector_offset"
     else:
@@ -46,7 +48,10 @@ def validate_start_time_method(exp_setup: dict = {}):
                 + " set in the experiment setup. This is not valid; choose one of them to govern start times."
             )
         else:
-            if cfg.LICENCE == EXP.BREEDING_VECTORS:
+            if (
+                cfg.LICENCE == EXP.BREEDING_VECTORS
+                or cfg.LICENCE == EXP.LYAPUNOV_VECTORS
+            ):
                 if (
                     exp_setup["eval_times"][0]
                     - exp_setup["integration_time"] * exp_setup["n_cycles"]
@@ -58,10 +63,7 @@ def validate_start_time_method(exp_setup: dict = {}):
                         exp_variable=f"eval_time = {exp_setup['eval_times'][0]};"
                         + f" integration_time = {exp_setup['integration_time']}",
                     )
-            elif (
-                cfg.LICENCE == EXP.LYAPUNOV_VECTORS
-                or cfg.LICENCE == EXP.SINGULAR_VECTORS
-            ):
+            elif cfg.LICENCE == EXP.FINAL_SINGULAR_VECTORS:
                 if exp_setup["eval_times"][0] - exp_setup["integration_time"] < 0:
                     raise g_exceptions.ExperimentSetupError(
                         "Too long integration time compared to the chosen evaluation time",
@@ -69,7 +71,11 @@ def validate_start_time_method(exp_setup: dict = {}):
                         + f" integration_time = {exp_setup['integration_time']}",
                     )
 
-    elif offset_var not in exp_setup and "start_times" not in exp_setup:
+    elif (
+        offset_var not in exp_setup
+        and "start_times" not in exp_setup
+        and "eval_times" not in exp_setup
+    ):
         raise g_exceptions.ExperimentSetupError(
             f"Exp. setup invalid: Both {offset_var}, start_times and eval_times entries are"
             + " NOT set in the experiment setup. This is not valid; choose one of them."

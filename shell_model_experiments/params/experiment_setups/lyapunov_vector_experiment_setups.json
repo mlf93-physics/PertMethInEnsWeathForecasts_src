@@ -1,22 +1,13 @@
 {
-    "TestRun1": {
-        "folder_name": "pt_vectors/shell_model_lyapunov_vectors_it0.04",
-        "sub_exp_folder": "perturb_data",
-        "integration_time": 0.04,
-        "n_vectors": 8,
-        "vector_offset": 0.04,
-        "eval_times": [
-            4.5
-        ]
-    },
     "TestRun2": {
-        "folder_name": "pt_vectors/shell_model_lyapunov_vectors_it2.0",
+        "folder_name": "pt_vectors/shell_model_lyapunov_vectors_ttr0.01_n_cycles1_regime_low",
         "sub_exp_folder": "perturb_data",
-        "integration_time": 2.0,
-        "n_vectors": 8,
-        "vector_offset": 2.0,
-        "start_times": [
-            1
+        "integration_time": 0.01,
+        "n_cycles": 1,
+        "n_vectors": 20,
+        "vector_offset": 1,
+        "eval_times": [
+            8.95
         ]
     },
     "TestRun3": {
@@ -37,6 +28,17 @@
         "vector_offset": 0.02,
         "eval_times": [
             4.6
+        ]
+    },
+    "LyapunovExponentCalculation": {
+        "folder_name": "pt_vectors/lyapunov_exponent_calculation",
+        "sub_exp_folder": "perturb_data",
+        "integration_time": 0.01,
+        "n_cycles": 10,
+        "n_vectors": 20,
+        "vector_offset": 1,
+        "eval_times": [
+            8.95
         ]
     }
 }

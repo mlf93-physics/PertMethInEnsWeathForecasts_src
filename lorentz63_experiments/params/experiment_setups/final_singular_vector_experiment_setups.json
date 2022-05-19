@@ -1,0 +1,25 @@
+{
+    "TestRun0": {
+        "folder_name": "pt_vectors/fsv_test_run1",
+        "sub_exp_folder": "perturb_data",
+        "integration_time": 0.1,
+        "n_iterations": 1,
+        "n_vectors": 3,
+        "vector_offset": 0.1,
+        "eval_times": [
+            10.1
+        ]
+    },
+    "TestRun1": {
+        "folder_name": "pt_vectors/fsv_lanczos_test",
+        "sub_exp_folder": "perturb_data",
+        "integration_time": 0.1,
+        "n_lanczos_iterations": 1,
+        "n_model_iterations": 1,
+        "n_vectors": 3,
+        "vector_offset": 0.1,
+        "eval_times": [
+            10
+        ]
+    }
+}

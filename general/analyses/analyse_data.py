@@ -1,17 +1,23 @@
 import config as cfg
-import lorentz63_experiments.params.params as l63_params
 import general.utils.util_funcs as g_utils
 import general.utils.importing.import_data_funcs as g_import
 import numpy as np
 from general.params.model_licences import Models
 from general.utils.module_import.type_import import *
-from shell_model_experiments.params.params import PAR as PAR_SH
-from shell_model_experiments.params.params import ParamsStructType
 
 # Get parameters for model
 if cfg.MODEL == Models.SHELL_MODEL:
+    from shell_model_experiments.params.params import PAR as PAR_SH
+    from shell_model_experiments.params.params import ParamsStructType
+    import shell_model_experiments.utils.special_params as sh_sparams
+
+    sparams = sh_sparams
     params = PAR_SH
 elif cfg.MODEL == Models.LORENTZ63:
+    import lorentz63_experiments.params.params as l63_params
+    import lorentz63_experiments.params.special_params as l63_sparams
+
+    sparams = l63_sparams
     params = l63_params
 
 
@@ -83,6 +89,37 @@ def analyse_error_spread_vs_time_mean_of_norm(u_stores, args=None):
     return error_spread
 
 
+def analyse_RMSE_and_spread_vs_time(data_array: np.ndarray, args: dict):
+    """Analyse the RMSE of the ensemble mean and the spread of the ensemble members
+    around the mean
+
+    Parameters
+    ----------
+    data_array : np.ndarray((n_runs_per_profile, n_profiles, n_datapoints, sdim))
+        The data array containing data for multiple ensembles made from same perturbation type
+    args : dict
+        Run-time arguments
+
+    Returns
+    -------
+    [type]
+        [description]
+    """
+    ens_mean = np.mean(data_array, axis=0)
+
+    if args["rmse_spread"]:
+        spread_array = np.std(data_array - np.expand_dims(ens_mean, axis=0), axis=0)
+        mean_spread_array = np.abs(np.mean(np.mean(spread_array, axis=2), axis=0))
+    else:
+        mean_spread_array = None
+
+    mean_RMSE_array = np.sqrt(
+        np.mean(np.mean(ens_mean * ens_mean.conj(), axis=2), axis=0).real
+    )
+
+    return mean_RMSE_array, mean_spread_array
+
+
 def analyse_mean_exp_growth_rate_vs_time(
     error_norm_vs_time: np.ndarray, anal_type: str = "instant", header_dicts: dict = {}
 ) -> np.ndarray:
@@ -97,6 +134,15 @@ def analyse_mean_exp_growth_rate_vs_time(
         An array consisting of one or more error norm vs time dataseries
     args : dict, optional
         Run-time arguments, by default None
+
+    Returns
+    -------
+    Tuple[np.ndarray, np.ndarray]
+    (
+        mean_growth_rate : The average exponential growth rate across all profiles
+        profile_mean_growth_rates : The average exponential growth rate for each profile individually
+    )
+
     """
     n_datapoints, n_perturbations = error_norm_vs_time.shape
     growth_rates = np.empty((n_datapoints - 1, n_perturbations), dtype=np.float64)
@@ -134,7 +180,7 @@ def analyse_mean_exp_growth_rate_vs_time(
     # Average all profiles
     mean_growth_rate = np.mean(profile_mean_growth_rates, axis=1)
 
-    return mean_growth_rate
+    return mean_growth_rate, profile_mean_growth_rates
 
 
 def execute_mean_exp_growth_rate_vs_time_analysis(
@@ -149,11 +195,11 @@ def execute_mean_exp_growth_rate_vs_time_analysis(
         error_norm_vs_time,
         error_norm_mean_vs_time,
     ) = analyse_error_norm_vs_time(u_stores, args=args)
-    mean_growth_rate = analyse_mean_exp_growth_rate_vs_time(
+    mean_growth_rate, profile_mean_growth_rates = analyse_mean_exp_growth_rate_vs_time(
         error_norm_vs_time, anal_type=anal_type, header_dicts=header_dicts
     )
 
-    return mean_growth_rate
+    return mean_growth_rate, profile_mean_growth_rates
 
 
 def calc_eof_vectors(

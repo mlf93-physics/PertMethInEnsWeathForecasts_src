@@ -59,7 +59,25 @@ def get_regime_start_times(args: dict, return_all=False):
         )
         start_times = regime_start_time_data
     else:
-        start_times = list(regime_start_time_data[:, int(header[args["regime_start"]])])
+        regime_index = int(header[args["regime_start"]])
+        if regime_index == 0:  # high pred
+            index1 = np.s_[:]
+            index2 = index1
+        else:  # low pred
+            index1 = np.s_[:-1]
+            index2 = np.s_[1:]
+
+        start_times = list(regime_start_time_data[index1, regime_index])
+        # start_times = list(
+        #     abs(
+        #         regime_start_time_data[index1, regime_index]
+        #         + regime_start_time_data[
+        #             index2,
+        #             abs(regime_index - 1),
+        #         ]
+        #     )
+        #     / 2
+        # )
 
     return start_times, regime_start_times_shape[0], header
 

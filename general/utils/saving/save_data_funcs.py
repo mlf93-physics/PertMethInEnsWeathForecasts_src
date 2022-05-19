@@ -9,6 +9,7 @@ import numpy as np
 import general.utils.saving.save_data_funcs as g_save
 import general.utils.saving.save_utils as g_save_utils
 from libs.libutils import file_utils as lib_file_utils
+from libs.libutils import type_utils as lib_type_utils
 from general.params.model_licences import Models
 import config as cfg
 
@@ -62,11 +63,13 @@ def save_data(
     if cfg.GLOBAL_PARAMS.ref_run:
         # Generate path if not existing
         expected_path = lib_file_utils.generate_dir(
-            pl.Path("data", stand_data_name, "ref_data")
+            pl.Path(args["ref_data_out"], stand_data_name, "ref_data")
         )
 
         prefix = "ref_"
-        ref_filename_extra = f"_rec{args['record_id']}"
+        ref_filename_extra = (
+            f"_rec{lib_type_utils.zpad_string(str(args['record_id']), n_zeros=2)}"
+        )
         ref_header_extra = f"rec_id={args['record_id']}, "
         if len(header) == 0:
             header = g_save_utils.generate_header(
@@ -119,7 +122,7 @@ def save_reference_info(args):
 
     # Generate path if not existing
     expected_path = lib_file_utils.generate_dir(
-        pl.Path("data", stand_data_name, "ref_data")
+        pl.Path(args["ref_data_out"], stand_data_name, "ref_data")
     )
 
     ref_data_info_path = f"{expected_path}/ref_data_info_{stand_data_name}.txt"

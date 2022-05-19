@@ -2,7 +2,7 @@ import sys
 
 sys.path.append("..")
 from math import floor, log10
-
+import copy
 import config as cfg
 import general.utils.dev_plots as g_dev_plots
 import general.utils.importing.import_data_funcs as g_import
@@ -77,7 +77,7 @@ def calculate_perturbations(
                 )
 
             # Apply bv, bv_eof or sv perturbation
-            elif args["pert_mode"] in ["bv", "bv_eof", "sv", "rf"]:
+            elif args["pert_mode"] in ["lv", "bv", "bv_eof", "sv", "fsv", "rf"]:
                 # Make perturbation vector
                 perturb = perturb_vectors[:, i]
 
@@ -112,7 +112,7 @@ def calculate_perturbations(
 
 
 def rescale_perturbations(
-    perturb_data: np.ndarray, args: dict, raw_perturbations: bool = False
+    perturb_data: np.ndarray, args: dict, return_raw_perturbations: bool = False
 ) -> np.ndarray:
     """Rescale a set of perturbations to the seeked error norm relative to
     the reference data
@@ -123,7 +123,7 @@ def rescale_perturbations(
         The perturbations that are rescaled
     args : dict
         Run-time arguments
-    raw_perturbations : bool, optional
+    return_raw_perturbations : bool, optional
         If the raw perturbations should be returned instead of the perturbations
         added to the u_init_profiles, by default False
 
@@ -146,18 +146,15 @@ def rescale_perturbations(
         mode="constant",
     )
 
-    if not raw_perturbations:
-        # Import reference data
-        (
-            u_init_profiles,
-            _,
-            _,
-        ) = g_import.import_start_u_profiles(args=args)
+    # Import reference data
+    (
+        u_init_profiles,
+        _,
+        _,
+    ) = g_import.import_start_u_profiles(args=args)
 
-        # Diff data
-        diff_data = perturb_data.T - u_init_profiles
-    else:
-        diff_data = perturb_data.T
+    # Diff data
+    diff_data = perturb_data.T - u_init_profiles
 
     # Rescale data
     rescaled_data = (
@@ -172,14 +169,14 @@ def rescale_perturbations(
             np.linalg.norm(rescaled_data[:, 0] - rescaled_data[:, 1], axis=0),
         )
 
-    if not raw_perturbations:
+    if not return_raw_perturbations:
         # Add rescaled data to u_init_profiles
-        u_init_profiles += rescaled_data
+        out_profiles = u_init_profiles + rescaled_data
     else:
         # Return raw rescaled perturbations
-        u_init_profiles = rescaled_data
+        out_profiles = rescaled_data
 
-    return u_init_profiles
+    return out_profiles
 
 
 def generate_rd_perturbations() -> np.ndarray:
@@ -258,7 +255,7 @@ def generate_nm_perturbations(
 
 def lanczos_vector_algorithm(
     propagated_vector: np.ndarray((params.sdim, 1), dtype=sparams.dtype) = None,
-    input_vector_j: np.ndarray((params.sdim, 1), dtype=sparams.dtype) = None,
+    lanczos_vector_matrix: np.ndarray = None,
     n_iterations: int = 0,
 ):
     """Execute the Lanczos algorithm to find eigenvectors and -values of the L*L
@@ -273,8 +270,8 @@ def lanczos_vector_algorithm(
     ----------
     propagated_vector : np.ndarray, optional
         The propagated vector w defined as w = L*L v, by default None
-    input_vector_j : np.ndarray, optional
-        The input vector, v, which is propagated into w, by default None
+    lanczos_vector_matrix : np.ndarray, optional
+        The lanczos vector matrix with vectors, v, which is propagated into w, by default None
     n_iterations : int, optional
         The number of iterations of the Lanczos algorithm, by default 0.
         Corresponds to the number of singular vectors
@@ -284,20 +281,21 @@ def lanczos_vector_algorithm(
     ------
     tuple
         (
-            output_vector : np.ndarray
-                The vector that will be propagated by L*L in next iterations
             tridiag_matrix : np.ndarray
                 The tri-diagonal matrix which can be used to solve the eigenvalue
                 problem of L*L.
-            input_vector_matrix : np.ndarray
-                The matrix with columns equal to all input vectors (Lanczos vectors)
-                from all iterations
         )
     """
-    beta_j = 0
-    tridiag_matrix = np.zeros((n_iterations, n_iterations), dtype=sparams.dtype)
-    input_vector_matrix = np.zeros((params.sdim, n_iterations), dtype=sparams.dtype)
-    iteration = 0
+    beta_j: float = 0
+    tridiag_matrix: np.ndarray = np.zeros(
+        (n_iterations, n_iterations), dtype=np.float64
+    )
+
+    omega_vector_matrix: np.ndarray = np.zeros(
+        (params.sdim, n_iterations), dtype=sparams.dtype
+    )
+    omega_j: np.ndarray = np.zeros(params.sdim, dtype=sparams.dtype)
+    iteration: int = 0
 
     def iterator(
         beta_j: float = 0,
@@ -322,20 +320,60 @@ def lanczos_vector_algorithm(
                     The new value for the Beta variable
             )
         """
-        omega_j_temp = propagated_vector
-        alpha_j = (omega_j_temp.T.conj() @ input_vector_j)[0, 0]
+        # if iteration > 0:
+        # propagated_vector_norm = np.linalg.norm(propagated_vector)
+        # concat_matrix = np.concatenate(
+        #     [
+        #         lanczos_vector_matrix[:, : (iteration + 1)],
+        #         # if iteration > 0
+        #         # else lanczos_vector_matrix[:, 0][:, np.newaxis],
+        #         propagated_vector[:, np.newaxis],
+        #     ],
+        #     axis=1,
+        # )
+        # print("concat_matrix", concat_matrix)
+        # q_matrix, r_matrix = np.linalg.qr(concat_matrix)
+        # print("q_matrix", q_matrix)
+        # propagated_vector[:] = q_matrix[:, -1] * propagated_vector_norm
+
+        alpha_j = np.vdot(propagated_vector, lanczos_vector_matrix[:, iteration]).real
 
         # Save alpha_j to tridiag_matrix
         tridiag_matrix[iteration, iteration] = alpha_j
 
         # Calculate omega_j (on first iteration beta_j == 0)
-        omega_j = (
-            omega_j_temp
-            - alpha_j * input_vector_j
-            - beta_j
-            * np.reshape(input_vector_matrix[:, iteration - 1], (params.sdim, 1))
+        omega_j[:] = (
+            propagated_vector
+            - alpha_j * lanczos_vector_matrix[:, iteration]
+            - beta_j * lanczos_vector_matrix[:, iteration - 1]
         )
 
+        # Orthogonalize:
+        for i in range(iteration):
+            projection = np.vdot(omega_j, lanczos_vector_matrix[:, i])
+            if projection == 0.0:
+                continue
+            omega_j[:] -= projection * lanczos_vector_matrix[:, i]
+
+        # Orthogonalise omega_j vector against all preceeding vectors
+        # if iteration > 0:
+        #     # Get norm of omega_j
+        #     omega_j_norm = np.linalg.norm(omega_j)
+        #     # Concatenate vectors
+        #     concat_matrix = np.concatenate(
+        #         [
+        #             lanczos_vector_matrix[:, :(iteration)],
+        #             omega_j[:, np.newaxis],
+        #         ],
+        #         axis=1,
+        #     )
+        #     # Perform QR decomposition
+        #     q_matrix, r_matrix = np.linalg.qr(concat_matrix)
+        #     # Get omega_j
+        #     omega_j[:] = q_matrix[:, iteration] * omega_j_norm
+        #     omega_vector_matrix[:, iteration] = omega_j[:, 0]
+        #     beta_j = omega_j_norm
+        # else:
         # Update beta_j
         beta_j = np.linalg.norm(omega_j)
 
@@ -345,20 +383,33 @@ def lanczos_vector_algorithm(
                 iteration, iteration - 1
             ] = beta_j
         if beta_j != 0:
-            output_vector = omega_j / beta_j
+            if (iteration + 1) < n_iterations:
+                lanczos_vector_matrix[:, iteration + 1] = omega_j / beta_j
+                # print("lanczos_vector_matrix pre", lanczos_vector_matrix)
+                # q_matrix, r_matrix = np.linalg.qr(
+                #     lanczos_vector_matrix[:, : (iteration + 2)]
+                # )
+                # lanczos_vector_matrix[:, : (iteration + 2)] = q_matrix
+                # print("lanczos_vector_matrix post", lanczos_vector_matrix)
         else:
-            print("hello1, implementation lacking")
+            print("Norm of omega_j vector reached 0. Exiting")
+            exit()
 
-        return output_vector, beta_j
+        return beta_j
 
     while True:
-        output_vector, beta_j = iterator(beta_j, iteration)
-        input_vector_matrix[:, iteration] = input_vector_j.ravel()
+        beta_j = iterator(beta_j, iteration)
+
+        # if iteration > 0:
+        #     q_matrix, r_matrix = np.linalg.qr(
+        #         lanczos_vector_matrix[:, : (iteration + 1)]
+        #     )
+        #     lanczos_vector_matrix[:, : (iteration + 1)] = q_matrix
 
         # Update iteration
         iteration += 1
 
-        yield output_vector, tridiag_matrix, input_vector_matrix
+        yield tridiag_matrix
 
 
 def calculate_svs(
@@ -388,7 +439,7 @@ def calculate_svs(
     # Get eigenvectors from tridiag_matrix.
     e_values, e_vectors = np.linalg.eig(tridiag_matrix)
     # Take sqrt to get singular values of L
-    s_values = np.sqrt(e_values.astype(np.complex128))
+    s_values = e_values.astype(np.complex128)  # np.sqrt(e_values.astype(np.complex128))
     # Sort e_values and e_vectors
     sort_index = np.argsort(s_values)[::-1]
     s_values = s_values[sort_index]
@@ -458,7 +509,7 @@ def get_rand_field_perturbations(
         )
 
     elif cfg.MODEL == Models.LORENTZ63:
-        args["ref_end_time"] = 3000
+        args["ref_end_time"] = 10000
 
         _, u_data, _ = g_import.import_ref_data(args=args)
 
@@ -497,11 +548,13 @@ def get_rand_field_perturbations(
         rand_field1_times = rand_field1_indices * params.stt
         rand_field2_times = rand_field2_indices * params.stt
         # Import u_profiles
+        copy_args = copy.deepcopy(args)
+        copy_args["n_runs_per_profile"] = 1
         u_data_rand_field1, _, ref_header_dict = g_import.import_start_u_profiles(
-            args=args, start_times=list(rand_field1_times)
+            args=copy_args, start_times=list(rand_field1_times)
         )
         u_data_rand_field2, _, ref_header_dict = g_import.import_start_u_profiles(
-            args=args, start_times=list(rand_field2_times)
+            args=copy_args, start_times=list(rand_field2_times)
         )
         # Calculate rand_field diffs
         for i in range(args["n_profiles"] * args["n_runs_per_profile"]):

@@ -7,6 +7,7 @@ def react_on_comparison_arguments(args):
 
         args["perturbations"] = copy.deepcopy(PT_CHOICES)
         args["perturbations"].remove("all")
+        args["perturbations"].remove("tl_rd")
     if len(args["vectors"]) == 1 and args["vectors"][0] == "all":
         args["vectors"] = copy.deepcopy(V_CHOICES)
         args["vectors"].remove("all")

@@ -35,14 +35,20 @@ def save_perturbation_data(
         return
     elif cfg.LICENCE == EXP.NORMAL_PERTURBATION:
         prefix = f"perturb{perturb_count}_"
+    elif cfg.LICENCE == EXP.TANGENT_LINEAR:
+        prefix = f"tl_perturb{perturb_count}_"
     elif cfg.LICENCE == EXP.BREEDING_VECTORS:
         prefix = f"breed_perturb{perturb_count}_"
     elif cfg.LICENCE == EXP.LYAPUNOV_VECTORS:
         prefix = f"lyapunov_perturb{perturb_count}_"
+    elif cfg.LICENCE == EXP.ADJ_LYAPUNOV_VECTORS:
+        prefix = f"adj_lyapunov_perturb{perturb_count}_"
     elif cfg.LICENCE == EXP.HYPER_DIFFUSIVITY:
         prefix = f"hyper_perturb{perturb_count}_"
     elif cfg.LICENCE == EXP.SINGULAR_VECTORS:
         prefix = f"singular_vector_perturb{perturb_count}_"
+    elif cfg.LICENCE == EXP.FINAL_SINGULAR_VECTORS:
+        prefix = f"final_singular_vector_perturb{perturb_count}_"
     elif cfg.LICENCE == EXP.VERIFICATION:
         prefix = f"verification_perturb{perturb_count}_"
     else:

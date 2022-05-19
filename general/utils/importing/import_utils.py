@@ -27,10 +27,10 @@ def get_start_end_times_from_exp_setup(
     ValueError
         Raised if the start time could not be determined from exp_setup
     """
-    if "integration_time" in exp_setup:
-        int_time = exp_setup["integration_time"]
-    elif "time_to_run" in exp_setup:
+    if "time_to_run" in exp_setup:
         int_time = exp_setup["time_to_run"]
+    elif "integration_time" in exp_setup:
+        int_time = exp_setup["integration_time"]
     else:
         raise ValueError("No entry in exp_setup to get time duration of integration")
 
@@ -48,8 +48,8 @@ def get_start_end_times_from_exp_setup(
         # Adjust start- and endtime differently depending on if only last
         # perturbation data is saved, or all perturbation data is saved.
         if pert_info_dict["save_last_pert"]:
-            start_time = exp_setup["eval_times"][0] - int_time
-            end_time = start_time + (pert_info_dict["n_units"] + 1) * int_time
+            start_time = exp_setup["eval_times"][0]
+            end_time = start_time + (pert_info_dict["n_units"]) * int_time
         else:
             start_time = exp_setup["eval_times"][0] - exp_setup["n_cycles"] * int_time
             end_time = exp_setup["eval_times"][0]

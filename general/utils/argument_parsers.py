@@ -21,8 +21,8 @@ from general.params.model_licences import Models
 import config as cfg
 
 # Global variables
-V_CHOICES = ["bv", "bv_eof", "sv", "all"]
-PT_CHOICES = ["bv", "bv_eof", "rd", "nm", "sv", "rf", "all"]
+V_CHOICES = ["bv", "bv_eof", "sv", "fsv", "lv", "alv", "all"]
+PT_CHOICES = ["bv", "bv_eof", "rd", "tl_rd", "nm", "sv", "rf", "lv", "all"]
 
 # Instantiate ArgumentParser
 parser = argparse.ArgumentParser()
@@ -53,19 +53,32 @@ class StandardArgSetup:
     def setup_parser(self):
         # Prepare model specific default arguments
         if cfg.MODEL == Models.SHELL_MODEL:
-            datapath = "./data/ny_n19/ny2.37e-08_ny_n19_t3.00e+02_n_f0_f1.0_kexp2"
+            # datapath = "./data/ny_n19/ny2.37e-08_ny_n19_t3.00e+02_n_f0_f1.0_kexp2"
+            # datapath = "./data/new_dt/ny_n19/ny2.37e-08_ny_n19_t3.00e+02_n_f0_f1.0_sdim20_kexp2/"
+            datapath = (
+                "./data/thesis_data/ny2.37e-08_ny_n19_t3.00e+03_n_f0_f1.0_sdim20_kexp2/"
+            )
 
         elif cfg.MODEL == Models.LORENTZ63:
-            datapath = "./data/sig1.00e+01_t9.10e+03_b2.67e+00_r2.80e+01/"
+            # datapath = "./data/sig1.00e+01_t9.10e+03_b2.67e+00_r2.80e+01/"
+            datapath = (
+                "./data/thesis_data/sig1.00e+01_t1.00e+05_b2.67e+00_r2.80e+01_dt0.01/"
+            )
 
         # Add general arguments
         self._parser.add_argument("-dp", "--datapath", type=str, default=datapath)
         self._parser.add_argument(
-            "--analysis_path", type=str, default="./data/analysed_data/"
+            "--ref_data_out", type=str, default="./data/thesis_data"
+        )
+        self._parser.add_argument(
+            "--analysis_path",
+            type=str,
+            default="./data/thesis_data/ny2.37e-08_ny_n19_t3.00e+03_n_f0_f1.0_sdim20_kexp2/analysis_data/",
         )
         self._parser.add_argument("-ttr", "--time_to_run", default=0.1, type=float)
         self._parser.add_argument("--burn_in_time", default=0.0, type=float)
         self._parser.add_argument("--seed_mode", action="store_true")
+        self._parser.add_argument("--noconfirm", action="store_true")
 
     def react_on_arguments(self):
         # Set seed if wished
@@ -173,6 +186,9 @@ class RelReferenceArgSetup:
         )
         # Add optional arguments
         self._parser.add_argument("--n_runs_per_profile", default=1, type=int)
+        self._parser.add_argument(
+            "--specific_runs_per_profile", nargs="+", default=None, type=int
+        )
         self._parser.add_argument("--n_profiles", default=1, type=int)
         self._parser.add_argument("--exp_setup", default=None, type=str)
         start_time_group: argparse._MutuallyExclusiveGroup = (
@@ -226,6 +242,7 @@ class PerturbationVectorArgSetup:
         # Add arguments
         self._parser.add_argument("--pert_vector_folder", default="", type=str)
         self._parser.add_argument("--specific_start_vector", default=0, type=int)
+        self._parser.add_argument("--bv_raw_perts", action="store_true")
 
 
 class PerturbationArgSetup:
@@ -262,12 +279,15 @@ class PerturbationArgSetup:
     def setup_parser(self):
         # Add optional arguments
         self._parser.add_argument("--endpoint", action="store_true")
+        self._parser.add_argument("--save_no_pert", action="store_true")
         pert_mode_group = self._parser.add_mutually_exclusive_group(
             required=cfg.LICENCE
             in [EXP.NORMAL_PERTURBATION, EXP.HYPER_DIFFUSIVITY, EXP.BREEDING_VECTORS]
         )
         pert_mode_group.add_argument(
-            "--pert_mode", choices=["rd", "nm", "bv", "bv_eof", "rf", "sv"], type=str
+            "--pert_mode",
+            choices=["rd", "nm", "lv", "bv", "bv_eof", "rf", "sv", "fsv"],
+            type=str,
         )
 
         # Add model specific arguments
@@ -293,15 +313,15 @@ class PerturbationArgSetup:
                 )
 
         # Test if start_times is set when pert_mode in ["rd", "nm"]
-        if (
-            self.args["pert_mode"] in ["rd", "nm", "rf"]
-            and self.args["start_times"] is None
-            and self.args["regime_start"] is None
-        ):
-            if cfg.LICENCE not in [EXP.VERIFICATION]:
-                self._parser.error(
-                    "--start_times or --regime_start argument is required when pert_mode is 'rd' or 'nm'"
-                )
+        # if (
+        #     self.args["pert_mode"] in ["rd", "nm", "rf"]
+        #     and self.args["start_times"] is None
+        #     and self.args["regime_start"] is None
+        # ):
+        #     if cfg.LICENCE not in [EXP.VERIFICATION]:
+        #         self._parser.error(
+        #             "--start_times or --regime_start argument is required when pert_mode is 'rd' or 'nm'"
+        #         )
 
 
 class MultiPerturbationArgSetup:
@@ -423,6 +443,7 @@ class ReferenceAnalysisArgParser:
         self._parser.add_argument(
             "--specific_ref_records", nargs="+", default=[0], type=int
         )
+        self._parser.add_argument("--n_ref_records", default=None, type=int)
 
 
 class ComparisonPlottingArgParser:
@@ -452,6 +473,22 @@ class ComparisonPlottingArgParser:
 
     def setup_parser(self):
         self._parser.add_argument("--exp_folders", nargs="+", default=None, type=str)
+        lv_compare_group: argparse._MutuallyExclusiveGroup = (
+            self._parser.add_mutually_exclusive_group()
+        )
+        lv_compare_group.add_argument(
+            "-nlvs",
+            "--n_lvs_to_compare",
+            type=int,
+            help="Used to plot vector comparison to a specific number of LVs/ALVs",
+        )
+        lv_compare_group.add_argument(
+            "-lvs",
+            "--lvs_to_compare",
+            nargs="+",
+            type=int,
+            help="Used to plot vector comparison to specific LVs/ALVs",
+        )
 
 
 class StandardPlottingArgParser:
@@ -517,11 +554,43 @@ class StandardPlottingArgParser:
         self._parser.add_argument("-nt", "--notight", action="store_true")
         self._parser.add_argument("-s", "--save_fig", action="store_true")
         self._parser.add_argument(
+            "--save_fig_name", type=str, help="Name of file to save figure to"
+        )
+        self._parser.add_argument(
+            "--save_sub_folder", type=str, help="Sub folder to save figure to"
+        )
+        self._parser.add_argument(
             "--datapaths",
             nargs="+",
             type=str,
             default=None,
             help="For plots using multiple different datapaths (e.g. different reference files)",
+        )
+        self._parser.add_argument(
+            "--tolatex",
+            action="store_true",
+            help="Used to prepare plot for latex report",
+        )
+
+        self._parser.add_argument(
+            "-lf",
+            "--latex_format",
+            choices=[
+                "normal_small",
+                "normal_large",
+                "horizontal_panel",
+                "horizontal_panel_with_cbar",
+                "two_panel",
+                "three_panel",
+                "quad_item",
+                "two_vertical_panel",
+                "large_quad",
+                "two_quads",
+                "full_page",
+                "large_double",
+            ],
+            type=str,
+            help="Used to prepare plot for latex report",
         )
 
         # x, y limits
@@ -536,6 +605,11 @@ class StandardPlottingArgParser:
         self._parser.add_argument("--specific_files", nargs="+", default=None, type=int)
         self._parser.add_argument("--combinations", action="store_true")
         self._parser.add_argument("--endpoint", action="store_true")
+        self._parser.add_argument(
+            "--right_spine",
+            action="store_true",
+            help="Used to enable right spine",
+        )
 
         if cfg.MODEL == Models.SHELL_MODEL:
             self._parser.add_argument(
@@ -547,6 +621,51 @@ class StandardPlottingArgParser:
                 + " experiments, where only region of shells below diffusion region"
                 + " is relevant",
             )
+
+        sub_parser = self._parser.add_subparsers()
+        plot_kwargs_parser: argparse.ArgumentParser = sub_parser.add_parser(
+            "plot_kwargs"
+        )
+        plot_kwargs_parser.add_argument(
+            "--display_type", type=str, help="Used to determine how a plot is displayed"
+        )
+        plot_kwargs_parser.add_argument(
+            "--mark_pert_start",
+            default=False,
+            type=bool,
+            help="Used to mark perturbation start times on e.g. energy plot",
+        )
+        plot_kwargs_parser.add_argument(
+            "--ref_highlight",
+            default=False,
+            type=bool,
+            help="L63: Used to make a highlight plot of a specific area of the attractor",
+        )
+
+        plot_kwargs_parser.add_argument(
+            "--rmse_spread",
+            action="store_true",
+            help="Used to enable plotting spread together with RMSE instead of only RMSE",
+        )
+        plot_kwargs_parser.add_argument(
+            "--elev",
+            type=float,
+            default=6,
+            help="Elevation in 3D plot",
+        )
+        plot_kwargs_parser.add_argument(
+            "--azim",
+            type=float,
+            default=-100,
+            help="Azimuthal angle in 3D plot",
+        )
+        plot_kwargs_parser.add_argument(
+            "--exp_growth_type",
+            type=str,
+            default="instant",
+            choices=["instant", "mean"],
+            help="The analysis type of the exponential growth comparison",
+        )
 
 
 class VerificationArgParser:

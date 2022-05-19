@@ -14,7 +14,7 @@ import sys
 sys.path.append("..")
 from pathlib import Path
 from typing import List
-
+import pandas as pd
 import config as cfg
 import general.plotting.plot_data as g_plt_data
 from general.utils.module_import.type_import import *
@@ -22,9 +22,13 @@ import general.utils.argument_parsers as a_parsers
 import general.utils.importing.import_data_funcs as g_import
 import general.utils.importing.import_perturbation_data as pt_import
 import general.utils.plot_utils as g_plt_utils
+import general.plotting.plot_config as plt_config
+from general.plotting.plot_params import *
 import general.utils.user_interface as g_ui
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mpl_ticker
+import matplotlib.colors as mpl_colors
+import seaborn as sb
 import numpy as np
 import shell_model_experiments.utils.util_funcs as sh_utils
 import shell_model_experiments.analyses.analyse_data as sh_analysis
@@ -33,15 +37,23 @@ from mpl_toolkits import mplot3d
 from shell_model_experiments.params.params import ParamsStructType
 from shell_model_experiments.params.params import PAR
 
+# SHELL_TICKS_COMPACT = np.concatenate([np.array([1]), np.arange(2, PAR.sdim + 1, 2)])
+SHELL_TICKS_COMPACT = np.arange(1, PAR.sdim, 2)
+SHELL_TICKS_FULL = np.arange(1, PAR.sdim + 1, 1)
+
 
 def plot_energy_spectrum(
-    u_data: np.ndarray,
-    header_dict: dict,
+    u_data: np.ndarray = None,
+    header_dict: dict = None,
     axes: plt.Axes = None,
     plot_arg_list: list = ["kolmogorov", "calculate"],
     plot_kwargs: dict = {},
     args: dict = {},
 ):
+    # Import reference data if not given as input
+    if u_data is None:
+        _, u_data, header_dict = g_import.import_ref_data(args=args)
+
     # Make axes if not present
     if axes is None:
         fig = plt.figure()
@@ -58,9 +70,9 @@ def plot_energy_spectrum(
     if "kolmogorov" in plot_arg_list:
         axes.plot(
             np.log2(PAR.k_vec_temp),
-            PAR.k_vec_temp ** (-2 / 3),
+            1e2 * PAR.k_vec_temp ** (-5 / 3),
             "k--",
-            label="$k^{{-2/3}}$",
+            label="$k^{{-5/3}}$",
         )
 
     label: str = (
@@ -90,13 +102,16 @@ def plot_energy_spectrum(
         mean_energy /= np.exp(slope * np.log2(PAR.k_vec_temp) + intercept)
         title_suffix += "rel. fit, "
 
+    mean_energy /= PAR.k_vec_temp
+
     # Plot energy spectrum
     axes.plot(k_vectors, mean_energy, label=label, color=color, linestyle=linestyle)
 
     # Axes setup
     axes.set_yscale("log")
-    axes.set_xlabel("k")
-    axes.set_ylabel("Energy")
+    axes.set_xlabel("$n$")
+    axes.set_ylabel("Spectral energy\ndensity, $E(n)$")
+    axes.set_xlim(1, 20)
     axes.xaxis.set_major_locator(mpl_ticker.MaxNLocator(integer=True))
 
     # Limit y axis if necessary
@@ -107,7 +122,7 @@ def plot_energy_spectrum(
         if np.log(min_mean_energy) < -15:
             axes.set_ylim(1e-15, 10)
     else:
-        axes.set_ylim(1e-15, 10)
+        axes.set_ylim(1e-12, 1e2)
 
     # Title setup
     if "title" in plot_kwargs:
@@ -120,6 +135,17 @@ def plot_energy_spectrum(
             title_suffix=title_suffix,
         )
     axes.set_title(title)
+
+    if args["tolatex"]:
+        plt_config.adjust_axes(axes)
+
+        axes.set_yticks([1e-10, 1e-6, 1e-2, 1e2])
+
+        # if args["save_fig"]:
+        # g_plt_utils.save_figure(
+        #     subpath="thesis_figures/models/",
+        #     file_name="sh_energy_spectrum",
+        # )
 
 
 def plot_helicity_spectrum(
@@ -464,10 +490,31 @@ def plot_energy_per_shell(ax=None, omit=None, path=None, args=None):
                 break
 
 
-def plot_energy(args=None, axes=None, plot_args=["detailed_title"]):
+def plot_energy(args=None, axes=None, plot_args=["detailed_title"], zorder=0):
 
     # plot_energy_spectrum(u_data, header_dict, args=args)
-    g_plt_data.plot_energy(args, axes=axes, plot_args=plot_args)
+    axes = g_plt_data.plot_energy(
+        args,
+        axes=axes,
+        plot_args=plot_args,
+        zorder=zorder,
+        linewidth=LINEWIDTHS["thin"],
+    )
+
+    if args["tolatex"]:
+        plt_config.adjust_axes(axes)
+        # plt_config.adjust_axes_to_subplot(axes)
+        if cfg.MODEL == cfg.Models.LORENTZ63:
+            plt_config.set_axis_tick_format(axes.yaxis)
+        elif cfg.MODEL == cfg.Models.SHELL_MODEL:
+            plt_config.set_axis_tick_format(axes.yaxis, fmt="%.1f")
+
+        # if args["save_fig"]:
+        #     g_plt_utils.save_figure(
+        #         subpath="thesis_figures/models/",
+        #         file_name="sh_energy_vs_time",
+        #     )
+    return axes
 
 
 def plot_shell_error_vs_time(args=None):
@@ -511,7 +558,12 @@ def plot_shell_error_vs_time(args=None):
         plt.title(title)
 
 
-def plot_2D_eigen_mode_analysis(args=None):
+def plot_eigen_value_dist(args=None, axes=None, fig=None):
+
+    if axes is None:
+        fig = plt.figure()
+        axes = plt.axes()
+
     u_init_profiles, perturb_positions, header_dict = g_import.import_start_u_profiles(
         args=args
     )
@@ -537,27 +589,56 @@ def plot_2D_eigen_mode_analysis(args=None):
 
     e_value_collection = np.array(e_value_collection, dtype=np.complex128).T
 
-    # Calculate Kolmogorov-Sinai entropy, i.e. sum of positive e values
-    positive_e_values_only = np.copy(e_value_collection)
-    positive_e_values_only[positive_e_values_only <= 0] = 0 + 0j
-    kolm_sinai_entropy = np.sum(positive_e_values_only.real, axis=0)
+    kolm_sinai_entropy = sh_utils.get_kolm_sinai_entropy(e_value_collection)
 
     # Plot normalised sum of eigenvalues
-    plt.figure()
-    plt.plot(
-        np.cumsum(e_value_collection.real, axis=0) / kolm_sinai_entropy,
-        linestyle="-",
-        marker=".",
+    krange = np.log2(PAR.k_vec_temp) - 0.5
+    cumsummed_evalues = np.mean(
+        np.cumsum(e_value_collection.real, axis=0) / kolm_sinai_entropy, axis=1
     )
-    plt.xlabel("Lyaponov index")
-    plt.ylabel("$\sum_{i=0}^j \\lambda_j$ / H")
-    plt.ylim(-3, 1.5)
-    plt.legend(perturb_time_pos_list)
-    plt.title(
-        f'Cummulative eigenvalues; f={header_dict["f"]}'
-        + f', $n_f$={int(header_dict["n_f"])}, $\\nu$={header_dict["ny"]:.2e}'
-        + f', time={header_dict["time_to_run"]}s'
+    print("e_value_collection.real", np.mean(e_value_collection.real, axis=1))
+    axes.plot(krange[:4], cumsummed_evalues[:4], "k+")
+    axes.plot(krange[4:12], cumsummed_evalues[4:12], "k.")
+    axes.plot(krange[12:], cumsummed_evalues[12:], "k_")
+    # max_evalue = np.max(mean_evalues)
+    # scatter_plot = axes.scatter(
+    #     krange,
+    #     cumsummed_evalues,
+    #     c=mean_evalues,
+    #     cmap=plt.cm.jet,
+    #     vmax=max_evalue,
+    #     vmin=mean_evalues[15],
+    # )
+    axes.set_xlabel("$m$")
+    axes.set_ylabel("$\sum_{i=0}^m \\Re(\\mu_i) / H$")
+    axes.set_ylim(-1, 1.1)
+    axes.set_xlim(0, 20)
+    # axes.legend(perturb_time_pos_list)
+    axes.xaxis.set_major_locator(mpl_ticker.MaxNLocator(integer=True))
+
+    # fig.colorbar(
+    #     scatter_plot,
+    #     ax=axes,
+    #     orientation="horizontal",
+    #     pad=0.1,
+    # )
+    # fig = plt.gcf()
+    # cbar_ax = fig.axes[-1]
+    # cbar_ax.set_title("$\\Re(\\mu_m)$", x=-0.17, y=-2.0)
+
+    title = g_plt_utils.generate_title(
+        args,
+        header_dict=header_dict,
+        title_header="Cummulative eigenvalues",
+        title_suffix=f'N_tot={args["n_profiles"]*args["n_runs_per_profile"]}, ',
     )
+
+    # axes.grid(visible=True, axis="y", color="k", linestyle="dotted")
+
+    # plt.title(title)
+
+    if args["tolatex"]:
+        plt_config.adjust_axes_to_subplot(axes)
 
 
 def plot_3D_eigen_mode_anal_comparison(args: dict = None):
@@ -630,8 +711,13 @@ def plot_3D_eigen_mode_analysis(
     axes[0].set_zlabel("$<|v_i^j|^2>$")
     axes[0].set_zlim(0, 1)
     axes[0].view_init(elev=27.0, azim=-21)
-
-    figs[0].colorbar(surf_plot, ax=axes[0])
+    axes[0].xaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+    axes[0].yaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+    axes[0].zaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+    axes[0].xaxis.set_major_locator(mpl_ticker.MaxNLocator(integer=True))
+    axes[0].yaxis.set_major_locator(mpl_ticker.MaxNLocator(integer=True))
+    axes[0].grid(False)
+    figs[0].colorbar(surf_plot, ax=axes[0], pad=0.15, fraction=0.025)
 
     title = g_plt_utils.generate_title(
         args,
@@ -669,6 +755,83 @@ def plot_3D_eigen_mode_analysis(
     pcolorplot.set_clim(0, 1)
 
 
+def plot_2D_eigen_mode_analysis(
+    args: dict = None,
+    right_handed: bool = False,
+    axes: plt.Axes = None,
+    fig: plt.Figure = None,
+):
+    if axes is None:
+        fig, axes = plt.figure(), plt.axes()
+
+    u_init_profiles, header_dict = pt_import.import_profiles_for_nm_analysis(args)
+
+    # Set diff_exponent
+    args["diff_exponent"] = header_dict["diff_exponent"]
+
+    _, e_vector_collection, e_value_collection = sh_nm_estimator.find_normal_modes(
+        u_init_profiles,
+        args,
+        dev_plot_active=False,
+        local_ny=header_dict["ny"],
+    )
+
+    for i in range(len(e_value_collection)):
+        sort_id = e_value_collection[i].argsort()[::-1]
+        e_vector_collection[i] = e_vector_collection[i][:, sort_id]
+
+    e_vector_collection = np.array(e_vector_collection)
+
+    # Make data.
+    # shells = np.arange(1, PAR.sdim + 1, 1)
+    # lyaponov_index = np.arange(1, PAR.sdim + 1, 1)
+    # lyaponov_index, shells = np.meshgrid(lyaponov_index, shells)
+
+    title = g_plt_utils.generate_title(
+        args,
+        header_dict=header_dict,
+        title_header="Eigenvectors vs shell numbers",
+        title_suffix=f'N_tot={args["n_profiles"]*args["n_runs_per_profile"]}, ',
+    )
+
+    mean_e_vectors = np.mean(np.abs(e_vector_collection), axis=0)
+    eps = 2 * 1e-2
+    pcolorplot = sb.heatmap(
+        mean_e_vectors,
+        cmap="Reds",
+        mask=mean_e_vectors < eps,
+        vmin=0,
+        vmax=1,
+        cbar=True,
+        cbar_kws={
+            "location": "bottom",
+            "shrink": 0.5,
+            "label": "$\\langle|\\xi_{n,m}| \\rangle$",
+        },
+    )
+    pcolorplot.set_yticks(SHELL_TICKS_COMPACT)
+    pcolorplot.set_yticklabels(SHELL_TICKS_COMPACT, rotation=0)
+    pcolorplot.set_xticklabels(SHELL_TICKS_FULL)
+    axes.set_xlabel("$m$")
+    axes.set_ylabel("$n$")
+    axes.set_title(title)
+    axes.invert_yaxis()
+
+    if right_handed:
+        axes.set_xlim(PAR.sdim, 0)
+        axes.yaxis.tick_right()
+        axes.yaxis.set_label_position("right")
+
+    # axes.xaxis.set_major_locator(mpl_ticker.MaxNLocator(integer=True))
+    # axes.yaxis.set_major_locator(mpl_ticker.MaxNLocator(integer=True))
+    # fig.colorbar(pcolorplot, pad=0.1, ax=axes, location="bottom", shrink=0.5)
+    # else:
+    # fig.colorbar(pcolorplot, ax=axes, location="bottom", shrink=0.5)
+
+    if args["tolatex"]:
+        plt_config.adjust_axes(axes)
+
+
 def plot_eigen_vector_comparison(args=None):
     u_init_profiles, perturb_positions, header_dict = g_import.import_start_u_profiles(
         args=args
@@ -690,7 +853,7 @@ def plot_eigen_vector_comparison(args=None):
     # current_e_vectors = np.mean(e_vector_collection, axis=0)
     # current_e_vectors = e_vector_collection[1]
 
-    dev_plot = True
+    dev_plot = False
 
     integral_mean_lyaponov_index = (
         8  # int(np.average(np.arange(current_e_vectors.shape[1])
@@ -700,7 +863,7 @@ def plot_eigen_vector_comparison(args=None):
     print("integral_mean_lyaponov_index", integral_mean_lyaponov_index)
 
     orthogonality_array = np.zeros(
-        e_vector_collection.shape[0] * (integral_mean_lyaponov_index - 1),
+        (e_vector_collection.shape[0], integral_mean_lyaponov_index - 1),
         dtype=np.complex128,
     )
 
@@ -710,91 +873,41 @@ def plot_eigen_vector_comparison(args=None):
         for i in range(1, integral_mean_lyaponov_index):
             # print(f'{integral_mean_lyaponov_index - i} x'+
             #     f' {integral_mean_lyaponov_index + i} : ',
-            orthogonality_array[
-                j * (integral_mean_lyaponov_index - 1) + (i - 1)
-            ] = np.vdot(
+            orthogonality_array[j, i - 1] = np.vdot(
                 current_e_vectors[:, integral_mean_lyaponov_index - i],
                 current_e_vectors[:, integral_mean_lyaponov_index + i],
             )
 
-            if dev_plot:
-                fig, axes = plt.subplots(nrows=2, ncols=1, sharex=True)
-                legend = []
-
-                recent_plot = axes[0].plot(
-                    current_e_vectors[:, integral_mean_lyaponov_index - i].real, "-"
-                )
-                recent_color = recent_plot[0].get_color()
-                axes[0].plot(
-                    current_e_vectors.imag[:, integral_mean_lyaponov_index - i],
-                    linestyle="--",
-                    color=recent_color,
-                )
-
-                recent_plot = axes[1].plot(
-                    current_e_vectors[:, integral_mean_lyaponov_index + i].real, "-"
-                )
-                recent_color = recent_plot[0].get_color()
-                axes[1].plot(
-                    current_e_vectors.imag[:, integral_mean_lyaponov_index + i],
-                    linestyle="--",
-                    color=recent_color,
-                )
-
-                plt.xlabel("Shell number, i")
-                axes[0].set_ylabel(f"j = {integral_mean_lyaponov_index - i}")
-                axes[1].set_ylabel(f"j = {integral_mean_lyaponov_index + i}")
-                axes[0].legend(
-                    ["Real part", "Imag part"],
-                    loc="center right",
-                    bbox_to_anchor=(1.15, 0.5),
-                )
-                plt.subplots_adjust(right=0.852)
-                plt.suptitle(
-                    f'Eigenvector comparison; f={header_dict["f"]}'
-                    + f', $n_f$={int(header_dict["n_f"])}, $\\nu$={header_dict["ny"]:.2e}'
-                    + f', time={header_dict["time_to_run"]}s'
-                )
-
-    if dev_plot:
-        fig = plt.figure()
-        axes = plt.axes()
-        plt.pcolormesh(np.mean(np.abs(e_vector_collection) ** 2, axis=0), cmap="Reds")
-        plt.xlabel("Lyaponov index")
-        plt.ylabel("Shell number")
-        plt.title(
-            f'Eigenvectors vs shell numbers; f={header_dict["f"]}'
-            + f', $n_f$={int(header_dict["n_f"])}, $\\nu$={header_dict["ny"]:.2e}'
-            + f', time={header_dict["time_to_run"]}s, N_tot={args["n_profiles"]*args["n_runs_per_profile"]}'
-        )
-        plt.xlim(PAR.sdim, 0)
-        axes.yaxis.tick_right()
-        axes.yaxis.set_label_position("right")
-        plt.colorbar(pad=0.1)
-
     # Scatter plot
-    plt.figure()
     legend = []
 
+    fig, axes = plt.subplots(1, 1)
+
     for i in range(integral_mean_lyaponov_index - 1):
-        plt.scatter(
-            orthogonality_array[i : -1 : (integral_mean_lyaponov_index - 1)].real,
-            orthogonality_array[i : -1 : (integral_mean_lyaponov_index - 1)].imag,
-            marker=".",
-        )
+        # plt.scatter(
+        #     orthogonality_array[i : -1 : (integral_mean_lyaponov_index - 1)].real,
+        #     orthogonality_array[i : -1 : (integral_mean_lyaponov_index - 1)].imag,
+        #     marker=".",
+        # )
+        axes.hist(orthogonality_array[:, i].real, density=True, histtype="step")
 
-        legend.append(
-            f"{integral_mean_lyaponov_index - (i + 1)} x {integral_mean_lyaponov_index + (i + 1)}"
-        )
+        legend.append(f"$\\Delta$={i + 1}")
 
-    plt.xlabel("Real part")
-    plt.ylabel("Imag part")
-    plt.legend(legend)
-    plt.title(
-        f'Orthogonality of pairs of eigenvectors; f={header_dict["f"]}'
-        + f', $n_f$={int(header_dict["n_f"])}, $\\nu$={header_dict["ny"]:.2e}'
-        + f', time={header_dict["time_to_run"]}s, N_tot={args["n_profiles"]*args["n_runs_per_profile"]}'
-    )
+    axes.set_xlabel("$\\Re(\\langle \\xi_{9-\\Delta}; \\xi_{9 + \\Delta} \\rangle)$")
+    axes.set_ylabel("Frequency")
+    axes.legend(legend)
+
+    if args["tolatex"]:
+        # plt_config.remove_legends(axes)
+        plt_config.adjust_axes(axes)
+
+    if args["save_fig"]:
+        g_plt_utils.save_figure(
+            args,
+            fig=fig,
+            subpath="thesis_figures/models/",
+            file_name="sh_orthogonality_of_phasespace",
+        )
 
 
 def plot_pert_traject_energy_spectrum(args):
@@ -1024,7 +1137,9 @@ def plot_error_vector_spectrum(args=None):
     plt.colorbar(pad=0.1)
 
 
-def plot_howmoller_diagram_u_energy(args=None, plt_args: list = ["rel_mean"]):
+def plot_howmoller_diagram_u_energy(
+    args=None, axes=None, fig=None, plt_args: list = ["rel_mean"]
+):
 
     # Import reference data
     time, u_data, header_dict = g_import.import_ref_data(args=args)
@@ -1033,7 +1148,8 @@ def plot_howmoller_diagram_u_energy(args=None, plt_args: list = ["rel_mean"]):
     time2D, shell2D = np.meshgrid(time.real, PAR.k_vec_temp)
     energy_array = (u_data * np.conj(u_data)).real.T
 
-    fig, axes = plt.subplots(nrows=1, ncols=1)
+    if axes is None:
+        fig, axes = plt.subplots(nrows=1, ncols=1)
 
     if "rel_mean" in plt_args:
         # Prepare energy rel mean
@@ -1064,8 +1180,11 @@ def plot_howmoller_diagram_u_energy(args=None, plt_args: list = ["rel_mean"]):
         levels=30,
     )
     pcm.negative_linestyle = "solid"
-    axes.set_ylabel("Shell number, n")
-    axes.set_xlabel("Time")
+    axes.set_ylabel("$n$")
+    axes.set_xlabel("Time [tu]")
+    axes.set_yticks([1, 10, 20])
+    axes.set_xlim(args["ref_start_time"], args["ref_end_time"])
+    # axes.yaxis.set_major_locator(mpl_ticker.MaxNLocator(integer=True))
 
     title_header = "Howmöller diagram for $|u|^2$"
     title_header += "- $\\langle|u|^2\\rangle_t$" if "rel_mean" in plt_args else ""
@@ -1077,9 +1196,31 @@ def plot_howmoller_diagram_u_energy(args=None, plt_args: list = ["rel_mean"]):
 
     axes.set_title(title)
 
-    cbar_label = "$|u|²$"
-    cbar_label += " - $\\langle|u|²\\rangle_t$" if "rel_mean" in plt_args else ""
-    fig.colorbar(pcm, ax=axes, pad=0.1, label=cbar_label)
+    # cbar_label = "$|u|²$"
+    # cbar_label += " - $\\langle|u|²\\rangle_t$" if "rel_mean" in plt_args else ""
+    cbar_label = "$|u_n|^2 - \\langle|u_n|^2\\rangle_t$"
+    cbar = fig.colorbar(
+        pcm,
+        ax=axes,
+        pad=0.3,
+        label=cbar_label,
+        shrink=0.5,
+        location="bottom",
+        ticks=[-3, -1.5, 0, 1.5, 3],
+    )
+
+    fig.subplots_adjust(
+        top=0.961, bottom=0.053, left=0.15, right=0.967, hspace=0.614, wspace=0.2
+    )
+
+    if args["tolatex"]:
+        plt_config.adjust_axes(axes)
+
+        # if args["save_fig"]:
+        #     g_plt_utils.save_figure(
+        #         subpath="thesis_figures/models/",
+        #         file_name="sh_howmoller_vs_time",
+        #     )
 
 
 def plot_howmoller_diagram_helicity(args=None, plt_args: list = ["rel_mean"]):
@@ -1153,6 +1294,88 @@ def plot_howmoller_diagram_helicity(args=None, plt_args: list = ["rel_mean"]):
     )
 
 
+def plot_eddie_turnover_times(args=None):
+    time, u_data, header_dict = g_import.import_ref_data(args=args)
+
+    mean_eddy_turnover = sh_analysis.get_eddy_turnovertime(u_data)
+    # eddy_freq = 1 / mean_eddy_turnover
+    # np.set_printoptions(formatter={"all": np.format_float_scientific})
+    # rounded_mean_eddy_turnover = np.round_(mean_eddy_turnover, decimals=2)
+
+    print("mean_eddy_turnover", mean_eddy_turnover)
+
+    fig, axes = plt.subplots(nrows=1, ncols=1)
+
+    # axes[0].plot(
+    #     np.log2(PAR.k_vec_temp), eddy_freq, "k.", label="Eddy freq. from $||u||$"
+    # )
+    # axes[0].plot(
+    #     np.log2(PAR.k_vec_temp),
+    #     (PAR.k_vec_temp / (2 * np.pi)) ** (2 / 3),
+    #     "k--",
+    #     label="$k^{2/3}$",
+    # )
+
+    # delta_time = (time[-1] - time[0]).real + PAR.stt
+
+    # freq_title = g_plt_utils.generate_title(
+    #     args,
+    #     header_dict=header_dict,
+    #     title_header="Eddy frequencies",
+    #     title_suffix=f"$\\Delta t$={delta_time:.1f}s",
+    # )
+
+    # axes[0].set_yscale("log")
+    # axes[0].grid()
+    # axes[0].legend()
+    # axes[0].set_xlabel("k")
+    # axes[0].set_ylabel("Eddy frequency")
+    # axes[0].set_title(
+    #     freq_title,
+    # )
+
+    axes.plot(
+        np.log2(PAR.k_vec_temp),
+        mean_eddy_turnover,
+        "k.",
+        label="Eddy turnover time from $||u||$",
+    )
+    axes.plot(
+        np.log2(PAR.k_vec_temp),
+        (PAR.k_vec_temp / (2 * np.pi)) ** (-2 / 3),
+        "k--",
+        label="$k^{-2/3}$",
+    )
+
+    axes.set_xticks(SHELL_TICKS_COMPACT)
+    axes.grid(False)
+
+    # axes.xaxis.set_major_locator(mpl_ticker.MaxNLocator(integer=True))
+
+    time_title = g_plt_utils.generate_title(
+        args,
+        header_dict=header_dict,
+        title_header="Eddy turnover time",
+    )
+    axes.set_yscale("log")
+    axes.grid()
+    axes.legend()
+    axes.set_xlabel("$n$")
+    axes.set_ylabel("$t_n$ [tu]")
+    axes.set_title(time_title)
+
+    if args["tolatex"]:
+        plt_config.remove_legends(axes)
+        plt_config.adjust_axes(axes)
+
+    if args["save_fig"]:
+        g_plt_utils.save_figure(
+            args,
+            subpath="thesis_figures/appendices/timescale_analyses/",
+            file_name="sh_eddy_turnover_times",
+        )
+
+
 if __name__ == "__main__":
     cfg.init_licence()
 
@@ -1169,6 +1392,8 @@ if __name__ == "__main__":
 
     g_ui.confirm_run_setup(args)
 
+    plt_config.adjust_default_fig_axes_settings(args)
+
     if "time_to_run" in args:
         args["Nt"] = int(args["time_to_run"] / PAR.dt * PAR.sample_rate)
 
@@ -1180,12 +1405,7 @@ if __name__ == "__main__":
         plot_energy_per_shell(args=args)
 
     if "energy_spectrum" in args["plot_type"]:
-        # Import reference data
-        _, _temp_u_data, _temp_header_dict = g_import.import_ref_data(args=args)
         plot_energy_spectrum(
-            _temp_u_data,
-            _temp_header_dict,
-            plot_arg_list=["kolmogorov", "calculate"],
             args=args,
         )
     if "vel_spectrum" in args["plot_type"]:
@@ -1212,6 +1432,7 @@ if __name__ == "__main__":
                 # cmap_list=["blue"],
                 plot_args=[],
                 normalize_start_time=False,
+                raw_perturbations=True,
             )
 
     if "error_spectrum_vs_time" in args["plot_type"]:
@@ -1230,7 +1451,7 @@ if __name__ == "__main__":
         plot_3D_eigen_mode_anal_comparison(args=args)
 
     if "eigen_mode_plot_2D" in args["plot_type"]:
-        plot_2D_eigen_mode_analysis(args=args)
+        plot_eigen_value_dist(args=args)
 
     if "eigen_vector_comp" in args["plot_type"]:
         plot_eigen_vector_comparison(args=args)
@@ -1250,5 +1471,8 @@ if __name__ == "__main__":
     if "helicity_spectrum" in args["plot_type"]:
         _, u_data, header_dict = g_import.import_ref_data(args=args)
         plot_helicity_spectrum(u_data, header_dict, args)
+
+    if "eddy_turnover" in args["plot_type"]:
+        plot_eddie_turnover_times(args)
 
     g_plt_utils.save_or_show_plot(args)

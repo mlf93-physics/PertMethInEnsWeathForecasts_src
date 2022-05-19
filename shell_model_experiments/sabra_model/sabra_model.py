@@ -27,7 +27,7 @@ import general.utils.running.runner_utils as r_utils
 
 
 # Set global params
-cfg.GLOBAL_PARAMS.record_max_time = 30
+
 
 profiler = Profiler()
 
@@ -180,6 +180,9 @@ def main(args=None):
         stand_data_name = g_save_utils.generate_standard_data_name(args)
         compress_out_name = f"ref_data_{stand_data_name}"
         g_save_utils.compress_dir(save_path, compress_out_name)
+
+    profiler.stop()
+    print(profiler.output_text())
 
 
 if __name__ == "__main__":

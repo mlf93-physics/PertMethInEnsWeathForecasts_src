@@ -52,7 +52,11 @@ def main(args: dict, exp_setup: dict = None):
         u_init_profiles,
         eval_pos,
         perturb_header_dicts,
-    ) = pt_import.import_perturb_vectors(args)
+    ) = pt_import.import_perturb_vectors(
+        args,
+        raw_perturbations=args["bv_raw_perts"],
+        force_no_ref_import=args["bv_raw_perts"],
+    )
 
     # Calculate the orthogonal complement to the vectors
     eof_vectors, variances = g_anal.calc_eof_vectors(

@@ -3,6 +3,8 @@ import general.plotting.plot_config as plt_config
 from general.params.params import GlobalParams
 import general.utils.licence_utils.model_licence_utils as md_license_ut
 import general.utils.licence_utils.exp_licence_utils as exp_licence_ut
+from general.params.model_licences import Models
+
 
 # Init colorama
 colorama_init()
@@ -18,6 +20,11 @@ def init_licence():
 
 # Get global params
 GLOBAL_PARAMS = GlobalParams()
+
+if MODEL == Models.LORENTZ63:
+    GLOBAL_PARAMS.record_max_time = 10000
+else:
+    GLOBAL_PARAMS.record_max_time = 30
 
 # Set plotting config
 # plt_config.latex_plot_settings()

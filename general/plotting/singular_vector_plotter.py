@@ -26,6 +26,7 @@ import general.utils.importing.import_utils as g_imp_utils
 import general.utils.util_funcs as g_utils
 import general.utils.plot_utils as g_plt_utils
 import general.utils.user_interface as g_ui
+import general.plotting.plot_config as plt_config
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mpl_ticker
 from mpl_toolkits import mplot3d
@@ -169,13 +170,26 @@ def plot_s_vectors_average(args, axes: plt.Axes = None):
 
     # Prepare plot_kwargs
     plot_kwargs: dict = {
-        "xlabel": "SV index",
-        "ylabel": "Shell index",
+        "xlabel": "$i$",
+        "ylabel": "$n$",
         "title_header": "Averaged SVs",
+        "vector_label": "$\\langle|v_{n,i}| \\rangle$",
     }
 
     # Import breed vectors
-    g_plt_data.plot2D_average_vectors(args, axes=axes, plot_kwargs=plot_kwargs)
+    g_plt_data.plot2D_average_vectors(
+        args,
+        axes=axes,
+        characteristic_value_name="$\\frac{{1}}{{t_{{OPT}}}}\\mathrm{{ln}}\\sigma_i$",
+        plot_kwargs=plot_kwargs,
+    )
+
+    if args["save_fig"]:
+        g_plt_utils.save_figure(
+            args,
+            subpath="thesis_figures/" + args["save_sub_folder"],
+            file_name=args["save_fig_name"],
+        )
 
 
 def plot3D_s_vectors_average(args, axes: plt.Axes = None, plot_args: list = []):
@@ -314,7 +328,7 @@ def plot_s_vector_ortho_average(args, axes=None):
         _,
         header_dicts,
     ) = pt_import.import_perturb_vectors(
-        args, raw_perturbations=True, dtype=sparams.dtype
+        args, raw_perturbations=True, dtype=np.complex128
     )
 
     # Normalize
@@ -333,6 +347,10 @@ def plot_s_vector_ortho_average(args, axes=None):
         )
 
     orthogonality_matrix /= args["n_profiles"]
+    print(
+        "mean orthogonality",
+        np.mean(orthogonality_matrix[np.triu_indices(args["n_runs_per_profile"], k=1)]),
+    )
 
     sb.heatmap(
         orthogonality_matrix,
@@ -390,6 +408,8 @@ if __name__ == "__main__":
         sh_utils.set_params(params, parameter="sdim", value=args["sdim"])
         sh_utils.update_arrays(params)
 
+    plt_config.adjust_default_fig_axes_settings(args)
+
     # Make profiler
     profiler = Profiler()
     profiler.start()
@@ -402,9 +422,9 @@ if __name__ == "__main__":
         plot_s_vectors_average(args)
     elif "s_vectors_average_3D" in args["plot_type"]:
         plot3D_s_vectors_average(args)
-    elif "s_vector_ortho" in args["plot_type"]:
+    elif "s_vectors_ortho" in args["plot_type"]:
         plot_s_vector_ortho(args)
-    elif "s_vector_ortho_average" in args["plot_type"]:
+    elif "s_vectors_ortho_average" in args["plot_type"]:
         plot_s_vector_ortho_average(args)
     elif "sv_error_norm" in args["plot_type"]:
         plot_sv_error_norm(args)

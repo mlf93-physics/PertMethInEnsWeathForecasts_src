@@ -1,6 +1,8 @@
 import config as cfg
 import general.utils.perturb_utils as pt_utils
 from general.params.model_licences import Models
+from general.params.experiment_licences import Experiments as EXP
+import general.analyses.plot_analyses as g_plt_anal
 import numpy as np
 
 # Get parameters for model
@@ -12,6 +14,7 @@ if cfg.MODEL == Models.SHELL_MODEL:
     import shell_model_experiments.utils.util_funcs as ut_funcs
     from shell_model_experiments.sabra_model.sabra_model_combinations import (
         sh_tl_atl_model,
+        sh_atl_tl_model,
     )
 
     params = PAR_SH
@@ -23,6 +26,7 @@ elif cfg.MODEL == Models.LORENTZ63:
     import lorentz63_experiments.utils.util_funcs as ut_funcs
     from lorentz63_experiments.lorentz63_model.lorentz63_model_combinations import (
         l63_tl_atl_model,
+        l63_atl_tl_model,
     )
 
     params = l63_params
@@ -36,15 +40,13 @@ def sv_generator(
     u_old: np.ndarray,
     data_out: np.ndarray,
 ):
-    # Initiate rescaled_perturbations
-    lanczos_outarray = None
 
     # Initiate the Lanczos arrays and algorithm
-    propagated_vector: np.ndarray((params.sdim, 1)) = np.zeros(
-        (params.sdim, 1), dtype=sparams.dtype
+    propagated_vector: np.ndarray(params.sdim) = np.zeros(
+        params.sdim, dtype=sparams.dtype
     )
-    input_vector: np.ndarray((params.sdim, 1)) = np.zeros(
-        (params.sdim, 1), dtype=sparams.dtype
+    lanczos_vector_matrix: np.ndarray = np.zeros(
+        (params.sdim, exp_setup["n_vectors"]), dtype=sparams.dtype
     )
 
     sv_matrix = np.zeros(
@@ -73,68 +75,97 @@ def sv_generator(
 
     # Average over multiple iterations of the lanczos algorithm
     for _ in range(exp_setup["n_lanczos_iterations"]):
-        # Start out by running on u_old, but hereafter lanczos_outarray will be
+        # Start out by running on u_old, but hereafter lanczos_vector_matrix will be
         # updated by the lanczos_iterator
-        lanczos_outarray = u_old
+        lanczos_vector_matrix[:, 0] = u_old[sparams.u_slice]
         lanczos_iterator = pt_utils.lanczos_vector_algorithm(
             propagated_vector=propagated_vector,
-            input_vector_j=input_vector,
+            lanczos_vector_matrix=lanczos_vector_matrix,
             n_iterations=exp_setup["n_vectors"],
         )
         # Calculate the desired number of SVs
-        for _ in range(exp_setup["n_vectors"]):
+        for i in range(exp_setup["n_vectors"]):
             # Run specified number of model iterations
             for _ in range(exp_setup["n_model_iterations"]):
                 if cfg.MODEL == Models.SHELL_MODEL:
-                    _, u_atl_out, u_init_perturb = sh_tl_atl_model(
-                        lanczos_outarray.ravel(),
-                        u_ref,
-                        data_out,
-                        copy_args,
-                        J_matrix,
-                        diagonal0,
-                        diagonal1,
-                        diagonal2,
-                        diagonal_1,
-                        diagonal_2,
-                    )
+                    if cfg.LICENCE == EXP.SINGULAR_VECTORS:
+                        _, u_atl_out, _ = sh_tl_atl_model(
+                            np.pad(
+                                lanczos_vector_matrix[:, i],
+                                pad_width=params.bd_size,  # , params.bd_size), (0, 0)),
+                                mode="constant",
+                            ),
+                            u_ref,
+                            data_out,
+                            copy_args,
+                            J_matrix,
+                            diagonal0,
+                            diagonal1,
+                            diagonal2,
+                            diagonal_1,
+                            diagonal_2,
+                        )
+                    elif cfg.LICENCE == EXP.FINAL_SINGULAR_VECTORS:
+                        u_tl_out, _, _ = sh_atl_tl_model(
+                            np.pad(
+                                lanczos_vector_matrix[:, i],
+                                pad_width=params.bd_size,  # , params.bd_size), (0, 0)),
+                                mode="constant",
+                            ),
+                            u_ref,
+                            data_out,
+                            copy_args,
+                            J_matrix,
+                            diagonal0,
+                            diagonal1,
+                            diagonal2,
+                            diagonal_1,
+                            diagonal_2,
+                        )
                 elif cfg.MODEL == Models.LORENTZ63:
-                    # Run TL model followed by ATL model
-                    _, u_atl_out, u_init_perturb = l63_tl_atl_model(
-                        lanczos_outarray.ravel(),
-                        u_ref,
-                        jacobian_matrix,
-                        lorentz_matrix,
-                        data_out,
-                        copy_args,
-                    )
+                    if cfg.LICENCE == EXP.SINGULAR_VECTORS:
+                        # Run TL model followed by ATL model
+                        _, u_atl_out, _ = l63_tl_atl_model(
+                            np.copy(lanczos_vector_matrix[:, i]),
+                            u_ref,
+                            jacobian_matrix,
+                            lorentz_matrix,
+                            data_out,
+                            copy_args,
+                        )
+                    elif cfg.LICENCE == EXP.FINAL_SINGULAR_VECTORS:
+                        # Run TL model followed by ATL model
+                        u_tl_out, _, _ = l63_atl_tl_model(
+                            np.copy(lanczos_vector_matrix[:, i]),
+                            u_ref,
+                            jacobian_matrix,
+                            lorentz_matrix,
+                            data_out,
+                            copy_args,
+                        )
 
                 #  Rescale perturbations
-                # lanczos_outarray = pt_utils.rescale_perturbations(
+                # lanczos_vector_next = pt_utils.rescale_perturbations(
                 #     u_atl_out[np.newaxis, :], copy_args, raw_perturbations=True
                 # )
-            # Update arrays for the lanczos algorithm
-            propagated_vector[:, :] = np.reshape(u_atl_out, (params.sdim, 1))
-            input_vector[:, :] = u_init_perturb[sparams.u_slice, np.newaxis]
+            # Update array for the lanczos algorithm
+            if cfg.LICENCE == EXP.SINGULAR_VECTORS:
+                propagated_vector[:] = u_atl_out
+            elif cfg.LICENCE == EXP.FINAL_SINGULAR_VECTORS:
+                propagated_vector[:] = u_tl_out
 
             # Iterate the Lanczos algorithm one step
-            lanczos_outarray, tridiag_matrix, input_vector_matrix = next(
-                lanczos_iterator
-            )
+            tridiag_matrix = next(lanczos_iterator)
 
-            # NOTE: Uncomment this to enable normalization of lanczos vectors -
-            # produces orthogonal lanczos vectors. lanczos_outarray =
-            # g_utils.normalize_array( lanczos_outarray,
-            #     norm_value=params.seeked_error_norm, axis=0 )
-            lanczos_outarray = np.pad(
-                lanczos_outarray,
-                pad_width=((params.bd_size, params.bd_size), (0, 0)),
-                mode="constant",
-            )
+        # Calculate orthogonality between Lanczos vectors
+        orthogonality = g_plt_anal.orthogonality_of_vectors(lanczos_vector_matrix)
+        # print("orthogonality", orthogonality)
+        # print("tridiag_matrix", tridiag_matrix)
+        # print("lanczos_vector_matrix", lanczos_vector_matrix)
 
         # Calculate SVs from eigen vectors of tridiag_matrix
         temp_sv_matrix, temp_s_values = pt_utils.calculate_svs(
-            tridiag_matrix, input_vector_matrix
+            tridiag_matrix, lanczos_vector_matrix
         )
 
         # Add to arrays to perform averaging

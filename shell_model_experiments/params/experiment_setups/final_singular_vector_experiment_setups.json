@@ -1,0 +1,14 @@
+{
+    "LowPredRegime": {
+        "folder_name": "pt_vectors/fsv_lanczos_low_pred1",
+        "sub_exp_folder": "perturb_data",
+        "integration_time": 0.005,
+        "n_lanczos_iterations": 1,
+        "n_model_iterations": 1,
+        "n_vectors": 20,
+        "vector_offset": 0.005,
+        "eval_times": [
+            8.95
+        ]
+    }
+}

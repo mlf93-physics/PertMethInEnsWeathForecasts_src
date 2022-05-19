@@ -1,66 +1,12 @@
 {
-    "TestRun0": {
+    "SequentialRun1": {
         "general": {
-            "folder_name": "compare_pert_test_seeked_error1e-2-high_pred",
+            "folder_name": "compare_sequential_vector_runs",
             "vector_folder": "vectors",
             "perturbation_folder": "perturbations",
             "sub_exp_folder": "perturb_data",
             "eval_times": [
-                11.5
-            ],
-            "n_units": 6,
-            "unit_offset": 0.01
-        },
-        "bv_gen_setup": {
-            "integration_time": 0.01,
-            "n_cycles": 4,
-            "n_vectors": 8
-        },
-        "sv_gen_setup": {
-            "integration_time": 0.01,
-            "n_vectors": 20,
-            "n_lanczos_iterations": 1,
-            "n_model_iterations": 1
-        },
-        "pert_setup": {
-            "time_to_run": 0.01
-        }
-    },
-    "TestRun1": {
-        "general": {
-            "folder_name": "compare_pert_test_seeked_error1e-2-low_pred",
-            "vector_folder": "vectors",
-            "perturbation_folder": "perturbations",
-            "sub_exp_folder": "perturb_data",
-            "eval_times": [
-                11.22
-            ],
-            "n_units": 6,
-            "unit_offset": 0.01
-        },
-        "bv_gen_setup": {
-            "integration_time": 0.01,
-            "n_cycles": 4,
-            "n_vectors": 8
-        },
-        "sv_gen_setup": {
-            "integration_time": 0.01,
-            "n_vectors": 20,
-            "n_lanczos_iterations": 1,
-            "n_model_iterations": 1
-        },
-        "pert_setup": {
-            "time_to_run": 0.01
-        }
-    },
-    "CompareLowPredRegime0.01": {
-        "general": {
-            "folder_name": "compare_bvs",
-            "vector_folder": "vectors",
-            "perturbation_folder": "perturbations",
-            "sub_exp_folder": "perturb_data",
-            "eval_times": [
-                11.22
+                11.15
             ],
             "n_units": 30,
             "unit_offset": 0.01
@@ -84,63 +30,272 @@
             "time_to_run": 0.01
         }
     },
+    "CompareLowPredRegime0.01": {
+        "general": {
+            "folder_name": "test_lv_exp_growth_rates",
+            "vector_folder": "vectors",
+            "perturbation_folder": "perturbations",
+            "sub_exp_folder": "perturb_data",
+            "eval_times": [
+                8.95
+            ],
+            "n_units": 60,
+            "unit_offset": 0.01
+        },
+        "lv_gen_setup": {
+            "integration_time": 0.01,
+            "n_cycles": 1,
+            "n_vectors": 20
+        },
+        "bv_gen_setup": {
+            "integration_time": 0.01,
+            "n_cycles": 4,
+            "n_vectors": 20
+        },
+        "bv_eof_gen_setup": {
+            "sub_exp_folder": "perturb_data",
+            "n_vectors": 20
+        },
+        "sv_gen_setup": {
+            "integration_time": 0.01,
+            "n_vectors": 20,
+            "n_lanczos_iterations": 1,
+            "n_model_iterations": 1
+        },
+        "rd_pert_setup": {
+            "n_runs_per_profile": 20
+        },
+        "nm_pert_setup": {
+            "n_runs_per_profile": 20
+        },
+        "rf_pert_setup": {
+            "n_runs_per_profile": 20
+        },
+        "pert_setup": {
+            "time_to_run": 0.01
+        }
+    },
     "CompareHighPredRegime0.01": {
         "general": {
-            "folder_name": "compare_pert_high_pred_regimes",
+            "folder_name": "compare_sv_high_pred_regimes_n_units6",
             "vector_folder": "vectors",
             "perturbation_folder": "perturbations",
             "sub_exp_folder": "perturb_data",
             "eval_times": [
                 11.5
             ],
-            "n_units": 100,
+            "n_units": 6,
             "unit_offset": 0.01
         },
         "bv_gen_setup": {
             "integration_time": 0.01,
             "n_cycles": 4,
-            "n_vectors": 8
+            "n_vectors": 20
         },
         "bv_eof_gen_setup": {
             "sub_exp_folder": "perturb_data",
-            "n_vectors": 3
+            "n_vectors": 20
         },
         "sv_gen_setup": {
             "integration_time": 0.01,
             "n_vectors": 20,
             "n_lanczos_iterations": 1,
             "n_model_iterations": 1
+        },
+        "rd_pert_setup": {
+            "n_runs_per_profile": 20
+        },
+        "nm_pert_setup": {
+            "n_runs_per_profile": 20
+        },
+        "rf_pert_setup": {
+            "n_runs_per_profile": 20
         },
         "pert_setup": {
             "time_to_run": 0.01
         }
     },
-    "TestRun2": {
+    "ComparePertErrorNorm": {
         "general": {
-            "folder_name": "compare_sv_pert_low_pred_regime_lanczos_normalization",
+            "folder_name": "compare_pert_error_norm",
             "vector_folder": "vectors",
             "perturbation_folder": "perturbations",
             "sub_exp_folder": "perturb_data",
             "eval_times": [
-                11.22
+                21.12
             ],
-            "n_units": 64,
+            "n_units": 10,
             "unit_offset": 0.01
         },
-        "bv_gen_setup": {
+        "lv_gen_setup": {
             "integration_time": 0.01,
-            "n_cycles": 4,
-            "n_vectors": 8
+            "n_cycles": 10,
+            "n_vectors": 20
+        },
+        "bv_gen_setup": {
+            "integration_time": 0.0005,
+            "n_cycles": 10,
+            "n_vectors": 20
         },
         "bv_eof_gen_setup": {
             "sub_exp_folder": "perturb_data",
-            "n_vectors": 3
+            "n_vectors": 20
+        },
+        "sv_gen_setup": {
+            "integration_time": 0.0005,
+            "n_vectors": 20,
+            "n_lanczos_iterations": 10,
+            "n_model_iterations": 1
+        },
+        "rd_pert_setup": {
+            "n_runs_per_profile": 20
+        },
+        "nm_pert_setup": {
+            "n_runs_per_profile": 20
+        },
+        "rf_pert_setup": {
+            "n_runs_per_profile": 20
+        },
+        "bv_pert_setup": {
+            "n_runs_per_profile": 3
+        },
+        "pert_setup": {
+            "time_to_run": 0.01
+        }
+    },
+    "ComparePertExpGrowthRateLowPred": {
+        "general": {
+            "folder_name": "low_pred/compare_pert_exp_growth_rate_it0.005",
+            "vector_folder": "vectors",
+            "perturbation_folder": "perturbations",
+            "sub_exp_folder": "perturb_data",
+            "eval_times": [
+                21.12
+            ],
+            "n_units": 1000,
+            "unit_offset": 0.01
+        },
+        "lv_gen_setup": {
+            "integration_time": 0.01,
+            "n_cycles": 10,
+            "n_vectors": 20
+        },
+        "bv_gen_setup": {
+            "integration_time": 0.005,
+            "n_cycles": 10,
+            "n_vectors": 20
+        },
+        "bv_eof_gen_setup": {
+            "sub_exp_folder": "perturb_data",
+            "n_vectors": 20
+        },
+        "sv_gen_setup": {
+            "integration_time": 0.005,
+            "n_vectors": 20,
+            "n_lanczos_iterations": 1,
+            "n_model_iterations": 1
+        },
+        "rd_pert_setup": {
+            "n_runs_per_profile": 3
+        },
+        "nm_pert_setup": {
+            "n_runs_per_profile": 3
+        },
+        "rf_pert_setup": {
+            "n_runs_per_profile": 3
+        },
+        "bv_pert_setup": {
+            "n_runs_per_profile": 3
+        },
+        "pert_setup": {
+            "time_to_run": 0.01
+        }
+    },
+    "ComparePertExpGrowthRateHighPred": {
+        "general": {
+            "folder_name": "high_pred/compare_pert_exp_growth_rate_it0.004",
+            "vector_folder": "vectors",
+            "perturbation_folder": "perturbations",
+            "sub_exp_folder": "perturb_data",
+            "eval_times": [
+                21.12
+            ],
+            "n_units": 1000,
+            "unit_offset": 0.01
+        },
+        "lv_gen_setup": {
+            "integration_time": 0.01,
+            "n_cycles": 10,
+            "n_vectors": 20
+        },
+        "bv_gen_setup": {
+            "integration_time": 0.004,
+            "n_cycles": 10,
+            "n_vectors": 20
+        },
+        "bv_eof_gen_setup": {
+            "sub_exp_folder": "perturb_data",
+            "n_vectors": 20
+        },
+        "sv_gen_setup": {
+            "integration_time": 0.004,
+            "n_vectors": 20,
+            "n_lanczos_iterations": 1,
+            "n_model_iterations": 1
+        },
+        "rd_pert_setup": {
+            "n_runs_per_profile": 3
+        },
+        "nm_pert_setup": {
+            "n_runs_per_profile": 3
+        },
+        "rf_pert_setup": {
+            "n_runs_per_profile": 3
+        },
+        "bv_pert_setup": {
+            "n_runs_per_profile": 3
+        },
+        "pert_setup": {
+            "time_to_run": 0.01
+        }
+    },
+    "TLMValidityTest": {
+        "general": {
+            "folder_name": "tlm_validity_test",
+            "vector_folder": "vectors",
+            "perturbation_folder": "perturbations",
+            "sub_exp_folder": "perturb_data",
+            "eval_times": [
+                21.12
+            ],
+            "n_units": 10,
+            "unit_offset": 0.01
+        },
+        "lv_gen_setup": {
+            "integration_time": 0.01,
+            "n_cycles": 10,
+            "n_vectors": 20
+        },
+        "bv_gen_setup": {
+            "integration_time": 0.01,
+            "n_cycles": 8,
+            "n_vectors": 20
+        },
+        "bv_eof_gen_setup": {
+            "sub_exp_folder": "perturb_data",
+            "n_vectors": 20
         },
         "sv_gen_setup": {
             "integration_time": 0.01,
             "n_vectors": 20,
             "n_lanczos_iterations": 1,
             "n_model_iterations": 1
+        },
+        "rd_pert_setup": {
+            "n_runs_per_profile": 20
+        },
+        "tl_rd_pert_setup": {
+            "n_runs_per_profile": 20
         },
         "pert_setup": {
             "time_to_run": 0.01

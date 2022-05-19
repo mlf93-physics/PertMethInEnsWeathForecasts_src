@@ -40,8 +40,6 @@ elif cfg.MODEL == Models.LORENTZ63:
 
     params = l63_params
 
-# Setup plotting defaults
-g_plt_config.setup_plotting_defaults()
 
 profiler = Profiler()
 

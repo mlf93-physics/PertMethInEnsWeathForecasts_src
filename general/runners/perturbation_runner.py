@@ -41,6 +41,7 @@ import general.utils.user_interface as g_ui
 import general.utils.running.runner_utils as r_utils
 import general.utils.process_utils as pr_utils
 import general.utils.util_funcs as g_utils
+import general.utils.importing.import_data_funcs as g_import
 import numpy as np
 from general.params.experiment_licences import Experiments as EXP
 from general.params.model_licences import Models
@@ -243,7 +244,7 @@ def perturbation_runner(
                     model=f"{cfg.MODEL.submodel} {cfg.MODEL}",
                 )
 
-    if not args["skip_save_data"]:
+    if not args["skip_save_data"] and not args["save_no_pert"]:
         pt_save.save_perturbation_data(
             data_out,
             perturb_position=perturb_positions[run_count // args["n_runs_per_profile"]],
@@ -255,7 +256,9 @@ def perturbation_runner(
     if (
         cfg.LICENCE == EXP.BREEDING_VECTORS
         or cfg.LICENCE == EXP.LYAPUNOV_VECTORS
+        or cfg.LICENCE == EXP.ADJ_LYAPUNOV_VECTORS
         or cfg.LICENCE == EXP.SINGULAR_VECTORS
+        or cfg.LICENCE == EXP.FINAL_SINGULAR_VECTORS
     ):
         # For the ATL model, time goes backwards, i.e. first datapoint in data_out
         # stores the result of the last integration.
@@ -269,8 +272,6 @@ def perturbation_runner(
 def prepare_processes(
     u_profiles_perturbed: np.ndarray,
     perturb_positions: List[int],
-    times_to_run: np.ndarray,
-    Nt_array: np.ndarray,
     n_perturbation_files: int,
     u_ref: np.ndarray = None,
     exec_all_runs_per_profile: Union[np.ndarray, None] = None,
@@ -288,9 +289,6 @@ def prepare_processes(
     # Append processes
     for count in iterator:
         profile_count = count // args["n_runs_per_profile"]
-
-        args["time_to_run"] = times_to_run[count]
-        args["Nt"] = Nt_array[count]
 
         # Copy args in order to avoid override between processes
         copy_args = copy.deepcopy(args)
@@ -332,15 +330,21 @@ def main_setup(
     u_ref=None,
 ):
 
-    times_to_run, Nt_array = r_utils.prepare_run_times(args)
     exec_all_runs_per_profile = None
+    args["Nt"] = int(round(args["time_to_run"] / params.dt))
 
     # If in 2. or higher breed cycle, the perturbation is given as input
     if u_profiles_perturbed is None:  # or perturb_positions is None:
 
         raw_perturbations = False
-        # Get only raw_perturbations if licence is LYAPUNOV_VECTORS
-        if cfg.LICENCE == EXP.LYAPUNOV_VECTORS or cfg.LICENCE == EXP.SINGULAR_VECTORS:
+        # Get only raw_perturbations for specific licences
+        if (
+            cfg.LICENCE == EXP.LYAPUNOV_VECTORS
+            or cfg.LICENCE == EXP.ADJ_LYAPUNOV_VECTORS
+            or cfg.LICENCE == EXP.SINGULAR_VECTORS
+            or cfg.LICENCE == EXP.FINAL_SINGULAR_VECTORS
+            or cfg.LICENCE == EXP.TANGENT_LINEAR
+        ):
             raw_perturbations = True
 
         (
@@ -348,6 +352,13 @@ def main_setup(
             perturb_positions,
             exec_all_runs_per_profile,
         ) = r_utils.prepare_perturbations(args, raw_perturbations=raw_perturbations)
+
+        if cfg.LICENCE == EXP.FINAL_SINGULAR_VECTORS:
+            # Import reference data based on perturb positions
+            u_ref, _, _ = g_import.import_start_u_profiles(
+                args=args,
+                start_times=np.array(perturb_positions, dtype=np.int32) * params.stt,
+            )
 
     # Detect if other perturbations exist in the perturbation_folder and calculate
     # perturbation count to start at
@@ -357,15 +368,13 @@ def main_setup(
     processes, data_out_list = prepare_processes(
         u_profiles_perturbed,
         perturb_positions,
-        times_to_run,
-        Nt_array,
         n_perturbation_files,
         u_ref=u_ref,
         exec_all_runs_per_profile=exec_all_runs_per_profile,
         args=args,
     )
 
-    if not args["skip_save_data"]:
+    if not args["skip_save_data"] and not args["save_no_pert"]:
         g_save.save_perturb_info(args=args, exp_setup=exp_setup)
 
     return processes, data_out_list, perturb_positions, u_profiles_perturbed

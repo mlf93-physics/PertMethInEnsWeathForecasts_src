@@ -10,9 +10,92 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 import numpy as np
 import general.utils.user_interface as g_ui
+import general.utils.importing.import_data_funcs as g_import
 from general.plotting.plot_params import *
 from general.params.model_licences import Models
+from general.params.experiment_licences import Experiments as EXP
 import config as cfg
+
+if cfg.MODEL == Models.SHELL_MODEL:
+    from shell_model_experiments.params.params import PAR as PAR_SH
+    from shell_model_experiments.params.params import ParamsStructType
+
+    params = PAR_SH
+elif cfg.MODEL == Models.LORENTZ63:
+    import lorentz63_experiments.params.params as l63_params
+
+    params = l63_params
+
+
+def post_process_vectors_and_char_values(
+    args: dict,
+    vector_units: np.ndarray,
+    characteristic_values: np.ndarray,
+    header_dicts: dict,
+):
+    """Post process the pert vectors and characteristic values differently
+    depending on the license
+
+    E.g. the singular values are converted to growth rates and variances to fraction of
+    total variance.
+
+    Parameters
+    ----------
+    args : dict
+        Run-time arguments
+    vector_units : np.ndarray
+        The vector units
+    characteristic_values : np.ndarray
+        The characteristic values
+    header_dicts : dict
+        The header dicts
+
+    Returns
+    -------
+    Tuple(
+        np.ndarray: valid_char_value_range
+        np.ndarray: characteristic_values
+    )
+    """
+
+    exp_setup = g_import.import_exp_info_file(args)
+
+    n_zeros = 0  # Used to remove negative singular values
+    if cfg.LICENCE == EXP.SINGULAR_VECTORS:
+        # Cut off at zero
+        real_s_values = characteristic_values.real
+        below_zero_bool_array = real_s_values < 0
+        # Count number of zero entries
+        n_zeros = np.max(np.sum(below_zero_bool_array, axis=1))
+        real_s_values[below_zero_bool_array] = 0
+        temp_log_array = np.zeros(characteristic_values.shape)
+        # Take log and output to temp_log_array
+        np.log(
+            np.sqrt(real_s_values),
+            out=temp_log_array,
+            where=np.logical_not(below_zero_bool_array),
+        )
+        # Divide by optimization time
+        characteristic_values = 1 / header_dicts[0]["time_to_run"] * temp_log_array
+    elif cfg.LICENCE == EXP.BREEDING_EOF_VECTORS:
+        characteristic_values = (
+            characteristic_values.real
+            / np.sum(characteristic_values.real, axis=1)[:, np.newaxis]
+        )
+    else:
+        characteristic_values = characteristic_values.real
+
+    valid_char_value_range = np.s_[:-(n_zeros)] if n_zeros > 0 else np.s_[:]
+    characteristic_values = characteristic_values[:, valid_char_value_range]
+
+    sort_index = np.argsort(characteristic_values, axis=1)[:, ::-1]
+    for i in range(vector_units.shape[0]):
+        vector_units[i, valid_char_value_range, :] = vector_units[
+            i, sort_index[i, :], :
+        ]
+        characteristic_values[i, :] = characteristic_values[i, sort_index[i, :]]
+
+    return valid_char_value_range, characteristic_values
 
 
 def get_non_repeating_colors(
@@ -72,8 +155,57 @@ def get_custom_cmap(
     return cmap, norm
 
 
-def save_interactive_fig(fig, path, name):
-    out_path = pl.Path(path, f"{name}.fig.pickle")
+def set_color_cycle_for_vectors(
+    axes: plt.Axes, vector_type: str = "sv", n_vectors: int = 0
+):
+    if "sv" == vector_type:
+        cmap_list, cmap = get_non_repeating_colors(
+            n_colors=n_vectors,
+            cmap=plt.cm.Blues_r,
+            vmin=0.2,
+            vmax=0.7,
+        )
+        axes.set_prop_cycle("color", cmap_list)
+    elif "bv_eof" == vector_type:
+        cmap_list, cmap = get_non_repeating_colors(
+            n_colors=n_vectors,
+            cmap=plt.cm.Oranges_r,
+            vmin=0.2,
+            vmax=0.7,
+        )
+        axes.set_prop_cycle("color", cmap_list)
+    elif "bv" == vector_type:
+        cmap_list, cmap = get_non_repeating_colors(
+            n_colors=n_vectors,
+            cmap=plt.cm.Greens_r,
+            vmin=0.2,
+            vmax=0.7,
+        )
+        axes.set_prop_cycle("color", cmap_list)
+    elif "nm" == vector_type:
+        cmap_list, cmap = get_non_repeating_colors(
+            n_colors=n_vectors,
+            cmap=plt.cm.Purples_r,
+            vmin=0.2,
+            vmax=0.7,
+        )
+        axes.set_prop_cycle("color", cmap_list)
+    else:
+        raise ValueError(f"No color settings for vector_type={vector_type}")
+
+    return cmap
+
+
+def save_interactive_fig(fig, subpath=None, name="standard_filename"):
+    if subpath is None:
+        full_path = FIG_ROOT
+    else:
+        full_path = FIG_ROOT / subpath
+
+    if not os.path.isdir(full_path):
+        os.makedirs(full_path)
+
+    out_path = pl.Path(full_path, f"{name}.fig.pickle")
 
     with open(out_path, "wb") as file:
         pickle.dump(fig, file)
@@ -81,12 +213,15 @@ def save_interactive_fig(fig, path, name):
 
 def load_interactive_fig(args):
 
-    with open(args["file_path"], "rb") as file:
+    full_path = FIG_ROOT / args["file_path"]
+
+    with open(full_path, "rb") as file:
         fig = pickle.load(file)
         fig.show()
 
 
 def save_figure(
+    args,
     subpath: pl.Path = None,
     file_name="figure1",
     fig: plt.Figure = None,
@@ -94,7 +229,8 @@ def save_figure(
 ):
     print("\nSaving figure...\n")
     # Prepare layout
-    plt.tight_layout(rect=tight_layout_rect)
+    if not args["notight"]:
+        plt.tight_layout(rect=tight_layout_rect)
 
     if subpath is None:
         full_path = FIG_ROOT
@@ -109,17 +245,25 @@ def save_figure(
     else:
         plot_handle = fig
 
-    # Save png
-    plot_handle.savefig(full_path / (file_name + ".png"), dpi=400, format="png")
+    # Save pdf
+    plot_handle.savefig(
+        full_path / (file_name + ".pdf"),
+        format="pdf",
+        # backend="pgf",
+        bbox_inches="tight",
+    )
 
-    # # Save pgf
+    plot_handle.savefig(
+        full_path / (file_name + ".png"),
+        format="png",
+        dpi=100,
+        bbox_inches="tight",
+    )
     # plot_handle.savefig(
-    #     full_path / (file_name + ".pgf"),
-    #     dpi=400,
-    #     format="pgf",
+    #     full_path / (file_name + ".pgf"), format="pgf", bbox_inches="tight"
     # )
 
-    print(f"\nFigures (png, pgf) saved as {file_name} at figures/{str(subpath)}\n")
+    print(f"\nFigures (pdf, png) saved as {file_name} at figures/{str(subpath)}\n")
 
 
 def generate_title(
@@ -158,7 +302,7 @@ def generate_title(
                 + f', time={header_dict["time_to_run"]}, '
             )
 
-    model_addon = f"{str(cfg.MODEL)}"
+    model_addon = f"{str(cfg.MODEL)}, "
 
     # Add prefixes
     title = title_header + " | " + model_addon + title
@@ -174,44 +318,51 @@ def generate_title(
     title = title.rstrip(", ")
 
     # Wrap title
-    title = "\n".join(textwrap.wrap(title, 60))
+    title = "\n".join(
+        textwrap.wrap(title, 60, break_long_words=False, break_on_hyphens=False)
+    )
 
     return title
 
 
 def save_or_show_plot(args: dict, tight_layout_rect: list = None):
-    if args["save_fig"]:
-        subpath = pl.Path("lorentz63_experiments/singular_vectors/test_perturbations2/")
+    # if args["save_fig"]:
+    #     subpath = pl.Path("lorentz63_experiments/singular_vectors/test_perturbations2/")
 
-        for i in plt.get_fignums():
-            fig = plt.figure(i)
-            file_name = "sv_perturbations_sv1"
+    #     for i in plt.get_fignums():
+    #         fig = plt.figure(i)
+    #         file_name = "sv_perturbations_sv1"
 
-            name = g_ui.get_name_input(
-                "Proposed name of figure: ", proposed_input=file_name
-            )
+    #         name = g_ui.get_name_input(
+    #             "Proposed name of figure: ", proposed_input=file_name
+    #         )
 
-            question = (
-                "\nConfirm that the figure is being saved to\n"
-                + f"path: {subpath}\n"
-                + f"name: {name}\n"
-            )
+    #         question = (
+    #             "\nConfirm that the figure is being saved to\n"
+    #             + f"path: {subpath}\n"
+    #             + f"name: {name}\n"
+    #         )
 
-            answer = g_ui.ask_user(question)
-            if answer:
-                save_figure(
-                    subpath=subpath,
-                    file_name=name,
-                    fig=fig,
-                    tight_layout_rect=tight_layout_rect,
-                )
-            else:
-                print("\nSaving the figure was aborted\n")
+    #         answer = g_ui.ask_user(question)
+    #         if answer:
+    #             save_figure(
+    #                 subpath=subpath,
+    #                 file_name=name,
+    #                 fig=fig,
+    #                 tight_layout_rect=tight_layout_rect,
+    #             )
+    #         else:
+    #             print("\nSaving the figure was aborted\n")
 
-    elif not args["noplot"]:
+    if not args["noplot"]:
         if not args["notight"]:
             plt.tight_layout()
         plt.show()
+
+
+def add_subfig_labels(axs):
+    for ax, label in zip(axs, SUBFIG_LABELS):
+        ax.set_title(label, loc="center", fontsize="medium")
 
 
 if __name__ == "__main__":

@@ -82,7 +82,7 @@ def main(args: dict, exp_setup: dict = None):
         start_times, num_possible_units = r_utils.generate_start_times(exp_setup, args)
     elif cfg.MODEL == Models.SHELL_MODEL:
         start_times, num_possible_units, _ = sh_r_utils.get_regime_start_times(args)
-        start_times = r_utils.get_bv_start_time(
+        start_times = r_utils.get_bv_lv_start_time(
             eval_time=np.array(start_times), exp_setup=exp_setup
         )
 
@@ -139,7 +139,10 @@ def main(args: dict, exp_setup: dict = None):
                 copy_args["start_times"][0] += copy_args["time_to_run"]
 
                 # The rescaled data is used to start off cycle 1+
-                rescaled_data = pt_utils.rescale_perturbations(data_out_list, copy_args)
+                rescaled_data = pt_utils.rescale_perturbations(
+                    data_out_list,
+                    copy_args,
+                )
                 # Update perturb_positions
                 perturb_positions += int(exp_setup["integration_time"] * params.tts)
         else:
@@ -147,6 +150,10 @@ def main(args: dict, exp_setup: dict = None):
 
         # Set out folder
         args["out_exp_folder"] = pl.Path(exp_setup["folder_name"])
+
+        rescaled_data = pt_utils.rescale_perturbations(
+            data_out_list, copy_args, return_raw_perturbations=args["bv_raw_perts"]
+        )
         # Save breed vector data
         v_save.save_vector_unit(
             rescaled_data[sparams.u_slice, :].T,

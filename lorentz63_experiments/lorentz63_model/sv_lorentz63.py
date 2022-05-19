@@ -23,7 +23,7 @@ from pyinstrument import Profiler
 profiler = Profiler()
 
 # Set global params
-cfg.GLOBAL_PARAMS.record_max_time = 3000
+
 cfg.GLOBAL_PARAMS.ref_run = False
 
 
